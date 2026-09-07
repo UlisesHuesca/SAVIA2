@@ -4,150 +4,280 @@
 {% load widget_tweaks %}
 {% load l10n %}
 {% load i18n %}
-<html>
-<head>
-{% block title %}{% trans "Selección" %}{% endblock %}
-</head>
-<body>
-    {% block content %}
-    <hr>
-    <hr>
-    <h6>&nbsp;</h6>
-    <h6>&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <div class="row">
-        <div class="col-12">
-        <!-- Aqui es el encabezado de los filtros -->
-        <div class ="card bg-white">
-            
-               <div class="card-header">
-                    <h5>{% trans "Filtro de productos" %}</h5>
-                </div>
-                <div class="card-body">
-                    {% csrf_token %}
-                    <form class="row g-3" method="GET">
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Código" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Producto" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Familia" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Subfamilia" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">
-                                    {{ myfilter.form.activo_producto|add_class:"form-select" }}
-                                    <label style="color: #121212;" for="activo_producto">{% trans "Productos" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-2 mt-3">
-                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- Aquí terminan el encabezado de los filtros -->
+{% load tt_extras %}
 
-        <div class="row">
+{% block title %}{% trans "Selección de productos" %}{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+                {% trans "Selección de productos" %}
+            </h1>
+            <p class="sv-page-subtitle">
+                {% trans "Consulta el inventario y agrega los materiales requeridos a tu solicitud." %}
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-box"></i>
+            {{ productos_list.paginator.count }} {% trans "productos" %}
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-filter"></i>
+                {% trans "Filtros de productos" %}
+            </h2>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código" }}
+                                <label for="{{ myfilter.form.codigo.id_for_label }}">{% trans "Código" %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                                <label for="{{ myfilter.form.producto.id_for_label }}">{% trans "Producto" %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder=Familia" }}
+                                <label for="{{ myfilter.form.familia.id_for_label }}">{% trans "Familia" %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder=Subfamilia" }}
+                                <label for="{{ myfilter.form.subfamilia.id_for_label }}">{% trans "Subfamilia" %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-toggle-on"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.activo_producto|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.activo_producto.id_for_label }}">{% trans "Estado del producto" %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a href="{{ request.path }}" class="sv-btn sv-btn-outline">
+                            <i class="fa-solid fa-eraser"></i>
+                            {% trans "Limpiar" %}
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            {% trans "Buscar" %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="sv-card-title mb-0">
+                <i class="fa-solid fa-grip"></i>
+                {% trans "Productos disponibles" %}
+            </h2>
+            {% if productos_list.paginator.num_pages > 1 %}
+            <span class="sv-badge sv-badge-dark">
+                {% trans "Página" %} {{ productos_list.number }} {% trans "de" %} {{ productos_list.paginator.num_pages }}
+            </span>
+            {% endif %}
+        </div>
+
+        <div class="row g-4">
             {% for producto in productos_list %}
-            <div class='select-product col-md-3 col-sm-12 my-2'>
-                <img class="thumbnail" src="{{producto.producto.imageURL}}">
-                <div class='box-element product'>
-                    <h6><strong>{{producto.producto}}</strong></h6>
-                    <h8>{% trans "Disponible" %}: {{producto.cantidad}}</h8>
-                    {% if producto.producto.activo == True %}
-                    <br>
-                    <h8>{% trans "Producto tipo activo" %}</h8>
-                    {% endif %}
-                    <hr>
-                    <button data-product={{producto.id|unlocalize}} data-action="add" data-type="{{orden.tipo.id}}"  class="btn btn-outline-secondary add-btn update-cart">{% trans "Agregar a Solicitud" %}</button>
-                    {% if producto.producto.critico %}
-                    <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
-                    {% endif %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <article class="sv-card h-100 overflow-hidden d-flex flex-column">
+                    <div class="ratio ratio-4x3 bg-light">
+                        <img class="thumbnail w-100 h-100 object-fit-cover"
+                             src="{{ producto.producto.imageURL }}"
+                             alt="{{ producto.producto.nombre|default:producto.producto }}"
+                             loading="lazy">
+                    </div>
+
+                    <div class="sv-card-body d-flex flex-column flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <span class="sv-badge sv-badge-dark">
+                                {{ producto.producto.codigo }}
+                            </span>
+                            {% if producto.producto.activo == True %}
+                            <span class="sv-badge sv-badge-primary">
+                                <i class="fa-solid fa-tag"></i>
+                                {% trans "Activo" %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <h3 class="sv-card-title mb-2">
+                            {{ producto.producto.nombre|default:producto.producto }}
+                        </h3>
+
+                        <div class="d-flex align-items-center justify-content-between gap-2 mt-auto pt-3">
+                            <span class="sv-cell-subtitle">{% trans "Disponible" %}</span>
+                            {% if producto.cantidad > 0 %}
+                            <span class="sv-badge sv-badge-success">{{ producto.cantidad }}</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-danger">{{ producto.cantidad }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body border-top">
+                        <div class="d-flex gap-2">
+                            <button type="button"
+                                    data-product="{{ producto.id|unlocalize }}"
+                                    data-action="add"
+                                    data-type="{{ orden.tipo.id }}"
+                                    class="sv-btn sv-btn-primary flex-grow-1 add-btn update-cart">
+                                <i class="fa-solid fa-cart-plus"></i>
+                                {% trans "Agregar" %}
+                            </button>
+
+                            {% if producto.producto.critico %}
+                            <button type="button"
+                                    class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#qualityModal"
+                                    hx-get="{% url 'select-product-quality' producto.producto.id %}"
+                                    hx-target="#document"
+                                    hx-swap="innerHTML"
+                                    title="{% trans 'Requisitos de calidad' %}"
+                                    aria-label="{% trans 'Requisitos de calidad' %}">
+                                <i class="fa-solid fa-q"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="sv-card">
+                    <div class="sv-empty py-5">
+                        <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                        <span class="sv-empty-title">{% trans "No se encontraron productos" %}</span>
+                        <span class="sv-empty-text">{% trans "Modifica los filtros para ampliar la búsqueda." %}</span>
+                    </div>
                 </div>
             </div>
             {% endfor %}
         </div>
-    </div>
-    <!--Este es el modal-->
-    <div class="modal" id ="dialog" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" id="document" role="document">
+    </section>
 
-        </div>
-    </div>
-    <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+    {% if productos_list.paginator.num_pages > 1 %}
+    <nav class="mt-4" aria-label="{% trans 'Paginación de productos' %}">
+        <ul class="pagination justify-content-center mb-0">
             {% if productos_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+            <li class="page-item">
+                <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="{% trans 'Primera página' %}">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{% my_url productos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="{% trans 'Página anterior' %}">
+                    <i class="fa-solid fa-angle-left"></i>
+                </a>
+            </li>
             {% endif %}
-            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
 
             {% for item in productos_list.paginator.page_range %}
                 {% if productos_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ item }}</span>
+                </li>
                 {% elif item > productos_list.number|add:'-2' and item < productos_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a>
+                </li>
                 {% endif %}
             {% endfor %}
 
-            {% if productos_list.paginator.num_pages > productos_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ productos_list.paginator.num_pages}}">{{productos_list.paginator.num_pages}}</a></li>
-            {% endif %}
-
             {% if productos_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            <li class="page-item">
+                <a class="page-link" href="{% my_url productos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="{% trans 'Página siguiente' %}">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="{% trans 'Última página' %}">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+            </li>
             {% endif %}
-            </ul>
-        </nav>
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-var carro = document.getElementById('cart');
-carro.removeAttribute('class');
-carro.setAttribute('class',"form-inline my-2 my-lg-0 position-relative");
+        </ul>
+    </nav>
+    {% endif %}
+</main>
 
+<div class="modal fade" id="qualityModal" tabindex="-1"
+     aria-labelledby="qualityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" id="document">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="qualityModalLabel">
+                    <i class="fa-solid fa-clipboard-check me-2"></i>
+                    {% trans "Requisitos de calidad" %}
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Cerrar' %}"></button>
+            </div>
+            <div class="modal-body">
+                <div class="sv-empty py-4">
+                    <span class="spinner-border text-success" role="status" aria-hidden="true"></span>
+                    <span class="sv-empty-title mt-3">{% trans "Cargando información…" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cart = document.getElementById('cart');
+
+    if (cart) {
+        cart.className = 'form-inline my-2 my-lg-0 position-relative';
+    }
+
+    const qualityModal = document.getElementById('qualityModal');
+    const qualityDocument = document.getElementById('document');
+    const initialModalContent = qualityDocument.innerHTML;
+
+    qualityModal.addEventListener('hidden.bs.modal', function() {
+        qualityDocument.innerHTML = initialModalContent;
+    });
+});
 </script>
-    {% endblock %}
-</body>
-</html>
+{% endblock %}

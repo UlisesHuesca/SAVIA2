@@ -1,749 +1,761 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
-{% load djmoney %}
 {% load widget_tweaks %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Pago OC{% endblock %}
-</head>
-<body>
+
+{% block title %}Pago de orden de compra{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="col-lg-6 offset-lg-3 col-sm-12" >
-    <div class="card">
-        <div class="card-header">
-            <h5 class="modal-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Compra: {{compra.folio}} | Pago: {{pago.id}}</h5>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-money-check-dollar"></i>
+                </span>
+                Registrar pago
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta la información de la orden, revisa los pagos anteriores y registra un nuevo movimiento.
+            </p>
         </div>
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+            <span id="compra"
+                  class="sv-badge sv-badge-primary"
+                  data-compra-id="{{ compra.id|unlocalize }}"
+                  data-compra-pagos="{{ compra_pagos }}">
+                <i class="fa-solid fa-cart-shopping"></i>
+                OC {{ compra.folio }}
+            </span>
+            {% if pago.id %}
+            <span class="sv-badge sv-badge-dark">
+                <i class="fa-solid fa-receipt"></i>
+                Pago {{ pago.id }}
+            </span>
+            {% endif %}
+        </div>
+    </header>
 
-        <div class="card-body">
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                        <th scope="col">{% if usuario.distritos.nombre == "BRASIL" %}Fornecedor:{% else %}Proveedor:{% endif %}</th>
-                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="col">{% if usuario.distritos.nombre == "BRASIL" %} CNPJ/CPF:{% else %} RFC:{% endif %}</th>
-                            <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
-                        </tr>
-                        {% if usuario.distritos.nombre == "BRASIL" %}
+    <div class="row g-3">
+        <div class="col-12 col-xl-4 order-1">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-building-columns"></i>
+                        {% if usuario.distritos.nombre == "BRASIL" %}Dados do fornecedor{% else %}Datos del proveedor{% endif %}
+                    </h2>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table table-sm">
+                        <tbody>
                             <tr>
-                                <th scope="col">Banco:</th>
-                                <th scope="col">{{compra.proveedor.banco}}</th>
+                                <th>{% if usuario.distritos.nombre == "BRASIL" %}Fornecedor{% else %}Proveedor{% endif %}</th>
+                                <td><span class="sv-cell-title">{{ compra.proveedor.nombre.razon_social }}</span></td>
                             </tr>
                             <tr>
-                                <th scope="col">Cód. Banco</th>
-                                <th scope="col">{% if compra.proveedor.convenio %}{{compra.proveedor.convenio}}{% else %} NR {% endif %}</th>
+                                <th>{% if usuario.distritos.nombre == "BRASIL" %}CNPJ/CPF{% else %}RFC{% endif %}</th>
+                                <td>{{ compra.proveedor.nombre.rfc }}</td>
                             </tr>
                             <tr>
-                                <th scope="col">Agencia:</th>
-                                <th scope="col">{{compra.proveedor.swift}}</th>
+                                <th>Banco</th>
+                                <td>{{ compra.proveedor.banco }}</td>
+                            </tr>
+
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            <tr>
+                                <th>Cód. Banco</th>
+                                <td>{% if compra.proveedor.convenio %}{{ compra.proveedor.convenio }}{% else %}NR{% endif %}</td>
                             </tr>
                             <tr>
-                                <th scope="col">Conta:</th>
-                                <th scope="col">{{compra.proveedor.cuenta}}</th>
+                                <th>Agencia</th>
+                                <td>{{ compra.proveedor.swift }}</td>
                             </tr>
                             <tr>
-                                <th scope="col">Chave Pix:</th>
-                                <th scope="col">{{compra.proveedor.spid}}</th>
+                                <th>Conta</th>
+                                <td>{{ compra.proveedor.cuenta }}</td>
                             </tr>
                             <tr>
-                                <th scope="col">Moeda</th>
-                                <th scope="col">{{compra.moneda.nombre}}</th>
+                                <th>Chave Pix</th>
+                                <td>{{ compra.proveedor.spid }}</td>
                             </tr>
-                        {% else %}
+                            {% else %}
                             <tr>
-                                <th scope="col">Banco:</th>
-                                <th scope="col">{{compra.proveedor.banco}}</th>
-                            </tr>
-                            <tr>
-                                <th scope="col">Cuenta:</th>
-                                <th scope="col">{{compra.proveedor.cuenta}}</th>
+                                <th>Cuenta</th>
+                                <td>{{ compra.proveedor.cuenta }}</td>
                             </tr>
                             <tr>
-                                <th scope="col">Clabe:</th>
-                                <th scope="col">{{compra.proveedor.clabe}}</th>
+                                <th>CLABE</th>
+                                <td>{{ compra.proveedor.clabe }}</td>
                             </tr>
-                            {% if compra.monto_anticipo %}
-                                <tr>
-                                    <th scope="col">Anticipo en OC</th>
-                                    <th scope="col">{{compra.monto_anticipo}}</th>
-                                </tr>
-                            {% endif %}
-                       
                             {% if compra.referencia %}
-                                <tr>
-                                    <th scope="col">Referencia</th>
-                                    <th scope="col">{{compra.referencia}}</th>
-                                </tr>
-                            {% else %}
-                                <tr> </tr>
+                            <tr>
+                                <th>Referencia</th>
+                                <td>{{ compra.referencia }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if compra.monto_anticipo %}
+                            <tr>
+                                <th>Anticipo en OC</th>
+                                <td><strong>$ {{ compra.monto_anticipo|floatformat:4 }}</strong></td>
+                            </tr>
+                            {% endif %}
+                            {% endif %}
+
+                            <tr>
+                                <th>Moneda</th>
+                                <td><span class="sv-badge sv-badge-dark">{{ compra.moneda.nombre }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-5 order-3">
+            <section class="sv-card">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-calculator"></i>
+                        Resumen financiero
+                    </h2>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table table-sm">
+                        <tbody>
+                            <tr>
+                                <th>{% if usuario.distritos.nombre == "BRASIL" %}Valor total{% else %}Importe de compra{% endif %}</th>
+                                <td id="importe"
+                                    data-value="{{ compra.costo_plus_adicionales|unlocalize }}"
+                                    data-moneda="{{ compra.moneda.nombre }}">
+                                    <strong>$ {{ compra.costo_oc|floatformat:4 }}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Impuestos</th>
+                                <td>$ {{ compra.costo_iva|floatformat:4 }}</td>
+                            </tr>
+                            {% if compra.impuestos %}
+                            <tr>
+                                <th>Impuestos adicionales</th>
+                                <td>$ {{ compra.impuestos|floatformat:4 }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if compra.retencion %}
+                            <tr>
+                                <th>Retención</th>
+                                <td>− $ {{ compra.retencion|floatformat:4 }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if compra.costo_fletes > 0 %}
+                            <tr>
+                                <th>Flete</th>
+                                <td>$ {{ compra.costo_fletes|floatformat:4 }}</td>
+                            </tr>
                             {% endif %}
                             <tr>
-                                <th scope="col">Moneda</th>
-                                <th scope="col">{{compra.moneda.nombre}}</th>
+                                <th>Pagado</th>
+                                <td id="total"
+                                    data-value="{{ suma_pagos|unlocalize }}"
+                                    data-monto="{{ monto|unlocalize }}">
+                                    <span class="sv-cell-title">$ {{ monto|floatformat:4 }}</span>
+                                </td>
                             </tr>
-                           
-                        {% endif %}
-                       
-                    </tbody>
-                </table>
-              
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                        <th scope="col">{% if usuario.distritos.nombre == "BRASIL" %}Valor Total{% else %}Importe Compra{% endif %}</th>
-                        <th id="importe" value={{compra.costo_plus_adicionales}} moneda={{compra.moneda.nombre}} scope="col"> ${{compra.costo_oc|floatformat:4}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="col">Impuestos</th>
-                            <th scope="col"> ${{compra.costo_iva|floatformat:4}}</th>
-                        </tr>
-                        {% if compra.impuestos %}
-                        <tr>
-                            <th scope="col">Impuestos Adicionales</th>
-                            <th scope="col"> ${{compra.impuestos|floatformat:4}}</th>
-                        </tr>
-                        {% endif %}
-                        {% if compra.retencion %}
-                        <tr>
-                            <th scope="col">Retención</th>
-                            <th scope="col">-${{compra.retencion|floatformat:4}}</th>
-                        </tr>
-                        {% endif %}
-                        {% if compra.costo_fletes > 0 %}
-                        <tr>
-                            <th scope="col">Flete</th>
-                            <th scope="col">${{compra.costo_fletes}}</th>
-                        </tr>
-                        {% endif %}
-                        <tr>
-                            <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:4}}</th>
-                        </tr>
-                        {% if suma_pago_usd > 0 %}
-                        <tr>
-                            <th scope="col">Pagado USD:</th>
-                            <th id="total" value={{suma_pago_usd}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{suma_pago_usd|floatformat:4}}</th>
-                        </tr>
-                        {% endif %}
-                        <tr>
-                            <th>Remanente:</th>
-                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:4}}</th>
-                        </tr>
-                        <tr>
-                            <th>Parcialidad:</th>
-                            <th  id="parialidad" parcialidad="{{compra.parcial|unlocalize}}" style="color:#3e92cc">${{compra.parcial|floatformat:4}}</th>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class ="table-responsive">
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-2">Pagado</th>
-                            <th scope="col-2">Moneda</th>
-                            <th scope="col-2">T.C.</th>
-                            <th scope="col-3">Cuenta</th>
-                            <th scope="col-3">Fecha</th>
-                            <th scope="col-2">Pago</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for p in pagos_alt %}
-                        <form method="post" action="{% url 'edit-pago' p.id %}">
-                        {% csrf_token %}
-                        <tr>
-                            <th scope="row">{{p.id}}</th>
-                            <td>{{p.monto|floatformat:2}}</td>
-                            <td>{{p.cuenta.moneda}}</td>
-                            {% if p.tipo_de_cambio %}
-                            <td>{{p.tipo_de_cambio}}</td>
-                            {% else %}
-                            <td></td>
+                            {% if suma_pago_usd > 0 %}
+                            <tr>
+                                <th>Pagado USD</th>
+                                <td id="total_usd" data-value="{{ suma_pago_usd|unlocalize }}">
+                                    <span class="sv-cell-title">$ {{ suma_pago_usd|floatformat:4 }}</span>
+                                </td>
+                            </tr>
                             {% endif %}
-                            <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
-                            <td>{{p.pagado_date}}</td>
-                            <td>
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button> 
-                                <div class="modal fade" id="pdfModal{{ p.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ p.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel{{ p.id|unlocalize }}">Comprobante de Pago</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ p.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--<a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                </a>-->
-                            </td>
-                            <td>
-                                <button name="btn_eliminar" type="submit" class="btn btn-danger">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </a>
-                            </td>
-                            <td>
-                                <button class="btn btn-outline-info" type="submit" name="btn_actualizar"  id="btnActualizar">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        </form>
-                   {% endfor %}
-                   </tbody>
-                </table>
+                            <tr>
+                                <th>Remanente</th>
+                                <td id="remanente" data-remanente="{{ remanente|unlocalize }}">
+                                    <strong>$ {{ remanente|floatformat:4 }}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Parcialidad</th>
+                                <td id="parcialidad" data-parcialidad="{{ compra.parcial|unlocalize }}">
+                                    <strong>$ {{ compra.parcial|floatformat:4 }}</strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-        
-      
-        <form id="myForm" method="post" enctype="multipart/form-data">
-            <div class="col">
-                {% csrf_token %}
-                <!--<div class="row">
-                    <div class="card-footer text-end">
-                        <button onclick="pagarTodo()"  class="btn btn-outline-info">Pagar todo</button>
-                    </div>
-                </div>-->
-                <div class="row">
-                        <div class="col-lg-12 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.cuenta}}
-                                    </div>
-                            </div>
-                        </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field form.pagado_real type="date" class="form-control" %}
-                                <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field form.pagado_hora type="time" class="form-control" %}
-                                <label style="color: #121212;" for="id_pagado_hora">Hora Pago:</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </section>
+        </div>
 
-                <div class="row my-2">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
-                            <input type="text" class="form-control d-none" id="monto_dolares" placeholder="Dolares...">      
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
-                                        <label style="color: #121212;" for="id_area">Monto*</label>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-               
-                <div class="row my-2">
-                    <div class="col-lg-6 col-md-12 d-none" id="text_tc">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1">TC</span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.tipo_de_cambio|add_class:'form-control'|append_attr:"placeholder= Tipo de Cambio"}}
-                                <label style="color: #121212;" for="id_area">TC</label>
-                            </div>           
-                        </div>
-                    </div>
-                    <div id="lbl_tipo_cambio" tc="{{compra.tipo_de_cambio}}" class="col-lg-3 col-md-6">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>TC: {{compra.tipo_de_cambio}}</h6>   
-                        </div>
-                    </div>
-                </div>
-                <div class="row my-2">
-                    <div id="lbl_calculo" class="col-lg-3 col-md-6">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Cálculo previo: </h6>   
-                        </div>
-                    </div>
-                </div>
+        <div class="col-12 col-xl-7 order-4">
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Historial de pagos
+            </h2>
+            <span class="sv-badge sv-badge-primary">{{ pagos_alt|length }} registros</span>
+        </div>
 
-                <div class="row my-2">
-                        <div class="col-12">
-                            {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
-                        </div>
-                </div>
-                <input type="hidden" id="remanente_value" value="{{ remanente|unlocalize }}">    
-                
+        <div class="sv-table-wrap">
+            <table class="sv-table table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Pagado</th>
+                        <th>Moneda</th>
+                        <th>T.C.</th>
+                        <th>Cuenta</th>
+                        <th>Fecha</th>
+                        <th>Comprobante</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pagos_alt %}
+                    <tr>
+                        <td><span class="sv-folio">{{ p.id }}</span></td>
+                        <td><strong>$ {{ p.monto|floatformat:2 }}</strong></td>
+                        <td><span class="sv-badge sv-badge-dark">{{ p.cuenta.moneda }}</span></td>
+                        <td>{{ p.tipo_de_cambio|default_if_none:"—" }}</td>
+                        <td>
+                            <span class="sv-cell-title">{{ p.cuenta.banco }}</span>
+                            <span class="sv-cell-subtitle">{{ p.cuenta.cuenta }}</span>
+                        </td>
+                        <td>{{ p.pagado_date }}</td>
+                        <td>
+                            {% if p.comprobante_pago %}
+                            <button type="button"
+                                    class="sv-btn sv-btn-info sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#paymentPdfModal"
+                                    data-pdf-url="{{ p.comprobante_pago.url }}"
+                                    title="Ver comprobante de pago"
+                                    aria-label="Ver comprobante de pago">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Sin archivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{% url 'edit-pago' p.id %}">
+                                {% csrf_token %}
+                                <div class="sv-actions">
+                                    <button name="btn_actualizar" type="submit"
+                                            class="sv-btn sv-btn-info sv-btn-icon"
+                                            title="Actualizar pago" aria-label="Actualizar pago">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button name="btn_eliminar" type="submit"
+                                            class="sv-btn sv-btn-danger sv-btn-icon"
+                                            title="Eliminar pago" aria-label="Eliminar pago">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-receipt"></i></span>
+                            <span class="sv-empty-title">Esta orden todavía no tiene pagos</span>
+                            <span class="sv-empty-text">El primer movimiento aparecerá aquí después de registrarlo.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+        </div>
+
+        <div class="col-12 col-xl-8 order-2">
+    <section class="sv-card h-100">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    Nuevo pago
+                </h2>
+                <span class="sv-cell-subtitle">Orden de compra {{ compra.folio }}</span>
             </div>
-            <div class="card-footer text-end">
-                
-                <h6>Registrar pago: {{compra.folio}}</h6>
-                {% if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" or usuario.tipo.superintendente %}
-                   
-                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
-                        Cerrar OC
-                    </button>
-                    
+            <div class="d-flex flex-wrap justify-content-end gap-2">
+                <span class="sv-badge sv-badge-dark">
+                    {{ compra.moneda.nombre }}
+                </span>
+                <span class="sv-badge sv-badge-primary">
+                    Remanente: $ {{ remanente|floatformat:2 }}
+                </span>
+                {% if compra.parcial > 0 %}
+                <span class="sv-badge sv-badge-warning">
+                    Parcialidad: $ {{ compra.parcial|floatformat:2 }}
+                </span>
                 {% endif %}
-                {% if compra.no_conformidad.all|length == 0 %}
-                <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
-                {% endif %} 
-                <a type="button" class="btn btn-secondary" href="{% url 'compras-autorizadas' %}">Cerrar</a>
+            </div>
+        </div>
+
+        <form id="myForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="sv-card-body p-3">
+                <div class="row g-3">
+                    <div class="col-12 col-xl-6">
+                        <label class="visually-hidden" for="id_cuenta">Cuenta de pago</label>
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building-columns"></i></span>
+                            <div class="flex-grow-1">{{ form.cuenta }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
+                                {% render_field form.pagado_real type="date" class="form-control" %}
+                                <label for="{{ form.pagado_real.id_for_label }}">Fecha de pago</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-clock"></i></span>
+                            <div class="form-floating">
+                                {% render_field form.pagado_hora type="time" class="form-control" %}
+                                <label for="{{ form.pagado_hora.id_for_label }}">Hora de pago</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating">
+                                {{ form.monto|add_class:"form-control"|append_attr:"placeholder=Monto" }}
+                                <label for="{{ form.monto.id_for_label }}">Monto</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 d-none" id="text_tc">
+                        <div class="sv-input-group">
+                            <span class="input-group-text">TC</span>
+                            <div class="form-floating">
+                                {{ form.tipo_de_cambio|add_class:"form-control"|append_attr:"placeholder=Tipo de cambio" }}
+                                <label for="{{ form.tipo_de_cambio.id_for_label }}">Tipo de cambio</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6 d-flex flex-wrap align-items-center gap-2">
+                        <span id="lbl_tipo_cambio"
+                              data-tc="{{ compra.tipo_de_cambio|unlocalize }}"
+                              class="sv-badge sv-badge-dark">
+                            TC de la OC: {{ compra.tipo_de_cambio|default_if_none:"No disponible" }}
+                        </span>
+                        <span id="lbl_calculo" class="sv-badge sv-badge-primary d-none">
+                            Cálculo previo: <strong id="calculo_previo_valor"></strong>
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="id_comprobante_pago">Comprobante de pago</label>
+                        {{ form.comprobante_pago|add_class:"form-control" }}
+                    </div>
+                </div>
+
+                <input type="hidden" id="remanente_value" value="{{ remanente|unlocalize }}">
             </div>
 
+            <div class="sv-card-body border-top p-3">
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                    <a class="sv-btn sv-btn-outline"
+                       href="{% url 'compras-autorizadas' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+                        <i class="fa-solid fa-arrow-left"></i>Regresar
+                    </a>
+
+                    {% if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" or usuario.tipo.superintendente %}
+                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit"
+                            class="sv-btn sv-btn-warning">
+                        <i class="fa-solid fa-lock"></i>Cerrar OC
+                    </button>
+                    {% endif %}
+
+                    {% if compra.no_conformidad.all|length == 0 %}
+                    <button id="myBtn" name="envio" type="submit"
+                            class="sv-btn sv-btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i>Registrar pago
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
         </form>
+    </section>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="paymentPdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">
+                        <i class="fa-solid fa-file-invoice-dollar me-2"></i>
+                        Comprobante de pago
+                    </h2>
+                    <span class="sv-modal-subtitle">Vista previa del documento</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="paymentPdfFrame" src="" title="Comprobante de pago"
+                        width="100%" height="700" class="border-0"></iframe>
+            </div>
         </div>
     </div>
 </div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
+     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "NEGRO" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Negro"
+                     width="72" height="72"
+                     class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="Vordcab"
+                     width="96"
+                     class="img-fluid rounded">
+                {% endif %}
+                    <strong>Registrando pago</strong>
+                    <p class="sv-cell-subtitle mb-0">
+                        Por favor espera… <i class="fa-solid fa-mug-hot"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-{% if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" or usuario.tipo.superintendente %}
-document.getElementById("btnCerrar").addEventListener("click", function (e) {
-    Swal.fire({
-    title: '¿Cerrar OC sin pago completo?',
-    html: `
-        <p>Recuerda que esta acción marcará la OC como cerrado sin pago completo.</p>
-        <textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..." required></textarea>
-    `,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Sí, cerrar OC',
-    cancelButtonText: 'Cancelar',
-    preConfirm: () => {
-        const comentario = document.getElementById('comentarioCierre').value.trim();
-        if (!comentario) {
-            Swal.showValidationMessage('Por favor escribe un comentario de cierre.');
-            return false;
-        }
-        return comentario;
-    }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const comentario = result.value;
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-            const form = document.getElementById('myForm');
-
-            // Input oculto para marcar el cierre sin pago
-            const inputCerrar = document.createElement('input');
-            inputCerrar.type = 'hidden';
-            inputCerrar.name = 'cerrar_sin_pago';
-            inputCerrar.value = 'true';
-
-            // Input oculto para el comentario
-            const inputComentario = document.createElement('input');
-            inputComentario.type = 'hidden';
-            inputComentario.name = 'comentario_cierre';
-            inputComentario.value = comentario;
-
-            form.appendChild(inputCerrar);
-            form.appendChild(inputComentario);
-
-            form.submit();
-        }
-    });
-});
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
 {% endif %}
 
+<script>
+const paymentForm = document.getElementById("myForm");
+const importeElement = document.getElementById("importe");
+const compraMoneda = importeElement ? importeElement.dataset.moneda : "";
+const montoInput = document.getElementById("id_monto");
+const tipoCambioInput = document.getElementById("id_tipo_de_cambio");
+const tipoCambioContainer = document.getElementById("text_tc");
+const calculoContainer = document.getElementById("lbl_calculo");
+const calculoValor = document.getElementById("calculo_previo_valor");
+const registerButton = document.getElementById("myBtn");
+
 function mostrarIndicadorCarga() {
-    // Mostrar el indicador de carga
-    document.getElementById('loadingIndicator').style.display = 'block';
+    const indicator = document.getElementById("loadingIndicator");
 
-    // Desactivar el botón de envío para evitar doble clic
-    var btn = document.getElementById('submit-button');
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.add('d-none');
+    if (indicator) {
+        bootstrap.Modal.getOrCreateInstance(indicator).show();
     }
 
-    // Retorna true para permitir el envío del formulario
-    return true;
 }
 
-function pagarTodo() {
-    // Opción A: Obtener el valor de 'remanente' desde el elemento oculto
-    var remanente = document.getElementById('remanente_value');
-    var valor_remanente = remanente.getAttribute('remanente')
-    console.log(valor_remanente)
-    valor= Number(valor_remanente).toFixed(4)
-    // Actualizar el campo 'monto' del formulario con el valor de 'remanente'
-    document.getElementById('id_monto').value = valor // Asegúrate de que el selector apunte correctamente al campo 'monto'
+function monedaCuentaSeleccionada() {
+    const seleccion = $("#id_cuenta").select2("data")[0];
+    return seleccion ? seleccion.moneda : "";
 }
 
-
-var compra = document.getElementById("importe");
-var compra_moneda = compra.getAttribute("moneda");
-var monto_moneda = document.getElementById("id_monto");
-//var tipo_cambio = document.getElementById("id_tipo_de_cambio");
-//var lbl_tipo = document.getElementById("lbl_tipo");
-//if (tipo_cambio) {
-//    tipo_cambio.setAttribute("class","form-control d-none");
-
-//}
-//document.getElementById('myForm').addEventListener('submit', function() {
-    // Espera 150 milisegundos antes de deshabilitar el botón de envío
-//    setTimeout(function() {
-//        document.getElementById('myBtn').disabled = true;
-//    }, 50);
-//});
-const form = document.getElementById('myForm');
-if (form) {
-  form.addEventListener('submit', function(event) {
-
-    // ===== remanente seguro =====
-    let remanente = 0;
-
-    const remInp = document.getElementById('remanente_value');
-    if (remInp) {
-      remanente = Number(remInp.value || "0");
-    } else {
-      const remTh = document.getElementById('remanente');
-      if (!remTh) {
-        console.error("No existe #remanente_value ni #remanente en el DOM.");
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo validar el remanente. Recarga la página o contacta a sistemas.'
-        });
-        event.preventDefault();
+function actualizarCalculoPrevio() {
+    if (!montoInput) {
         return;
-      }
-      remanente = Number(remTh.getAttribute('remanente') || "0");
     }
 
-    // ===== parcialidad segura =====
-    let parcialidad = 0;
-    const parcInp = document.getElementById('parcialidad_value');
-    if (parcInp) {
-      parcialidad = Number(parcInp.value || "0");
-    } else {
-      const parcEl = document.getElementById('parcialidad');
-      if (parcEl) parcialidad = Number(parcEl.getAttribute('parcialidad') || "0");
+    const monto = Number(montoInput.value || 0);
+    const tcOc = Number(document.getElementById("lbl_tipo_cambio")?.dataset.tc || 0);
+    const tcCapturado = Number(tipoCambioInput?.value || 0);
+    const monedaCuenta = monedaCuentaSeleccionada();
+    const requiereTc = compraMoneda === "DOLARES" && monedaCuenta === "PESOS";
+    const tipoCambio = tcCapturado || tcOc;
+
+    if (tipoCambioContainer) {
+        tipoCambioContainer.classList.toggle("d-none", !requiereTc);
     }
 
-    // ===== moneda cuenta desde select2 =====
-    const cuenta_select = $('#id_cuenta').select2('data')[0];
-    const moneda_cuenta = cuenta_select ? cuenta_select.moneda : "";
-
-    // ===== regla TC =====
-    const requiere_tc = (compra_moneda === "DOLARES" && moneda_cuenta === "PESOS");
-
-    const tc_raw = document.getElementById('id_tipo_de_cambio')?.value;
-    const tc = Number(tc_raw);
-
-    if (requiere_tc) {
-      if (tc_raw === "" || tc_raw == null || isNaN(tc) || tc <= 0) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error de validación',
-          text: 'Debes capturar un Tipo de Cambio válido (> 0).',
-          confirmButtonText: 'Entendido'
-        });
-        event.preventDefault();
+    if (compraMoneda === "PESOS") {
+        if (registerButton) {
+            registerButton.classList.toggle("d-none", monto <= 0);
+        }
+        if (calculoContainer) {
+            calculoContainer.classList.add("d-none");
+        }
         return;
-      }
     }
 
-    // ===== monto =====
-    let monto = Number(document.getElementById('id_monto')?.value || "0");
-    console.log("Monto inicial:", monto);
-    
-    if (requiere_tc) monto = monto / tc;
+    if (compraMoneda === "DOLARES") {
+        const calculoValido = monto > 0 && (!requiereTc || tipoCambio > 0);
 
-    // ===== comparación =====
-    const tolerancia = 0.2;
-    const valor_a_comparar = (parcialidad > 0 && parcialidad < remanente) ? parcialidad : remanente;
-    console.log("Valor a comparar", valor_a_comparar)
-    if ((monto + torelancia) < valor_a_comparar) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error de validación',
-        text: 'El monto debe ser menor o igual al remanente. Favor de modificar el monto'
-      });
-      event.preventDefault();
-      return;
-    }
-
-    mostrarIndicadorCarga();
-  });
-}
-/* *******************NO BORRAR EL CODIGO**********************
-este era para evitar el envío doble cuando era un modal
-htmx.defineExtension('disable-on-submit', {
-  onEvent: function(name, evt) {
-    if (name === 'htmx:configRequest') {
-      var target = evt.detail.elt;
-      if (target.tagName === 'FORM') {
-        var button = target.querySelector('input[type="submit"]');
-        if (button) {
-          button.disabled = true;
+        if (registerButton) {
+            registerButton.classList.toggle("d-none", !calculoValido);
         }
-      }
-    }
-  },
-});*/
-document.getElementById('id_monto').addEventListener('change',(event)=>{
-    var lblTipoCambio = document.getElementById("lbl_tipo_cambio");
-    var tc = lblTipoCambio.getAttribute('tc');
-    var tipo = document.getElementById("id_tipo_de_cambio").value || tc;
-    var monto = parseFloat(document.getElementById('id_monto').value) || 0;
-    console.log(monto)
-    calculo_previo = document.getElementById('lbl_calculo')
-    var alertDiv = document.querySelector('#lbl_calculo .alert');
-    console.log(alertDiv)
-    var mybtn = document.getElementById('myBtn')
 
-    if (compra_moneda == "PESOS"){
-        if (monto <= 0 || tipo_cambio <= 0){
-            mybtn.classList.add('d-none')
-        } else {
-            mybtn.classList.remove('d-none')
-        }
-    }
-    if (compra_moneda == "DOLARES"){
-    if (monto <= 0 || tipo <= 0){
-            mybtn.classList.add('d-none')
-            console.log("Creo que es acá donde todo falla")
-        } else {
-            total_dolares = monto/tipo
-            console.log(total_dolares)
-            calculo_previo.classList.remove('d-none')
-            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
-            //monto_real.value = parseFloat(total_dolares).toFixed(4)
-            mybtn.classList.remove('d-none')
-        }
-    }
-    });
-
-
-if (compra_moneda == "DOLARES"){
-document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>{
-    var lblTipoCambio = document.getElementById("lbl_tipo_cambio");
-    var tc = lblTipoCambio.getAttribute('tc');
-    var tipo = document.getElementById("id_tipo_de_cambio").value || tc;
-    var alertDiv = document.querySelector('#lbl_calculo .alert');
-    var monto = parseFloat(document.getElementById('id_monto').value) || 0;
-    console.log(tipo)
-    calculo_previo = document.getElementById('lbl_calculo')
-    var mybtn = document.getElementById('myBtn')
-    if (compra_moneda == "PESOS"){
-        if (monto <= 0 || tipo_cambio <= 0){
-            mybtn.classList.add('d-none')
-        } else {
-            mybtn.classList.remove('d-none')
-        }
-    }
-    if (compra_moneda == "DOLARES"){
-        if (monto <= 0 || tipo <= 0){
-            mybtn.classList.add('d-none')
+        if (calculoContainer && calculoValor) {
+            if (calculoValido) {
+                const montoUsd = requiereTc ? monto / tipoCambio : monto;
+                calculoValor.textContent = "$ " + montoUsd.toFixed(2) + " USD";
+                calculoContainer.classList.remove("d-none");
             } else {
-            total_dolares = monto / tipo
-            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
-            //monto_real.value = parseFloat(total_dolares).toFixed(4)
-            mybtn.classList.remove('d-none')
+                calculoValor.textContent = "";
+                calculoContainer.classList.add("d-none");
             }
         }
-
-})
+    }
 }
 
-document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
-  var file = event.target.files[0];
-  var formData = new FormData();
-  formData.append('comprobante_pago', file);
-  
-  // Añadir CSRF token a la solicitud AJAX
-  //formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+(function configurarModalComprobante() {
+    const modal = document.getElementById("paymentPdfModal");
+    const frame = document.getElementById("paymentPdfFrame");
 
-  fetch("{% url 'prellenar-formulario' %}", { // Asegúrate de que esta es la URL correcta para tu vista
-    method: 'POST',
-    body: formData,
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX    
-      'X-CSRFToken': '{{ csrf_token }}', // Añadir el token CSRF
-    },
-  })
-  .then(response => response.json()) // Asegúrate de que el backend devuelva un JSON
-  .then(data => {
-    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
-    document.querySelector('[name="monto"]').value = data.monto;
-    //document.querySelector('[name="cuenta"]').value = data.cuenta;
-    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
-    if (data.hora_operacion) {
-    // Solo deja HH:mm
-    console.log(data.hora_operacion)
-    const horaSinSegundos = data.hora_operacion.slice(0, 5);
-    document.querySelector('[name="pagado_hora"]').value=  horaSinSegundos;
+    if (!modal || !frame) {
+        return;
     }
-    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
-    var $selectElement = $('[name="cuenta"]');
-    var divisa = data.divisa_cuenta
-    console.log(divisa)
-    $selectElement.val(cuentaId).trigger('change');
-    if (divisa == "MXP" && compra_moneda == "DOLARES" ){
-    var tipo_cambio = document.getElementById('text_tc')
-    tipo_cambio.classList.remove('d-none');
-    }
-  })
-  .catch(error => console.error('Error:', error));
-});
 
-
-
-var datosCuenta = {{cuentas_para_select2|safe }};
-
-
-$(document).ready(function() {
-  
-    $('#id_cuenta').select2({
-        allowClear: true,
-        width: '100%',
-        placeholder: 'Selecciona una cuenta',
-        data: datosCuenta,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
+    modal.addEventListener("show.bs.modal", function (event) {
+        const button = event.relatedTarget;
+        const url = button ? button.getAttribute("data-pdf-url") : "";
+        frame.src = url ? url + "#zoom=80" : "";
     });
-    $('#id_cuenta').on('select2:select', function(e) {
-        var data = e.params.data;
-        var moneda = data.moneda;
-        var tipo_cambio = document.getElementById('text_tc')
-        console.log(moneda)
-        var monto = document.getElementById('id_monto');
-        var calculo_previo = document.getElementById('lbl_calculo');
-        if (compra_moneda == "DOLARES"){
-            if (moneda == "PESOS"){
-            //lbl_calculo.classList.remove('d-none'); 
-            //lbl_tipo_cambio.classList.remove('d-none');
-            tipo_cambio.classList.remove('d-none');
-            } else if (moneda =="DOLARES") {
-                monto.value = ""
-            tipo_cambio.value=""
-            calculo_previo.innerHTML = ""
-            //lbl_calculo.classList.add('d-none');
-            //lbl_tipo_cambio.classList.add('d-none');
-            tipo_cambio.classList.add('d-none');
-            //monto_dolares.classList.add('d-none')
-            monto.classList.remove('d-none');
+
+    modal.addEventListener("hidden.bs.modal", function () {
+        frame.src = "";
+    });
+})();
+
+{% if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" or usuario.tipo.superintendente %}
+const closeButton = document.getElementById("btnCerrar");
+
+if (closeButton) {
+    closeButton.addEventListener("click", function (event) {
+        event.preventDefault();
+
+        Swal.fire({
+            title: "¿Cerrar OC sin pago completo?",
+            html:
+                '<p>Esta acción marcará la OC como cerrada sin pago completo.</p>' +
+                '<textarea id="comentarioCierre" class="swal2-textarea" ' +
+                'placeholder="Escribe un comentario de cierre..." required></textarea>',
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Sí, cerrar OC",
+            cancelButtonText: "Cancelar",
+            preConfirm: function () {
+                const comentario = document.getElementById("comentarioCierre").value.trim();
+
+                if (!comentario) {
+                    Swal.showValidationMessage("Por favor escribe un comentario de cierre.");
+                    return false;
+                }
+
+                return comentario;
             }
+        }).then(function (result) {
+            if (!result.isConfirmed || !paymentForm) {
+                return;
+            }
+
+            const inputCerrar = document.createElement("input");
+            inputCerrar.type = "hidden";
+            inputCerrar.name = "cerrar_sin_pago";
+            inputCerrar.value = "true";
+
+            const inputComentario = document.createElement("input");
+            inputComentario.type = "hidden";
+            inputComentario.name = "comentario_cierre";
+            inputComentario.value = result.value;
+
+            paymentForm.appendChild(inputCerrar);
+            paymentForm.appendChild(inputComentario);
+            mostrarIndicadorCarga();
+            paymentForm.submit();
+        });
+    });
+}
+{% endif %}
+
+if (paymentForm) {
+    paymentForm.addEventListener("submit", function (event) {
+        const remanenteInput = document.getElementById("remanente_value");
+        const remanenteElement = document.getElementById("remanente");
+        const parcialidadElement = document.getElementById("parcialidad");
+
+        const remanente = Number(
+            remanenteInput?.value ||
+            remanenteElement?.dataset.remanente ||
+            0
+        );
+        const parcialidad = Number(parcialidadElement?.dataset.parcialidad || 0);
+        const monedaCuenta = monedaCuentaSeleccionada();
+        const requiereTc = compraMoneda === "DOLARES" && monedaCuenta === "PESOS";
+        const tcRaw = tipoCambioInput?.value;
+        const tc = Number(tcRaw);
+
+        if (requiereTc && (tcRaw === "" || tcRaw == null || Number.isNaN(tc) || tc <= 0)) {
+            Swal.fire({
+                icon: "error",
+                title: "Error de validación",
+                text: "Debes capturar un tipo de cambio válido mayor que cero.",
+                confirmButtonText: "Entendido"
+            });
+            event.preventDefault();
+            return;
         }
+
+        let monto = Number(montoInput?.value || 0);
+
+        if (requiereTc) {
+            monto = monto / tc;
+        }
+
+        const tolerancia = 0.2;
+        const valorAComparar =
+            parcialidad > 0 && parcialidad < remanente
+                ? parcialidad
+                : remanente;
+
+        if (monto > valorAComparar + tolerancia) {
+            Swal.fire({
+                icon: "error",
+                title: "Monto no válido",
+                text:
+                    parcialidad > 0 && parcialidad < remanente
+                        ? "El monto supera la parcialidad permitida."
+                        : "El monto supera el remanente permitido."
+            });
+            event.preventDefault();
+            return;
+        }
+
+        mostrarIndicadorCarga();
+    });
+}
+
+montoInput?.addEventListener("change", actualizarCalculoPrevio);
+tipoCambioInput?.addEventListener("change", actualizarCalculoPrevio);
+
+const comprobanteInput = document.getElementById("id_comprobante_pago");
+
+comprobanteInput?.addEventListener("change", function (event) {
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("comprobante_pago", file);
+
+    fetch("{% url 'prellenar-formulario' %}", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": "{{ csrf_token }}"
+        }
+    })
+    .then(function (response) {
+        if (!response.ok) {
+            throw new Error("No fue posible leer el comprobante.");
+        }
+        return response.json();
+    })
+    .then(function (data) {
+        const fechaInput = document.querySelector('[name="pagado_real"]');
+        const horaInput = document.querySelector('[name="pagado_hora"]');
+        const cuentaSelect = $('[name="cuenta"]');
+
+        if (montoInput) {
+            montoInput.value = data.monto || "";
+        }
+        if (fechaInput) {
+            fechaInput.value = data.pagado_real || "";
+        }
+        if (horaInput && data.hora_operacion) {
+            horaInput.value = data.hora_operacion.slice(0, 5);
+        }
+
+        cuentaSelect.val(data.cuenta).trigger("change");
+
+        if (data.divisa_cuenta === "MXP" && compraMoneda === "DOLARES" && tipoCambioContainer) {
+            tipoCambioContainer.classList.remove("d-none");
+        }
+
+        actualizarCalculoPrevio();
+    })
+    .catch(function (error) {
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message
+        });
     });
 });
 
-function formatRepo (repo) {
+const datosCuenta = {{ cuentas_para_select2|safe }};
+
+$(document).ready(function () {
+    $("#id_cuenta").select2({
+        allowClear: true,
+        width: "100%",
+        placeholder: "Selecciona una cuenta",
+        data: datosCuenta,
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    $("#id_cuenta").on("select2:select select2:clear", function () {
+        actualizarCalculoPrevio();
+    });
+});
+
+function formatRepo(repo) {
     if (repo.loading) {
         return repo.text;
     }
 
-    var $container = $("<div class='select2-result-repository clearfix'>" +
+    const container = $(
+        "<div class='select2-result-repository clearfix'>" +
         "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
+        "</div>"
+    );
 
-    $container.find(".select2-result-repository__title").text(repo.text);
-    
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
+    container.find(".select2-result-repository__title").text(repo.text);
+    return container;
 }
-function formatRepoSelection (repo) {
+
+function formatRepoSelection(repo) {
     return repo.text || repo.id;
 }
-//This is the function that remove any product from render product table and remove the specific element from the array
-/*function deleteRow(element) {
-     producto="{{p.id|unlocalize}}"
-    let btn_delete = document.getElementById('delete');
-    let monto = btn_delete.getAttribute('monto');
-    let tipo_de_cambio = btn_delete.getAttribute('tc');
-    let moneda = btn_delete.getAttribute('moneda');
-    let id = btn_delete.getAttribute('producto');
-    
-   
-    //console.log(id)
-    //console.log(precio)
-    var action = "remove";
-    ActualizarArticulos(id, monto, moneda, tipo_de_cambio);
-
-}
-
-function ActualizarArticulos(id, monto, moneda, tipo_de_cambio){
-    console.log('User is logged in, sending data...' )
-
-    var url = '/compras/update_oc/'
-
-    fetch( url, {
-        method:'POST',
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRFToken': csrftoken,
-        },
-        body:JSON.stringify({'id':id, 'monto':monto, 'moneda':moneda, 'tipo_de_cambio':tipo_de_cambio})
-    })
-    .then((response)=>{
-        return response.json()
-    })
-    .then((data)=>{
-        console.log('data:', data)
-        location.reload()
-    })
-}
-*/
-
 </script>
 {% endblock %}
-</body>
-</html>

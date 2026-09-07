@@ -1,0 +1,88 @@
+{% extends "emails/base_email.html" %}
+
+{% block titulo_documento %}Orden de compra generada{% endblock %}
+
+{% block titulo_correo %}Orden de compra generada{% endblock %}
+
+{% block subtitulo_correo %}OC {{ oc.folio }}{% endblock %}
+
+{% block contenido %}
+    <p style="margin: 0 0 18px; color: #344054; font-size: 17px; line-height: 1.6;">
+        Estimado(a) <strong style="color: {{ color_acento }};">{{ nombre_solicitante }}</strong>:
+    </p>
+
+    <p style="margin: 0 0 22px; color: #475467; font-size: 15px; line-height: 1.7;">
+        Tu requisición se ha convertido correctamente en una orden de compra.
+    </p>
+
+    <!-- Información general -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; background-color: #F9FAFB; border: 1px solid #EAECF0; border-radius: 10px;">
+        <tr>
+            <td style="padding: 21px 23px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Solicitud</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ oc.req.orden.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Requisición</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ oc.req.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Orden de compra</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ oc.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="color: #667085; font-size: 13px;">Creada por</td>
+                        <td style="color: #101828; font-size: 14px; font-weight: 700;">{{ nombre_creador }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Artículos -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 22px; overflow: hidden; background-color: #FFFFFF; border: 1px solid #EAECF0; border-radius: 10px;">
+        <tr>
+            <td>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th align="left" style="padding: 12px 14px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Artículo</th>
+                            <th align="center" width="85" style="padding: 12px 14px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Cantidad</th>
+                            <th align="left" style="padding: 12px 14px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Observación</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for articulo in articulos %}
+                            <tr>
+                                <td style="padding: 12px 14px; border-bottom: 1px solid #EAECF0; color: #344054; font-size: 13px; line-height: 1.5;">{{ articulo.producto.producto.articulos.producto.producto.nombre|default:"Sin nombre" }}</td>
+
+                                <td align="center" style="padding: 12px 14px; border-bottom: 1px solid #EAECF0; color: #101828; font-size: 13px; font-weight: 700; white-space: nowrap;">{{ articulo.cantidad }}</td>
+
+                                <td style="padding: 12px 14px; border-bottom: 1px solid #EAECF0; color: #667085; font-size: 13px; line-height: 1.5;">{{ articulo.producto.producto.articulos.comentario|default:"Sin observaciones" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" align="center" style="padding: 22px; color: #667085; font-size: 13px;">No hay artículos registrados.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Siguiente paso -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 22px; background-color: {{ color_fondo_acento }}; border-left: 4px solid {{ color_acento }}; border-radius: 7px;">
+        <tr>
+            <td style="padding: 15px 17px; color: #344054; font-size: 14px; line-height: 1.6;">
+                <strong>Siguiente paso:</strong> autorización de la orden de compra por Superintendencia Administrativa.
+            </td>
+        </tr>
+    </table>
+{% endblock %}

@@ -1,170 +1,415 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
-{% load static %}
+
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Solicitudes| Vista: Productos{% endblock %}
-</head>
-<body>
+
+{% block title %}Solicitudes | Productos{% endblock %}
+
 {% block content %}
 
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class="row my-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtro de productos</h5>
-            </div>
-            <div class="card-body">
-            <form method="GET" class="row g-7">
+<main class="sv-page sv-page-with-navbar">
+
+    <!-- Encabezado -->
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+
+                Productos solicitados
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta los productos incluidos en las solicitudes y filtra
+                por responsable, proyecto, folio o fecha.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a
+                class="sv-btn sv-btn-secondary"
+                href="{% url 'solicitud-matriz' %}"
+            >
+                <i class="fa-solid fa-angle-left"></i>
+                Volver a matriz
+            </a>
+
+            <form method="POST">
                 {% csrf_token %}
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
-                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                            <label style="color: #121212;" for="id_proyecto">Folio</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                            <label style="color: #121212;" for="id_producto">Producto</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                </div>
+
+                <button
+                    type="submit"
+                    name="btnExcel"
+                    class="sv-btn sv-btn-success"
+                    title="Exportar productos a Excel"
+                >
+                    <i class="fa-solid fa-file-excel"></i>
+                    Exportar Excel
+                </button>
             </form>
-            <hr>
-            <div class='col md-12'>
-                <div class = "row mt-2 bg-white">
-                    <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item ml-2 mx-2">
-                            <a class="btn btn-outline-info" href="{% url 'solicitud-matriz' %}"><i class="fa-solid fa-angle-left"></i> Volver a Matriz Solicitud</a>
-                        </li>
-                        <li class="nav-item mx-2">
-                            <button type="submit" name="btnExcel" class="btn btn-outline-success"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                        </li>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                        </li>-->
-                    </ul>
-                    </form>
-                </div>
-            </div>
 
         </div>
-</div>
+    </header>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio</th>
-                    <th scope="col">Solicitado por</th>
-                    <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Operación</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Aprobada</th>
-                    
-                </tr>
-            </thead>
-            <tbody>
-                {% for producto in productos %}
-                <tr>
-                    <th scope="row">{{producto.orden.folio}}</th>
-                    <td>{{producto.orden.staff.staff.staff.first_name}} {{producto.orden.staff.staff.staff.last_name}}</td>
-                    <td>{{producto.orden.proyecto.nombre}}</td>
-                    <td>{{producto.orden.subproyecto.nombre}}</td>
-                    <td>{{producto.orden.operacion}}</td>
-                    <td>{{producto.cantidad}}</td>
-                    <td>{{producto.producto}}</td>
-                    <td>{{producto.orden.created_at}}</td>
-                    
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if productos.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+    <!-- Filtros -->
+    <section class="sv-card mb-4">
+
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter me-2"></i>
+                    Filtro de productos
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Combina uno o varios criterios para localizar solicitudes.
+                </p>
+            </div>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+
+                <div class="row g-3">
+
+                    <!-- Solicitado por -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label
+                            class="sv-cell-title mb-2"
+                            for="{{ myfilter.form.staff.id_for_label }}"
+                        >
+                            Solicitado por
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+
+                            {{ myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder=Solicitado por" }}
+                        </div>
+                    </div>
+
+                    <!-- Proyecto -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label
+                            class="sv-cell-title mb-2"
+                            for="{{ myfilter.form.proyecto.id_for_label }}"
+                        >
+                            Proyecto
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-diagram-project"></i>
+                            </span>
+
+                            {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                        </div>
+                    </div>
+
+                    <!-- Folio -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label
+                            class="sv-cell-title mb-2"
+                            for="{{ myfilter.form.folio.id_for_label }}"
+                        >
+                            Folio
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-hashtag"></i>
+                            </span>
+
+                            {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                        </div>
+                    </div>
+
+                    <!-- Producto -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label
+                            class="sv-cell-title mb-2"
+                            for="{{ myfilter.form.producto.id_for_label }}"
+                        >
+                            Producto
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-box"></i>
+                            </span>
+
+                            {{ myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                        </div>
+                    </div>
+
+                    <!-- Fecha inicial -->
+                    <div class="col-12 col-md-4">
+                        <label
+                            class="sv-cell-title mb-2"
+                            for="{{ myfilter.form.start_date.id_for_label }}"
+                        >
+                            Desde
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar"></i>
+                            </span>
+
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- Fecha final -->
+                    <div class="col-12 col-md-4">
+                        <label
+                            class="sv-cell-title mb-2"
+                            for="{{ myfilter.form.end_date.id_for_label }}"
+                        >
+                            Hasta
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar"></i>
+                            </span>
+
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="col-12 col-md-4">
+                        <span class="sv-cell-title mb-2">
+                            Acciones
+                        </span>
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                class="sv-btn sv-btn-primary flex-grow-1"
+                                type="submit"
+                            >
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Buscar
+                            </button>
+
+                            <a
+                                class="sv-btn sv-btn-secondary sv-btn-icon"
+                                href="{{ request.path }}"
+                                title="Limpiar filtros"
+                                aria-label="Limpiar filtros"
+                            >
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </a>
+
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+    </section>
+
+    <!-- Resultados -->
+    <section class="sv-card">
+
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    Resultados
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    {{ productos.paginator.count }}
+                    producto{{ productos.paginator.count|pluralize:"s" }}
+                    encontrado{{ productos.paginator.count|pluralize:"s" }}
+                </p>
+            </div>
+
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                {{ productos.paginator.count }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Solicitado por</th>
+                        <th>Proyecto</th>
+                        <th>Subproyecto</th>
+                        <th>Operación</th>
+                        <th class="text-end">Cantidad</th>
+                        <th>Producto</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+
+                        <td>
+                            <span class="sv-badge sv-badge-primary">
+                                SL-{{ producto.orden.folio }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="sv-user">
+                                <span class="sv-user-avatar">
+                                    {{ producto.orden.staff.staff.staff.first_name|first }}
+                                    {{ producto.orden.staff.staff.staff.last_name|first }}
+                                </span>
+
+                                <span class="sv-cell-title">
+                                    {{ producto.orden.staff.staff.staff.first_name }}
+                                    {{ producto.orden.staff.staff.staff.last_name }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ producto.orden.proyecto.nombre }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ producto.orden.subproyecto.nombre }}
+                        </td>
+
+                        <td>
+                            {{ producto.orden.operacion }}
+                        </td>
+
+                        <td class="text-end">
+                            <strong>
+                                {{ producto.cantidad }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ producto.producto }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ producto.orden.created_at|date:"d/m/Y" }}
+                            </span>
+
+                            <span class="sv-cell-subtitle">
+                                {{ producto.orden.created_at|date:"H:i" }}
+                            </span>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-box-open"></i>
+
+                                <strong>
+                                    No se encontraron productos
+                                </strong>
+
+                                <span>
+                                    Intenta modificar o limpiar los filtros de búsqueda.
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+
+    <!-- Paginación -->
+    
+    {% if productos.paginator.num_pages > 1 %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Paginación de productos">
+        <ul class="pagination gap-1 mb-0">
+
+            {% if productos.has_previous %}
+                <li class="page-item">
+                    <a
+                        class="page-link"
+                        href="{% my_url productos.previous_page_number 'page' request.GET.urlencode %}"
+                        title="Página anterior"
+                        aria-label="Página anterior"
+                    >
+                        <i class="fa-solid fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for item in productos.paginator.page_range %}
+                {% if productos.number == item %}
+                    <li
+                        class="page-item active"
+                        aria-current="page"
+                    >
+                        <span class="page-link">
+                            {{ item }}
+                        </span>
+                    </li>
+
+                {% elif item > productos.number|add:"-3" and item < productos.number|add:"3" %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="{% my_url item 'page' request.GET.urlencode %}"
+                        >
+                            {{ item }}
+                        </a>
+                    </li>
                 {% endif %}
+            {% endfor %}
 
-                {% for item in productos.paginator.page_range %}
-                    {% if productos.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > productos.number|add:'-2' and item < productos.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-                    {% endif %}
-                {% endfor %}
+            {% if productos.has_next %}
+                <li class="page-item">
+                    <a
+                        class="page-link"
+                        href="{% my_url productos.next_page_number 'page' request.GET.urlencode %}"
+                        title="Página siguiente"
+                        aria-label="Página siguiente"
+                    >
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
+                </li>
 
-                {% if productos.paginator.num_pages > productos.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{productos.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url productos.paginator.num_pages 'page' request.GET.urlencode %}">{{productos.paginator.num_pages}}</a></li>
-                {% endif %}
+                <li class="page-item">
+                    <a
+                        class="page-link"
+                        href="{% my_url productos.paginator.num_pages 'page' request.GET.urlencode %}"
+                        title="Última página"
+                        aria-label="Última página"
+                    >
+                        <i class="fa-solid fa-angles-right"></i>
+                    </a>
+                </li>
+            {% endif %}
 
-                {% if productos.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
+        </ul>
+    </nav>
 </div>
-</div>
+{% endif %}
+
+</main>
 
 {% endblock %}
-</body>
-</html>

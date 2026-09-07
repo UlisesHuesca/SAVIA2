@@ -4,213 +4,255 @@
 {% load widget_tweaks %}
 {% load l10n %}
 {% load i18n %}
-<html>
-<head>
+{% block title %}{% trans "Crear solicitud" %}{% endblock %}
 
-{% block title %}{% trans "Crear Solicitud" %}{% endblock %}
-</head>
-<body>
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  
-  
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                {% trans "Crear solicitud" %}
+            </h1>
+            <p class="sv-page-subtitle">
+                {% trans "Completa los datos generales y revisa los artículos antes de enviar la solicitud." %}
+            </p>
+        </div>
+        <span id="order" class="sv-badge sv-badge-primary"
+              tipo="{{ orden.tipo }}" orden="{{ orden.id|unlocalize }}">
+            <i class="fa-solid fa-file-lines"></i>
+            {% trans "Folio" %}: {{ folio_preview }}
+        </span>
+    </header>
 
-<hr>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-4 col-md-12"> 
-            <div class="card" id="Solicitud-info">
-                <div class="card-header">
-					<h2 id="order" tipo="{{orden.tipo}}" orden="{{orden.id|unlocalize}}">{% trans "Información de Solicitud|Folio:" %} {{folio_preview}}</h2>
+    <div class="row g-4 align-items-start">
+        <div class="col-12 col-xl-4">
+            <section class="sv-card" id="Solicitud-info">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        {% trans "Información de la solicitud" %}
+                    </h2>
                 </div>
+
                 {% if error_messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{error_messages}}
+                <div class="alert alert-danger m-3 mb-0" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>{{ error_messages }}
                 </div>
                 {% endif %}
-                <div class="card-body">
-					<form id="formulario_encabezado" method="POST" enctype="multipart/form-data" onsubmit="mostrarIndicadorCarga();">
+
+                <div class="sv-card-body">
+                    <form id="formulario_encabezado" method="POST"
+                          enctype="multipart/form-data" onsubmit="mostrarIndicadorCarga();">
                         {% csrf_token %}
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.proyecto}}
-                                        </div>
+
+                        <div class="d-grid gap-3">
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.proyecto }}</div>
+                            </div>
+
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.subproyecto }}</div>
+                            </div>
+
+                            <div id="campo-pozo" class="d-none">
+                                <div class="sv-input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-oil-well"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form.pozo|add_class:"form-select" }}
+                                        <label for="{{ form.pozo.id_for_label }}">{% trans "Pozo" %}</label>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.subproyecto}}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="campo-pozo" class="col-12" style="display: none;">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-oil-well"></i>
-                                </span>
-
-                                <div class="form-floating form-floating-group flex-grow-1">
-                                    {{ form.pozo|add_class:"form-select" }}
-
-                                    <label style="color: #121212;" for="{{ form.pozo.id_for_label }}"> Pozo</label>
-                                </div>
+                                {% if form.pozo.errors %}
+                                <div class="text-danger small mt-1">{{ form.pozo.errors }}</div>
+                                {% endif %}
                             </div>
 
-                            {% if form.pozo.errors %}
-                                <div class="text-danger">
-                                    {{ form.pozo.errors }}
-                                </div>
+                            {% if usuario.distritos.nombre != "Yerod" %}
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.sector }}</div>
+                            </div>
                             {% endif %}
-                                </div>
 
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Sector"}}
-                                            <label style="color: #121212;" for="id_area">Sector</label>
-                                        </div>
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-list-check"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.operacion }}</div>
+                            </div>
+
+                            {% if usuario.distritos.nombre != "NEGRO" %}
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-truck-pickup"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.activo }}</div>
+                            </div>
+                            {% endif %}
+
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.superintendente }}</div>
+                            </div>
+
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user-check"></i></span>
+                                <div class="form-floating flex-grow-1">{{ form.supervisor }}</div>
+                            </div>
+
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
+                                <div class="form-floating flex-grow-1">
+                                    {{ form.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
+                                    <label for="{{ form.comentario.id_for_label }}">{% trans "Comentario" %}*</label>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.operacion}}
-                                        </div>
-                                    </div>
-                                </div>
+
+                            <div class="form-check form-switch" id="Soporte">
+                                <input class="form-check-input" type="checkbox" role="switch" id="SwitchSoporte">
+                                <label class="form-check-label" for="SwitchSoporte">
+                                    {% trans "Subir soporte, factura o cotización" %}
+                                </label>
                             </div>
-                            <div class="row">
-                               
-                                    <div class="col-12">
-                                        <div class="input-group mb-3">
-                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                            <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.activo}}    
-                                            </div>
-                                        </div>  
-                                    </div>                                
-                                
+
+                            <div id="subir_pdf" class="d-none">
+                                <label class="form-label" for="id_soporte">
+                                    <i class="fa-solid fa-cloud-arrow-up me-1"></i>{% trans "Documento PDF" %}
+                                </label>
+                                {{ form.soporte|add_class:"form-control" }}
                             </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.superintendente}}    
-                                        </div>
-                                    </div>  
-                                </div>
-                            </div>                         
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.supervisor}}    
-                                        </div>
-                                    </div>  
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                                            <label style="color: #121212;" for="id_area">Comentario*</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-check form-switch col-auto mx-4" id="Soporte">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchSoporte">
-                                    <label class="form-check-label" for="SwitchSoporte">{% trans "Subir Soporte/Factura/Cotización" %}</label>
-                                </div>     
-                                <div id="subir_pdf" class="row d-none">
-                                        <div class="input-group mb-3" style="height:60px" >
-                                            {{form.soporte|add_class:"form-control"}}
-                                            <label class="input-group-text" for="id_soporte" style="color:#980F0F"><i class="fa-solid fa-cloud-arrow-up"></i>PDF</label>
-                                        </div>
-                                </div>
-                            </div>
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <input id="submit-button" class="btn btn-lg btn-outline-info d-none" name="agregar" type="submit" value="Crear Solicitud">
-                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button id="submit-button" class="sv-btn sv-btn-success d-none"
+                                    name="agregar" type="submit" value="Crear Solicitud">
+                                <i class="fa-solid fa-floppy-disk"></i>{% trans "Crear solicitud" %}
+                            </button>
+                        </div>
                     </form>
                 </div>
-            </div>
-    </div>
-    <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-            <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-            <p style="color: white; margin: 0;">{% trans "Generando reporte, por favor espera..." %}&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <section class="sv-card overflow-hidden" id="checkout-products">
+                {% include "solicitud/product_edit.html" %}
+            </section>
         </div>
     </div>
-    <div class="col-lg-8 col-md-12">
-        <div class="card">
-            {% include "solicitud/product_edit.html" %}
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" id="document"></div>
+</div>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
+     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "NEGRO" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Negro" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="Vordcab" width="96" class="img-fluid rounded">
+                {% endif %}
+                <div>
+                    <strong>{% trans "Creando solicitud" %}</strong>
+                    <p class="sv-cell-subtitle mb-0">{% trans "Por favor espera…" %}</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-   <!--Este es el modal-->
-    <div class="modal" id ="dialog" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" id="document" role="document">
-
-        </div>
-    </div>
 
 
 <!--AJAX CALL-->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+  function aplicarClaseSavia(elemento, variantes) {
+    if (!elemento) return;
+
+    Array.from(elemento.classList).forEach(function(clase) {
+        if (clase === 'btn' || clase.indexOf('btn-') === 0) {
+            elemento.classList.remove(clase);
+        }
+    });
+
+    elemento.classList.add('sv-btn');
+    variantes.forEach(function(clase) {
+        elemento.classList.add(clase);
+    });
+  }
+
+  function modernizarResumenSolicitud() {
+    const resumen = document.getElementById('checkout-products');
+    if (!resumen) return;
+
+    const encabezado = resumen.querySelector('.card-header');
+    if (encabezado) {
+        encabezado.classList.add('sv-card-header');
+        const titulo = encabezado.querySelector('h1, h2, h3, h4, h5, h6');
+        if (titulo) titulo.classList.add('sv-card-title', 'mb-0');
+    }
+
+    const tabla = resumen.querySelector('table');
+    if (tabla) {
+        tabla.classList.add('sv-table', 'sv-table-xwide');
+        const contenedorTabla = tabla.closest('.table-responsive, .table-responsive-sm, .table-responsive-md');
+        if (contenedorTabla) contenedorTabla.classList.add('sv-table-wrap');
+    }
+
+    const enlaces = Array.from(resumen.querySelectorAll('a[href]'));
+    const agregarProductos = enlaces.find(function(enlace) {
+        const texto = enlace.textContent.trim().toUpperCase();
+        return texto.includes('AGREGAR PRODUCTOS') || texto.includes('ADD PRODUCTS');
+    });
+
+    if (agregarProductos) {
+        aplicarClaseSavia(agregarProductos, ['sv-btn-primary']);
+        agregarProductos.classList.add('mb-2');
+    }
+
+    resumen.querySelectorAll('[id^="edit_quantity_"], [id^="modificar_comentario_"]').forEach(function(boton) {
+        aplicarClaseSavia(boton, ['sv-btn-info', 'sv-btn-icon']);
+    });
+
+    resumen.querySelectorAll('[id^="save_cantidad_"], [id^="save_comment_"]').forEach(function(boton) {
+        aplicarClaseSavia(boton, ['sv-btn-success', 'sv-btn-icon']);
+    });
+
+    resumen.querySelectorAll('[id^="cancel_edit_"] , [id^="cancel_edit2_"]').forEach(function(boton) {
+        aplicarClaseSavia(boton, ['sv-btn-outline', 'sv-btn-icon']);
+    });
+
+    resumen.querySelectorAll('[id^="delete_row_"]').forEach(function(boton) {
+        aplicarClaseSavia(boton, ['sv-btn-danger', 'sv-btn-icon']);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', modernizarResumenSolicitud);
+
   function mostrarIndicadorCarga() {
-    var btn = document.getElementById('submit-button')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
-    //verificarDescargaIniciada();
-    btn.classList.add('d-none')
+    const btn = document.getElementById('submit-button');
+    const loadingElement = document.getElementById('loadingIndicator');
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
+    btn.classList.add('d-none');
     }
   
 
@@ -226,31 +268,39 @@
              })
     {% endif %}
 
+    var orderElement = document.getElementById('order');
+    var orderId = orderElement.getAttribute('orden');
+    var orderStorageKey = "id_solicitud_" + orderId;
+
+    if (!localStorage.getItem(orderStorageKey)) {
+        localStorage.setItem(orderStorageKey, JSON.stringify({}));
+    }
+
     document.getElementById('formulario_encabezado').addEventListener('submit', function(event) {
-        event.preventDefault();
-        var submit = document.getElementById('submit-button')
+        var submit = document.getElementById('submit-button');
         var orden = document.getElementById('order');
         var orden_id = orden.getAttribute('orden');
-        var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id));
-        //Limpio el local storage
-        localStorage.removeItem('id_solicitud'+orden_id);
 
-        //Deshabilito el botón para prevenir dobles clicks
+        if (this.dataset.submitting === 'true') {
+            event.preventDefault();
+            return;
+        }
+
+        this.dataset.submitting = 'true';
+        localStorage.removeItem('id_solicitud_' + orden_id);
+
+        // Se deshabilita después de construir el POST para conservar name="agregar".
         setTimeout(function(){
-            document.getElementById('submit-button').disabled = true;
-        }, 50);
-       
-        this.submit();
-
+            submit.disabled = true;
+        }, 0);
     });
 
 
 document.getElementById('SwitchSoporte').addEventListener("change", function(element){
     var orden = document.getElementById('order')
     var orden_id = orden.getAttribute('orden')
-    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id ))
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id )) || {};
     var check_soporte = this;
-    var soporte = check_soporte.value
     var subir_soporte = document.getElementById('subir_pdf')
     
 
@@ -285,8 +335,8 @@ function cambio_en_formulario(data,key) {
 document.getElementById('id_comentario').addEventListener("change",function(){
     var orden = document.getElementById('order')
     var orden_id = orden.getAttribute('orden')
-    comentario = this.value 
-    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id ))
+    var comentario = this.value;
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id )) || {};
     datosGuardados['comentario'] = comentario;
     localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datosGuardados));
 });
@@ -297,11 +347,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var orden = document.getElementById('order');
     var orden_id = orden.getAttribute('orden');
-    var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id));
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id)) || {};
 
     if (datos.comentario){
         var inputElement = document.getElementById('id_comentario');
-        inputElement.innerHTML = datos.comentario;
+        inputElement.value = datos.comentario;
     } 
     console.log(datos.soporte)
     if (datos.soporte == true){
@@ -778,7 +828,7 @@ $(document).ready(function() {
     var orden_id = orden.getAttribute('orden');
     var usuarioDistrito = '{{ usuario_distrito }}';
     var placeholderText = 'Supervisor';
-    if (usuarioDistrito === 'BRASIL ') {
+    if (usuarioDistrito === 'BRASIL') {
         placeholderText = 'Superintendente';
     }
     $('#id_supervisor').select2({
@@ -837,7 +887,7 @@ $(document).ready(function () {
     const pozoActual = "{{ form.pozo.value|default:'' }}";
 
     function ocultarCampoPozo() {
-        campoPozo.hide();
+        campoPozo.addClass("d-none");
         selectPozo.prop("required", false);
 
         selectPozo.empty().append(
@@ -893,7 +943,7 @@ $(document).ready(function () {
                     );
                 });
 
-                campoPozo.show();
+                campoPozo.removeClass("d-none");
                 selectPozo.prop("required", false);
                 selectPozo.trigger("change");
             },
@@ -925,5 +975,3 @@ $(document).ready(function () {
 
 </script>
 {% endblock %}
-</body>
-</html>

@@ -1195,11 +1195,12 @@ $(document).ready(function(){
         datosCompra.financiamiento = financiamiento;
         datosCompra.dias_de_credito = dias;
         precio_ref()
-        //if (status == "NUEVO"){
-        //    comparativo.classList.remove('d-none');
-        //} else {
-        //    comparativo.classList.add('d-none');
-        //}
+        console.log("Distrito", distrito)
+        if (distrito == "NEGRO"){
+            comparativo.classList.add('d-none');
+        } else {
+            comparativo.classList.remove('d-none');
+        }
         
         localStorage.setItem("id_formulario_"+ oc, JSON.stringify(datosCompra));
         console.log("Formulario guardado para OC:",oc, datosCompra)

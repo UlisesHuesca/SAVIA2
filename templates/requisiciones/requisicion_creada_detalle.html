@@ -1,60 +1,164 @@
-{% extends 'partials/base_w_nav.html' %}
-{% load static %}
 
-<html>
-<head>
-{% block title %}Solicitudes{% endblock %}
-</head>
+<div class="modal-content">
 
-<body>
-{% block content %}
+    <div class="modal-header">
+        <div>
+            <h5
+                class="modal-title fw-bold"
+                id="requisicionModalTitle"
+            >
+                Productos de la requisición
+            </h5>
 
-<div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Requisicion: {{requis.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+            <small class="text-muted">
+                RQ-{{ requis.folio }} ·
+                Solicitud-{{ requis.orden.folio }} ·
+                {{ productos|length }}
+                producto{{ productos|length|pluralize }}
+            </small>
         </div>
 
-        <div class="modal-body">
-            <div class='box-element-2'>
-            <table class="table table-dark table-striped table-hover mx-2">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Código</th>
-                    <th scope="col">Artículo</th>
-                    <th scope="col">Unidad</th>
-                    <th scope="col">Cantidad Requisitada</th>
-                    <th>Comentario Usuario</th>
-                </tr>
-            </thead>
-            <tbody id="mytbl">
-                {% for producto in productos %}
-                <tr>
-                    <td scope="col"><img class='row-image' src="{{producto.producto.articulos.producto.producto.imageURL}}"></td>
-                    <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
-                    <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
-                    <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
-                    <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
-                    <td>{% if producto.producto.articulos.comentario %} {{producto.producto.articulos.comentario}} {% endif %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Cerrar"
+        ></button>
+    </div>
+
+    <div class="modal-body">
+
+        <div class="table-responsive bg-white border rounded">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Unidad</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Comentario</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for producto in productos %}
+                        <tr>
+                            <td style="width: 90px;">
+                                <img
+                                    src="{{ producto.producto.articulos.producto.producto.imageURL }}"
+                                    alt="{{ producto.producto.articulos.producto.producto.nombre }}"
+                                    class="img-thumbnail"
+                                    width="70"
+                                    height="70"
+                                    style="
+                                        width: 70px;
+                                        height: 70px;
+                                        object-fit: cover;
+                                    "
+                                >
+                            </td>
+
+                            <td class="fw-bold">
+                                {{ producto.producto.articulos.producto.producto.codigo }}
+                            </td>
+
+                            <td>
+                                {{ producto.producto.articulos.producto.producto.nombre }}
+                            </td>
+
+                            <td>
+                                {{ producto.producto.articulos.producto.producto.unidad }}
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge bg-success fs-6">
+                                    {{ producto.cantidad|floatformat:"-2" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if producto.producto.articulos.comentario %}
+                                    {{ producto.producto.articulos.comentario }}
+                                {% else %}
+                                    <span class="text-muted fst-italic">
+                                        Sin comentarios
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td
+                                colspan="6"
+                                class="py-5 text-center text-muted"
+                            >
+                                No hay productos registrados.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
-            <h6>Comentario Solicitud: {% if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentarios {% endif %}</h6>
-            <h6>Comentario Almacén para compras: {% if requis.comentario_compras %} {{requis.comentario_compras}} {%else%} No hay comentarios {% endif %}</h6>
-            <h6>Comentario Almacén: {% if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentarios {% endif %}
+        </div>
+
+        <div class="row g-3 mt-2">
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body text-dark">
+                        <h6 class="card-title fw-bold">
+                            <i class="fa-solid fa-user text-primary me-1"></i>
+                            Solicitud
+                        </h6>
+
+                        <p class="card-text mb-0">
+                            {{ requis.orden.comentario|default:"No hay comentarios" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body text-dark">
+                        <h6 class="card-title fw-bold">
+                            <i class="fa-solid fa-cart-shopping text-warning me-1"></i>
+                            Almacén para compras
+                        </h6>
+
+                        <p class="card-text mb-0">
+                            {{ requis.comentario_compras|default:"No hay comentarios" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body text-dark">
+                        <h6 class="card-title fw-bold">
+                            <i class="fa-solid fa-warehouse text-success me-1"></i>
+                            Almacén
+                        </h6>
+
+                        <p class="card-text mb-0">
+                            {{ requis.comentario_super|default:"No hay comentarios" }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="modal-footer">
-        </div>
     </div>
+
+    <div class="modal-footer">
+        <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+        >
+            Cerrar
+        </button>
+    </div>
+
 </div>
-
-
-
-{% endblock %}
-</body>
-</html>

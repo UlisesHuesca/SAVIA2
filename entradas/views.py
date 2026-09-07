@@ -9,6 +9,9 @@ from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.core.cache import cache
+from django.template.loader import render_to_string
+
+from utils.email_theme import obtener_tema_correo
 from compras.models import Compra, ArticuloComprado, Evidencia
 from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
@@ -363,65 +366,39 @@ def articulos_entrada(request, pk):
             #calidad_usuarios = Profile.objects.filter(tipo__nombre = 'Admin')
             # Lista de correos electrónicos de los usuarios
             correos = [usuario.staff.staff.email for usuario in calidad_usuarios]
-            static_path = settings.STATIC_ROOT
-            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-            image_base64 = get_image_base64(img_path)
-            logo_v_base64 = get_image_base64(img_path2)
-            html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado Supervisor de Calidad,</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque se ha recibido en almacén los siguientes productos críticos que requieren la liberación por parte de calidad.</p>
-                                                <p>Productos a liberar</p>
-                                                {articulos_html}
-                                                </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-            """
-            try:
-                email = EmailMessage(
-                    f'Entrada recibida: {entrada.folio}',
-                    body=html_message,
-                    from_email =settings.DEFAULT_FROM_EMAIL,
-                    to=correos,
-                    headers={'Content-Type': 'text/html'}
-                    )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
-                messages.success(request, f'La entrada {entrada.folio} ha sido creada')
-            except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                error_message = f'La entrada {entrada.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
-                messages.success(request, error_message)
+            articulos_correo = []
+
+            for articulo in articulos_entrada:
+                producto = ( articulo.articulo_comprado.producto.producto.articulos.producto.producto)
+
+                if producto.critico:
+                    articulos_correo.append({
+                        "codigo": producto.codigo,
+                        "nombre": producto.nombre,
+                        "cantidad":articulo.canitdad,
+                    })
+
+                if articulos_correo:
+                    es_savia_negro = bool(entrada.oc and entrada.oc.req and entrada.oc.req.orden and entrada.oc.req.orden.distrito and entrada.oc.req.orden.distrito.nombre == "Yerod")
+
+                    contexto_correo = obtener_tema_correo(settings.STATIC_ROOT,es_savia_negro,)
+
+                    contexto_correo.update({"entrada": entrada,"articulos": articulos_correo,})
+
+                    html_message = render_to_string("emails/almacen/entrada_calidad.html",contexto_correo,)
+                    try:
+                        email = EmailMessage(
+                            f'Entrada recibida: {entrada.folio}',
+                            body=html_message,
+                            from_email =settings.DEFAULT_FROM_EMAIL,
+                            to=correos,
+                            headers={'Content-Type': 'text/html'}
+                            )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.send()
+                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
+                        error_message = f'La entrada {entrada.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
+                        messages.error(request, error_message)
         for articulo in articulos_entrada:
             producto_surtir2 = ArticulosparaSurtir.objects.filter(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir = ArticulosparaSurtir.objects.get(articulos = articulo.articulo_comprado.producto.producto.articulos)

@@ -6,6 +6,7 @@ from django.views.decorators.cache import cache_page
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField, OuterRef, Subquery, DateTimeField
 from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
+from django.utils.html import escape
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
@@ -15,7 +16,10 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.urls import reverse
+from django.template.loader import render_to_string
+
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
+from utils.email_theme import obtener_tema_correo
 from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir, Producto_Calidad, Product
 from solicitudes.filters import InventoryFilter
 from requisiciones.models import Requis, ArticulosRequisitados
@@ -42,6 +46,7 @@ import decimal
 from io import BytesIO
 from datetime import date, datetime, timedelta, time as dt_time
 from num2words import num2words
+
 
 
 #PDF generator
@@ -664,8 +669,10 @@ def oc_modal(request, pk):
                 cuenta_art_totales = requisitados.count()
                 if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0: #Compara los artículos comprados vs artículos requisitados
                     req.colocada = True
+                    print(req.colocada)
                 else:
                     req.colocada = False
+                    print(req.colocada)
                 for articulo in articulos:
                     costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
                     if articulo.producto.producto.articulos.producto.producto.iva == True:
@@ -683,95 +690,36 @@ def oc_modal(request, pk):
                     oc.costo_iva = decimal.Decimal(costo_iva)
                     oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
 
-                #last_oc = Compra.objects.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-                #if last_oc:
-                #    folio = last_oc.folio + 1
-                #else:
-                #    folio = 1
                 oc = form.save(commit = False)
                 oc.complete = True
-                #oc.folio = folio ############
                 oc.created_at = date.today()
-                #form.save()
                 oc.save()
                 req.save()
+
                 static_path = settings.STATIC_ROOT
-                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-        
-                image_base64 = get_image_base64(img_path)
-                logo_v_base64 = get_image_base64(img_path2)
-                # Construir el HTML para la lista de artículos
-                articulos_html = """
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>Artículo</th>
-                            <th>Cantidad</th>
-                            <th>Observación</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                """
 
-                for articulo in articulos:
-                    articulos_html += f"""
-                        <tr>
-                            <td>{articulo.producto.producto.articulos.producto.producto.nombre}</td>
-                            <td>{articulo.cantidad}</td>
-                            <td>{articulo.producto.producto.articulos.comentario}
-                        </tr>
-                    """
+                es_savia_negro =  (oc.req.orden.distrito.nombre == "Yerod")
 
-                articulos_html += """
-                    </tbody>
-                </table>
-                """
+                contexto_correo = obtener_tema_correo(static_path, es_savia_negro)
 
+                contexto_correo.update({
+                    "oc": oc,
+                    "articulos": articulos,
+                    "nombre_solicitante": (
+                        f"{oc.req.orden.staff.staff.staff.first_name} "
+                        f"{oc.req.orden.staff.staff.staff.last_name}"
+                    ),
+                    "nombre_creador": (
+                        f"{oc.creada_por.staff.staff.first_name} "
+                        f"{oc.creada_por.staff.staff.last_name}"
+                    ),
+                })
 
-                # Crear el mensaje HTML
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {oc.req.orden.staff.staff.staff.first_name} {oc.req.orden.staff.staff.staff.last_name},</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu solicitud: {oc.req.orden.folio}| Req: {oc.req.folio} se ha convertido en la OC: {oc.folio}, creada por {oc.creada_por.staff.staff.first_name} {oc.creada_por.staff.staff.last_name}.</p>
-                                                </p>
-                                            <p style="font-size: 16px; text-align: justify;">
-                                                El siguiente paso del sistema: Autorización de OC por Superintedencia Administrativa.
-                                            </p>
-                                            {articulos_html}
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
+                html_message = render_to_string(
+                    "emails/compras/compra_generada.html",
+                    contexto_correo,
+                )
+                            
                 try:
                     email = EmailMessage(
                         f'OC Elaborada {oc.folio}',
@@ -1291,52 +1239,163 @@ def cancelar_oc1(request, pk):
         compra.save()
 
         static_path = settings.STATIC_ROOT
-        img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-        img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-        image_base64 = get_image_base64(img_path)
-        logo_v_base64 = get_image_base64(img_path2)
-        # Crear el mensaje HTML
-        html_message = f"""
-        <html>
-            <head>
-                <meta charset="UTF-8">
-            </head>
-            <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+        es_savia_negro = (compra.req.orden.distrito and compra.req.orden.distrito.nombre == "Yerod")
+
+        if es_savia_negro:
+            logo_principal_path = os.path.join(static_path, "images", "SAVIA_Negro_verde.jpg")
+            logo_principal_base64 = get_image_base64(logo_principal_path)
+
+            color_principal = "#237A57"
+            fondo_encabezado = "#F3F8F5"
+            nombre_sistema = "SAVIA 2.1"
+
+            logos_html = f"""
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E4E7EC; border-radius: 14px; box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);">
                     <tr>
-                        <td align="center">
-                            <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                <tr>
-                                    <td align="center">
-                                        <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <p style="font-size: 18px; text-align: justify;">
-                                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                        </p>
-                                        <p style="font-size: 16px; text-align: justify;">
-                                            Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> solicitud folio: <strong>{compra.req.orden.folio}</strong> ha sido cancelada.</p>
-                                        </p>
-                                    <p style="font-size: 16px; text-align: justify;">
-                                        Att: {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}
-                                    </p>
-                                        <p style="text-align: center; margin: 20px 0;">
-                                            <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                        </p>
-                                        <p style="font-size: 14px; color: #999; text-align: justify;">
-                                            Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td width="110" align="center" style="width: 110px; padding: 12px;">
+                            <img src="data:image/jpeg;base64,{logo_principal_base64}" alt="SAVIA 2.1" width="76" style="display: block; width: 76px !important; max-width: 76px !important; height: auto !important; margin: 0 auto; border: 0;">
                         </td>
                     </tr>
                 </table>
-            </body>
-        </html>
-        """
+            """
+
+            logo_pie_html = ""
+
+        else:
+            logo_vordcab_path = os.path.join(static_path, "images", "logo_vordcab.jpg")
+            logo_savia_path = os.path.join(static_path, "images", "SAVIA_Logo.png")
+
+            logo_vordcab_base64 = get_image_base64(logo_vordcab_path)
+            logo_savia_base64 = get_image_base64(logo_savia_path)
+
+            color_principal = "#17324D"
+            fondo_encabezado = "#EEF3F7"
+            nombre_sistema = "SAVIA 2.0"
+
+            logos_html = f"""
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E4E7EC; border-radius: 14px; box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);">
+                    <tr>
+                        <td width="150" align="center" style="width: 150px; padding: 14px 18px;">
+                            <img src="data:image/jpeg;base64,{logo_vordcab_base64}" alt="Grupo Vordcab" width="115" style="display: block; width: 115px !important; max-width: 115px !important; height: auto !important; margin: 0 auto; border: 0;">
+                        </td>
+                    </tr>
+                </table>
+            """
+
+            logo_pie_html = f"""
+                <img src="data:image/png;base64,{logo_savia_base64}" alt="SAVIA 2.0" width="50" style="display: block; width: 50px !important; max-width: 50px !important; height: auto !important; margin: 0 auto; border: 0; border-radius: 50%;">
+            """
+
+        nombre_solicitante = (f"{compra.req.orden.staff.staff.staff.first_name} "f"{compra.req.orden.staff.staff.staff.last_name}")
+
+        nombre_usuario = (f"{usuario.staff.staff.first_name} "f"{usuario.staff.staff.last_name}")
+
+        html_message = f"""
+                    <!DOCTYPE html>
+                    <html lang="es">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Orden de compra cancelada</title>
+                    </head>
+    
+                    <body style="margin: 0; padding: 0; background-color: #F2F4F7; font-family: Arial, Helvetica, sans-serif; color: #344054;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F2F4F7;">
+                            <tr>
+                                <td align="center" style="padding: 32px 15px;">
+                                    <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width: 100%; max-width: 600px; background-color: #FFFFFF; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 20px rgba(16, 24, 40, 0.08);">
+    
+                                        <!-- Encabezado -->
+                                        <tr>
+                                            <td align="center" style="padding: 28px 30px 22px; background-color: {fondo_encabezado}; border-top: 6px solid {color_principal};">
+                                                {logos_html}
+    
+                                                <p style="margin: 18px 0 0; color: {color_principal}; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+                                                    Notificación de compras
+                                                </p>
+                                            </td>
+                                        </tr>
+    
+                                        <!-- Contenido -->
+                                        <tr>
+                                            <td style="padding: 34px 38px 16px;">
+                                                <p style="margin: 0 0 20px; font-size: 18px; line-height: 1.6;">
+                                                    Estimado(a) <strong style="color: {color_principal};">{nombre_solicitante}</strong>:
+                                                </p>
+    
+                                                <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7;">
+                                                    Te informamos que la siguiente orden de compra ha sido cancelada:
+                                                </p>
+    
+                                                <!-- Información de la orden -->
+                                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F9FAFB; border: 1px solid #EAECF0; border-radius: 10px;">
+                                                    <tr>
+                                                        <td style="padding: 22px 24px;">
+                                                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                                                <tr>
+                                                                    <td style="padding: 0 0 14px; color: #667085; font-size: 14px;">
+                                                                        Folio de orden de compra
+                                                                    </td>
+    
+                                                                    <td align="right" style="padding: 0 0 14px;">
+                                                                        <span style="display: inline-block; padding: 6px 12px; background-color: {color_principal}; color: #FFFFFF; border-radius: 6px; font-size: 15px; font-weight: 700;">
+                                                                            OC {compra.folio}
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+    
+                                                                <tr>
+                                                                    <td style="padding-top: 14px; border-top: 1px solid #EAECF0; color: #667085; font-size: 14px;">
+                                                                        Folio de solicitud
+                                                                    </td>
+    
+                                                                    <td align="right" style="padding-top: 14px; border-top: 1px solid #EAECF0; color: #101828; font-size: 15px; font-weight: 700;">
+                                                                        {compra.req.orden.folio}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+    
+                                                <!-- Estado -->
+                                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top: 24px;">
+                                                    <tr>
+                                                        <td align="center" style="padding: 13px 18px; background-color: #FEF3F2; border: 1px solid #FECDCA; border-radius: 8px; color: #B42318; font-size: 14px; font-weight: 700;">
+                                                            ORDEN DE COMPRA CANCELADA
+                                                        </td>
+                                                    </tr>
+                                                </table>
+    
+                                                <p style="margin: 26px 0 5px; font-size: 15px; line-height: 1.6; color: #475467;">
+                                                    Atentamente,
+                                                </p>
+    
+                                                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #101828; font-weight: 700;">
+                                                    {nombre_usuario}
+                                                </p>
+                                            </td>
+                                        </tr>
+    
+                                        <!-- Pie -->
+                                        <tr>
+                                            <td align="center" style="padding: 24px 38px 30px;">
+                                                {logo_pie_html}
+    
+                                                <p style="margin: 16px 0 0; color: #98A2B3; font-size: 12px; line-height: 1.5; text-align: center;">
+                                                    Este mensaje fue generado automáticamente por {nombre_sistema}. Por favor, no respondas a este correo.
+                                                </p>
+                                            </td>
+                                        </tr>
+    
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                    </html>
+                    """
+    
         try:
             email = EmailMessage(
                 f'OC Cancelada',
@@ -1619,290 +1678,188 @@ def autorizar_oc1(request, pk):
             pdf_etica = attach_codigo_etica_pdf(request)
             pdf_politica_proveedor = attach_politica_proveedor(request)
             static_path = settings.STATIC_ROOT
-            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-        
-            image_base64 = get_image_base64(img_path)
-            logo_v_base64 = get_image_base64(img_path2)
+            static_path = settings.STATIC_ROOT
 
-            articulos_html = """
-            <table border="1" style="border-collapse: collapse; width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Producto Crítico</th>
-                        <th>Requerimiento</th>
-                        <th>Comentarios</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
-            productos_criticos = productos_criticos
-            for articulo in productos_criticos:
-                producto = articulo.producto.producto.articulos.producto.producto
-                # Si no existe producto_calidad, capturamos la excepción y seguimos
-                try:
-                    requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                except ObjectDoesNotExist:
-                    requerimientos = []  # o ProductoCalidad.objects.none()
+            es_savia_negro = bool(compra.req and compra.req.orden and compra.req.orden.distrito and compra.req.orden.distrito.nombre.strip().upper() == "Yerod")
 
-                if requerimientos:
-                    for requerimiento in requerimientos:
-                        #print(requerimiento.requerimiento.nombre)
-                        articulos_html += f"""
-                            <tr>
-                                <td>{producto.nombre}</td>
-                                <td>{requerimiento.requerimiento.nombre}</td>
-                                <td>{requerimiento.comentarios}</td>
+            contexto_base = obtener_tema_correo(static_path, es_savia_negro,)
 
-                            </tr>
-                        """
-                else:
-                    articulos_html += f"""
-                        <tr>
-                            <td>{producto.codigo}</td>
-                            <td>Sin requerimiento</td>
-                        </tr>
-                    """
-            articulos_html += """
-                </tbody>
-            </table>
-            """
-            # Crear el mensaje HTML
-            if usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name}.</p>
-                                                </p>
-                                            <p style="font-size: 16px; text-align: justify;">
-                                                El siguiente paso del sistema: Pago por parte de tesorería.
-                                            </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
-                if compra.cond_de_pago.nombre == "CREDITO":
-                    html_message2 = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                                <tr>
-                                    <td align="center">
-                                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                            <tr>
-                                                <td align="center">
-                                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 20px;">
-                                                    <p style="font-size: 18px; text-align: justify;">
-                                                        <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
-                                                    </p>
-                                                    <p style="font-size: 16px; text-align: justify;">
-                                                        Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.</p>
-                                                    </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    <p>&nbsp;</p>
-                                                    Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}.
-                                                    <p>GRUPO VORDCAB S.A. de C.V.</p>
-                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
-                                                </p>
-                                                    <p style="text-align: center; margin: 20px 0;">
-                                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                    </p>
-                                                    <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </body>
-                    </html>
-                    """    
-                    try:
-                        email = EmailMessage(
-                        f'Compra Autorizada {compra.folio}|SAVIA',
-                        body=html_message2,
-                        from_email =settings.DEFAULT_FROM_EMAIL,
-                        to= [compra.creada_por.staff.staff.email, compra.proveedor.email,],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                        email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
-                        email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
-                        email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
-                        email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
-                        email.attach(f'Politica_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
-                        # Adjuntar los archivos con nombres personalizados
-                        for articulo in productos:
-                            producto = articulo.producto.producto.articulos.producto.producto
-                            if producto.critico:
-                                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                                contador = 1  # Contador para evitar nombres duplicados
-                                for requerimiento in requerimientos:
-                                    archivo_path = requerimiento.url.path
-                                    nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
-                                    
-                                    # Abrir el archivo en modo binario y adjuntarlo directamente
-                                    with open(archivo_path, 'rb') as archivo:
-                                        email.attach(nombre_archivo, archivo.read())
+            nombre_solicitante = (f"{compra.req.orden.staff.staff.staff.first_name} " f"{compra.req.orden.staff.staff.staff.last_name}")
 
-                                    contador += 1  # Incrementar el contador para el siguiente archivo
-                        email.send()
-                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                        error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
-                else:
-                    html_message = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                                <tr>
-                                    <td align="center">
-                                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                            <tr>
-                                                <td align="center">
-                                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 20px;">
-                                                    <p style="font-size: 18px; text-align: justify;">
-                                                        <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                                    </p>
-                                                    <p style="font-size: 16px; text-align: justify;">
-                                                        Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name}.</p>
-                                                    </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    El siguiente paso del sistema: Pago por parte de tesorería.
-                                                </p>
-                                                    <p style="text-align: center; margin: 20px 0;">
-                                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                    </p>
-                                                    <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </body>
-                    </html>
-                    """    
-                    try:
-                        email = EmailMessage(
-                        f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                        body=html_message,
-                        from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= [compra.creada_por.staff.staff.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                        email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.send()
-                        messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
-                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                        error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
-                        messages.success(request, error_message)    
-                    return redirect('autorizacion-oc1')
+            nombre_creador = (f"{compra.creada_por.staff.staff.first_name} " f"{compra.creada_por.staff.staff.last_name}")
+
+            if compra.oc_autorizada_por:
+                nombre_autorizador = (f"{compra.oc_autorizada_por.staff.staff.first_name} " f"{compra.oc_autorizada_por.staff.staff.last_name}")
             else:
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name}.</p>
-                                                </p>
-                                            <p style="font-size: 16px; text-align: justify;">
-                                                El siguiente paso del sistema: Autorización de OC por Gerencia de Distrito.
-                                            </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """    
+                nombre_autorizador = "No disponible"
+
+            contexto_base.update({
+                "compra": compra,
+                "nombre_solicitante": nombre_solicitante,
+                "nombre_creador": nombre_creador,
+                "nombre_autorizador": nombre_autorizador,
+            })
+
+            es_autorizacion_final = (usuario.tipo.subdirector or (usuario.tipo.oc_gerencia and usuario.distritos.nombre == "BRASIL"))
+
+            if es_autorizacion_final:
+                contexto_correo = contexto_base.copy()
+
+                contexto_correo["siguiente_paso"] = ("programación del pago por parte de Tesorería.")
+
+                html_message = render_to_string("emails/compras/compra_autorizada.html", contexto_correo,)
+
+                if compra.cond_de_pago.nombre == "CREDITO":
+                    contexto_proveedor = contexto_base.copy()
+
+                    contexto_proveedor.update({
+                        "contacto_proveedor": (
+                            compra.proveedor.contacto
+                            or "representante del proveedor"
+                        ),
+                        "nombre_proveedor": compra.proveedor.nombre,
+                        "productos_criticos": productos_criticos,
+                    })
+
+                    html_message2 = render_to_string(
+                        "emails/proveedores/orden_compra_asignada.html",
+                        contexto_proveedor,
+                    )
+
+                    try:
+                        email = EmailMessage(
+                            f"Compra Autorizada {compra.folio}|SAVIA",
+                            body=html_message2,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[compra.creada_por.staff.staff.email,compra.proveedor.email,],
+                            headers={"Content-Type": "text/html",},
+                        )
+                        email.content_subtype = "html"
+                        email.attach(f"OC_folio_{compra.folio}.pdf",archivo_oc,"application/pdf",)
+                        email.attach("Politica_antisoborno.pdf",pdf_antisoborno,"application/pdf",)
+                        email.attach("Aviso_de_privacidad.pdf", pdf_privacidad,"application/pdf",)
+                        email.attach("Codigo_de_etica.pdf", pdf_etica,"application/pdf",)
+                        email.attach("Politica_proveedor.pdf",pdf_politica_proveedor,"application/pdf",)
+
+                        for articulo in productos:
+                            producto = (articulo.producto.producto.articulos.producto.producto)
+
+                            if not producto.critico:
+                                continue
+
+                            try:
+                                requerimientos = (producto.producto_calidad.requerimientos_calidad.all())
+                            except ObjectDoesNotExist:
+                                requerimientos = []
+
+                            contador = 1
+
+                            for requerimiento in requerimientos:
+                                if not requerimiento.url:
+                                    continue
+
+                                archivo_path = requerimiento.url.path
+
+                                extension = os.path.splitext(
+                                    archivo_path
+                                )[1]
+
+                                nombre_archivo = (f"{producto.codigo}_"f"requerimiento_{contador}"f"{extension}")
+
+                                with open(archivo_path,"rb",) as archivo:
+                                    email.attach(nombre_archivo,archivo.read(),)
+
+                                contador += 1
+
+                        email.send()
+
+                    except (BadHeaderError, SMTPException, socket.gaierror,OSError,) as error:
+                        error_message = (
+                            "El correo dirigido al proveedor no fue "
+                            f"enviado debido a un error: {error}"
+                        )
+
+                else:
+                    try:
+                        email = EmailMessage(f"OC Autorizada Gerencia {compra.folio}|"f"RQ: {compra.req.folio} |"f"Sol: {compra.req.orden.folio}",
+                            body=html_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[compra.creada_por.staff.staff.email,],
+                            headers={
+                                "Content-Type": "text/html",
+                            },
+                        )
+
+                        email.content_subtype = "html"
+                        email.send()
+
+                        messages.success(request,f"{usuario.staff.staff.first_name} "f"has autorizado la compra {compra.folio}",)
+
+                    except (BadHeaderError,SMTPException,socket.gaierror,) as error:
+                        error_message = (
+                            f"{usuario.staff.staff.first_name} "
+                            f"has autorizado la compra {compra.folio}, "
+                            "pero el correo de notificación no fue "
+                            f"enviado debido a un error: {error}"
+                        )
+
+                        messages.success(request, error_message,)
+
+                    return redirect("autorizacion-oc1")
+
+            else:
+                contexto_correo = contexto_base.copy()
+
+                contexto_correo["siguiente_paso"] = (
+                    "autorización de la orden de compra por "
+                    "Gerencia de Distrito."
+                )
+
+                html_message = render_to_string(
+                    "emails/compras/compra_autorizada.html",
+                    contexto_correo,
+                )
+
             try:
                 email = EmailMessage(
-                    f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                    f"OC Autorizada {compra.folio}|"
+                    f"RQ: {compra.req.folio} |"
+                    f"Sol: {compra.req.orden.folio}",
                     body=html_message,
-                    from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= [compra.req.orden.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[
+                        compra.req.orden.staff.staff.staff.email,
+                    ],
+                    headers={
+                        "Content-Type": "text/html",
+                    },
                 )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
+
+                email.content_subtype = "html"
                 email.send()
-                messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
-            except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
-                messages.success(request, error_message)    
+
+            except (
+                BadHeaderError,
+                SMTPException,
+                socket.gaierror,
+            ) as error:
+                error_message = (
+                    "La orden de compra fue autorizada, pero el "
+                    "correo de notificación no fue enviado debido "
+                    f"a un error: {error}"
+                )
+
+                messages.success(
+                    request,
+                    error_message,
+                )
+            
+          
                 
             return redirect('autorizacion-oc1')
 
+        else:
+            messages.error(request, 'Error al autorizar la compra. Por favor, verifica los datos ingresados.')
     context={
         'form':form,
         'compra':compra,
@@ -1985,256 +1942,214 @@ def autorizar_oc2(request, pk):
             #compra.autorizado_hora2 = datetime.now().time()
             compra.save()
             static_path = settings.STATIC_ROOT
-            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-            image_base64 = get_image_base64(img_path)
-            logo_v_base64 = get_image_base64(img_path2)
-            articulos_html = """
-            <table border="1" style="border-collapse: collapse; width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Requerimiento</th>
-                        <th>Comentarios</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
-            productos_criticos = productos_criticos
-            for articulo in productos_criticos:
-                producto = articulo.producto.producto.articulos.producto.producto
-                try:
-                    requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                except ObjectDoesNotExist:
-                    requerimientos = []  # o ProductoCalidad.objects.none()
+            static_path = settings.STATIC_ROOT
 
-                if requerimientos:
-                    for requerimiento in requerimientos:
-                        articulos_html += f"""
-                            <tr>
-                                <td>{producto.nombre}</td>
-                                <td>{requerimiento.requerimiento.nombre}</td>
-                                <td>{requerimiento.comentarios}</td>
-                            </tr>
-                        """
-                else:
-                    articulos_html += f"""
-                        <tr>
-                            <td>{producto.nombre}</td>
-                            <td>Sin requerimientos</td>
-                            <td>Sin comentarios</td>
-                        </tr>
-                    """
-            articulos_html += """
-                </tbody>
-            </table>
-            """
-            # Crear el mensaje HTML
-            if compra.cond_de_pago.nombre == "CREDITO":
-                archivo_oc = attach_oc_pdf(request, compra.id)
-                pdf_antisoborno = attach_antisoborno_pdf(request)
-                pdf_privacidad = attach_aviso_privacidad_pdf(request)
-                pdf_etica = attach_codigo_etica_pdf(request)
-                pdf_politica_proveedor = attach_politica_proveedor(request)
+            es_savia_negro = bool(
+                compra.req
+                and compra.req.orden
+                and compra.req.orden.distrito
+                and compra.req.orden.distrito.nombre.strip().upper() == "Yerod"
+            )
+
+            contexto_base = obtener_tema_correo(
+                static_path,
+                es_savia_negro,
+            )
+
+            autorizador_segunda = (
+                compra.oc_autorizada_por2
+                or usuario
+            )
+
+            nombre_autorizador = (
+                f"{autorizador_segunda.staff.staff.first_name} "
+                f"{autorizador_segunda.staff.staff.last_name}"
+            )
+
+            nombre_creador = (
+                f"{compra.creada_por.staff.staff.first_name} "
+                f"{compra.creada_por.staff.staff.last_name}"
+            )
+
+            contexto_base.update({
+                "compra": compra,
+                "nombre_autorizador": nombre_autorizador,
+                "nombre_creador": nombre_creador,
+            })
+
+            es_compra_credito = (
+                compra.cond_de_pago
+                and compra.cond_de_pago.nombre.strip().upper() == "CREDITO"
+            )
+
+            if es_compra_credito:
+                archivo_oc = attach_oc_pdf(
+                    request,
+                    compra.id,
+                )
+
+                pdf_antisoborno = attach_antisoborno_pdf(
+                    request
+                )
+
+                pdf_privacidad = attach_aviso_privacidad_pdf(
+                    request
+                )
+
+                pdf_etica = attach_codigo_etica_pdf(
+                    request
+                )
+
+                pdf_politica_proveedor = (
+                    attach_politica_proveedor(request)
+                )
+
                 avisar_calidad_oc(compra)
-                html_message2 = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.</p>
-                                                    <p>&nbsp;</p>
-                                                    <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
-                                                    <p>GRUPO VORDCAB S.A. de C.V.</p>
-                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
-                                                </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
-                try:
-                    email = EmailMessage(
-                    f'Compra Autorizada {compra.folio}|SAVIA',
-                    body=html_message2,
-                    from_email =settings.DEFAULT_FROM_EMAIL,
-                    to= [compra.creada_por.staff.staff.email, compra.proveedor.email,],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                    email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
-                    email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
-                    email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
-                    email.attach(f'Politica_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
-                    # Adjuntar los archivos con nombres personalizados
-                    #articulos = ArticuloComprado.objects.filter(oc=compra)
-                    #for articulo in articulos:
-                        #producto = articulo.producto.producto.articulos.producto.producto
-                        #if producto.critico:
-                            #requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                            #contador = 1  # Contador para evitar nombres duplicados
-                            #for requerimiento in requerimientos:
-                            #    archivo_path = requerimiento.url.path
-                            #    nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
-                                
-                                # Abrir el archivo en modo binario y adjuntarlo directamente
-                            #    with open(archivo_path, 'rb') as archivo:
-                            #        email.attach(nombre_archivo, archivo.read())
 
-                            #    contador += 1  # Incrementar el contador para el siguiente archivo
-                    email.send()
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por2.staff.staff.first_name} {compra.oc_autorizada_por2.staff.staff.last_name}.</p>
-                                                    <p>El siguiente paso del sistema: Recepción por parte de Almacén |Compra a crédito</p>
-                                                </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
+                contexto_proveedor = contexto_base.copy()
+
+                contexto_proveedor.update({
+                    "contacto_proveedor": (
+                        compra.proveedor.contacto
+                        or "representante del proveedor"
+                    ),
+                    "nombre_proveedor": compra.proveedor.nombre,
+                    "productos_criticos": productos_criticos,
+                })
+
+                html_message2 = render_to_string(
+                    "emails/proveedores/orden_compra_asignada.html",
+                    contexto_proveedor,
+                )
+
                 try:
-                    email = EmailMessage(
-                        f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                        body=html_message,
-                        #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                        from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= [compra.creada_por.staff.staff.email,],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    email.send()
-                    
-                    #for producto in productos:
-                    #    if producto.producto.producto.articulos.producto.producto.especialista == True:
-                    #        archivo_oc = attach_oc_pdf(request, compra.id)
-                    #        email = EmailMessage(
-                    #            f'Compra Autorizada {compra.folio}',
-                    #            f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                    #            settings.DEFAULT_FROM_EMAIL,
-                    #            ['ulises_huesc@hotmail.com'],
-                    #            )
-                    #        email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                    #        email.send()
-                    messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
-                    messages.warning(request, error_message)    
-                
+                    email_proveedor = EmailMessage(
+                        f"Compra Autorizada {compra.folio}|SAVIA",
+                        body=html_message2,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[
+                            compra.creada_por.staff.staff.email,
+                            compra.proveedor.email,
+                        ],
+                        headers={
+                            "Content-Type": "text/html",
+                        },
+                    )
+
+                    email_proveedor.content_subtype = "html"
+
+                    # 1. Orden de compra
+                    email_proveedor.attach(
+                        f"folio_{compra.folio}.pdf",
+                        archivo_oc,
+                        "application/pdf",
+                    )
+
+                    # 2. Política antisoborno
+                    email_proveedor.attach(
+                        "Politica_antisoborno.pdf",
+                        pdf_antisoborno,
+                        "application/pdf",
+                    )
+
+                    # 3. Aviso de privacidad
+                    email_proveedor.attach(
+                        "Aviso_de_privacidad.pdf",
+                        pdf_privacidad,
+                        "application/pdf",
+                    )
+
+                    # 4. Código de ética
+                    email_proveedor.attach(
+                        "Codigo_de_etica.pdf",
+                        pdf_etica,
+                        "application/pdf",
+                    )
+
+                    # 5. Política de proveedor
+                    email_proveedor.attach(
+                        "Politica_proveedor.pdf",
+                        pdf_politica_proveedor,
+                        "application/pdf",
+                    )
+
+                    email_proveedor.send()
+
+                except (
+                    BadHeaderError,
+                    SMTPException,
+                    socket.gaierror,
+                    OSError,
+                ) as error:
+                    messages.warning(
+                        request,
+                        "La orden fue autorizada, pero el correo "
+                        "dirigido al proveedor no fue enviado: "
+                        f"{error}",
+                    )
+
+                siguiente_paso = (
+                    "recepción de la orden de compra por parte de "
+                    "Almacén, debido a que se trata de una compra "
+                    "a crédito."
+                )
+
             else:
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name}.</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por2.staff.staff.first_name} {compra.oc_autorizada_por2.staff.staff.last_name}.</p>
-                                                    <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
-                                                </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
-                try:
-                    email = EmailMessage(
-                        f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                        body=html_message,
-                        #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                        from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= [compra.creada_por.staff.staff.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    email.send()
-                    messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
-                    messages.success(request, error_message)    
-            return redirect('autorizacion-oc2')
+                siguiente_paso = (
+                    "programación del pago por parte de Tesorería."
+                )
+
+            # Correo interno dirigido a quien creó la orden de compra
+            contexto_interno = contexto_base.copy()
+
+            contexto_interno.update({
+                "nombre_solicitante": nombre_creador,
+                "siguiente_paso": siguiente_paso,
+            })
+
+            html_message = render_to_string(
+                "emails/compras/compra_autorizada.html",
+                contexto_interno,
+            )
+
+            try:
+                email_interno = EmailMessage(
+                    f"OC Autorizada Gerencia {compra.folio}|"
+                    f"RQ: {compra.req.folio} |"
+                    f"Sol: {compra.req.orden.folio}",
+                    body=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[
+                        compra.creada_por.staff.staff.email,
+                    ],
+                    headers={
+                        "Content-Type": "text/html",
+                                       },
+                )
+
+                email_interno.content_subtype = "html"
+                email_interno.send()
+
+                messages.success(
+                    request,
+                    f"{usuario.staff.staff.first_name} ha autorizado "
+                    f"la compra {compra.folio}",
+                )
+
+            except (
+                BadHeaderError,
+                SMTPException,
+                socket.gaierror,
+            ) as error:
+                messages.warning(
+                    request,
+                    f"{usuario.staff.staff.first_name} ha autorizado "
+                    f"la compra {compra.folio}, pero el correo interno "
+                    f"no fue enviado debido a un error: {error}",
+                )
+
+            return redirect("autorizacion-oc2")
+          
 
     context={
         'form':form,
@@ -3576,28 +3491,46 @@ def generar_pdf_nueva(compra):
     #compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=compra.id)
 
+    nombre_distrito = (
+        compra.req.orden.distrito.nombre.strip().upper()
+        if (
+            compra.req
+            and compra.req.orden
+            and compra.req.orden.distrito
+        )
+        else ''
+    )
+
+    es_savia_negro = nombre_distrito == 'Yerod'
+
     # Define estilos para las tablas (antes de usarlos)
     styles = getSampleStyleSheet()
     style_desc = styles["BodyText"]
     style_desc.wordWrap = 'CJK'
     style_desc.fontSize = 6
     style_desc.leading = 8
-
-    # Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    if es_savia_negro:
+        color_principal = colors.HexColor('#1A1A1A')
+        logo_path = 'static/images/SAVIA_Negro_verde.jpg'
+    else:
+        color_principal = Color(0.0859375, 0.1953125, 0.30859375)
+        logo_path = 'static/images/logo_vordcab.jpg'
+        # Azul Vordcab
+    
     rojo = Color(0.59375, 0.05859375, 0.05859375)
     gris_legal = Color(0.5, 0.5, 0.5)
 
     def dibujar_pie_pagina_legal(c_obj):
-        texto_legal = """Este documento está protegido por derechos de autor y contiene información confidencial, ya sea patentable o no, propiedad de Vordcab. Se deposita en los destinatarios de este documento restricciones de confidencialidad, con el entendimiento de que ni esta documentación ni la información contenida allí se reproducirán, utilizarán ni divulgarán, en forma total ni parcial para ningún otro propósito que no sea el autorizado específicamente por Vordcab."""
-        
-        style_legal = ParagraphStyle('legal_footer', parent=styles['Normal'], fontSize=5, textColor=gris_legal, alignment=TA_CENTER, leading=6)
-        p_legal = Paragraph(texto_legal, style_legal)
-        
-        w_legal, h_legal = p_legal.wrap(550, 50)
-        p_legal.drawOn(c_obj, 30, 20) # Posición en el pie de página
+        if not es_savia_negro:
+            texto_legal = """Este documento está protegido por derechos de autor y contiene información confidencial, ya sea patentable o no, propiedad de Vordcab. Se deposita en los destinatarios de este documento restricciones de confidencialidad, con el entendimiento de que ni esta documentación ni la información contenida allí se reproducirán, utilizarán ni divulgarán, en forma total ni parcial para ningún otro propósito que no sea el autorizado específicamente por Vordcab."""
+            
+            style_legal = ParagraphStyle('legal_footer', parent=styles['Normal'], fontSize=5, textColor=gris_legal, alignment=TA_CENTER, leading=6)
+            p_legal = Paragraph(texto_legal, style_legal)
+            
+            w_legal, h_legal = p_legal.wrap(550, 50)
+            p_legal.drawOn(c_obj, 30, 20) # Posición en el pie de página
 
-     # 3. Crear función interna dibujar_encabezado(canvas_obj) para reutilizar.
+        # 3. Crear función interna dibujar_encabezado(canvas_obj) para reutilizar.
     def dibujar_encabezado(c_obj):
         c_obj.setFillColor(black)
         c_obj.setLineWidth(.2)
@@ -3618,7 +3551,7 @@ def generar_pdf_nueva(compra):
         # Fila 1: Logo, Título, Aprobación
         
         # Logo
-        logo_path = 'static/images/logo_vordcab.jpg'
+        #logo_path = 'static/images/logo_vordcab.jpg'
         if os.path.exists(logo_path):
             logo_img = Image(logo_path, width=2*cm, height=1*cm)
             logo_img.hAlign = 'CENTER'
@@ -3666,7 +3599,7 @@ def generar_pdf_nueva(compra):
             # Espera, indices: 0=Logo, 1=Col2, 2=Col3, 3=Col4, 4=Col5, 5=Col6, 6=Col7
             # Title spans cols 2,3,4,5 -> Indices 1, 2, 3, 4. So SPAN (1,0) to (4,0).
             
-            ('BACKGROUND', (1, 0), (4, 0), prussian_blue), # Fondo azul para título
+            ('BACKGROUND', (1, 0), (4, 0), color_principal), # Fondo azul para título
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('GRID', (0, 0), (-1, -1), 0.5, black),
@@ -3707,7 +3640,7 @@ def generar_pdf_nueva(compra):
     # Fila 1: ORDEN DE COMPRA Y DATOS DEL PROVEEDOR
     # Panel Izquierdo: Orden de compra (Etiqueta centrada en fondo azul oscuro)
     panel_inicio_y = seccion_inicio - 25
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
     c.setFillColor(white)
     c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño para evitar superposición
@@ -3750,7 +3683,7 @@ def generar_pdf_nueva(compra):
     
     # Panel Derecho: Datos del proveedor (Etiqueta centrada en fondo azul oscuro)
     panel_derecho_inicio = col_inicio + col_ancho + col_separacion
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
     c.setFillColor(white)
     c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
@@ -3841,7 +3774,7 @@ def generar_pdf_nueva(compra):
     panel_inicio_y = panel_inicio_y - espacio_entre_filas  # Mayor separación
 
     # Panel Izquierdo: Trazabilidad/ Datos de requisición (Etiqueta centrada en fondo azul oscuro)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
     c.setFillColor(white)
     c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
@@ -3945,7 +3878,7 @@ def generar_pdf_nueva(compra):
     new_frame.addFromList([conditional_paragraph], c)
 
     # Panel Derecho: Términos y condiciones (Etiqueta centrada en fondo azul oscuro)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
     c.setFillColor(white)
     c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
@@ -3974,9 +3907,11 @@ def generar_pdf_nueva(compra):
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Uso CFDI:')
     c.drawString(panel_derecho_inicio + 80, campo_y, compra.uso_del_cfdi.descripcion)
 
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Enviar factura:')
-    c.drawString(panel_derecho_inicio + 80,campo_y, compra.creada_por.staff.staff.email)
+    
+    if not es_savia_negro:
+        campo_y -= 12
+        c.drawString(panel_derecho_inicio + 3, campo_y, 'Enviar factura:')
+        c.drawString(panel_derecho_inicio + 80, campo_y, compra.creada_por.staff.staff.email)
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Tiempo entrega:')
@@ -4006,6 +3941,7 @@ def generar_pdf_nueva(compra):
     new_frame.addFromList([conditional_paragraph], c)
 
     # --- SECCIÓN NOTA IMPORTANTE ---
+   
     # Se calcula la posición Y para la nota, debajo de los paneles de contenido.
     nota_y_inicio = panel_inicio_y - 100 # Ajustado para bajar la nota
     
@@ -4014,19 +3950,21 @@ def generar_pdf_nueva(compra):
     style_nota_cuerpo = ParagraphStyle('nota_cuerpo', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_JUSTIFY)
 
     # Create Paragraphs for the note
+
     titulo_texto = "<strong>IMPORTANTE: Requisito de Acceso para Personal Externo</strong>"
     cuerpo_texto = """
     Todo personal externo (proveedores, contratistas y subcontratistas) solo podrá ingresar a realizar
     trabajos o servicios en las instalaciones de GRUPO VORDCAB presentando su constancia de vigencia
     de derechos del IMSS con una antigüedad no mayor a 30 días naturales a partir de su fecha de emisión.
     """
-    titulo_p = Paragraph(titulo_texto, style_nota_titulo)
-    cuerpo_p = Paragraph(cuerpo_texto, style_nota_cuerpo)
+    if not es_savia_negro:
+        titulo_p = Paragraph(titulo_texto, style_nota_titulo)
+        cuerpo_p = Paragraph(cuerpo_texto, style_nota_cuerpo)
 
-    # Create and draw a Frame to hold the note content with a border
-    elementos_nota = [titulo_p, Spacer(1, 4), cuerpo_p]
-    nota_frame = Frame(col_inicio, nota_y_inicio - 65, col_total_ancho, 45, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=0)
-    nota_frame.addFromList(elementos_nota, c)
+        # Create and draw a Frame to hold the note content with a border
+        elementos_nota = [titulo_p, Spacer(1, 4), cuerpo_p]
+        nota_frame = Frame(col_inicio, nota_y_inicio - 65, col_total_ancho, 45, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=0)
+        nota_frame.addFromList(elementos_nota, c)
 
 
     # NUEVA SECCIÓN: TABLA DE PARTIDAS - Colocada debajo de la nota
@@ -4064,7 +4002,7 @@ def generar_pdf_nueva(compra):
         # ENCABEZADO
         ('TEXTCOLOR', (0, 0), (-1, 0), white),
         ('FONTSIZE', (0, 0), (-1, 0), 8),
-        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('BACKGROUND', (0, 0), (-1, 0), color_principal),
         # CUERPO
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('FONTSIZE', (0, 1), (-1, -1), 6),
@@ -4178,7 +4116,7 @@ def generar_pdf_nueva(compra):
 
 
     # Total (resaltado en azul)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.setFont('Helvetica-Bold', 11)
     c.drawRightString(montos_align_x - 80, footer_y - 80, 'Total:')
     total =  format(float(compra.costo_plus_adicionales), ',.2f')
@@ -4227,6 +4165,11 @@ def generar_pdf_nueva(compra):
         t.setStyle(table_style)
         w, h = t.wrap(0, 0)               # altura real de esta tabla
         t.drawOn(c, 30, table_y_other - h)  # <-- AQUÍ está la corrección
+
+    if es_savia_negro:
+        c.save()
+        buf.seek(0)
+        return buf
 
      # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
     rows_cal = []   # solo filas con requerimientos
@@ -4279,7 +4222,7 @@ def generar_pdf_nueva(compra):
         c.showPage()
         dibujar_encabezado(c) # encabezado hoja
         c.setFont('Helvetica', 12)
-        c.setFillColor(prussian_blue)
+        c.setFillColor(color_principal)
         c.rect(20, 650, 565, 24, fill=True, stroke=False)
         c.setFillColor(white)
         c.setFont('Helvetica-Bold', 13)
@@ -4294,7 +4237,7 @@ def generar_pdf_nueva(compra):
             ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
             ('BOX',       (0,0), (-1,-1), 0.50, colors.black),
             ('VALIGN',    (0,0), (-1,-1), 'MIDDLE'),
-            ('BACKGROUND',(0,0), (-1,0),  prussian_blue),
+            ('BACKGROUND',(0,0), (-1,0),  color_principal),
             ('TEXTCOLOR', (0,0), (-1,0),  colors.white),
             ('FONTSIZE',  (0,0), (-1,0),  9),
             ('FONTSIZE',  (0,1), (-1,-1), 8),
@@ -4401,7 +4344,7 @@ def generar_pdf_nueva(compra):
     # Fila 1: Logo, Título, Aprobación
         
     # Logo
-    logo_path = 'static/images/logo_vordcab.jpg'
+    #logo_path = 'static/images/logo_vordcab.jpg'
     if os.path.exists(logo_path):
         logo_img = Image(logo_path, width=2*cm, height=1*cm)
         logo_img.hAlign = 'CENTER'
@@ -4458,7 +4401,7 @@ def generar_pdf_nueva(compra):
         # Espera, indices: 0=Logo, 1=Col2, 2=Col3, 3=Col4, 4=Col5, 5=Col6, 6=Col7
         # Title spans cols 2,3,4,5 -> Indices 1, 2, 3, 4. So SPAN (1,0) to (4,0).
             
-        ('BACKGROUND', (1, 0), (3, 0), prussian_blue), # Fondo azul para título
+        ('BACKGROUND', (1, 0), (3, 0), color_principal), # Fondo azul para título
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('GRID', (0, 0), (-1, -1), 0.5, black),
@@ -4477,13 +4420,13 @@ def generar_pdf_nueva(compra):
     styles = getSampleStyleSheet()
     styleN = styles["Normal"]
     styleN.fontSize = 10
-    #styleN.color = prussian_blue
+    #styleN.color = color_principal
     styleN.leading = 13  # Espaciado entre líneas
     styleN = ParagraphStyle('Justicado', parent=styles['Normal'], alignment=TA_JUSTIFY)
     styleT = styles["Normal"]
     styleT.fontSize = 13
     styleT.fontName = 'Helvetica-Bold'
-    styleT.textColor = prussian_blue
+    styleT.textColor = color_principal
     styleT.leading = 17
     styleT = ParagraphStyle('Center', parent=styles['Normal'], alignment= TA_CENTER)
 

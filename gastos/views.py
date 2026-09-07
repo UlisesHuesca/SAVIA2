@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
+from django.contrib.staticfiles import finders
 from django.db import transaction
 from django.db.models.functions import Concat
 from django.db.models import Sum, Q, Prefetch, Max, Value,Count, When, Case,DecimalField
@@ -2778,6 +2779,68 @@ def render_pdf_gasto(pk):
     c = canvas.Canvas(buf, pagesize=letter)
     #Here ends conf.
     gasto = Solicitud_Gasto.objects.get(id=pk)
+
+    # =============== Marca según distrito ===============
+
+    distrito_nombre = (
+        gasto.staff.distritos.nombre
+        if gasto.staff and gasto.staff.distritos
+        else ''
+    )
+
+    es_yerod = distrito_nombre == 'Yerod'
+
+    if es_yerod:
+        # SAVIA Yerod: negro y verde
+        color_principal = Color(
+            26 / 255,
+            26 / 255,
+            26 / 255,
+        )
+        color_acento = Color(
+            40 / 255,
+            140 / 255,
+            69 / 255,
+        )
+        color_folio = color_acento
+
+        logo_path = finders.find(
+            'images/SAVIA_Negro_Verde.jpg'
+        )
+
+        logo_width = 1.75 * cm
+        logo_height = 1.75 * cm
+
+    else:
+        # SAVIA VORDCAB: azul y rojo
+        color_principal = Color(
+            22 / 255,
+            50 / 255,
+            79 / 255,
+        )
+        color_acento = Color(
+            62 / 255,
+            146 / 255,
+            204 / 255,
+        )
+        color_folio = Color(
+            152 / 255,
+            15 / 255,
+            15 / 255,
+        )
+
+        logo_path = finders.find(
+            'images/logo_vordcab.jpg'
+        )
+
+        logo_width = 3 * cm
+        logo_height = 1.5 * cm
+
+
+
+
+
+
     productos = Articulo_Gasto.objects.filter(gasto=gasto, completo=True)
     facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho = True)
     vales = ValeRosa.objects.filter(gasto = gasto)
@@ -2834,8 +2897,7 @@ def render_pdf_gasto(pk):
     print(total_facturas)
 
    #Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
-    rojo = Color(0.59375, 0.05859375, 0.05859375)
+
     #Encabezado
     c.setFillColor(black)
     c.setLineWidth(.2)
@@ -2864,7 +2926,7 @@ def render_pdf_gasto(pk):
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
     c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
@@ -2876,7 +2938,16 @@ def render_pdf_gasto(pk):
     c.setLineWidth(.3) #Grosor
     c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
     c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+    if logo_path:
+        c.drawImage(
+            logo_path,
+            45,
+            730,
+            width=logo_width,
+            height=logo_height,
+            preserveAspectRatio=True,
+            mask='auto',
+        )
 
     c.setFillColor(white)
     c.setFont('Helvetica-Bold',11)
@@ -2901,7 +2972,7 @@ def render_pdf_gasto(pk):
     
     c.setFont('Helvetica-Bold',12)
     c.drawString(500,caja_proveedor-20,'FOLIO:')
-    c.setFillColor(rojo)
+    c.setFillColor(color_acento)
     c.setFont('Helvetica-Bold',12)
     c.drawString(540,caja_proveedor-20, str(gasto.folio))
 
@@ -2986,7 +3057,7 @@ def render_pdf_gasto(pk):
         high = high - 18
 
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
     #Primer renglón
@@ -3014,8 +3085,8 @@ def render_pdf_gasto(pk):
     else:
         comentario = "No hay comentarios"
 
-   
-    c.setFillColor(prussian_blue)
+
+    c.setFillColor(color_principal)     
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
     # Personalizar el estilo de los párrafos
@@ -3041,7 +3112,7 @@ def render_pdf_gasto(pk):
         #ENCABEZADO
         ('TEXTCOLOR',(0,0),(-1,0), white),
         ('FONTSIZE',(0,0),(-1,0), 8),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        ('BACKGROUND',(0,0),(-1,0), color_principal),
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
@@ -3139,7 +3210,7 @@ def render_pdf_gasto(pk):
     y_totales_pos = y_pos - (len(data_totales) * 15 + 30) 
     table_totales.drawOn(c, 20, y_totales_pos)
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20, y_totales_pos-50,565,25, fill=True, stroke=False)
     c.setFillColor(white)
     c.drawCentredString(320, y_totales_pos-45,'Observaciones')
@@ -3206,7 +3277,7 @@ def render_pdf_gasto(pk):
         if first:
             table_facturas_style.add('TEXTCOLOR', (0, 0), (-1, 0), colors.white)
             table_facturas_style.add('FONTSIZE', (0, 0), (-1, 0), 8)
-            table_facturas_style.add('BACKGROUND', (0, 0), (-1, 0), prussian_blue)
+            table_facturas_style.add('BACKGROUND', (0, 0), (-1, 0), color_principal)
             first = False  # Cambiar el estado del booleano para las siguientes páginas
         
         # Estilo del cuerpo

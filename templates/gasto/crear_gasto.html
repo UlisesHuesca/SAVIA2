@@ -4,15 +4,12 @@
 {% load crispy_forms_tags %}
 {% load l10n %}
 {% load i18n %}
-<html>
-<head>
+
 {% block title %}{% trans "Gasto" %}{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
+<main class="sv-page sv-page-with-navbar sv-expense-create">
+<div class="d-none">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% if messages %}
             {% for message in messages %}
@@ -20,7 +17,7 @@
                 <script>
                 Swal.fire({
                     "title": "Error",
-                    "text": "{{ message }}",
+                    "text": "{{ message|escapejs }}",
                     "icon": "error",
                 })
                 </script>
@@ -28,7 +25,7 @@
                 <script>
                 Swal.fire({
                     "title": "Facturas repetidas",
-                    "text": "{{ message }}",
+                    "text": "{{ message|escapejs }}",
                     "icon": "warning",
                 })
                 </script>
@@ -36,25 +33,34 @@
                 <script>
                 Swal.fire({
                     "title": "Excelente",
-                    "text": "{{ message }}",
+                    "text": "{{ message|escapejs }}",
                     "icon": "success",
                 })
                 </script>
                 {% endif %}
             {% endfor %}
         {% endif %}
-    </div>
 </div>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-5 col-sm-12">
-        <div class="card" id="form-wrapper"> 
-            <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
-					<h2>{% trans "Encabezado Gasto" %}</h2>
+
+<header class="sv-page-header sv-expense-page-header">
+    <div>
+        <span class="sv-page-eyebrow">{% trans "Gastos" %}</span>
+        <h1 class="sv-page-title">{% trans "Crear solicitud de gasto" %}</h1>
+        <p class="sv-page-subtitle">{% trans "Captura el encabezado, agrega conceptos y adjunta la documentación necesaria." %}</p>
+    </div>
+    <span class="sv-badge sv-badge-neutral">G{{ gasto.folio|default:"—" }}</span>
+</header>
+
+<div class="sv-expense-layout">
+    <aside class="sv-expense-sidebar">
+        <div class="sv-card" id="form-wrapper"> 
+            <div class="sv-card-header" id="Gasto" data-gasto-id="{{ gasto.id }}" gasto="{{ gasto.id }}">
+                <div>
+                    <span class="sv-card-kicker">{% trans "Paso 1" %}</span>
+                    <h2 class="sv-card-title"><i class="fa-solid fa-receipt"></i> {% trans "Encabezado del gasto" %}</h2>
+                </div>
             </div>
-            <div class="card-body">   
+            <div class="sv-card-body">   
 				<form method="POST" id='OrderForm'>
                         {% csrf_token %}
                         {% if error_messages %}
@@ -64,8 +70,8 @@
                         {% endif %}
                         <div class="row my-2">
                             <div class="col-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.tipo}}
                                     </div>
@@ -79,8 +85,8 @@
 
                             <div class="row d-none" id="colaborador_parrafo">
                                 <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.colaborador}}    
                                         </div>
@@ -89,8 +95,8 @@
                             </div>
                             <div class="row d-none" id="proveedor_parrafo">
                                 <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.proveedor}}    
                                         </div>
@@ -100,8 +106,8 @@
                             
                             <div class="row">
                                 <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.superintendente}}    
                                         </div>
@@ -110,7 +116,7 @@
                             </div> 
                             <div class="row d-none" id="distrito">
                                 <div class="col-12">
-                                    <div class="input-group mb-3">
+                                    <div class="sv-input-group input-group mb-3">
                                         <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{ form.distrito }}
@@ -120,7 +126,7 @@
                             </div>
                             <div class="row d-none" id="empresa">
                                 <div class="col-12">
-                                    <div class="input-group mb-3">
+                                    <div class="sv-input-group input-group mb-3">
                                         <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{ form.empresa }}
@@ -129,45 +135,50 @@
                                 </div>
                             </div>
 
-                            <div class="form-check form-switch my-3">
+                            <div class="sv-expense-options">
+                            <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="activarFacturas">
                                 <label class="form-check-label" for="activarFacturas">Subir facturas</label>
                             </div>
                             
-                            <div class="form-check form-switch my-3">
+                            <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="activarValeRosa">
                                 <label class="form-check-label" for="activarValeRosa">Agregar vale rosa</label>
+                            </div>
                             </div>
 
 
                         {% if productos %}
-                            <div class="text-end">
+                            <div class="sv-card-actions">
                      
                         
-                                <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear Solicitud" %}'>
+                                <button class="sv-btn sv-btn-primary" name="btn_agregar" id="btn_agregar" type="submit">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    {% trans "Crear solicitud" %}
+                                </button>
                             </div>
                         {% endif %}
                             
                 </form> 
             </div>
         </div>
-        <div class="card mt-2 d-none" id="cardRH"> 
-            <div class="card-header">
-                <h4>RH Documentos</h4>
+        <div class="sv-card sv-expense-support-card d-none" id="cardRH"> 
+            <div class="sv-card-header">
+                <h3 class="sv-card-title"><i class="fa-solid fa-folder-open"></i> RH Documentos</h3>
             </div>
-            <div class="card-body">  
+            <div class="sv-card-body">  
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <label id="archivo_rh_label">Archivo:</label> 
-                    <div class="input-group mb-3">
+                    <div class="sv-input-group input-group mb-3">
                         <span class="input-group-text" >
-                            <i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i>
+                            <i class="fa-solid fa-file-pdf fa-xl"></i>
                         </span>
                         <input type="file" id="archivo_rh_input" name="" class="form-control" accept=".pdf">
                     </div> 
                     <div class="text-end">
-                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_documentos_rh" title = "Subir Documentos">
+                            <button class="sv-btn sv-btn-success" type="submit" name="btn_documentos_rh" title = "Subir Documentos">
                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
                             </button>
                     </div>
@@ -176,7 +187,7 @@
                 {% if archivos_rh %}
                     <div class="mt-4">
                         <h5>Archivos RH cargados:</h5>
-                        <table class="table table-bordered table-sm">
+                        <table class="sv-table table table-bordered table-sm">
                         <thead class="table-light">
                             <tr>
                             <th>Tipo de Archivo</th>
@@ -192,17 +203,17 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <!-- Botón para ver el PDF en modal -->
-                                        <button type="button" class="btn btn-outline-info btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#pdfModal{{ archivo.id }}" title="Ver archivo">
+                                        <button type="button" class="sv-btn sv-btn-icon sv-btn-outline" data-bs-toggle="modal" data-bs-target="#pdfModal{{ archivo.id }}" title="Ver archivo">
                                         <i class="fa-solid fa-eye"></i>
                                         </button>
 
                                         <!-- Botón para descargar el archivo -->
-                                        <a href="{{ archivo.archivo.url }}" class="btn btn-outline-info btn-sm mx-1" download data-bs-toggle="tooltip" title="Descargar archivo">
+                                        <a href="{{ archivo.archivo.url }}" class="sv-btn sv-btn-icon sv-btn-outline" download data-bs-toggle="tooltip" title="Descargar archivo">
                                         <i class="fa-solid fa-download"></i>
                                         </a>
                                         <form method="post" action="{% url 'eliminar_archivo' archivo.id %}" class="mx-1">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Eliminar archivo" onclick="return confirm('¿Estás seguro de que deseas eliminar este archivo?');">
+                                            <button type="submit" class="sv-btn sv-btn-icon sv-btn-danger" data-bs-toggle="tooltip" title="Eliminar archivo" onclick="return confirm('¿Estás seguro de que deseas eliminar este archivo?');">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </form>
@@ -217,7 +228,7 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <iframe src="{{ archivo.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                    <iframe class="sv-expense-pdf" src="{{ archivo.archivo.url }}#zoom=80" title="Archivo {{ archivo.tipo.nombre }}"></iframe>
                                                 </div>
                                             </div>
                                         </div>
@@ -233,17 +244,17 @@
                                 
             </div>
         </div>
-        <div class="card mt-2 d-none" id="cardTxt"> 
-            <div class="card-header">
-                <h4>Nómina</h4>
+        <div class="sv-card sv-expense-support-card d-none" id="cardTxt"> 
+            <div class="sv-card-header">
+                <h3 class="sv-card-title"><i class="fa-solid fa-building-columns"></i> Nómina</h3>
             </div>
-            <div class="card-body">  
+            <div class="sv-card-body">  
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     {% if not archivo_bbva %}      
                     <label>Archivo Lote BBVA:</label> 
-                    <div class="input-group mb-3" title="Archivo BBVA">
+                    <div class="sv-input-group input-group mb-3" title="Archivo BBVA">
                         <span class="input-group-text" >
                             <i class="fa-duotone fa-solid fa-file"></i>
                         </span>
@@ -252,7 +263,7 @@
                     {% endif %}
                     {% if not archivo_ob %}
                     <label>Archivo Otros Bancos (OB):</label> 
-                    <div class="input-group mb-3" title="Otros Bancos">
+                    <div class="sv-input-group input-group mb-3" title="Otros Bancos">
                         <span class="input-group-text" >
                             <i class="fa-duotone fa-solid fa-file"></i>
                         </span>
@@ -261,7 +272,7 @@
                     {% endif %}
                     {% if not archivo_pensiones %}
                     <label>Archivo Pensiones:</label> 
-                    <div class="input-group mb-3" title="Pensiones">
+                    <div class="sv-input-group input-group mb-3" title="Pensiones">
                         <span class="input-group-text" >
                             <i class="fa-duotone fa-solid fa-file"></i>
                         </span>
@@ -271,7 +282,7 @@
                     {% endif %}
                     {% if not archivo_banorte %}
                     <label>Archivo Banorte:</label> 
-                    <div class="input-group mb-3" title="Banorte">
+                    <div class="sv-input-group input-group mb-3" title="Banorte">
                         <span class="input-group-text" >
                             <i class="fa-duotone fa-solid fa-file"></i>
                         </span>
@@ -281,7 +292,7 @@
                     {% endif %}
                     {% if not archivo_bbva and not archivo_ob and not archivo_pensiones and not archivo_banorte %}
                     <div class="text-end">
-                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_nomina" id="btn_nomina" type="submit" value='Subir Nómina'>
+                        <input class="sv-btn sv-btn-primary" name="btn_nomina" id="btn_nomina" type="submit" value='Subir Nómina'>
                     </div>
                     {% endif %}
                  
@@ -294,12 +305,12 @@
                             {% if archivo_bbva %}
                                 <li>
                                     <strong>BBVA:</strong> ${{ archivo_bbva.total|floatformat:2 }}
-                                    <a href="{{ archivo_bbva.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                    <a href="{{ archivo_bbva.archivo.url }}" target="_blank" class="sv-btn sv-btn-icon sv-btn-outline">
                                        <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
-                                    <form action="{% url 'eliminar_archivo_pago' archivo_bbva.id %}" method="post" style="display:inline;">
+                                    <form action="{% url 'eliminar_archivo_pago' archivo_bbva.id %}" method="post" class="sv-inline-form">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                        <button type="submit" class="sv-btn sv-btn-icon sv-btn-danger" title="Eliminar archivo">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
@@ -309,12 +320,12 @@
                             {% if archivo_ob %}
                                 <li>
                                     <strong>Otros Bancos (OB):</strong> ${{ archivo_ob.total|floatformat:2 }}
-                                    <a href="{{ archivo_ob.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                    <a href="{{ archivo_ob.archivo.url }}" target="_blank" class="sv-btn sv-btn-icon sv-btn-outline">
                                         <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
-                                       <form action="{% url 'eliminar_archivo_pago' archivo_ob.id %}" method="post" style="display:inline;">
+                                       <form action="{% url 'eliminar_archivo_pago' archivo_ob.id %}" method="post" class="sv-inline-form">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                        <button type="submit" class="sv-btn sv-btn-icon sv-btn-danger" title="Eliminar archivo">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
@@ -323,12 +334,12 @@
                             {% if archivo_pensiones %}
                                 <li>
                                     <strong>Pensiones:</strong> ${{ archivo_pensiones.total|floatformat:2 }}
-                                    <a href="{{ archivo_pensiones.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                    <a href="{{ archivo_pensiones.archivo.url }}" target="_blank" class="sv-btn sv-btn-icon sv-btn-outline">
                                         <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
-                                    <form action="{% url 'eliminar_archivo_pago' archivo_pensiones.id %}" method="post" style="display:inline;">
+                                    <form action="{% url 'eliminar_archivo_pago' archivo_pensiones.id %}" method="post" class="sv-inline-form">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                        <button type="submit" class="sv-btn sv-btn-icon sv-btn-danger" title="Eliminar archivo">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
@@ -337,12 +348,12 @@
                                {% if archivo_banorte %}
                                 <li>
                                     <strong>Banorte:</strong> ${{ archivo_banorte.total|floatformat:2 }}
-                                    <a href="{{ archivo_banorte.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                    <a href="{{ archivo_banorte.archivo.url }}" target="_blank" class="sv-btn sv-btn-icon sv-btn-outline">
                                         <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
-                                    <form action="{% url 'eliminar_archivo_pago' archivo_banorte.id %}" method="post" style="display:inline;">
+                                    <form action="{% url 'eliminar_archivo_pago' archivo_banorte.id %}" method="post" class="sv-inline-form">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                        <button type="submit" class="sv-btn sv-btn-icon sv-btn-danger" title="Eliminar archivo">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
@@ -358,25 +369,25 @@
                 {% endif %}
             </div>
         </div>
-        <div class="card mt-2 d-none" id="cardFacturas"> 
-            <div class="card-header">
-					<h4>{% trans "Subir Facturas" %}</h4>
+        <div class="sv-card sv-expense-support-card d-none" id="cardFacturas"> 
+            <div class="sv-card-header">
+					<h3 class="sv-card-title"><i class="fa-solid fa-file-invoice-dollar"></i> {% trans "Facturas" %}</h3>
             </div>
-            <div class="card-body">  
+            <div class="sv-card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <!--<label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>{% trans "Factura PDF" %}:</strong></label>
                         <input type="file" name="archivo_pdf" class="form-control" multiple>-->
-                        <div class="input-group mb-3" title="Subir facturas PDF">
+                        <div class="sv-input-group input-group mb-3" title="Subir facturas PDF">
                             <span class="input-group-text" >
-                                <i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i>
+                                <i class="fa-solid fa-file-pdf fa-xl"></i>
                             </span>
                             <input type="file" name="archivo_pdf" class="form-control" multiple>
                         </div>
                         
                         <!--<label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
                         <input type="file" name="archivo_xml" class="form-control" multiple>-->
-                        <div class="input-group mb-3" title="Subir facturas XML">
+                        <div class="sv-input-group input-group mb-3" title="Subir facturas XML">
                             <span class="input-group-text">
                                 <i class="fa-duotone fa-solid fa-file-xml fa-xl text-secondary"></i>
                             </span>
@@ -384,13 +395,13 @@
                         </div>
                     
                         <div class="text-end">
-                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_factura" title = "Subir Facturas">
+                            <button class="sv-btn sv-btn-success" type="submit" name="btn_factura" title = "Subir Facturas">
                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
                             </button>
                         </div>
                 </form>
-                <div class ="table-responsive-sm">
-                    <table class="table table-light table-striped table-hover">
+                <div class="sv-table-wrap">
+                    <table class="sv-table table table-light table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -409,14 +420,14 @@
                                 <td>{{ factura.id }}</td>
                                 <td>
                                     {% if factura.archivo_pdf %}
-                                    <a class="btn btn-outline-danger" href="{{factura.archivo_pdf.url}}" download class="btn btn-outline-info">
+                                    <a class="sv-btn sv-btn-icon sv-btn-danger" href="{{factura.archivo_pdf.url}}" download title="Descargar PDF">
                                         <i class="fa-solid fa-file-pdf"></i>
                                     </a>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if factura.archivo_xml %}
-                                    <a class="btn btn-outline-light" style="background-color:#9a9b9d" href="{{factura.archivo_xml.url}}" download class="btn btn-outline-light">
+                                    <a class="sv-btn sv-btn-icon sv-btn-secondary" href="{{factura.archivo_xml.url}}" download title="Descargar XML">
                                         <i class="fa-solid fa-file-code"></i>
                                     </a>
                                     {% endif %}
@@ -424,14 +435,14 @@
                                 <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
                                 <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
                                 <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% else %} {{factura.monto|floatformat:2}} {% endif %}</td>
-                                <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-factura' factura.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                                <td scope="col"><a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'eliminar-factura' factura.id %}" aria-label="Eliminar factura"><i class="fa-solid fa-trash-can"></i></a></td>
                             </tr>
                             {% endfor %}
                         
                         </tbody>
                     </table>
                 </div>
-                <table class="table table-light table-striped">
+                <table class="sv-table table table-light table-striped">
                     <thead>
                     <tr>
                             <th scope="col">Total</th>
@@ -445,53 +456,53 @@
         </div>
            
         
-    <div class="card mt-4 d-none" id="cardValeRosa">
-        <div class="card-header">
-            <h4>Agregar Vale Rosa</h4>
+    <div class="sv-card sv-expense-support-card d-none" id="cardValeRosa">
+        <div class="sv-card-header">
+            <h3 class="sv-card-title"><i class="fa-solid fa-receipt"></i> Agregar vale rosa</h3>
         </div>
-        <div class="card-body">
+        <div class="sv-card-body">
                     <form method="POST" id="formValeRosa" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row my-2">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_vale.motivo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Motivo"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Motivo" %}*</label>
+                                <label for="id_motivo">{% trans "Motivo" %}*</label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row my-2">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_vale.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Monto" %}*</label>
+                                <label for="id_monto">{% trans "Monto" %}*</label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div id="subir_pdf" class="row">
-                    <div class="input-group mb-3" title="Subir Archivo Vale" >
+                    <div class="sv-input-group input-group mb-3" title="Subir Archivo Vale" >
                         {{form_vale.comprobante_pdf|add_class:"form-control"}}
-                        <label class="input-group-text" for="id_soporte"><i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i></label>
+                        <label class="input-group-text" for="id_comprobante_pdf"><i class="fa-solid fa-file-pdf fa-xl text-danger"></i></label>
                     </div>
                 </div>
             
                 <div class="text-end">
-                    <button type="submit" name="btn_valerosa" class="btn btn-outline-success" title ="Agregar Vale Rosa">
+                    <button type="submit" name="btn_valerosa" class="sv-btn sv-btn-success" title ="Agregar Vale Rosa">
                         <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
                     </button>
                 </div>
             </form>
-            <h5 class="mt-4">Vales Rosa Registrados</h5>
-            <div class ="table-responsive-sm">
-                <table class="table table-bordered">
+            <h4 class="sv-section-title">Vales rosa registrados</h4>
+            <div class="sv-table-wrap">
+                <table class="sv-table table table-bordered">
                     <thead>
-                        <tr style="background-color: #f8d7da;">
+                        <tr class="sv-table-accent-rose">
                             <th>ID</th>
                             <th>Motivo</th>
                             <th>Monto</th>
@@ -505,7 +516,7 @@
                         {% for vale in gasto.vales_rosa.all %}
                             {% include "gasto/vale_rosa_row.html" with vale=vale %}
                         {% empty %}
-                            <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                            <tr><td colspan="7" class="sv-empty">Sin vales rosa registrados</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -513,24 +524,27 @@
         </div>
 
     </div>
-</div>
-<div class="col-lg-7 col-sm-12">
-        <div class="card">
-            <div class="card-header">
-                <h2 id="linea_gasto">{% trans "Líneas de Gasto" %}</h2>
+</aside>
+<section class="sv-expense-main">
+        <div class="sv-card">
+            <div class="sv-card-header">
+                <div>
+                    <span class="sv-card-kicker">{% trans "Paso 2" %}</span>
+                    <h2 class="sv-card-title" id="linea_gasto"><i class="fa-solid fa-list-check"></i> {% trans "Líneas de gasto" %}</h2>
+                </div>
             </div>
             <!--<div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
                 <label class="form-check-label" for="SwitchUsarXML">{% trans "Usar XML" %}</label>
             </div>--> 
-        <div class ="card-body">
+        <div class="sv-card-body">
         <div>
                 <form id="form_product" method="post" enctype="multipart/form-data">
                 {% csrf_token %}    
                 <div class="row">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_product.proyecto}}
                             </div>
@@ -540,8 +554,8 @@
                
                 <div class="row">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_product.subproyecto}}
                             </div>
@@ -551,27 +565,28 @@
                 
                 <div class="row">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_product.producto}}
                             </div>
                     </div>
                 </div>
+                </div>
                
                 <div class="form-check form-switch col-auto mx-4 d-none">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchGasto">
-                        <label class="form-check-label" for="SwitchGasto" id="LabelAlmacén">Almacén</label>
+                        <label class="form-check-label" for="SwitchGasto">Almacén</label>
                 </div>
 
             
             <div class="row my-2">
                 <div class="col-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                    <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.comentario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Comentario"}}
-                            <label style="color: #121212;" for="id_comentario">{% trans "Comentario" %}*</label>
+                            <label for="id_comentario">{% trans "Comentario" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -579,26 +594,26 @@
             <div class="row">
                
                 <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
-                            <label style="color: #121212;" for="id_cantidad">{% trans "Cantidad" %}*</label>
+                            <label for="id_cantidad">{% trans "Cantidad" %}*</label>
                         </div>
                     </div>
                 </div>
                  <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                    <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
-                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Precio Unitario" %}*</label>
+                            <label for="id_precio_unitario">{% trans "Precio Unitario" %}*</label>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1">IVA</span>
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text">IVA</span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_product.iva|add_class:"form-select grupo-entrada"}}
                             </div>
@@ -606,40 +621,38 @@
                         </div>
                     </div>
                 </div>
-                <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
-                    <div class="alert alert-primary" role="alert">
-                        <h6 style="color: #121212;">&nbsp;{% trans "Cálculo Previo" %}:&nbsp;<div id="calculo_previo"> </div></h6>   
-                    </div>
+                <div id="etiqueta_responsable" class="sv-expense-preview" aria-live="polite">
+                    <span>{% trans "Cálculo previo" %}</span>
+                    <strong>$<span id="calculo_previo">0.0000</span></strong>
                 </div>
-            </div>
 
-            <div  class="row">
-                <div class="form-check form-switch col-auto mx-4 mt-3" id="Otros_impuestos">
+            <div class="sv-expense-tax-row">
+                <div class="form-check form-switch" id="Otros_impuestos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
-                        <label class="form-check-label" for="Switch_Otros_impuestos" id="LabelOtros_Impuestos">{% trans "Otros Impuestos" %}</label>
+                        <label class="form-check-label" for="Switch_Otros_impuestos">{% trans "Otros Impuestos" %}</label>
                 </div>
-                <div class="col-4">
-                    <div id="otros_impuestos" class="input-group mb-3 mt-3 d-none">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
+                <div>
+                    <div id="otros_impuestos" class="sv-input-group input-group d-none">
+                    <span class="input-group-text"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.otros_impuestos|add_class:"form-control"|append_attr:"placeholder= Otros Impuestos"}}
-                            <label style="color: #121212;" for="id_otros_impuestos">{% trans "Otros Impuestos" %}*</label>
+                            <label for="id_otros_impuestos">{% trans "Otros Impuestos" %}*</label>
                         </div>
                     </div>
                 </div>
             </div>
                 
-            <div  class="row my-1">
-                <div class="form-check form-switch col-auto mx-4" id="Impuestos_retenidos">
+            <div class="sv-expense-tax-row">
+                <div class="form-check form-switch" id="Impuestos_retenidos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Impuestos_retenidos">
-                        <label class="form-check-label" for="Switch_Impuestos_retenidos" id="LabelOtros_Impuestos">Impuestos Retenidos</label>
+                        <label class="form-check-label" for="Switch_Impuestos_retenidos">Impuestos Retenidos</label>
                 </div>
-                <div class="col-4">
-                    <div id="impuestos_retenidos" class="input-group mb-3 d-none">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-minus"></i>&nbsp;$</span>
+                <div>
+                    <div id="impuestos_retenidos" class="sv-input-group input-group d-none">
+                    <span class="input-group-text"><i class="fa-solid fa-minus"></i>&nbsp;$</span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                         {{form_product.impuestos_retenidos|add_class:"form-control form1"|append_attr:"placeholder= Impuestos Retenidos"}}
-                        <label style="color: #121212;" for="id_impuestos_retenidos">{% trans "Impuestos Retenidos" %}*</label>
+                        <label for="id_impuestos_retenidos">{% trans "Impuestos Retenidos" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -647,16 +660,18 @@
 
             <div class="form-check form-switch col-auto mx-4 d-none" id="Entrada_Salida">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
-                        <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
+                        <label class="form-check-label" for="SwitchEntrada_Salida">Entrada-Salida Express</label>
                 </div>
-            <div class="text-end my-2">
-                    <input class="btn btn-outline-info btn-block btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
+            <div class="sv-card-actions">
+                    <button class="sv-btn sv-btn-primary" name="btn_producto" id="btn_producto" type="submit">
+                        <i class="fa-solid fa-plus"></i> {% trans "Agregar línea" %}
+                    </button>
             </div>
         </form>
         </div>
         
-        <div class ="table-responsive-sm">
-            <table class="table table-light table-striped table-hover">
+        <div class="sv-table-wrap">
+            <table class="sv-table table table-light table-striped table-hover">
             <thead>
                 <tr>
                     <th scope="col">#</th>
@@ -685,36 +700,36 @@
                     <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
                     <td scope="col">${{ producto.get_subtotal|floatformat:2 }}</td>
                     <td scope="col">${{ producto.total_parcial|floatformat:2 }}</td>
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-gasto' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <td scope="col"><a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'delete-gasto' producto.id %}" aria-label="Eliminar línea"><i class="fa-solid fa-trash-can"></i></a></td>
                     <!--<a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'editar-gasto' producto.id %}">
                                     <i class="fa-solid fa-pen-to-square"></i></td>-->
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="sv-empty">{% trans "Aún no hay líneas de gasto" %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             </table>
         </div>
-            <table class="table table-light table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">{% trans "Subtotal" %}</th>
-                    <td scope="col" id="subtotal">${{gasto.get_subtotal_solicitud}}</td>
-                </tr>
-                </thead>
-            <tbody>
-                <tr>
-                    <th scope="col">{% trans "Impuestos" %}</th>
-                    <td scope="col" id="iva">${{gasto.get_total_impuesto}}</td>
-                </tr>
-                <tr>
-                    <th scope="col">{% trans "Total" %}</th>
-                    <td scope="col" id="total">${{gasto.get_total_solicitud|floatformat:2}}</td>
-                </tr>
-                
-            </tbody>
-            </table>
+            <div class="sv-expense-summary" aria-label="Resumen financiero">
+                <div>
+                    <span>{% trans "Subtotal" %}</span>
+                    <strong id="subtotal">${{ gasto.get_subtotal_solicitud }}</strong>
+                </div>
+                <div>
+                    <span>{% trans "Impuestos" %}</span>
+                    <strong id="iva">${{ gasto.get_total_impuesto }}</strong>
+                </div>
+                <div class="sv-expense-summary-total">
+                    <span>{% trans "Total" %}</span>
+                    <strong id="total">${{ gasto.get_total_solicitud|floatformat:2 }}</strong>
+                </div>
+            </div>
         </div>
     </div>
     
+</section>
 </div>
 
 <!--Este es el modal-->
@@ -723,11 +738,11 @@
 
     </div>
 </div>
+</main>
 
 <!--AJAX CALL-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
 $(document).ready(function(){
@@ -755,30 +770,27 @@ $(document).ready(function(){
     const montosVales = document.querySelectorAll('.monto-vale');
 
     totalesFacturas.forEach((element) => {
-        const value = parseFloat(element.textContent.trim().replace('$', '').replace(',', '')) || 0;
+        const value = parseFloat(element.textContent.replace(/[$,\s]/g, '')) || 0;
         totalFacturas += value;
     });
 
     montosVales.forEach((element) => {
-        const value = parseFloat(element.textContent.trim().replace('$', '').replace(',', '')) || 0;
+        const value = parseFloat(element.textContent.replace(/[$,\s]/g, '')) || 0;
         totalVales += value;
     });
 
     const total = totalFacturas + totalVales;
 
-    document.getElementById('total-sum').textContent = total.toFixed(2);
+    const totalElement = document.getElementById('total-sum');
+    if (totalElement) totalElement.textContent = total.toFixed(2);
 }
 
     
     
     function validarCampo(event) {
-    var valor = event.target.value;
-    
-    // Convertir a número para asegurar la comparación correcta
-    valor = parseInt(valor, 10);
+    const valor = Number(event.target.value);
 
-    // Si la cantidad es 0, borra el valor del campo
-    if (valor === 0) {
+    if (!Number.isFinite(valor) || valor <= 0) {
         event.target.value = '';
         Swal.fire({
                     "title":"Error",
@@ -819,7 +831,7 @@ $(document).ready(function(){
                 if (tipoActual) {
                     // Restaurar label y name
                     $('#archivo_rh_label').text('Archivo ' + tipoActual + ':');
-                    $('#archivo_rh_input').attr('name', 'archivo_' + tipoActual.toLowerCase());
+                    $('#archivo_rh_input').attr('name', tipoActual.toLowerCase());
 
                     // Asegurarse que el cardRH esté visible
                     $('#cardRH').removeClass('d-none');
@@ -844,21 +856,33 @@ $(document).ready(function(){
         const btnAgregar = document.getElementById('btn_agregar');
         sumarTotales();
 
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(event) {
+            const colaborador = document.getElementById('id_colaborador');
+
+            if (chkOtroColaborador.checked && (!colaborador || !colaborador.value)) {
+                event.preventDefault();
+                Swal.fire({
+                    title: "Error",
+                    text: "Favor de agregar un colaborador",
+                    icon: "error"
+                });
+                return;
+            }
+
+            if (!btnAgregar) return;
             setTimeout(function() {
                 btnAgregar.disabled = true;
-            }, 50); // desactivar el botón 50ms después del clic
+            }, 50);
         });
     });
     
     function f_calculo_previo(){
-        cantidad = document.getElementById('id_cantidad').value
-        precio = document.getElementById('id_precio_unitario').value
-        otros_impuestos = document.getElementById('id_otros_impuestos').value
-        retenidos = document.getElementById('id_impuestos_retenidos').value
-        iva = document.getElementById('id_iva').value
-        console.log(iva)
-        calculo_previo = document.getElementById('calculo_previo')
+        const cantidad = document.getElementById('id_cantidad').value;
+        const precio = document.getElementById('id_precio_unitario').value;
+        const otros_impuestos = document.getElementById('id_otros_impuestos').value;
+        const retenidos = document.getElementById('id_impuestos_retenidos').value;
+        const iva = document.getElementById('id_iva').value;
+        const calculo_previo = document.getElementById('calculo_previo');
 
         var valor_iva;
         switch(iva) {
@@ -873,9 +897,8 @@ $(document).ready(function(){
                 break;
         }
         
-        console.log(precio, cantidad, otros_impuestos, retenidos)
-        subtotal = (Number(precio) * Number(cantidad) + Number(otros_impuestos) - Number(retenidos)) * (1 + valor_iva) 
-        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+        const subtotal = (Number(precio) * Number(cantidad) + Number(otros_impuestos) - Number(retenidos)) * (1 + valor_iva);
+        calculo_previo.textContent = Number.isFinite(subtotal) ? subtotal.toFixed(4) : '0.0000';
         
 
     }
@@ -888,32 +911,14 @@ $(document).ready(function(){
 
 
 
-    if (document.getElementById('btn_agregar')){
-    document.getElementById('btn_agregar').addEventListener('submit', (event)=>{
-
-    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
-
-        Swal.fire({
-                "title":"Error",
-                "text":"Favor de agregar un colaborador",
-                "icon":"error",
-            })
-        event.preventDefault()
-    }
-
-    });
-    }
-
-
-
-var precio_mod = document.getElementById("id_precio_unitario")
-var check_colaborador = document.getElementById("SwitchColaborador");
+const precio_mod = document.getElementById("id_precio_unitario");
+const chkOtroColaborador = document.getElementById("SwitchColaborador");
 
 
 document.getElementById("SwitchColaborador").addEventListener("change", function(element){
 	let colaboradores = document.getElementById('colaborador_parrafo');
 
-	if (check_colaborador.checked){
+		if (chkOtroColaborador.checked){
 	    colaboradores.setAttribute('class','col-sm-12')
 
 	} else {
@@ -932,6 +937,10 @@ document.getElementById("SwitchGasto").addEventListener("change", function(eleme
 	let form_art = document.getElementById('id_producto')
 	let entrada_salida = document.getElementById('Entrada_Salida')
 
+	if (!articulos || !articulos_gasto || !form_art || !entrada_salida) {
+		console.warn('No se encontraron los controles del selector Almacén/Gasto.');
+		return;
+	}
 
 	articulos.value = ""
 	articulos_gasto.value=""
@@ -1515,5 +1524,3 @@ function cambio_en_formulario(data,key) {
 
 </script>
 {% endblock %}
-</body>
-</html>

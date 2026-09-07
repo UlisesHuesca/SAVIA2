@@ -3,407 +3,433 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Entrada de Artículos{% endblock %}
-</head>
-<body>
+{% block title %}Entrada de servicios{% endblock %}
+
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
-
-<div class="row">
-     
-    <div class="col-lg-8 col-sm-12 offset-lg-2">
-        <div class="card" id="form-wrapper">
-        <div class="card-header"> 
-            <h5 class="modal-title" id="entrada" value="{{entrada.id|unlocalize}}">Entrada: {{max_folio}}&ensp;&ensp; Compra: {{compra.folio}}</h5>
+<main id="Principal" class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+                Entrada de servicios
+            </h1>
+            <p class="sv-page-subtitle">
+                Selecciona los conceptos recibidos y confirma la entrada del servicio.
+            </p>
         </div>
-        <div class="card-body">
-            <table class='table table-striped'>
-                <thead>
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+            <span id="entrada" class="sv-badge sv-badge-primary"
+                  data-entrada-id="{{ entrada.id|unlocalize }}">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                Entrada {{ max_folio }}
+            </span>
+            <span class="sv-badge sv-badge-dark">
+                <i class="fa-solid fa-cart-shopping"></i>
+                OC {{ compra.folio }}
+            </span>
+        </div>
+    </header>
 
-                    <tr>
-                        <th scope="col">Proveedor:</th>
-                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="col">RFC:</th>
-                        <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
-                    </tr>
-                </tbody>
-            </table>
-            <hr>
-            <form id="myForm" method="POST">  
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-lg-8 col-sm-12">
-                        <div id="input_producto" class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                                <label  style="font-size:10px; color:gray;" for="subproyecto">Productos*</label>
-                                <select style="font-size:16px" class="form-select form-select-sm" placeholder="Subproyecto" id="producto">
-                                    <option style="color:gray;" value="" selected disabled>Producto</option>
-                                    {% for articulo in articulos %}
-                                    <option id="js" target="{{articulo.id|unlocalize}}" producto="{{articulo.producto.producto.articulos.id|unlocalize}}" cantidad="{{articulo.cantidad_pendiente|unlocalize}}">
-                                        {{articulo.producto.producto.articulos.producto}}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="etiqueta_solicitado" class="col-lg-4 col-sm-12">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
-                        </div>
-                    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-4">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-building"></i>
+                        Proveedor
+                    </h2>
                 </div>
-                <div class="row">
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
-                                <label style="color: #121212;" for="id_cantidad">Cantidad</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-check form-switch col-auto mx-4 mt-3" id="referencia">
-                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchReferencia">
-                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelReferencia"><strong>Folio</strong></label>
-                    </div>
-                    <div  id="referencialbl" class="col-lg-4 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.referencia|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_impuestos_adicionales">Folio</label>
-                            </div>
-                        </div>
-                    </div>
+                <div class="sv-card-body">
+                    <dl class="row g-3 mb-0">
+                        <dt class="col-12 col-sm-4">Razón social</dt>
+                        <dd class="col-12 col-sm-8 mb-0">
+                            <span class="sv-cell-title">{{ compra.proveedor.nombre.razon_social }}</span>
+                        </dd>
+
+                        <dt class="col-12 col-sm-4">RFC</dt>
+                        <dd class="col-12 col-sm-8 mb-0">
+                            {{ compra.proveedor.nombre.rfc }}
+                        </dd>
+                    </dl>
                 </div>
-                <div class="row">
-                    <div class="col-sm-1">
-                        <button class="btn btn-success d-none" id='update-entrada' type="button">
-                        Agregar
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <section class="sv-card h-100" id="form-wrapper">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            Agregar concepto
+                        </h2>
+                        <span class="sv-cell-subtitle">Captura la cantidad recibida y su referencia cuando corresponda.</span>
+                    </div>
+                    <span class="sv-badge sv-badge-dark">
+                        Pendiente:
+                        <strong id="solicitado">—</strong>
+                    </span>
+                </div>
+
+                <form id="myForm" method="POST">
+                    {% csrf_token %}
+                    <div class="sv-card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-12">
+                                <label class="form-label" for="producto">
+                                    Producto o servicio
+                                </label>
+                                <div id="input_producto" class="sv-input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                                    <select class="form-select" id="producto">
+                                        <option value="" selected disabled>
+                                            Selecciona un concepto
+                                        </option>
+                                        {% for articulo in articulos %}
+                                        <option data-target="{{ articulo.id|unlocalize }}"
+                                                data-producto="{{ articulo.producto.producto.articulos.id|unlocalize }}"
+                                                data-cantidad="{{ articulo.cantidad_pendiente|unlocalize }}">
+                                            {{ articulo.producto.producto.articulos.producto }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-5">
+                                <div class="sv-input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-boxes-stacked"></i></span>
+                                    <div class="form-floating">
+                                        {{ form.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad" }}
+                                        <label for="id_cantidad">Cantidad</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-2">
+                                <div class="form-check form-switch" id="referencia">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           id="SwitchReferencia">
+                                    <label class="form-check-label" for="SwitchReferencia" id="LabelReferencia">
+                                        <strong>Folio</strong>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="referencialbl" class="col-12 col-md-5 d-none">
+                                <div class="sv-input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                                    <div class="form-floating">
+                                        {{ form.referencia|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                        <label for="{{ form.referencia.id_for_label }}">Folio</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body border-top d-flex justify-content-end">
+                        <button class="sv-btn sv-btn-success d-none" id="update-entrada" type="button">
+                            <i class="fa-solid fa-plus"></i>
+                            Agregar
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </section>
+        </div>
+    </div>
 
-        <hr>
-        <div class ="table-responsive-sm">
-            <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            
-                            <th scope="col">Producto</th>
-                            <th scope="col">Cantidad</th>
-                            <th scope="col">Unidad</th>
-                            <th scope="col">Referencia</th>
-                            <th scope="col" class="col-sm-2">Eliminar</th>
-                        </tr>
-                    </thead>
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-list-check"></i>
+                Conceptos de la entrada
+            </h2>
+            <span class="sv-badge sv-badge-primary">{{ articulos_entrada|length }} registros</span>
+        </div>
 
-                    <tbody id="mytbl">
-                    {% for producto in articulos_entrada %}
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
                     <tr>
-                        
-                        <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
-                        <td scope="col">{{producto.cantidad}}</td>
-                        <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
-                        {% if  producto.referencia %}
-                        <td scope="col">{{producto.referencia}}</td>
-                        {% else %}
-                        <td></td>
-                        {% endif %}
-                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id|unlocalize}}" entrada="{{producto.entrada.id|unlocalize}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <th>Producto o servicio</th>
+                        <th>Cantidad</th>
+                        <th>Unidad</th>
+                        <th>Referencia</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="mytbl">
+                    {% for producto in articulos_entrada %}
+                    <tr data-entry-row>
+                        <td><span class="sv-cell-title">{{ producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre }}</span></td>
+                        <td><strong>{{ producto.cantidad }}</strong></td>
+                        <td>{{ producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad }}</td>
+                        <td>{{ producto.referencia|default_if_none:"—" }}</td>
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-cantidad="{{ producto.cantidad }}"
+                                    data-producto="{{ producto.articulo_comprado.id|unlocalize }}"
+                                    data-entrada="{{ producto.entrada.id|unlocalize }}"
+                                    onclick="deleteRow(this)"
+                                    title="Eliminar producto" aria-label="Eliminar producto">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                            <span class="sv-empty-title">No hay conceptos agregados</span>
+                            <span class="sv-empty-text">Selecciona un producto o servicio para iniciar la entrada.</span>
+                        </td>
                     </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
+                </tbody>
+            </table>
         </div>
-        <form id="myForm2" method="POST">
-            {% csrf_token %}
-            <button id="Btn_Crear" type="submit" class="btn btn-success"  name="entrada_articulo">Crear</button>
-            <a id="cerrar" type="button" class="btn btn-secondary cerrar"  href="{% url 'entrada-servicios' %}">Cerrar</a>
-        </form>
-        </div>
-    </form>
-</div>
 
+        <div class="sv-card-body border-top">
+            <form id="myForm2" method="POST">
+                {% csrf_token %}
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                    <a id="cerrar" class="sv-btn sv-btn-outline cerrar"
+                       href="{% url 'entrada-servicios' %}">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cerrar
+                    </a>
+                    <button id="Btn_Crear" type="submit" class="sv-btn sv-btn-success"
+                            name="entrada_articulo">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Crear entrada
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
+     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "NEGRO" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Negro" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="Vordcab" width="96" class="img-fluid rounded">
+                {% endif %}
+                <div>
+                    <strong>Procesando entrada</strong>
+                    <p class="sv-cell-subtitle mb-0">
+                        Por favor espera… <i class="fa-solid fa-mug-hot"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-        const form2 = document.getElementById('myForm2');
-        const btnCrear = document.getElementById('Btn_Crear');
-        const form = document.getElementById('myForm');
-        const btn = document.getElementById('update-entrada');
+const productSelect = document.getElementById('producto');
+const quantityInput = document.getElementById('id_cantidad');
+const referenceSwitch = document.getElementById('SwitchReferencia');
+const referenceContainer = document.getElementById('referencialbl');
+const referenceInput = document.getElementById('id_referencia');
+const requestedLabel = document.getElementById('solicitado');
+const addButton = document.getElementById('update-entrada');
+const createForm = document.getElementById('myForm2');
+const createButton = document.getElementById('Btn_Crear');
 
-        form2.addEventListener('submit', function() {
-           preventDoubleClick(btnCrear)
+function entryRowCount() {
+    return document.querySelectorAll('#mytbl tr[data-entry-row]').length;
+}
+
+function showLoading() {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loadingIndicator')).show();
+}
+
+function hideLoading() {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loadingIndicator')).hide();
+}
+
+function selectedProduct() {
+    return productSelect.options[productSelect.selectedIndex];
+}
+
+function updateAddButton() {
+    const option = selectedProduct();
+    const requested = Number(option?.dataset.cantidad || 0);
+    const quantity = Number(quantityInput.value || 0);
+    const valid = Boolean(option?.value) && quantity > 0 && quantity <= requested;
+
+    addButton.classList.toggle('d-none', !valid);
+}
+
+createForm.addEventListener('submit', function (event) {
+    if (entryRowCount() < 1) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Error',
+            text: 'No tienes productos seleccionados',
+            icon: 'error'
         });
-        btn.addEventListener('click', function(){
-            preventDoubleClick(btn);
-        });
+        return;
+    }
+
+    createButton.setAttribute('name', 'entrada');
+    showLoading();
 });
 
-function preventDoubleClick(button) {
-    setTimeout(function() {
-        button.disabled = true;
-    }, 50);
-}
+document.querySelectorAll('.cerrar').forEach(function (button) {
+    button.addEventListener('click', function (event) {
+        const rows = entryRowCount();
+        if (rows < 1) return;
 
-var rows = document.getElementById("mytbl").rows.length
-var CrearBtn = document.getElementById('Btn_Crear')
-console.log('rows',rows)
-
-CrearBtn.addEventListener('click',function(){
-
-    if (rows < 1){
+        event.preventDefault();
         Swal.fire({
-                "title":"Error",
-                "text":"No tienes productos seleccionados",
-                "icon":"error",
-            })
-        CrearBtn.setAttribute('name','')
-        } else {
-            CrearBtn.setAttribute('name','entrada')
-
-        }
-
-})
-
-var cerrarBtn = document.getElementsByClassName('cerrar')
-
-for(var i=0; i< cerrarBtn.length; i++){
-    cerrarBtn[i].addEventListener('click',function(){
-    var rows = document.getElementById("mytbl").rows.length;
-    if (rows == 1) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de eliminar el producto para poder salir",
-                    "icon":"error",
-                })
-        }if (rows > 1) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de eliminar los productos para poder salir",
-                    "icon":"error",
-                })
-    }
-})
-};
-
-
-document.getElementById("producto").addEventListener("change", function(element){
-    var select = document.getElementById('producto');
-    var current_option = select.options[select.selectedIndex];
-    let target = current_option.getAttribute('target')
-    //var other_select = document.getElementById('id_articulo_comprado')
-    //other_select.value = target
-    let cantidad =  current_option.getAttribute('cantidad')
-    var solicitado = document.getElementById('solicitado');
-    solicitado.innerHTML = cantidad;
-    //console.log(target);
-    //console.log(other_select);
-});
-
-
-
-document.getElementById('id_cantidad').addEventListener('change', function(){
-var cantidad = document.getElementById('id_cantidad');
-var checkref = document.getElementById("SwitchReferencia");
-var select = document.getElementById('producto');
-var current_option = select.options[select.selectedIndex];
-let solicitado =  current_option.getAttribute('cantidad');
-var boton =document.getElementById('update-entrada');
-console.log(cantidad.value)
-console.log(solicitado)
-if (Number(cantidad.value) <= Number(solicitado)){
-    boton.setAttribute('class','btn btn-success')
-} else if (cantidad.value == 0){
-    boton.setAttribute('class','btn btn-success d-none')
-} else {
-    boton.setAttribute('class','btn btn-success d-none')
-}
-
-if (checkref.checked){
-    if (cantidad.value > 1){
-        Swal.fire({
-                "title":"Error",
-                "text":"Cuando tienes seleccionada la referencia la cantidad no puede ser mayor a 1",
-                "icon":"error",
-            })
-        cantidad.value = 1
-    }
-}
-})
-
-//var updateBtn = document.getElementById('update-entrada')
-
-    let count=0;
-    let suma=0;
-    let array_id_prod=[];
-
-
-    document.getElementById('update-entrada').addEventListener('click',function(){
-        let entrada = document.getElementById('entrada')
-        entrada_id = entrada.getAttribute('value')
-        var select = document.getElementById('producto');
-        var current_option = select.options[select.selectedIndex];
-        var current_cantidad = current_option.getAttribute('cantidad')
-        var referencia_div = document.getElementById('id_referencia')
-        producto = current_option.getAttribute('target');
-        console.log('current_option',current_option)
-        producto_id = current_option.getAttribute('producto');
-        var select = document.getElementById('producto');
-        var cantidad_form = document.getElementById('id_cantidad');
-        var value = select.options[select.selectedIndex].value;
-        var default_op = document.getElementById('default_sel');
-        cantidad_ingresada = cantidad_form.value;
-
-        var referencia = referencia_div.value
-        console.log(cantidad_ingresada)
-        action = "add"
-        
-
-
-        if (!value) {
-            Swal.fire({
-                "title":"Error",
-                "text":"Favor de seleccionar algún valor de la lista",
-                "icon":"error",
-            })
-        } else if (Number(cantidad_ingresada)>Number(current_cantidad)){
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada es mayor que la cantidad solicitada",
-                    "icon":"error",
-                })
-        } else if (Number(cantidad_ingresada<=0)) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada debe ser mayor que 0",
-                    "icon":"error",
-                })
-        } else {
-            count += 1;
-            current_option.classList.add("d-none");
-            //select.value = default_sel;
-
-            console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id, 'referencia': new String(referencia)}));
-            ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id, referencia);
-       
-            } 
+            title: 'Error',
+            text: rows === 1
+                ? 'Favor de eliminar el producto para poder salir'
+                : 'Favor de eliminar los productos para poder salir',
+            icon: 'error'
+        });
     });
-
-
-
-document.getElementById("SwitchReferencia").addEventListener("change", function(){
-    var checkref = this;
-	console.log('referencia check:'+checkref.checked);
-	var lbl_referencia = document.getElementById('referencialbl');
-    var referencia = document.getElementById('id_referencia')
-    var cantidad = document.getElementById('id_cantidad')
-
-
-
-	if (checkref.checked){
-	    lbl_referencia.classList.remove('d-none');
-        //referencia.classList.remove('d-none');
-        cantidad.value = 1
-	} else {
-	    lbl_referencia.classList.add('d-none')
-        //referencia.setAttribute('class','form-control d-none')
-        cantidad.value = 0
-        referencia.value = ""
-	}
 });
 
+productSelect.addEventListener('change', function () {
+    const option = selectedProduct();
+    requestedLabel.textContent = option?.dataset.cantidad || '—';
+    updateAddButton();
+});
 
+quantityInput.addEventListener('input', function () {
+    if (referenceSwitch.checked && Number(quantityInput.value) > 1) {
+        Swal.fire({
+            title: 'Error',
+            text: 'Cuando tienes seleccionada la referencia la cantidad no puede ser mayor a 1',
+            icon: 'error'
+        });
+        quantityInput.value = 1;
+    }
 
-//ActualizarArticulos(array_id_prod)
+    updateAddButton();
+});
 
-    function ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id, referencia){
-        console.log('User is logged in, sending data...' )
+referenceSwitch.addEventListener('change', function () {
+    referenceContainer.classList.toggle('d-none', !this.checked);
 
-    var url = '/entradas/update_entrada/'
+    if (this.checked) {
+        quantityInput.value = 1;
+    } else {
+        quantityInput.value = 0;
+        referenceInput.value = '';
+    }
 
-    fetch( url, {
-        method:'POST',
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRFToken': csrftoken,
+    updateAddButton();
+});
+
+addButton.addEventListener('click', function () {
+    const entryId = document.getElementById('entrada').dataset.entradaId;
+    const option = selectedProduct();
+    const requested = Number(option?.dataset.cantidad || 0);
+    const quantity = Number(quantityInput.value || 0);
+    const reference = referenceInput.value;
+
+    if (!option?.value) {
+        Swal.fire({
+            title: 'Error',
+            text: 'Favor de seleccionar algún valor de la lista',
+            icon: 'error'
+        });
+    } else if (quantity > requested) {
+        Swal.fire({
+            title: 'Error',
+            text: 'La cantidad ingresada es mayor que la cantidad solicitada',
+            icon: 'error'
+        });
+    } else if (quantity <= 0) {
+        Swal.fire({
+            title: 'Error',
+            text: 'La cantidad ingresada debe ser mayor que 0',
+            icon: 'error'
+        });
+    } else {
+        addButton.disabled = true;
+        showLoading();
+        ActualizarArticulos(option.dataset.target, quantity, 'add', entryId, reference);
+    }
+});
+
+function ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id, referencia) {
+    const csrfToken = document.querySelector('#myForm input[name="csrfmiddlewaretoken"]').value;
+
+    fetch('/entradas/update_entrada/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
         },
-        body:JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id': entrada_id, 'referencia': new String(referencia)})
+        body: JSON.stringify({
+            producto: producto,
+            cantidad_ingresada: cantidad_ingresada,
+            action: action,
+            entrada_id: entrada_id,
+            referencia: String(referencia || '')
+        })
     })
-    .then((response)=>{
-        if (response.headers.get("content-type").includes("application/json")) {
-            return response.json();
-        } else {
-            throw new Error('Received non-JSON response');
-        }   
+    .then(function (response) {
+        const contentType = response.headers.get('content-type') || '';
+        if (!response.ok || !contentType.includes('application/json')) {
+            throw new Error('La respuesta del servidor no es válida');
+        }
+        return response.json();
     })
-    .then((data)=>{
-        console.log('data:', data)
-        location.reload()  
+    .then(function () {
+        location.reload();
     })
-    .catch((error) => {
-        console.log("Error:", error)
-    });   
+    .catch(function (error) {
+        hideLoading();
+        addButton.disabled = false;
+        Swal.fire({
+            title: 'Error',
+            text: error.message,
+            icon: 'error'
+        });
+    });
 }
-
 
 function deleteRow(element) {
-    console.log(element)
-    //let btn_delete = document.getElementById('delete');
-    producto = element.getAttribute('producto');
-    console.log(producto)
-    cantidad_ingresada = element.getAttribute('cantidad');
-    //cantidad_ingresada = cantidad.value
-    entrada_id= element.getAttribute('entrada');
-    referencia = ""
-    action = "remove" ;
-    console.log(producto, cantidad_ingresada, action, entrada_id, referencia);
-    console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id, 'referencia':referencia}))
-    ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id,referencia);
-    preventDoubleClick(element);
-    
-    
+    element.disabled = true;
+    showLoading();
+    ActualizarArticulos(
+        element.dataset.producto,
+        element.dataset.cantidad,
+        'remove',
+        element.dataset.entrada,
+        ''
+    );
 }
 
 </script>
 {% endblock %}
-</body>
-</html>

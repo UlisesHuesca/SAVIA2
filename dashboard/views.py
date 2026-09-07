@@ -730,7 +730,10 @@ def proyectos_anterior(request):
 def contratos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    contratos = Contrato.objects.filter(complete = True)
+    if usuario.distritos.nombre == "NEGRO":
+        contratos = Contrato.objects.filter(complete = True, created_by__distritos__nombre = "NEGRO")
+    else:
+        contratos = Contrato.objects.filter(complete = True)
 
     myfilter= ContratoFilter(request.GET, queryset=contratos)
     contratos = myfilter.qs
@@ -780,7 +783,10 @@ def editar_contrato(request, pk):
 def proyectos_contrato(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    contrato = Contrato.objects.get(id = pk)
+    if usuario.distritos.nombre == "NEGRO":
+        contrato = Contrato.objects.get(id = pk, created_by__distritos__nombre = "NEGRO")
+    else:
+        contrato = Contrato.objects.get(id = pk)
     proyectos = Proyecto.objects.filter(contrato = contrato)
     myfilter=ProyectoFilter(request.GET, queryset=proyectos)
     proyectos = myfilter.qs
@@ -867,8 +873,14 @@ def subproyectos(request, pk):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def proyectos_edit(request, pk):
-
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     proyecto = Proyecto.objects.get(id=pk)
+    print(usuario.distritos.nombre)
+    if usuario.distritos.nombre == "NEGRO":
+        contratos = Contrato.objects.filter(created_by__distritos__nombre = "NEGRO")
+    else: 
+        contratos = Contrato.objects.exclude(created_by__distritos__nombre = "NEGRO")
 
     if request.method =='POST':
         form = Proyectos_Form(request.POST, instance=proyecto)
@@ -916,12 +928,19 @@ def proveedor_direcciones(request, pk):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def proyectos_add(request):
+    print('Entrando a proyectos_add')
     #usuario = Profile.objects.get(staff=request.user
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     distrito = usuario.distritos
+    print(usuario.distritos.nombre)
+    if usuario.distritos.nombre == "NEGRO":
+        contratos = Contrato.objects.filter(created_by__distritos__nombre = "NEGRO")
+    else: 
+        contratos = Contrato.objects.exclude(created_by__distritos__nombre = "NEGRO")
 
     form = Proyectos_Add_Form()
+   
 
     if request.method =='POST':
         proyecto, created = Proyecto.objects.get_or_create(distrito = distrito, complete = False)
@@ -935,6 +954,8 @@ def proyectos_add(request):
             return redirect('configuracion-proyectos')
     else:
         form = Proyectos_Add_Form()
+
+    form.fields['contrato'].queryset = contratos
 
     context = {
         'form': form,

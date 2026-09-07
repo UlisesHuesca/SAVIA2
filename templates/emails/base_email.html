@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo_documento %}Notificación SAVIA{% endblock %}</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #F2F4F7; color: #344054; font-family: Arial, Helvetica, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; background-color: #F2F4F7;">
+        <tr>
+            <td align="center" style="padding: 32px 15px;">
+
+                <!-- Card principal -->
+                <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width: 100%; max-width: 620px; overflow: hidden; background-color: #FFFFFF; border: 1px solid #E4E7EC; border-radius: 14px; box-shadow: 0 8px 24px rgba(16, 24, 40, 0.10);">
+
+                    <!-- Encabezado -->
+                    <tr>
+                        <td align="center" style="padding: 27px 30px 24px; background-color: {{ color_encabezado }}; border-top: 5px solid {{ color_acento }}; border-radius: 14px 14px 0 0;">
+
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
+                                <tr>
+                                    <td width="100" align="center" style="width: 100px;">
+                                        <img src="data:{{ logo_encabezado_mime }};base64,{{ logo_encabezado_base64 }}" alt="{{ nombre_sistema }}" width="72" style="display: block; width: 72px !important; max-width: 72px !important; height: auto !important; margin: 0 auto; border: 0;">
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <h1 style="margin: 17px 0 0; color: #FFFFFF; font-size: 21px; line-height: 1.3; font-weight: 700;">{% block titulo_correo %}Notificación{% endblock %}</h1>
+
+                            <p style="margin: 7px 0 0; color: {{ color_texto_encabezado }}; font-size: 13px; line-height: 1.5;">{% block subtitulo_correo %}SAVIA 2.0{% endblock %}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Contenido específico -->
+                    <tr>
+                        <td style="padding: 32px 36px 18px;">
+                            {% block contenido %}{% endblock %}
+                        </td>
+                    </tr>
+
+                    <!-- Pie -->
+                    <tr>
+                        <td align="center" style="padding: 22px 36px 28px; border-top: 1px solid #EAECF0;">
+
+                            {% if logo_pie_base64 %}
+                                <img src="data:image/png;base64,{{ logo_pie_base64 }}" alt="SAVIA 2.0" width="48" style="display: block; width: 48px !important; max-width: 48px !important; height: auto !important; margin: 0 auto; border: 0; border-radius: 50%;">
+                            {% endif %}
+
+                            <p style="margin: 14px 0 0; color: #98A2B3; font-size: 12px; line-height: 1.5; text-align: center;">Este mensaje fue generado automáticamente por {{ nombre_sistema }}.</p>
+
+                            <p style="margin: 4px 0 0; color: #B0B7C3; font-size: 11px; line-height: 1.5; text-align: center;">Por favor, no respondas a este correo.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

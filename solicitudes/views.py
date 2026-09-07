@@ -29,7 +29,8 @@ from user.decorators import perfil_seleccionado_required
 import json
 from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter, HistoricalProductoFilter
 import decimal
-
+from django.template.loader import render_to_string
+from utils.email_theme import obtener_tema_correo
 
 import xlsxwriter
 from django.http import HttpResponse
@@ -352,7 +353,6 @@ def checkout(request):
             if usuario.tipo.supervisor == True or usuario.distritos.nombre == "BRASIL": #Si el usuario es supervisor
                
                 for producto in productos:
-                    productos_html += f'<li>{producto.producto.producto.nombre}: {producto.cantidad}.</li>'
                     # We fetch inventory product corresponding to product (that's why we use product.id)
                     # We create a new product line in a new database to control the ArticlestoDeliver (ArticulosparaSurtir)
                     prod_inventario = Inventario.objects.get(id = producto.producto.id)
@@ -370,7 +370,7 @@ def checkout(request):
                             #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
                             #last_requi = requis.order_by('-folio').first()
                             max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-                            requi.folio = max_folio + 1
+                            requi.folio = (max_folio or 0) + 1
                             numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
                             if productos.count() == numero_servicios: 
                                 order.requisitar=False
@@ -419,111 +419,104 @@ def checkout(request):
                 order.approved_at = date.today()
                 order.approved_at_time = datetime.now().time()
                 static_path = settings.STATIC_ROOT
-                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-                productos_html += '</ul>'
-                image_base64 = get_image_base64(img_path)
-                logo_v_base64 = get_image_base64(img_path2)
-                # Crear el mensaje HTML
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {order.staff.staff.staff.first_name} {order.staff.staff.staff.last_name},</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu solicitud folio: <strong>{order.folio}</strong> ha sido aprobada.</p>
-                                                <p>Con los productos siguientes</p>
-                                                {productos_html}
-                                                </p>
-                                            <p style="font-size: 16px; text-align: justify;">
-                                                El siguiente paso del sistema: Requisitar los productos.
-                                            </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
+                es_savia_negro = (order.distrito and order.distrito.nombre.strip().upper() == 'Yerod')
+
+                contexto_base = obtener_tema_correo(static_path,es_savia_negro,)
+
+                nombre_solicitante = (
+                    f"{order.staff.staff.staff.first_name} "
+                    f"{order.staff.staff.staff.last_name}"
+                )
+
+                articulos_correo = [
+                    {
+                        "nombre": producto.producto.producto.nombre,
+                        "cantidad": producto.cantidad,
+                    } 
+                    for producto in productos
+                ]
+
+                contexto_base.update({
+                    "solicitud": order,
+                    "nombre_solicitante": nombre_solicitante,
+                    "articulos": articulos_correo,
+                })
+
+
+              
+                nombre_autorizador = (
+                    f"{usuario.staff.staff.first_name} "
+                    f"{usuario.staff.staff.last_name}"
+                )
+
+
+                contexto_correo = contexto_base.copy()
+
+                contexto_correo["nombre_autorizador"] = (
+                    nombre_autorizador
+                    )
+
+                html_message = render_to_string(
+                    "emails/solicitudes/solicitud_aprobada.html",
+                    contexto_correo,
+                )
+
                 try:
                     email = EmailMessage(
-                        f'Solicitud Autorizada {order.folio}',
+                        f"Solicitud Autorizada {order.folio}",
                         body=html_message,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[order.staff.staff.staff.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                        to=[order.staff.staff.staff.email,],
+                        headers={"Content-Type": "text/html",},)
+
+                    email.content_subtype = "html"
                     email.send()
-                    messages.success(request, f'La solicitud {order.folio} ha sido creada')
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'La solicitud {order.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
-                    messages.success(request, error_message)
-                order.sol_autorizada_por = Profile.objects.get(id=usuario.id)    
-                cartItems = '0'
+
+                    messages.success(request,f"La solicitud {order.folio} ha sido autorizada",)
+
+                except (BadHeaderError,SMTPException,socket.gaierror,) as error:
+                    error_message = (
+                        f"La solicitud {order.folio} ha sido autorizada, "
+                        "pero el correo no fue enviado debido a un error: "
+                        f"{error}"
+                    )
+
+                    messages.success(request,error_message,)
+                cartItems = "0"
+         
+                    
+
             else:
-                for producto in productos:
-                    productos_html += f'<li>{producto.producto.producto.nombre}: {producto.cantidad}.</li>'
-                static_path = settings.STATIC_ROOT
-                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-                productos_html += '</ul>'
-                image_base64 = get_image_base64(img_path)
-                logo_v_base64 = get_image_base64(img_path2)
-                # Crear el mensaje HTML
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body>
-                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                        <p>Estimado {order.staff.staff.staff.first_name} {order.staff.staff.staff.last_name},</p>
-                        <p>Estás recibiendo este correo porque tu solicitud folio:{order.folio}  se ha generado</p>
-                        <p>Con los productos siguientes</p>
-                        {productos_html}
-                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                    </body>
-                </html>
-                """
+                              
+                contexto_correo = contexto_base.copy()
+
+                html_message = render_to_string(
+                    "emails/solicitudes/solicitud_generada.html",
+                    contexto_correo,
+                )
+
                 try:
                     email = EmailMessage(
-                        f'Solicitud Autorizada {order.folio}',
+                        f"Solicitud Generada {order.folio}",
                         body=html_message,
-                        from_email= settings.DEFAULT_FROM_EMAIL,
-                        to=[order.staff.staff.staff.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[order.staff.staff.staff.email,],
+                        headers={"Content-Type": "text/html",},)
+                    email.content_subtype = "html"
                     email.send()
-                    messages.success(request, f'La solicitud {order.folio} ha sido creada')
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'La solicitud {order.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
-                    messages.success(request, error_message)
+
+                    messages.success(request,f"La solicitud {order.folio} ha sido creada",)
+
+                except (BadHeaderError, SMTPException,socket.gaierror,) as error:
+                    error_message = (
+                        f"La solicitud {order.folio} ha sido creada, "
+                        "pero el correo no fue enviado debido a un error: "
+                        f"{error}"
+                        )
+
+                    messages.success(request,error_message,)
+                        
+                
             order.complete = True
             order.save()
             #print(order.inicio_form)
@@ -844,7 +837,7 @@ def solicitud_matriz(request):
     ordenes_list = p.get_page(page)
 
     if request.method =='POST' and 'btnExcel' in request.POST:
-        return convert_excel_solicitud_matriz(ordenes)
+        return convert_excel_solicitud_matriz(ordenes, perfil)
   
     context= {
         'ordenes_list':ordenes_list,
@@ -1743,12 +1736,6 @@ def autorizada_sol(request, pk):
         order.autorizar = True
         order.approved_at = date.today()
         order.approved_at_time = datetime.now().time()
-        #send_mail(
-        #    f'Solicitud Autorizada {order.folio}',
-        #    f'{order.staff.staff.first_name}, la solicitud {order.folio} ha sido autorizada. Este mensaje ha sido automáticamente generado por SAVIA X',
-        #    'saviax.vordcab@gmail.com',
-        #    [order.staff.staff.email],
-        #    )
         order.sol_autorizada_por = Profile.objects.get(id = pk_perfil)
         order.save()
 
@@ -2695,20 +2682,33 @@ def convert_excel_solicitud_matriz_productos(productos):
 
     return(response)
 
-def convert_excel_solicitud_matriz(ordenes):
+def convert_excel_solicitud_matriz(ordenes, usuario):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Solicitudes_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
     ws = wb.create_sheet(title='Solicitudes')
 
+    es_yerod = usuario.distritos.nombre == 'Yerod'
+
+    if es_yerod:
+        color_principal = '002E5E3F'  # Verde Yerod
+        color_titulo = '002E5E3F'
+        color_texto_header = '00FFFFFF'
+        nombre_logo = 'SAVIA_Negro_Verde.jpg'
+    else:
+        color_principal = '00003366'  # Azul Vordcab
+        color_titulo = '00003366'
+        color_texto_header = '00FFFFFF'
+        nombre_logo = 'logo_vordcab.jpg'
+
     #Create heading style and adding to workbook | Crear estilos y agregarlos al Workbook
     #Head 
     head1_style = NamedStyle(name = "head1_style")
-    head1_style.font = Font(name = 'Arial', color = '00003366', bold = True, size = 18)
+    head1_style.font = Font(name = 'Arial', color = color_titulo, bold = True, size = 18)
     #Head table
     head_style = NamedStyle(name = "head_style")
     head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
-    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    head_style.fill = PatternFill("solid", fgColor = color_titulo)
     wb.add_named_style(head_style)
     #Create body style and adding to workbook
     body_style = NamedStyle(name = "body_style")
@@ -2730,19 +2730,25 @@ def convert_excel_solicitud_matriz(ordenes):
     wb.add_named_style(money_resumen_style)
     # Construir la ruta completa a la imagen
     static_path = settings.STATIC_ROOT
-    img_path = os.path.join(static_path,'images','logo_vordcab.jpg')
+    img_path = os.path.join(
+        static_path,
+        'images',
+        nombre_logo,
+    )
+
     # Añadir imagen
     img = Image(img_path)
     # Ajustar tamaño de la imagen
-    img.width = 120  # Ajusta el ancho como sea necesario
-    img.height = 120  # Ajusta el alto como sea necesario
+    img.width = 110  # Ajusta el ancho como sea necesario
+    img.height = 110  # Ajusta el alto como sea necesario
 
     ws.add_image(img, 'A1')
     
      # Añadir título y fechas
     (ws.cell(column = 3, row = 1, value = 'MATRIZ DE SOLICITUDES')).style = head1_style
-    (ws.cell(column = 3, row = 4, value='Reporte Creado Automáticamente por SAVIA 2.0. UH')).style = messages_style
-    (ws.cell(column = 3, row = 5, value='Software desarrollado por Grupo Vordcab S.A. de C.V.')).style = messages_style
+    (ws.cell(column = 3, row = 4, value='Reporte Creado Automáticamente por SAVIA 2.1.')).style = messages_style
+    if not es_yerod:
+        (ws.cell(column = 3, row = 5, value='Software desarrollado por Grupo Vordcab S.A. de C.V.')).style = messages_style
     #fecha_min = min((orden.created_at for orden in ordenes if orden.created_at is not None), default=None)  # Suponiendo que 'fecha' es un atributo de tus 'ordenes'
     #fecha_max = max((orden.created_at for orden in ordenes if orden.created_at is not None), default=None)
     #ws['B6'] = f'Fecha desde: {fecha_min} hasta: {fecha_max}'

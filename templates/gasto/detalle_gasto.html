@@ -1,24 +1,27 @@
-{% extends 'partials/base_w_nav.html' %}
-{% load static %}
+{% load l10n %}
 {% load humanize %}
-<html>
-<head>
-{% block title %}Detalle Gasto{% endblock %}
-</head>
 
-<body>
-{% block content %}
-
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Gasto: G{{gasto.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+<div class="modal-content sv-modal">
+    <div class="modal-header">
+        <div>
+            <h2 class="modal-title">
+                <i class="fa-solid fa-receipt me-2"></i>Detalle del gasto
+            </h2>
+            <span class="sv-modal-subtitle">Gasto G{{ gasto.folio }}</span>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
 
-        <div class="modal-body">
-            <div class='box-element-2'>
-                <table class="table" style="color:white">
+    <div class="modal-body">
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <h3 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>Conceptos del gasto
+                </h3>
+                <span class="sv-badge sv-badge-dark">{{ productos|length }} conceptos</span>
+            </div>
+            <div class="sv-table-wrap">
+                <table class="sv-table sv-table-xwide">
                     <thead>
                         <tr>
                             <th>Código</th>
@@ -34,126 +37,209 @@
                     <tbody>
                         {% for producto in productos %}
                         <tr>
-                            <td>{{producto.producto.codigo}}</td>
-                            <td>{{producto.producto.nombre}}</td>
-                            <td>{{producto.proyecto.nombre}}</td>
-                            <td>{{producto.subproyecto.nombre}}</td>
-                            <td><p class='quantity' id='prod_quantity'>{{producto.cantidad|floatformat:2}}</p></td>
-                            <td>${{producto.precio_unitario|floatformat:2}}</td>
-                            <td>${{producto.total_parcial}}</td>
-                            <td>{{producto.comentario}}</td>
+                            <td><span class="sv-folio">{{ producto.producto.codigo }}</span></td>
+                            <td><span class="sv-cell-title">{{ producto.producto.nombre }}</span></td>
+                            <td>{{ producto.proyecto.nombre }}</td>
+                            <td><span class="sv-cell-subtitle">{{ producto.subproyecto.nombre }}</span></td>
+                            <td><strong>{{ producto.cantidad|floatformat:2 }}</strong></td>
+                            <td>${{ producto.precio_unitario|floatformat:2 }}</td>
+                            <td><strong>${{ producto.total_parcial|floatformat:2 }}</strong></td>
+                            <td>{{ producto.comentario|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                                <span class="sv-empty-title">Sin conceptos registrados</span>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="modal-footer">
-        <h4>Contenido de Facturas</h4>
-        <table class="table" style="color:white">
-            <thead>
-                <tr>
-                    <th>Archivo PDF</th>
-                    <th>Archivo XML</th>
-                    <th>Fecha de Subida</th>
-                    <th>Concepto</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for factura in facturas %}
-            <tr>
-                <td>
-                    {% if factura.archivo_pdf %}
-                    <a class="btn btn-outline-danger" href="{{factura.archivo_pdf.url}}" download class="btn btn-outline-info">
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </a>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if factura.archivo_xml %}
-                    <a class="btn btn-outline-light" style="background-color:#9a9b9d" href="{{factura.archivo_xml.url}}" download class="btn btn-outline-light">
-                        <i class="fa-solid fa-file-code"></i>
-                    </a>
-                    {% endif %}
-                </td>
-                <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
-                <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
-                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% endif %}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <h4 class="mt-4">Contenido de Vales Rosa</h4>
-            <table class="table" style="color:white">
-                <thead style="background-color: #f8d7da;">
-                    <tr>
-                        <th>ID</th>
-                        <th>Motivo</th>
-                        <th>Monto</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vale in gasto.vales_rosa.all %}
-                    <tr>
-                        <td>{{ vale.id }}</td>
-                        <td>{{ vale.motivo }}</td>
-                        <td>${{ vale.monto|floatformat:2 }}</td>
-                        <td>
-                            {% if vale.esta_aprobado %} 
-                            <span class="badge bg-primary">Autorizado</span> 
-                            {% elif vale.esta_aprobado == False %} 
-                                <span class="badge bg-danger">Cancelado</span>
-                            {% else %} 
-                                <span class="badge bg-warning">No Autorizado Aún</span> 
-                            {% endif %}
-                        </td>
-                        <td>{{ vale.creado_en|date:"d/m/Y" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">Sin vales rosa registrados</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                
-            </table>
-            <h5 class="mt-4">Archivos de Nómina</h5>
-            <table class="table" style="color:white">
-                <thead style="background-color: #d1ecf1;">
-                    <tr>
-                        <th>ID</th>
-                        <th>Tipo</th>
-                        <th>Total</th>
-                        <th>Fecha de Subida</th>
-                        <th>Archivo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if gasto.archivonomina_set.all.count == 0 %}
-                        <tr><td colspan="5" class="text-center text-muted">No hay archivos de nómina en esta solicitud</td></tr>
-                    {% else %}
-                        {% for archivo in gasto.archivonomina_set.all %}
-                            <tr>
-                                <td>{{ archivo.id }}</td>
-                                <td>{{ archivo.tipo.nombre }}</td>
-                                <td>${{ archivo.total|floatformat:2 }}</td>
-                                <td>{{ archivo.fecha_subida|date:"d/m/Y H:i" }}</td>
-                                <td><a href="{{ archivo.archivo.url }}" target="_blank">Descargar</a></td>
-                            </tr>
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <h3 class="sv-card-title">
+                    <i class="fa-solid fa-file-invoice"></i>Contenido de facturas
+                </h3>
+                <span class="sv-badge sv-badge-primary">{{ facturas|length }} archivos</span>
+            </div>
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <thead>
+                        <tr>
+                            <th>PDF</th>
+                            <th>XML</th>
+                            <th>Fecha de subida</th>
+                            <th>Concepto</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for factura in facturas %}
+                        <tr>
+                            <td>
+                                {% if factura.archivo_pdf %}
+                                <div class="d-flex flex-nowrap gap-1">
+                                    <a class="sv-btn sv-btn-info sv-btn-icon"
+                                       href="{{ factura.archivo_pdf.url }}" target="_blank" rel="noopener"
+                                       title="Visualizar PDF" aria-label="Visualizar PDF">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a class="sv-btn sv-btn-danger sv-btn-icon"
+                                       href="{{ factura.archivo_pdf.url }}" download
+                                       title="Descargar PDF" aria-label="Descargar PDF">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <span class="sv-cell-subtitle">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if factura.archivo_xml %}
+                                <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                   href="{{ factura.archivo_xml.url }}" download
+                                   title="Descargar XML" aria-label="Descargar XML">
+                                    <i class="fa-solid fa-file-code"></i>
+                                </a>
+                                {% else %}
+                                <span class="sv-cell-subtitle">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if factura.archivo_xml %}
+                                    {{ factura.fecha_subida|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="sv-cell-subtitle">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if factura.archivo_xml %}
+                                    {{ factura.emisor.resultados|default:"—" }}
+                                {% else %}
+                                    <span class="sv-cell-subtitle">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="factura-total">
+                                {% if factura.archivo_xml %}
+                                    <strong>${{ factura.emisor.total|floatformat:2 }}</strong>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">Sin facturas registradas</span>
+                            </td>
+                        </tr>
                         {% endfor %}
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <h3 class="sv-card-title">
+                    <i class="fa-solid fa-file-circle-check"></i>Vales rosa
+                </h3>
+            </div>
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Motivo</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vale in gasto.vales_rosa.all %}
+                        <tr>
+                            <td><span class="sv-folio">{{ vale.id }}</span></td>
+                            <td>{{ vale.motivo }}</td>
+                            <td><strong>${{ vale.monto|floatformat:2 }}</strong></td>
+                            <td>
+                                {% if vale.esta_aprobado %}
+                                <span class="sv-badge sv-badge-success">Autorizado</span>
+                                {% elif vale.esta_aprobado == False %}
+                                <span class="sv-badge sv-badge-danger">Cancelado</span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ vale.creado_en|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">Sin vales rosa registrados</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sv-card">
+            <div class="sv-card-header">
+                <h3 class="sv-card-title">
+                    <i class="fa-solid fa-file-zipper"></i>Archivos de nómina
+                </h3>
+            </div>
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Total</th>
+                            <th>Fecha de subida</th>
+                            <th>Archivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for archivo in gasto.archivonomina_set.all %}
+                        <tr>
+                            <td><span class="sv-folio">{{ archivo.id }}</span></td>
+                            <td>{{ archivo.tipo.nombre }}</td>
+                            <td><strong>${{ archivo.total|floatformat:2 }}</strong></td>
+                            <td>{{ archivo.fecha_subida|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a class="sv-btn sv-btn-outline"
+                                   href="{{ archivo.archivo.url }}" target="_blank" rel="noopener">
+                                    <i class="fa-solid fa-download"></i>Descargar
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">Sin archivos de nómina</span>
+                                <span class="sv-empty-text">Esta solicitud todavía no contiene archivos.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark"></i>Cerrar
+        </button>
     </div>
 </div>
-
-
-
-{% endblock %}
-</body>
-</html>

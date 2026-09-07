@@ -1,270 +1,308 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
-{% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
-<html>
-<head>
+
 {% block title %}Autorización Gerencia{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<hr>
-<div class = "card">
-        
-    <div class="card-header">
-        <h5>Filtro de Compras {{num_approved_requis}} {{num_requis_atendidas}}</h5>
-    </div>
-    <div class="card-body">
-       
-        {% csrf_token %}
-        <form method="GET">
-        <div class="row g-12">
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                        <label style="color: #121212;" for="id_id">Folio</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                        <label style="color: #121212;" for="id_id">Proveedor</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
-                        <label style="color: #121212;" for="id_id">Requisición</label>
-                    </div>
-                </div>
-            </div>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-file-circle-check"></i></span>
+                Autorización Gerencia
+            </h1>
+            <p class="sv-page-subtitle">
+                Revisa costos, proveedores, comparativos y documentación antes de autorizar las órdenes de compra.
+            </p>
         </div>
-        <div class="row g-12">
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                        <label style="color: #121212;" for="id_id">Proyecto</label>
-                    </div>
-                </div>
-            </div>
-        
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
-                        <label style="color: #121212;" for="id_id">Subproyecto</label>
-                    </div>
-                </div>
-            </div>
-            <div id="serie" class="col-lg-2 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                    <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                    </div>
-                </div>
-            </div>
-            <div id="serie" class="col-lg-2 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                    <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-2">
-                <!--onclick="regenerar()"-->
-                <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
+
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                {{ compras|length }} por revisar
+            </span>
         </div>
-        <hr>
-        </form>
-    </div>
-</div>
+    </header>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>Filtro de compras</h2>
+        </div>
 
-<div class = "card bg-white my-2">
-    <div class="card-header">
-        <h3>Autorización Gerente</h3>
-    </div>
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr role="row">
-                    <th >Folio</th>
-                    <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    <th class="d-none d-lg-table-cell">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th class="d-none d-lg-table-cell">Operación</th>
-                    <th class="d-none d-lg-table-cell">Creado</th>
-                    <th class="numeric">Proveedor</th>
-                    <th class="numeric">Costo</th>
-                    <th class="numeric">Moneda</th>
-                    <th>Precios</th>
-                    <th class="d-none d-lg-table-cell">Condición</th>
-                    <th class="numeric">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for compra in compras %}
-                <tr>
-                    <th scope="row">{{compra.folio}}</th>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.operacion}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
-                    <td>{{compra.proveedor}}</td>
-                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
-                    <td>{{compra.moneda.nombre}} </td>
-                    <td>
-                        <a id="myBtn" type="button" title= "Productos y Comentarios" class="btn btn-outline-info" href="{% url 'productos-oc-precio' compra.id %}">
-                            <i class="fa-duotone fa-solid fa-circle-info"></i>
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor" }}
+                                <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.req|add_class:"form-control"|append_attr:"placeholder=Requisición" }}
+                                <label for="{{ myfilter.form.req.id_for_label }}">Requisición</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                                <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto" }}
+                                <label for="{{ myfilter.form.subproyecto.id_for_label }}">Subproyecto</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>Limpiar
                         </a>
-                    </td>
-                    <td class="d-none d-lg-table-cell">{{compra.cond_de_pago.nombre}}</td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'autorizar-oc2' compra.id %}"><i class="fa-solid fa-check"></i></a>
-                            </li>
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}">R<i class="fa-solid fa-backward"></i></a>
-                            </li>
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
-                            </li>
-                            {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
-                                {% if compra.comparativo_model %}
-                                <li class="nav-item m-1">
-                                    <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document"  hx-get="{% url 'mostrar-comparativo' compra.id|unlocalize %}">
-                                        <i class="fa-duotone fa-solid fa-scale-balanced"></i>
+                        <button id="btnBuscar" class="sv-btn sv-btn-primary" onclick="guardar_variable();" type="submit">
+                            <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i>Órdenes pendientes de autorización</h2>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-xwide">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Solicitado por</th>
+                        <th>Proyecto</th>
+                        <th>Subproyecto</th>
+                        <th>Operación</th>
+                        <th>Creado</th>
+                        <th>Proveedor</th>
+                        <th>Costo</th>
+                        <th>Moneda</th>
+                        <th>Precios</th>
+                        <th>Condición</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for compra in compras %}
+                    <tr>
+                        <td><span class="sv-folio">{{ compra.folio }}</span></td>
+                        <td>
+                            <div class="sv-user">
+                                <span class="sv-user-avatar">
+                                    {{ compra.req.orden.staff.staff.staff.first_name|first }}{{ compra.req.orden.staff.staff.staff.last_name|first }}
+                                </span>
+                                <span class="sv-user-name">
+                                    {{ compra.req.orden.staff.staff.staff.first_name }} {{ compra.req.orden.staff.staff.staff.last_name }}
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
+                        <td><span class="sv-cell-title">{{ compra.req.orden.subproyecto.nombre }}</span></td>
+                        <td><span class="sv-cell-subtitle">{{ compra.req.orden.operacion }}</span></td>
+                        <td>
+                            <div class="sv-date">
+                                <strong><i class="fa-regular fa-calendar me-1"></i>{{ compra.created_at|date:"d/m/Y" }}</strong>
+                                <small>{{ compra.created_at|time:"H:i" }} hrs.</small>
+                            </div>
+                        </td>
+                        <td><span class="sv-cell-title">{{ compra.proveedor }}</span></td>
+                        <td><strong>$ {{ compra.costo_plus_adicionales|floatformat:2 }}</strong></td>
+                        <td><span class="sv-badge sv-badge-dark">{{ compra.moneda.nombre }}</span></td>
+                        <td>
+                            <a class="sv-btn sv-btn-info sv-btn-icon"
+                               href="{% url 'productos-oc-precio' compra.id %}"
+                               title="Productos, precios y comentarios"
+                               aria-label="Productos, precios y comentarios">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </a>
+                        </td>
+                        <td><span class="sv-cell-subtitle">{{ compra.cond_de_pago.nombre }}</span></td>
+                        <td>
+                            <div class="sv-actions">
+                                <a class="sv-btn sv-btn-danger sv-btn-icon"
+                                   data-bs-toggle="modal" data-bs-target="#dialog"
+                                   hx-target="#document" hx-swap="innerHTML"
+                                   hx-get="{% url 'cancelar-oc2' compra.id %}"
+                                   title="Cancelar OC" aria-label="Cancelar OC">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+
+                                <a class="sv-btn sv-btn-warning sv-btn-icon"
+                                   data-bs-toggle="modal" data-bs-target="#dialog"
+                                   hx-target="#document" hx-get="{% url 'back-oc' compra.id %}"
+                                   title="Regresar OC" aria-label="Regresar OC">
+                                    <i class="fa-solid fa-backward"></i>
+                                </a>
+
+                                <a class="sv-btn sv-btn-success sv-btn-icon"
+                                   data-bs-toggle="modal" data-bs-target="#dialog"
+                                   hx-target="#document" hx-get="{% url 'autorizar-oc2' compra.id %}"
+                                   title="Autorizar OC" aria-label="Autorizar OC">
+                                    <i class="fa-solid fa-check"></i>
+                                </a>
+
+                                {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
+                                    {% if compra.comparativo_model %}
+                                    <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                       data-bs-toggle="modal" data-bs-target="#dialog"
+                                       hx-target="#document"
+                                       hx-get="{% url 'mostrar-comparativo' compra.id|unlocalize %}"
+                                       title="Mostrar comparativo" aria-label="Mostrar comparativo">
+                                        <i class="fa-solid fa-scale-balanced"></i>
                                     </a>
-                                </li>
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
-                            <li class="nav-item m-2">
-                                <button class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" data-pdf-url="{% url 'ver_oc_pdf' compra.id %}">
+
+                                <button class="sv-btn sv-btn-info sv-btn-icon" type="button"
+                                        data-bs-toggle="modal" data-bs-target="#pdfModal"
+                                        data-pdf-url="{% url 'ver_oc_pdf' compra.id %}"
+                                        title="Ver orden de compra" aria-label="Ver orden de compra">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
-                                  <!-- Modal -->
-                                <div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                                        <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Orden de compra</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="12" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-check"></i></span>
+                            <span class="sv-empty-title">No hay órdenes pendientes de autorización</span>
+                            <span class="sv-empty-text">Todas las órdenes de compra disponibles han sido revisadas.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
-                                        <div class="modal-body" style="height:80vh;">
-                                            <iframe id="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
-                                        </div>
-                                        </div>
-                                    </div>
-                                </div>
-                               
-
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-xl" id="document" role="document" hx-target="this">
-
-    </div>
+<div class="modal fade" id="dialog" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+         id="document" role="document" hx-target="this"></div>
 </div>
 
+<div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title"><i class="fa-solid fa-file-pdf me-2"></i>Orden de compra</h2>
+                    <span class="sv-modal-subtitle">Vista previa del documento</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh;">
+                <iframe id="pdfFrame" src="" title="Vista previa de la orden de compra"
+                        style="width: 100%; height: 100%; border: 0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
+(function () {
+    const pdfModal = document.getElementById("pdfModal");
+    const pdfFrame = document.getElementById("pdfFrame");
+    const dialog = document.getElementById("dialog");
 
-document.getElementById('pdfModal').addEventListener('show.bs.modal', function (event) {
-  const button = event.relatedTarget;
-  const url = button.getAttribute('data-pdf-url');
-  const iframe = document.getElementById('pdfFrame');
-  iframe.src = url;
-});
+    if (pdfModal && pdfFrame) {
+        pdfModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            pdfFrame.src = button ? button.getAttribute("data-pdf-url") : "";
+        });
 
-// opcional: limpiar al cerrar para que no se quede cargado
-document.getElementById('pdfModal').addEventListener('hidden.bs.modal', function () {
-  document.getElementById('pdfFrame').src = '';
-});
+        pdfModal.addEventListener("hidden.bs.modal", function () {
+            pdfFrame.src = "";
+        });
+    }
 
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
+    if (dialog) {
+        const modal = bootstrap.Modal.getOrCreateInstance(dialog);
 
-(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+        document.body.addEventListener("htmx:beforeSwap", function (event) {
+            if (event.detail.target && event.detail.target.id === "document" && !event.detail.xhr.response) {
+                modal.hide();
+            }
+        });
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    });
+        dialog.addEventListener("hidden.bs.modal", function () {
+            window.location.reload();
+        });
+    }
 })();
-
-var myModal = document.getElementById('dialog')
-
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
-
-
 </script>
 {% endblock %}
-</body>
-</html>

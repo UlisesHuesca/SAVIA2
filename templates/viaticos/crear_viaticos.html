@@ -3,23 +3,19 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load i18n %}
-<html>
-<head>
+
 {% block title %}{% trans "Viáticos" %}{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="d-none" aria-hidden="true">
         {% if messages %}
             {% for message in messages %}
                 {% if message.tags == "error" %}
                 <script>
                 Swal.fire({
                     "title":"Error",
-                    "text":"{{message}}",
+                    "text":"{{ message|escapejs }}",
                     "icon":"error",
                 })
                 </script>
@@ -27,26 +23,37 @@
                 <script>
                 Swal.fire({
                     "title":"Excelente",
-                    "text":"{{message}}",
+                    "text":"{{ message|escapejs }}",
                     "icon":"success",
                 })
                 </script>
                 {% endif %}
             {% endfor %}
         {% endif %}
-    </div>
 </div>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class="col-lg-8 offset-lg-2 col-sm-12">
-    <div class="card">
-        <div class="card-header">
-		    <h2 id="viatico" viatico_id = "{{viatico.id}}">{% trans "Solicitud de Viáticos" %}: {{folio_probable}}</h2>
-	    </div>
-        <div class="card-body">
-					<form method="POST" id='SolicitudForm'>
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header" id="viatico" viatico_id="{{ viatico.id }}">
+        <div>
+            <span class="sv-page-eyebrow">{% trans "Viáticos" %}</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-suitcase-rolling"></i></span>
+                {% trans "Solicitud de viáticos" %}
+            </h1>
+            <p class="sv-page-subtitle">{% trans "Registra los datos de la comisión, traslado y cuenta de depósito." %}</p>
+        </div>
+        <span class="sv-badge sv-badge-primary">{% trans "Folio" %}: {{ folio_probable }}</span>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">{% trans "Nueva solicitud" %}</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-clipboard-list"></i> {% trans "Datos de la comisión" %}</h2>
+            </div>
+        </div>
+        <div class="sv-card-body">
+						<form method="POST" id='SolicitudForm'>
                         {% csrf_token %}
                         {% if error_messages %}
                         <div class="alert alert-danger" role="alert">
@@ -56,8 +63,8 @@
                         {% if usuario.tipo.subdirector %}
                         <div class="row my-2">
                             <div class="col-lg-12 col-sm-12" >
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-message"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{form.tipo|add_class:"form-control"|append_attr:"placeholder=Tipo"}}
                                             <label for="id_transporte">Tipo*</label>
@@ -66,57 +73,54 @@
                             </div>
                         </div>
                         {% endif %}
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="row g-3">
+                            <div class="col-lg-4 col-12">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.proyecto}}
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="col-lg-4 col-12">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.subproyecto}}
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="col-lg-4 col-12">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                     {{form.superintendente}}    
                                     </div>
                                 </div>  
                             </div>
                         </div> 
-                        <div class="row">
-                            <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
-                                <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
-                                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelColaborador">Otro Colaborador</label>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-lg-3 col-12" id="Otro_Colaborador">
+                                <div class="form-check form-switch ps-5 py-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
+                                    <label class="form-check-label" for="SwitchColaborador" id="LabelColaborador">Otro Colaborador</label>
+                                </div>
                             </div>
                             
-                            <div class="row d-none" id="colaborador_parrafo">
-                                <div class="col-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="col-lg-9 col-12 d-none" id="colaborador_parrafo">
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.colaborador}}    
                                         </div>
                                     </div>  
-                                </div>
                             </div>
                         </div>
+                        <h3 class="sv-section-title"><i class="fa-solid fa-route"></i> {% trans "Itinerario y transporte" %}</h3>
                         <div class="row my-2">
                             <div class="col-lg-12 col-sm-12" >
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-message"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{form.motivo|add_class:"form-control"|append_attr:"placeholder=Motivo"}}
                                             <label for="id_transporte">Motivo*</label>
@@ -126,37 +130,37 @@
                         </div>
                         <div class="row my-2">
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-clock"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-clock"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {% render_field form.hora_partida type="time" class="form-control" %}
                                         <label for="id_hora_partida">Hora de partida*</label>
                                     </div>
                                 </div>
                             </div>
-                            <div id="serie" class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {% render_field form.fecha_partida type="date" class="form-control" %}
-                                        <label style="color: #121212;" for="id_subproyecto">{% trans "Desde" %}:</label>
+                                        <label for="id_subproyecto">{% trans "Desde" %}:</label>
                                     </div>
                                 </div>
                             </div>
-                            <div id="serie" class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {% render_field form.fecha_retorno type="date" class="form-control" %}
-                                        <label style="color: #121212;" for="id_subproyecto">{% trans "Hasta" %}:</label>
+                                        <label for="id_subproyecto">{% trans "Hasta" %}:</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="row my-2">
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-car"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         <select id="transporte" name="tipo_transporte" class="form-control" required onchange="actualizarEtiqueta()">
                                             <option value="" disabled selected>{% trans "Seleccione su transporte" %}</option>
@@ -173,8 +177,8 @@
                             </div>
 
                             <div class="col-lg-8 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text">
                                         <i class="fa-solid fa-car" id="iconoTransporte"></i>
                                     </span>
                                     <div class="form-floating form-floating-group flex-grow-1">
@@ -186,8 +190,8 @@
                         </div>
                         <div class="row my-2">
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder:Lugar de partida*"}}
                                         <label for="id_lugar_partida">{% trans "Lugar de partida" %}*</label>
@@ -195,8 +199,8 @@
                                 </div>
                             </div>
                             <div class="col-lg-6 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.lugar_comision|add_class:"form-control"|append_attr:"placeholder=Lugar de comision*"}}
                                         <label for="id_lugar_comision">{% trans "Lugar de comisión" %}*</label> 
@@ -212,8 +216,8 @@
                         </div>
                         <div class="row">
                             <div class="col-lg-6 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">  
                                     {{form.comentario_jefe_inmediato|add_class:"form-control"|append_attr:"placeholder=Comentario para Jefe Inmediato"}}
                                     <label for="id_comentario">{% trans "Comentario para Jefe Inmediato" %}</label>
@@ -231,8 +235,8 @@
                         </div>
                         <div class="row">
                             <div class="col-lg-6 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">  
                                     {{form.comentario_general|add_class:"form-control"|append_attr:"placeholder=Comentario General"}}
                                     <label for="id_comentario">{% trans "Comentario General" %}</label>
@@ -250,8 +254,8 @@
                         </div>
                         <div id="emergencyPhoneField" class="row my-2 d-none">
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.phone|add_class:"form-control"|append_attr:"placeholder=Número de emergencia" }}
                                         <label for="id_phone">{% trans "Número de emergencia" %}</label>
@@ -261,8 +265,8 @@
                         </div>
                         <div id="bankFields" class="row my-2 d-none">
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-credit-card"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-credit-card"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.cuenta_bancaria|add_class:"form-control"|append_attr:"placeholder=Cuenta bancaria" }}
                                         <label for="id_cuenta_bancaria">{% trans "Cuenta bancaria" %}*</label>
@@ -270,8 +274,8 @@
                                 </div>
                             </div>
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-key"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.clabe|add_class:"form-control"|append_attr:"placeholder=CLABE interbancaria" }}
                                         <label for="id_clabe">{% trans "CLABE interbancaria" %}*</label>
@@ -279,8 +283,8 @@
                                 </div>
                             </div>
                             <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building"></i></span>
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.banco|add_class:"form-control"|append_attr:"placeholder=Seleccione su banco" }}
                                         <label for="id_banco">{% trans "Banco" %}*</label>
@@ -288,20 +292,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <input class="btn btn-outline-info btn-block my-2 col-sm-12 col-lg-3" id="btn_agregar" name="btn_agregar" type="submit" value="Crear Solicitud">
+                        <div class="sv-actions justify-content-end mt-2">
+                            <button class="sv-btn sv-btn-primary" id="btn_agregar" name="btn_agregar" type="submit" value="Crear Solicitud">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                {% trans "Crear solicitud" %}
+                            </button>
                         </div>
                     </form>
-                    <form method="POST" id='Lugar_Intermedio' class="d-none">
+                    <form method="POST" id='Lugar_Intermedio' class="d-none border-top mt-4 pt-4">
                         {% csrf_token %}
-                          <div class="alert alert-secondary" role="alert">
-                            <h4>{% trans "Puntos Intermedios" %}</h4>
-                          </div>
+                        <h3 class="sv-section-title"><i class="fa-solid fa-location-crosshairs"></i> {% trans "Puntos intermedios" %}</h3>
                          
                             <div class="row">
                                 <div class="col-lg-4 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{form2.nombre|add_class:"form-control"|append_attr:"placeholder=Punto Intermedio*"}}
                                             <label for="id_lugar_partida">{% trans "Punto Intermedio" %}*</label>
@@ -309,26 +314,26 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {% render_field form2.fecha_inicio type="date" class="form-control" %}
-                                            <label style="color: #121212;" for="id_subproyecto">{% trans "Desde" %}:</label>
+                                            <label for="id_subproyecto">{% trans "Desde" %}:</label>
                                         </div>
                                     </div>
                                 </div>
-                                <div id="serie" class="col-lg-4 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {% render_field form2.fecha_fin type="date" class="form-control" %}
-                                            <label style="color: #121212;" for="id_subproyecto">{% trans "Hasta" %}:</label>
+                                            <label for="id_subproyecto">{% trans "Hasta" %}:</label>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                    <div class="sv-input-group input-group mb-3">
+                                        <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">  
                                             {{form2.comentario_hospedaje|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
                                             <label for="id_comentario">{% trans "Comentario" %}*</label>
@@ -336,13 +341,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button class="btn btn-outline-info btn-block my-2" id="btn_punto" name="btn_punto" type="submit"> <i class="fa-solid fa-circle-plus"></i></button>
+                            <div class="sv-actions justify-content-end">
+                                <button class="sv-btn sv-btn-outline" id="btn_punto" name="btn_punto" type="submit">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                    {% trans "Agregar punto" %}
+                                </button>
                             </div>
                         </form>
-                            <hr>
-                            <div id="table_puntos" class ="table-responsive-sm d-none">
-                                <table class="table table-light table-striped table-hover mx-2">
+                            <div id="table_puntos" class="sv-table-wrap d-none mt-3">
+                                <table class="sv-table">
                                 <thead>
                                     <tr>
                                         <th scope="col">{% trans "Punto Intermedio" %}</th>
@@ -355,12 +362,12 @@
                                 <tbody id="mytbl">
                                     {% for punto in puntos%}
                                     <tr id="row_{{punto.id}}">
-                                        <td class="d-none d-lg-table-cell">{{punto.nombre}}</td>
+                                        <td><span class="sv-cell-title">{{punto.nombre}}</span></td>
                                         <td>{{punto.fecha_inicio}}</td>
                                         <td>{{punto.fecha_fin}}</td>
                                         <td>{{punto.comentario_hospedaje}}</td>
                                        
-                                        <td><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow({{punto.id}})" id="delete"><i class="fa-solid fa-trash-can"></i></button></td>
+                                        <td><button type="button" class="sv-btn sv-btn-icon sv-btn-danger" value="Delete" onclick="deleteRow({{punto.id}})" title="{% trans 'Eliminar punto' %}"><i class="fa-solid fa-trash-can"></i></button></td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -368,8 +375,8 @@
                             </div>
                             
         </div>
-    </div>
-</div>
+    </section>
+</main>
     
 
 
@@ -384,7 +391,6 @@
 <!--AJAX CALL-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.getElementById("SolicitudForm").addEventListener('change', function() {
     var viatico = document.getElementById('viatico');
@@ -413,18 +419,6 @@ document.getElementById("SolicitudForm").addEventListener('change', function() {
     
 });
 
-document.getElementById("SwitchColaborador").addEventListener("change", function(element){
-	let colaboradores = document.getElementById('colaborador_parrafo');
-
-	if (check_colaborador.checked){
-	    colaboradores.classList.remove('d-none')
-	    
-	} else {
-	    colaboradores.classList.add('d-none')
-	    
-	}
-});
-
 document.getElementById("SwitchPuntos").addEventListener("change", activar_seccion_puntos)
 
 function activar_seccion_puntos(){
@@ -442,9 +436,8 @@ function activar_seccion_puntos(){
 };
 //This is the function that remove any product from render product table and remove the specific element from the array
 function deleteRow(elemento) {
-    id = elemento
+    const id = elemento
     console.log(id)
-    var action = "remove";
     EliminarArticulos(id);
     //var select = document.getElementById('producto');
 
@@ -603,6 +596,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     }
 
+    actualizarEtiqueta();
     activar_seccion_puntos()
 });
 
@@ -771,7 +765,7 @@ $(document).ready(function() {
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
         cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
     });
-    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id)) || {};
     var superintendenteSelect = $('#id_superintendente');
     //Si hay datos se rellena el campo con los datos del local storage
     if (datos) {
@@ -844,7 +838,7 @@ function cambio_en_formulario(data,key) {
             } else {
                 $('#bankFields').addClass('d-none');  // Ocultar los campos
             }
-        });
+        }).trigger('change');
     });
     $(document).ready(function() {
         $('#toggleEmergencyPhone').on('change', function() {
@@ -853,7 +847,7 @@ function cambio_en_formulario(data,key) {
             } else {
                 $('#emergencyPhoneField').addClass('d-none');  // Ocultar el campo
             }
-        });
+        }).trigger('change');
     });
 function actualizarEtiqueta() {
     const select = document.getElementById('transporte');
@@ -862,7 +856,7 @@ function actualizarEtiqueta() {
     const opcionSeleccionada = select.options[select.selectedIndex].value;
 
     // Cambia el contenido de la etiqueta y el icono según la opción seleccionada
-    if (opcionSeleccionada === 'vehiculo_propio' || opcionSeleccionada === 'vehiculo_empresa' || opcionSeleccionada === 'tercero') {
+    if (opcionSeleccionada === 'vehiculo_propio' || opcionSeleccionada === 'vehiculo_empresa') {
         etiqueta.textContent = 'Transporte (marca, modelo, rendimiento)*';
         icono.className = 'fa-solid fa-car'; // Icono de coche
     } else if (opcionSeleccionada === 'autobus') {
@@ -884,5 +878,3 @@ function actualizarEtiqueta() {
 }
 </script>
 {% endblock %}
-</body>
-</html>

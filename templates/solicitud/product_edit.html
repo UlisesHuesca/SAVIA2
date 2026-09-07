@@ -1,103 +1,183 @@
 {% load l10n %}
 {% load widget_tweaks %}
 {% load i18n %}
-<html>
-<body>
-<div class = "card bg-white">
-    
-        <div class="card-header">
-            <h3>{% trans "Resumen de solicitud" %}</h3>
-        </div>
-    {% if orden.tipo.id == 2 %}
-    <div class="col-3 my-2">
-        <a class="btn btn-outline-info" href="{% url 'product_selection_resurtimiento' %}">
-            <i class="fa-solid fa-arrow-left">&nbsp;{% trans "Agregar productos" %}</i>
+
+<div class="sv-card-header">
+    <div>
+        <h2 class="sv-card-title mb-1">
+            <i class="fa-solid fa-basket-shopping"></i>
+            {% trans "Resumen de solicitud" %}
+        </h2>
+        <span class="sv-cell-subtitle">
+            {% trans "Revisa cantidades y comentarios antes de crear la solicitud." %}
+        </span>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="sv-badge sv-badge-dark">
+            <i class="fa-solid fa-box"></i>
+            {{ productos.count }} {% trans "artículos" %}
+        </span>
+
+        {% if orden.tipo.id == 2 %}
+        <a class="sv-btn sv-btn-primary" href="{% url 'product_selection_resurtimiento' %}">
+            <i class="fa-solid fa-plus"></i>
+            {% trans "Agregar productos" %}
         </a>
-    </div>
-    {% else %}
-    <div class="col-3 my-2">
-        <a class="btn btn-outline-info" href="{% url 'solicitud-product-selection' %}">
-            <i class="fa-solid fa-arrow-left">&nbsp;{% trans "Agregar productos" %}</i>
+        {% else %}
+        <a class="sv-btn sv-btn-primary" href="{% url 'solicitud-product-selection' %}">
+            <i class="fa-solid fa-plus"></i>
+            {% trans "Agregar productos" %}
         </a>
-    </div>
-    {% endif %}
-    
-           
-    <div class ="table-responsive-sm">
-        <table class="table table-ligth table-striped mx-1">
-            <form method="POST">
-            {% csrf_token %}
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">{% trans "Código" %}</th>
-                    <th scope="col">{% trans "Producto" %}</th>
-                    <th>{% trans "Cantidad" %}</th>
-                    <th>{% trans "Editar" %}</th>
-                    <th scope="col">{% trans "Unidad" %}</th>
-                    <th scope="col">{% trans "Comentario" %}</th>
-                    <th>{% trans "Editar" %}</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for producto in productos %}
-                <tr id="row_{{producto.id|unlocalize}}" producto_id="{{producto.producto.id|unlocalize}}">
-                    <td>
-                        {% if producto.producto.producto.critico %}
-                        <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
-                        {% endif %}
-                    <img class="row-image" src="{{producto.producto.producto.imageURL}}"></td>
-                    <td>{{producto.producto.producto.codigo}}</td>
-                    <td>{{producto.producto.producto.nombre}}</td>
-                    <td class="" id="cantidad_{{producto.id|unlocalize}}">{{producto.cantidad}}</td>
-                    <td class="d-none" id="form_cantidad_{{producto.id|unlocalize}}">
-                        <input type="number"  class="form-control" id="cantidad-input_{{ producto.id|unlocalize }}" value="{{ producto.cantidad }}">
-                    </td>
-                    <td><a id="edit_quantity_{{producto.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_cantidad('{{producto.id|unlocalize}}')">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </a>
-                        <button type="button" id="save_cantidad_{{producto.id|unlocalize}}" onclick="aceptar_edicion2('{{producto.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
-                            <i class="fa-regular fa-circle-check"></i>
-                        </button>
-                        <button id="cancel_edit2_{{producto.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion2('{{producto.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
-                            <i class="fa-solid fa-circle-xmark"></i>
-                        </button>
-                    </td>
-                    <td>{{producto.producto.producto.unidad}}</td>
-                    <td class="d-none" id="form_comentario_{{producto.id|unlocalize}}">
-                        <input type="textarea" class="form-control" id="comentario-input_{{ producto.id|unlocalize }}" value="{{ producto.comentario }}">
-                    </td>
-                    <td class="" id="comentario_{{producto.id|unlocalize}}">{% if producto.comentario %} {{producto.comentario}} {% endif %}</td>
-                    <td>
-                        <!--<a id="edit_quantity_{{producto.id|unlocalize}}" class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'product-quantity-edit' producto.id %}">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </a>-->
-                        <a id="modificar_comentario_{{producto.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{producto.id|unlocalize}}')">
-                            <i class="fa-regular fa-comment"></i>
-                        </a>
-                    </td>
-                    <!--El código que hace funcionar al botón de delete está en el js >> cart.js -->
-                    <td>
-                        <button id="delete_row_{{producto.id|unlocalize}}" type="button" class="btn add-btn update-cart" style="color:ghostwhite; background-color:#980F0F ;" value="Delete" data-type="{{orden.tipo.id}}" data-product={{producto.producto.id|unlocalize}} data-action="remove" aria-label="Close">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                        <button type="button" id="save_comment_{{producto.id|unlocalize}}" onclick="aceptar_edicion('{{producto.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
-                            <i class="fa-regular fa-circle-check"></i>
-                        </button>
-                        <button id="cancel_edit_{{producto.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{producto.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
-                            <i class="fa-solid fa-circle-xmark"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            </form>
-        </table>
-    </div>
-    <div class=card-footer>
-        <h5>{% trans "Artículos" %}: {{productos.count}}</h5>
+        {% endif %}
     </div>
 </div>
-</body>
-</html>
+
+<div class="sv-table-wrap">
+    <table class="sv-table sv-table-xwide">
+        <thead>
+            <tr>
+                <th>{% trans "Imagen" %}</th>
+                <th>{% trans "Código" %}</th>
+                <th>{% trans "Producto" %}</th>
+                <th>{% trans "Cantidad" %}</th>
+                <th>{% trans "Editar cantidad" %}</th>
+                <th>{% trans "Unidad" %}</th>
+                <th>{% trans "Comentario" %}</th>
+                <th>{% trans "Editar comentario" %}</th>
+                <th>{% trans "Eliminar" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr id="row_{{ producto.id|unlocalize }}"
+                producto_id="{{ producto.producto.id|unlocalize }}">
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <img class="row-image"
+                             src="{{ producto.producto.producto.imageURL }}"
+                             alt="{{ producto.producto.producto.nombre }}"
+                             loading="lazy">
+
+                        {% if producto.producto.producto.critico %}
+                        <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                data-bs-toggle="modal" data-bs-target="#dialog"
+                                hx-target="#document" hx-swap="innerHTML"
+                                hx-get="{% url 'select-product-quality' producto.producto.id %}"
+                                title="{% trans 'Requisitos de calidad' %}"
+                                aria-label="{% trans 'Requisitos de calidad' %}">
+                            <i class="fa-solid fa-q"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </td>
+
+                <td><span class="sv-folio">{{ producto.producto.producto.codigo }}</span></td>
+                <td><span class="sv-cell-title">{{ producto.producto.producto.nombre }}</span></td>
+
+                <td id="cantidad_{{ producto.id|unlocalize }}">
+                    <strong>{{ producto.cantidad }}</strong>
+                </td>
+                <td class="d-none" id="form_cantidad_{{ producto.id|unlocalize }}">
+                    <input type="number" class="form-control"
+                           id="cantidad-input_{{ producto.id|unlocalize }}"
+                           value="{{ producto.cantidad }}" min="0" step="0.01">
+                </td>
+                <td>
+                    <div class="d-flex flex-nowrap gap-1">
+                        <button type="button" id="edit_quantity_{{ producto.id|unlocalize }}"
+                                class="sv-btn sv-btn-info sv-btn-icon"
+                                onclick="modificar_cantidad('{{ producto.id|unlocalize }}')"
+                                title="{% trans 'Editar cantidad' %}"
+                                aria-label="{% trans 'Editar cantidad' %}">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" id="save_cantidad_{{ producto.id|unlocalize }}"
+                                class="sv-btn sv-btn-success sv-btn-icon d-none"
+                                onclick="aceptar_edicion2('{{ producto.id|unlocalize }}')"
+                                title="{% trans 'Guardar cantidad' %}"
+                                aria-label="{% trans 'Guardar cantidad' %}">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button type="button" id="cancel_edit2_{{ producto.id|unlocalize }}"
+                                class="sv-btn sv-btn-outline sv-btn-icon d-none"
+                                onclick="cancelar_edicion2('{{ producto.id|unlocalize }}')"
+                                title="{% trans 'Cancelar edición' %}"
+                                aria-label="{% trans 'Cancelar edición' %}">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </td>
+
+                <td>{{ producto.producto.producto.unidad }}</td>
+
+                <td class="d-none" id="form_comentario_{{ producto.id|unlocalize }}">
+                    <input type="text" class="form-control"
+                           id="comentario-input_{{ producto.id|unlocalize }}"
+                           value="{{ producto.comentario|default:'' }}"
+                           maxlength="250">
+                </td>
+                <td id="comentario_{{ producto.id|unlocalize }}">
+                    {% if producto.comentario %}
+                    <span class="sv-cell-title">{{ producto.comentario }}</span>
+                    {% else %}
+                    <span class="sv-cell-subtitle">{% trans "Sin comentario" %}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex flex-nowrap gap-1">
+                        <button type="button" id="modificar_comentario_{{ producto.id|unlocalize }}"
+                                class="sv-btn sv-btn-info sv-btn-icon"
+                                onclick="modificar_comentario('{{ producto.id|unlocalize }}')"
+                                title="{% trans 'Editar comentario' %}"
+                                aria-label="{% trans 'Editar comentario' %}">
+                            <i class="fa-regular fa-comment"></i>
+                        </button>
+                        <button type="button" id="save_comment_{{ producto.id|unlocalize }}"
+                                class="sv-btn sv-btn-success sv-btn-icon d-none"
+                                onclick="aceptar_edicion('{{ producto.id|unlocalize }}')"
+                                title="{% trans 'Guardar comentario' %}"
+                                aria-label="{% trans 'Guardar comentario' %}">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button type="button" id="cancel_edit_{{ producto.id|unlocalize }}"
+                                class="sv-btn sv-btn-outline sv-btn-icon d-none"
+                                onclick="cancelar_edicion('{{ producto.id|unlocalize }}')"
+                                title="{% trans 'Cancelar edición' %}"
+                                aria-label="{% trans 'Cancelar edición' %}">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </td>
+
+                <td>
+                    <button type="button" id="delete_row_{{ producto.id|unlocalize }}"
+                            class="sv-btn sv-btn-danger sv-btn-icon add-btn update-cart"
+                            value="Delete" data-type="{{ orden.tipo.id }}"
+                            data-product="{{ producto.producto.id|unlocalize }}"
+                            data-action="remove"
+                            title="{% trans 'Eliminar producto' %}"
+                            aria-label="{% trans 'Eliminar producto' %}">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="sv-empty">
+                    <span class="sv-empty-icon"><i class="fa-solid fa-basket-shopping"></i></span>
+                    <span class="sv-empty-title">{% trans "La solicitud no tiene productos" %}</span>
+                    <span class="sv-empty-text">{% trans "Utiliza Agregar productos para comenzar." %}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="sv-card-body border-top d-flex justify-content-end">
+    <span class="sv-badge sv-badge-primary">
+        <i class="fa-solid fa-boxes-stacked"></i>
+        {% trans "Artículos seleccionados" %}: {{ productos.count }}
+    </span>
+</div>

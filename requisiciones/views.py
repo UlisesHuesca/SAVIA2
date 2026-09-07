@@ -12,6 +12,11 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.conf import settings
 from django.utils import timezone
+from django.template.loader import render_to_string
+from django.contrib.staticfiles import finders
+from reportlab.lib.utils import ImageReader
+
+from utils.email_theme import obtener_tema_correo
 from celery.result import AsyncResult
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -66,6 +71,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from bs4 import BeautifulSoup
 
 import urllib.request, urllib.parse, urllib.error
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 
 @perfil_seleccionado_required
@@ -83,7 +89,7 @@ def requisiciones_status(request):
         requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True,).filter(
             Q(autorizar=False)|Q(autorizar__isnull=True)).order_by('-folio')
     else:
-        requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True).order_by('-folio')
+        requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True, orden__staff = perfil).order_by('-folio')
    
     #requis = Requis.objects.filter(autorizar=True, colocada=False)
 
@@ -1203,54 +1209,40 @@ def requisicion_autorizar(request, pk):
         requi.autorizar = True
         requi.save()
         static_path = settings.STATIC_ROOT
-        img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-        img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-       
-        
-        
-        image_base64 = get_image_base64(img_path)
-        logo_v_base64 = get_image_base64(img_path2)
-        # Crear el mensaje HTML
-        html_message = f"""
-        <html>
-            <head>
-                <meta charset="UTF-8">
-            </head>
-            <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                    <tr>
-                        <td align="center">
-                            <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                <tr>
-                                    <td align="center">
-                                        <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <p style="font-size: 18px; text-align: justify;">
-                                            <p>Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},</p>
-                                        </p>
-                                        <p style="font-size: 16px; text-align: justify;">
-                                            Estás recibiendo este correo porque tu sol: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada, por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.</p>
-                                    <p style="font-size: 16px; text-align: justify;">
-                                        <p>El siguiente paso del sistema: Generación de OC</p>
-                                    </p>
-                                        <p style="text-align: center; margin: 20px 0;">
-                                            <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                        </p>
-                                        <p style="font-size: 14px; color: #999; text-align: justify;">
-                                            Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </body>
-        </html>
-        """
+        es_savia_negro = bool(
+            requi.orden
+            and requi.orden.distrito
+            and requi.orden.distrito.nombre.strip().upper() == "Yerod"
+        )
+
+        contexto_correo = obtener_tema_correo(
+            settings.STATIC_ROOT,
+            es_savia_negro,
+        )
+
+        nombre_solicitante = (
+            f"{requi.orden.staff.staff.staff.first_name} "
+            f"{requi.orden.staff.staff.staff.last_name}"
+        )
+
+        if requi.requi_autorizada_por:
+            nombre_autorizador = (
+                f"{requi.requi_autorizada_por.staff.staff.first_name} "
+                f"{requi.requi_autorizada_por.staff.staff.last_name}"
+            )
+        else:
+            nombre_autorizador = "No disponible"
+
+        contexto_correo.update({
+            "requisicion": requi,
+            "nombre_solicitante": nombre_solicitante,
+            "nombre_autorizador": nombre_autorizador,
+        })
+
+        html_message = render_to_string(
+            "emails/requisiciones/requisicion_autorizada.html",
+            contexto_correo,
+        )
         #Crear y enviar el correo
         try:
             email = EmailMessage(
@@ -1368,15 +1360,21 @@ def descargar_solicitud_pdf(request, pk):
 
 @xframe_options_sameorigin
 def ver_solicitud_pdf(request, pk):
-    solicitud = get_object_or_404(Order, id=pk)
-    buf = render_pdf_view(pk)  # tu función
+    solicitud = get_object_or_404(Order.objects.select_related('distrito'), id=pk)
+
+    es_savia_negro = solicitud.distrito.nombre == "Yerod"
+
+
+    buf = render_pdf_view(pk, es_savia_negro)  # tu función
     filename = f"Solicitud_{solicitud.folio}.pdf"
+
+
 
     resp = FileResponse(buf, content_type="application/pdf")
     resp["Content-Disposition"] = f'inline; filename="{filename}"'
     return resp
 
-def render_pdf_view( pk):
+def render_pdf_view( pk, es_savia_negro):
     #Configuration of the PDF object
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
@@ -1386,8 +1384,12 @@ def render_pdf_view( pk):
     #salidas = Salidas.objects.filter(producto__articulos__orden__id=pk)
 
 
-   #Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+   
+    if es_savia_negro:
+        color_principal = Color(0.10, 0.10, 0.10)
+    else:
+        #Azul Vordcab
+        color_principal = Color(0.0859375,0.1953125,0.30859375)
     rojo = Color(0.59375, 0.05859375, 0.05859375)
     #Encabezado
     c.setFillColor(black)
@@ -1405,7 +1407,7 @@ def render_pdf_view( pk):
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
     c.drawString(150,caja_iso-20,'Número de documento')
-    c.drawString(160,caja_iso-30,'SEOV-ALM-N4-01.01')
+    c.drawString(152,caja_iso-30,'SEOV-ALM-N4-01.01')
     c.drawString(245,caja_iso-20,'Clasificación del documento')
     c.drawString(275,caja_iso-30,'Controlado')
     c.drawString(355,caja_iso-20,'Nivel del documento')
@@ -1417,7 +1419,7 @@ def render_pdf_view( pk):
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
     c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
@@ -1429,7 +1431,10 @@ def render_pdf_view( pk):
     c.setLineWidth(.3) #Grosor
     c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
     c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+    if es_savia_negro:
+        dibujar_imagen_redonda(c=c, ruta_imagen='static/images/SAVIA_Negro_verde.jpg', x=65, y=730, diametro=1.5 * cm, ancho_imagen=3 * cm, alto_imagen=1.5 * cm)
+    else:
+        c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
 
     c.setFillColor(white)
     c.setFont('Helvetica-Bold',11)
@@ -1491,7 +1496,7 @@ def render_pdf_view( pk):
     if high <= 480-(15*15):
         high= 480-(15*15)
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
     #Primer renglón
@@ -1519,7 +1524,7 @@ def render_pdf_view( pk):
     else:
         comentario = "No hay comentarios"
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,230,565,25, fill=True, stroke=False)
     c.setFillColor(white)
     c.drawCentredString(320,235,'Observaciones')
@@ -1528,7 +1533,7 @@ def render_pdf_view( pk):
     frame = Frame(20, 30, 570, 200, id='normal')
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,30,565,30, fill=True, stroke=False)
 
     c.setFillColor(black)
@@ -1542,7 +1547,7 @@ def render_pdf_view( pk):
         c.drawString(370,670, 'CANCELADA')
     elif orden.autorizar:
         c.drawCentredString(410,140, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
-        c.setFillColor(prussian_blue)
+        c.setFillColor(color_principal)
         c.setFont('Helvetica-Bold',14)
         c.drawString(390,650, 'APROBADA')
     else:
@@ -1563,7 +1568,7 @@ def render_pdf_view( pk):
         #ENCABEZADO
         ('TEXTCOLOR',(0,0),(-1,0), white),
         ('FONTSIZE',(0,0),(-1,0), 8),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        ('BACKGROUND',(0,0),(-1,0), color_principal),
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
@@ -1602,17 +1607,64 @@ def render_pdf_view( pk):
         if page_start < data_len:  # Si hay más datos, agregar una nueva página
             c.showPage()
     
-   
-    
-    #pdf size
-    #table.wrapOn(c, width, height)
-    #table.drawOn(c, 20, high)
-
-    #c.showPage()
     c.save()
     buf.seek(0)
 
     return buf
+
+
+def dibujar_imagen_redonda(
+    c,
+    ruta_imagen,
+    x,
+    y,
+    diametro,
+    ancho_imagen=None,
+    alto_imagen=None
+):
+    ancho_imagen = ancho_imagen or diametro
+    alto_imagen = alto_imagen or diametro
+
+    centro_x = x + (diametro / 2)
+    centro_y = y + (diametro / 2)
+    radio = diametro / 2
+
+    c.saveState()
+
+    recorte = c.beginPath()
+    recorte.circle(
+        centro_x,
+        centro_y,
+        radio
+    )
+    c.clipPath(recorte, stroke=0, fill=0)
+
+    # Centra la imagen dentro del círculo
+    imagen_x = centro_x - (ancho_imagen / 2)
+    imagen_y = centro_y - (alto_imagen / 2)
+
+    c.drawImage(
+        ruta_imagen,
+        imagen_x,
+        imagen_y,
+        width=ancho_imagen,
+        height=alto_imagen,
+        preserveAspectRatio=True,
+        mask='auto'
+    )
+
+    c.restoreState()
+
+    # Borde opcional
+    c.setStrokeColor(colors.HexColor('#288C45'))
+    c.setLineWidth(1)
+    c.circle(
+        centro_x,
+        centro_y,
+        radio,
+        stroke=1,
+        fill=0
+    )
 
 @perfil_seleccionado_required
 def reporte_entradas(request):
@@ -2222,6 +2274,32 @@ def render_entrada_pdf(request, pk):
     vale = Entrada.objects.get(id = articulo.entrada.id)
     productos = EntradaArticulo.objects.filter(entrada= vale)
 
+    # =============== Marca según distrito ===============
+
+    distrito = vale.oc.req.orden.distrito
+
+    es_savia_negro = (distrito and distrito.nombre == 'Yerod')
+
+    if es_savia_negro:
+        color_principal = Color(26 / 255, 26 / 255, 26 / 255,)
+        color_acento = Color(40 / 255,140 / 255,69 / 255,)
+        color_folio = color_acento
+
+        logo_path = finders.find('images/SAVIA_Negro_Verde.jpg')
+
+        logo_max_width = 1.75 * cm
+        logo_max_height = 1.75 * cm
+
+    else:
+        color_principal = Color(22 / 255, 50 / 255, 79 / 255,)
+        color_acento = Color(62 / 255, 146 / 255, 204 / 255,)
+        color_folio = Color(152 / 255, 15 / 255, 15 / 255,)
+
+        logo_path = finders.find('images/logo_vordcab.jpg')
+
+        logo_max_width = 3 * cm
+        logo_max_height = 1.5 * cm
+
     # =============== Configuration de PDF ================
        # -------- Config de página y marcos --------
     buf = io.BytesIO()
@@ -2245,8 +2323,8 @@ def render_entrada_pdf(request, pk):
     body6 = styles['BodyText']
     body6.fontSize = 6
     body6.leading = 8
-    prussian_blue = Color(0.0859375, 0.1953125, 0.30859375)
-    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #prussian_blue = Color(0.0859375, 0.1953125, 0.30859375)
+    #rojo = Color(0.59375, 0.05859375, 0.05859375)
 
 
     # =============== Encabezado/Pie de página ================
@@ -2255,7 +2333,24 @@ def render_entrada_pdf(request, pk):
         # ---------- HEADER ----------
         y_top = PAGE_H - BASE_MARGIN
         # LOGO
-        canvas.drawInlineImage('static/images/logo_vordcab.jpg', 45, y_top-60, 3*cm, 1.5*cm)
+        # Card del logotipo
+        logo_card_x = 36
+        logo_card_y = y_top - 69
+        logo_card_width = 100
+        logo_card_height = 62
+
+        canvas.setFillColor(colors.white)
+        canvas.setStrokeColor(color_acento)
+        canvas.setLineWidth(1)
+
+        draw_logo_contain(
+            canvas=canvas,
+            image_path=logo_path,
+            x=45,
+            y=y_top - 60,
+            max_width=logo_max_width,
+            max_height=logo_max_height,
+        )
         caja_iso = y_top - 22
         # Textos Superiores
         canvas.setFillColor(black)
@@ -2268,7 +2363,7 @@ def render_entrada_pdf(request, pk):
         canvas.drawString(520,caja_iso-10,'SUB ADM')
 
         canvas.drawString(150,caja_iso-25,'Número de documento')
-        canvas.drawString(160,caja_iso-35,'SEOV-ALM-N4-01-02')
+        canvas.drawString(152,caja_iso-35,'SEOV-ALM-N4-01-02')
         canvas.drawString(245,caja_iso-25,'Clasificación del documento')
         canvas.drawString(275,caja_iso-35,'Controlado')
         canvas.drawString(355,caja_iso-25,'Nivel del documento')
@@ -2283,12 +2378,12 @@ def render_entrada_pdf(request, pk):
         canvas.drawString(510,caja_iso-60,'Fecha:')
         canvas.drawString(540,caja_iso-60, vale.entrada_date.strftime("%d/%m/%Y"))
 
-        canvas.setFillColor(rojo)
+        canvas.setFillColor(color_acento )
         canvas.setFont('Helvetica-Bold',12)
         canvas.drawString(540,caja_iso-50, str(vale.folio))
         
         #Barra azul título
-        canvas.setFillColor(prussian_blue)
+        canvas.setFillColor(color_principal)
         canvas.rect(150, caja_iso - 15, 250, 20, fill=True, stroke=False)
         canvas.setFillColor(white)
         canvas.setLineWidth(.2)
@@ -2300,7 +2395,7 @@ def render_entrada_pdf(request, pk):
         footer_top = 130  # deja 110 de margen infer + 30 de aire
 
         # Barra azul "Proyecto/Subproyecto"
-        canvas.setFillColor(prussian_blue)
+        canvas.setFillColor(color_principal)
         canvas.rect(20, footer_top + 5, 340, 20, fill=True, stroke=False)
         canvas.setFillColor(white)
         canvas.setFont('Helvetica-Bold', 10)
@@ -2326,7 +2421,7 @@ def render_entrada_pdf(request, pk):
         canvas.drawCentredString(425, footer_top - 40, vale.oc.proveedor.nombre.razon_social)
 
         # Barra azul inferior (decorativa)
-        canvas.setFillColor(prussian_blue)
+        canvas.setFillColor(color_principal)
         canvas.rect(20, footer_top - 65, 565, 20, fill=True, stroke=False)
 
         # Número de página (opcional)
@@ -2357,7 +2452,7 @@ def render_entrada_pdf(request, pk):
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        ('BACKGROUND',(0,0),(-1,0), color_principal),
         ('TEXTCOLOR',(0,0),(-1,0), white),
         ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
         ('FONTSIZE',(0,0),(-1,0),10),
@@ -2372,7 +2467,33 @@ def render_entrada_pdf(request, pk):
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename=f"vale_entrada_{vale.folio}.pdf")
 
-    
+def draw_logo_contain(canvas,image_path,x,y,max_width,max_height,):
+    if not image_path:
+        return
+
+    image = ImageReader(image_path)
+    image_width, image_height = image.getSize()
+
+    scale = min(
+        max_width / image_width,
+        max_height / image_height,
+    )
+
+    final_width = image_width * scale
+    final_height = image_height * scale
+
+    final_x = x + (max_width - final_width) / 2
+    final_y = y + (max_height - final_height) / 2
+
+    canvas.drawImage(
+        image,
+        final_x,
+        final_y,
+        width=final_width,
+        height=final_height,
+        preserveAspectRatio=True,
+        mask='auto',
+    )
 
 def convert_excel_matriz_requis(requis):
       #print('si entra a la función')
@@ -3023,6 +3144,7 @@ def generate_excel_report2(salidas):
     output.close()
     return response
 
+@xframe_options_sameorigin
 def render_requisicion_pdf_view(request, pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
@@ -3030,11 +3152,21 @@ def render_requisicion_pdf_view(request, pk):
     #Here ends conf.
     requisicion = Requis.objects.get(id=pk)
     productos = ArticulosRequisitados.objects.filter(req=pk)
-    #salidas = Salidas.objects.filter(producto__articulos__orden__id=pk)
 
 
-   #Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    nombre_distrito = (
+        requisicion.orden.distrito.nombre.strip().upper()
+        if requisicion.orden and requisicion.orden.distrito
+        else ''
+    )
+
+    es_savia_negro = nombre_distrito == 'Yerod'
+
+    if es_savia_negro:
+        color_principal = Color(0.10, 0.10, 0.10)
+    else:
+        #Azul Vordcab
+        color_principal = Color(0.0859375,0.1953125,0.30859375)
     rojo = Color(0.59375, 0.05859375, 0.05859375)
     #Encabezado
     c.setFillColor(black)
@@ -3052,7 +3184,7 @@ def render_requisicion_pdf_view(request, pk):
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
     c.drawString(150,caja_iso-20,'Número de documento')
-    c.drawString(160,caja_iso-30,'SEOV-ADQ-N4-01.01')
+    c.drawString(152,caja_iso-30,'SEOV-ADQ-N4-01.01')
     c.drawString(245,caja_iso-20,'Clasificación del documento')
     c.drawString(275,caja_iso-30,'Controlado')
     c.drawString(355,caja_iso-20,'Nivel del documento')
@@ -3064,7 +3196,7 @@ def render_requisicion_pdf_view(request, pk):
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
     c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
@@ -3076,7 +3208,24 @@ def render_requisicion_pdf_view(request, pk):
     c.setLineWidth(.3) #Grosor
     c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
     c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+    if es_savia_negro:
+        dibujar_imagen_redonda(
+            c=c,
+            ruta_imagen='static/images/SAVIA_Negro_verde.jpg',
+            x=65,
+            y=730,
+            diametro=1.5 * cm,
+            ancho_imagen=3 * cm,
+            alto_imagen=1.5 * cm
+        )
+    else:
+        c.drawInlineImage(
+            'static/images/logo_vordcab.jpg',
+            45,
+            730,
+            3 * cm,
+            1.5 * cm
+    )
 
     c.setFillColor(white)
     c.setFont('Helvetica-Bold',11)
@@ -3125,7 +3274,7 @@ def render_requisicion_pdf_view(request, pk):
         high = high - 18
 
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
     #Primer renglón
@@ -3153,7 +3302,7 @@ def render_requisicion_pdf_view(request, pk):
     else:
         comentario = "No hay comentarios"
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,230,565,25, fill=True, stroke=False)
     c.setFillColor(white)
     c.drawCentredString(320,235,'Observaciones')
@@ -3162,7 +3311,7 @@ def render_requisicion_pdf_view(request, pk):
     frame = Frame(20, -110, width-40, high-50, id='normal')
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
 
@@ -3180,7 +3329,7 @@ def render_requisicion_pdf_view(request, pk):
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'CANCELADA')
     elif requisicion.autorizar:
-        c.setFillColor(prussian_blue)
+        c.setFillColor(color_principal)
         c.drawCentredString(410,high-240, requisicion.orden.superintendente.staff.staff.first_name+' '+ requisicion.orden.superintendente.staff.staff.last_name)
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'APROBADA')
@@ -3202,7 +3351,7 @@ def render_requisicion_pdf_view(request, pk):
         #ENCABEZADO
         ('TEXTCOLOR',(0,0),(-1,0), white),
         ('FONTSIZE',(0,0),(-1,0), 8),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        ('BACKGROUND',(0,0),(-1,0), color_principal),
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
@@ -3230,13 +3379,13 @@ def render_requisicion_pdf_view(request, pk):
             c.showPage()
     
    
-    
-    #pdf size
-    #table.wrapOn(c, width, height)
-    #table.drawOn(c, 20, high)
-
-    #c.showPage()
     c.save()
     buf.seek(0)
 
-    return FileResponse(buf, as_attachment=True, filename='Requisición_' + str(requisicion.folio) +'.pdf')
+    filename = f"Requisicion_{requisicion.folio}.pdf"
+
+    response = FileResponse(buf, content_type='application/pdf')
+
+    response['Content-Disposition'] = (f'inline; filename="{filename}"')
+
+    return response

@@ -1,0 +1,64 @@
+{% extends "emails/base_email.html" %}
+
+{% block titulo_documento %}Solicitud generada{% endblock %}
+
+{% block titulo_correo %}Solicitud generada{% endblock %}
+
+{% block subtitulo_correo %}Solicitud {{ solicitud.folio }}{% endblock %}
+
+{% block contenido %}
+    <p style="margin: 0 0 18px; color: #344054; font-size: 17px; line-height: 1.6;">
+        Estimado(a) <strong style="color: {{ color_acento }};">{{ nombre_solicitante }}</strong>:
+    </p>
+
+    <p style="margin: 0 0 22px; color: #475467; font-size: 15px; line-height: 1.7;">
+        Tu solicitud con folio <strong>{{ solicitud.folio }}</strong> ha sido generada correctamente.
+    </p>
+
+    <!-- Productos -->
+    <p style="margin: 0 0 12px; color: #344054; font-size: 15px; line-height: 1.6; font-weight: 700;">Productos solicitados</p>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; overflow: hidden; background-color: #FFFFFF; border: 1px solid #EAECF0; border-radius: 10px;">
+        <tr>
+            <td>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th align="left" style="padding: 12px 14px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Producto</th>
+                            <th align="center" width="95" style="padding: 12px 14px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Cantidad</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for articulo in articulos %}
+                            <tr>
+                                <td style="padding: 12px 14px; border-bottom: 1px solid #EAECF0; color: #344054; font-size: 13px; line-height: 1.5;">{{ articulo.nombre }}</td>
+                                <td align="center" style="padding: 12px 14px; border-bottom: 1px solid #EAECF0; color: #101828; font-size: 13px; font-weight: 700;">{{ articulo.cantidad }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2" align="center" style="padding: 20px; color: #667085; font-size: 13px;">No hay productos registrados.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Estado -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 22px; background-color: #EFF8FF; border: 1px solid #B2DDFF; border-radius: 8px;">
+        <tr>
+            <td align="center" style="padding: 14px 18px; color: #175CD3; font-size: 13px; font-weight: 700;">SOLICITUD GENERADA</td>
+        </tr>
+    </table>
+
+    <!-- Siguiente paso -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 18px; background-color: {{ color_fondo_acento }}; border-left: 4px solid {{ color_acento }}; border-radius: 7px;">
+        <tr>
+            <td style="padding: 15px 17px; color: #344054; font-size: 14px; line-height: 1.6;">
+                <strong>Siguiente paso:</strong> autorización de la solicitud por Supervisión.
+            </td>
+        </tr>
+    </table>
+{% endblock %}

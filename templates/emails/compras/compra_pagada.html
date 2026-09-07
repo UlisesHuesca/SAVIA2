@@ -1,0 +1,59 @@
+{% extends "emails/base_email.html" %}
+
+{% block titulo_documento %}Orden de compra pagada{% endblock %}
+
+{% block titulo_correo %}Orden de compra pagada{% endblock %}
+
+{% block subtitulo_correo %}Requisición {{ compra.req.folio }} · OC {{ compra.folio }}{% endblock %}
+
+{% block contenido %}
+    <p style="margin: 0 0 18px; color: #344054; font-size: 17px; line-height: 1.6;">
+        Estimado(a) <strong style="color: {{ color_acento }};">{{ nombre_solicitante }}</strong>:
+    </p>
+
+    <p style="margin: 0 0 22px; color: #475467; font-size: 15px; line-height: 1.7;">
+        La orden de compra <strong>{{ compra.folio }}</strong> ha sido pagada correctamente.
+    </p>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; background-color: #F9FAFB; border: 1px solid #EAECF0; border-radius: 10px;">
+        <tr>
+            <td style="padding: 21px 23px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Solicitud</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ compra.req.orden.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Requisición</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ compra.req.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Orden de compra</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ compra.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="color: #667085; font-size: 13px;">Pago registrado por</td>
+                        <td style="color: #101828; font-size: 14px; font-weight: 700;">{{ nombre_tesorero }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 22px; background-color: #ECFDF3; border: 1px solid #ABEFC6; border-radius: 8px;">
+        <tr>
+            <td align="center" style="padding: 14px 18px; color: #067647; font-size: 13px; font-weight: 700;">PAGO REGISTRADO</td>
+        </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 18px; background-color: {{ color_fondo_acento }}; border-left: 4px solid {{ color_acento }}; border-radius: 7px;">
+        <tr>
+            <td style="padding: 15px 17px; color: #344054; font-size: 14px; line-height: 1.6;">
+                <strong>Siguiente paso:</strong> recepción de la orden de compra por parte de Almacén.
+            </td>
+        </tr>
+    </table>
+{% endblock %}

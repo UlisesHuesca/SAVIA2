@@ -1311,7 +1311,7 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
                                         </p>
                                         <!-- Botón del tutorial -->
                                         <p style=" text-align: center; margin: 15px 0 30px 0;">
-                                            <a href="https://youtu.be/fWBc_fR0FqA" target="_blank" title="Subir facturas y complementos de pago"
+                                            <a href="https://youtu.be/o727lMJdUCk?si=e4vgIkB4r1iZfUXd" target="_blank" title="Tutorial para proveedores Pre-alta"
                                                 style="background-color: #ffffff; color: #dc3545; padding: 11px 22px; text-decoration: none; border: 1px solid #dc3545;
                                                     border-radius: 5px; display: inline-block; font-size: 14px; font-weight: bold;">
                                                 ▶ Ver tutorial

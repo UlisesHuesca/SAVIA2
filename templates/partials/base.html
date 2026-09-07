@@ -65,7 +65,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!--Static Files-->
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}?v=20260903-2">
+    <!--<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">-->
 
     <!--Script para conocer el usuario -->
     <script type="text/javascript">
@@ -101,16 +102,15 @@ const csrftoken = getToken('csrftoken');
 
 </head>
 
-<body>
+<body class="{% if usuario.distritos.nombre == 'Yerod' %}sv-theme-negro{% else %}sv-theme-vordcab{% endif %}">
     {% include 'partials/nav.html' %}
     <!--{% include 'api/chatbot.html' %}-->
    
-    <div>
+    
     {% block content %}
     
     {% endblock %}
-    </div>
-
+    
 
     <!-- Optional JavaScript; choose one of the two! -->
 

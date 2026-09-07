@@ -4,381 +4,455 @@
 {% load widget_tweaks %}
 {% load l10n %}
 {% load tt_extras %}
-<html>
-<head>
 
-{% block title %}
-    {% if usuario_view %}
-        Mis Gastos
-    {% else %}
-        Matriz Gastos
-    {% endif %}   
-{% endblock %}
+{% block title %}{% if usuario_view %}Mis gastos{% else %}Matriz de gastos{% endif %}{% endblock %}
 
-</head>
-<body>
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Filtro de Gastos</h5>
-                </div>
-                <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio"}}
-                                <label for="id_lugar_partida">Folio</label>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-receipt"></i></span>
+                {% if usuario_view %}Mis gastos{% else %}Matriz de gastos{% endif %}
+            </h1>
+            <p class="sv-page-subtitle">
+                {% if usuario_view %}
+                    Consulta el seguimiento, documentos y pagos de tus solicitudes de gasto.
+                {% else %}
+                    Consulta autorizaciones, comprobación y avance financiero de los gastos.
+                {% endif %}
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list"></i>
+            {{ gastos_list.paginator.count }} registros
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-filter"></i>Filtros de gastos
+            </h2>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.solicitado_por|add_class:"form-control"|append_attr:"placeholder=Solicitó" }}
+                                <label for="{{ myfilter.form.solicitado_por.id_for_label }}">Solicitó</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-tags"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.tipo|add_class:"form-select"|append_attr:"placeholder=Tipo" }}
+                                <label for="{{ myfilter.form.tipo.id_for_label }}">Tipo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a href="{{ request.path }}" class="sv-btn sv-btn-outline">
+                            <i class="fa-solid fa-eraser"></i>Limpiar
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                        </button>
                     </div>
                 </div>
-                <div class="row g-12">
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.solicitado_por|add_class:"form-control"|append_attr:"placeholder=Solicitó"}}
-                                <label for="id_lugar_partida">Solicitó</label>
+            </form>
+        </div>
+
+        <div class="sv-card-body border-top">
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" class="sv-btn sv-btn-success" name="btnExcel">
+                    <i class="fa-solid fa-file-excel"></i>Generar Excel
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-list-check"></i>Gastos registrados
+            </h2>
+            <span class="sv-badge sv-badge-dark">
+                Página {{ gastos_list.number }} de {{ gastos_list.paginator.num_pages }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-xwide">
+                <thead>
+                    <tr>
+                        <th>Gasto</th>
+                        <th>Solicitado por</th>
+                        <th>Comentario</th>
+                        <th>Tipo</th>
+                        <th>Autorización</th>
+                        <th>Colaborador</th>
+                        <th>Importe</th>
+                        <th>Pagado</th>
+                        {% if not usuario.distritos.nombre == "MATRIZ" %}<th>Gerencia</th>{% endif %}
+                        <th>Detalles</th>
+                        <th>Facturas</th>
+                        {% if usuario_view %}
+                        <th>Vale rosa</th>
+                        <th>Vale azul</th>
+                        {% endif %}
+                        <th>Registro</th>
+                        {% if usuario_view %}<th>Pago</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gasto in gastos_list %}
+                    <tr>
+                        <td><span class="sv-folio">{{ gasto.folio }}</span></td>
+                        <td>
+                            <div class="sv-user">
+                                <span class="sv-user-avatar">
+                                    {{ gasto.staff.staff.staff.first_name|first }}{{ gasto.staff.staff.staff.last_name|first }}
+                                </span>
+                                <span class="sv-user-name">
+                                    {{ gasto.staff.staff.staff.first_name }} {{ gasto.staff.staff.staff.last_name }}
+                                </span>
                             </div>
-                        </div>
-                    </div>
-                     <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder=Tipo"}}
-                                <label for="id_lugar_partida">Tipo</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-2 mt-3">
-                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
-                </div>
-                </form>
-                <hr>
-                <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                        </li>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                        </td>
+                        <td>
+                            {% if gasto.comentario %}
+                                <span class="sv-cell-title">{{ gasto.comentario }}</span>
+                            {% else %}
+                                {% for articulo in gasto.articulos.all %}
+                                    {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    <span class="sv-cell-subtitle">Sin comentarios</span>
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                        <td><span class="sv-badge sv-badge-dark">{{ gasto.tipo.tipo }}</span></td>
+                        <td>
+                            {% if gasto.get_validado %}
+                                <span class="sv-cell-title">
+                                    {{ gasto.superintendente.staff.staff.first_name }}
+                                    {{ gasto.superintendente.staff.staff.last_name }}
+                                </span>
+                                {% if gasto.autorizar %}
+                                <span class="sv-badge sv-badge-success">Autorizado</span>
+                                {% elif gasto.autorizar == False %}
+                                <span class="sv-badge sv-badge-danger">Cancelado</span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">Pendiente</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="sv-badge sv-badge-warning">Llevar material a almacén</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if gasto.tipo.tipo == "NOMINA" %}
+                                <span class="sv-badge sv-badge-primary">NÓMINA</span>
+                            {% elif gasto.tipo.tipo == "IMPUESTOS" %}
+                                <span class="sv-cell-title">{{ gasto.proveedor.nombre.razon_social }}</span>
+                            {% elif gasto.colaborador %}
+                                {{ gasto.colaborador.staff.staff.first_name }} {{ gasto.colaborador.staff.staff.last_name }}
+                            {% else %}
+                                {{ gasto.staff.staff.staff.first_name }} {{ gasto.staff.staff.staff.last_name }}
+                            {% endif %}
+                        </td>
+                        <td><strong>${{ gasto.get_total_solicitud|floatformat:2 }}</strong></td>
+                        <td><strong>${{ gasto.monto_pagado|floatformat:2 }}</strong></td>
+
+                        {% if not usuario.distritos.nombre == "MATRIZ" %}
+                        <td>
+                            {% if gasto.autorizar2 %}
+                            <span class="sv-badge sv-badge-success">Autorizado</span>
+                            {% elif gasto.autorizar2 == False %}
+                            <span class="sv-badge sv-badge-danger">Cancelado</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-info"
+                                    data-bs-toggle="modal" data-bs-target="#dialog"
+                                    hx-target="#document" hx-swap="innerHTML"
+                                    hx-get="{% url 'detalle-gastos' gasto.id %}">
+                                <i class="fa-solid fa-list-ul"></i>Conceptos
                             </button>
-                        </li>-->
-                    </ul>
-                </form>
+                        </td>
+                        <td>
+                            {% if gasto.facturas.exists %}
+                            <a class="sv-btn sv-btn-success sv-btn-icon"
+                               href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}"
+                               data-bs-toggle="tooltip" title="Tiene facturas"
+                               aria-label="Consultar facturas">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </a>
+                            {% else %}
+                            <a class="sv-btn sv-btn-danger sv-btn-icon"
+                               href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}"
+                               data-bs-toggle="tooltip" title="No tiene facturas"
+                               aria-label="Agregar facturas">
+                                <i class="fa-solid fa-file-circle-xmark"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+
+                        {% if usuario_view %}
+                        <td>
+                            {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
+                            <a class="sv-btn sv-btn-danger sv-btn-icon"
+                               href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&color=rosa&next={{ request.path }}"
+                               data-bs-toggle="tooltip" title="Vale rosa" aria-label="Vale rosa">
+                                <i class="fa-regular fa-file-import"></i>
+                            </a>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="sv-btn sv-btn-info sv-btn-icon"
+                               href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&color=azul&next={{ request.path }}"
+                               data-bs-toggle="tooltip" title="Vale azul" aria-label="Vale azul">
+                                <i class="fa-regular fa-file-import"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                    data-bs-toggle="modal" data-bs-target="#gastoPdfModal"
+                                    data-pdf-url="{% url 'ver_gasto_pdf' gasto.id %}"
+                                    title="Vista previa del registro"
+                                    aria-label="Vista previa del registro">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </td>
+
+                        {% if usuario_view %}
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for pago in gasto.pagosg.all %}
+                                    {% if pago.comprobante_pago %}
+                                    <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#pagoPdfModal{{ pago.id|unlocalize }}"
+                                            title="Ver comprobante de pago"
+                                            aria-label="Ver comprobante de pago">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    </button>
+                                    {% endif %}
+                                {% empty %}
+                                    <span class="sv-cell-subtitle">—</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if not usuario.distritos.nombre == 'MATRIZ' %}{% if usuario_view %}15{% else %}12{% endif %}{% else %}{% if usuario_view %}14{% else %}11{% endif %}{% endif %}" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-receipt"></i></span>
+                            <span class="sv-empty-title">No se encontraron gastos</span>
+                            <span class="sv-empty-text">Modifica los filtros para ampliar la búsqueda.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {% if gastos_list.paginator.num_pages > 1 %}
+    <nav class="mt-3" aria-label="Paginación de gastos">
+        <ul class="pagination justify-content-center mb-0">
+            {% if gastos_list.has_previous %}
+            <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a></li>
+            <li class="page-item"><a class="page-link" href="{% my_url gastos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+
+            {% for item in gastos_list.paginator.page_range %}
+                {% if gastos_list.number == item %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
+                {% elif item > gastos_list.number|add:'-2' and item < gastos_list.number|add:'2' %}
+                <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if gastos_list.has_next %}
+            <li class="page-item"><a class="page-link" href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a></li>
+            <li class="page-item"><a class="page-link" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"></div>
+</div>
+
+<div class="modal fade" id="gastoPdfModal" tabindex="-1"
+     aria-labelledby="gastoPdfModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="gastoPdfModalLabel">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Registro de gasto
+                    </h2>
+                    <span class="sv-modal-subtitle">Vista previa del documento</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="gastoPdfStatus" class="sv-empty py-5">
+                    <span class="spinner-border text-success" role="status" aria-hidden="true"></span>
+                    <span class="sv-empty-title mt-3">Cargando vista previa…</span>
+                </div>
+                <iframe id="gastoPdfFrame" src="" title="Vista previa del registro de gasto"
+                        width="100%" height="700" class="border-0 d-none"></iframe>
             </div>
         </div>
     </div>
-    <!-- Aquí terminan el encabezado de los filtros -->
-
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Gasto</th>
-                    <th class="d-none d-lg-table-cell">Solicitado</th>
-                    <th>Comentario</th>
-                    <th>Tipo</th>
-                    <th scope="col">Autorizado</th>
-                    <th class="d-none d-lg-table-cell">Colaborador</th>
-                    <th scope="col">Importe</th>
-                    <th>Pagado</th>
-                    {% if not usuario.distritos.nombre == "MATRIZ" %}
-                    <th scope="col">Autorización Gerencia</th>
-                    {% endif %}
-                    <th>Detalles</th>
-                    <th scope="col">Facturas</th>
-                    {% if usuario_view %}
-                    <th>Vale Rosa</th>
-                    <th>Vale Azul</th>
-                    {% endif %}
-                    <th>Registro</th>
-                    {% if usuario_view %}
-                    <th>Pago</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for gasto in gastos_list %}
-                <tr>
-                    <th>{{gasto.folio}}</th>
-                    <td class="d-none d-lg-table-cell">
-                        {{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}
-                    </td>
-                    
-                    <td>{% if gasto.comentario %}
-                        {{gasto.comentario}}
-                        {% else %}
-                            {% for articulo in gasto.articulos.all %}
-                                {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
-                            {% empty %}
-                            No hay comentarios disponibles
-                            {% endfor %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {{gasto.tipo.tipo}}
-                    </td>
-                    {% if gasto.get_validado %}
-                    <td>{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}
-                        {% if gasto.autorizar %} 
-                        <span class="badge bg-primary">Autorizado</span> 
-                        {% elif gasto.autorizar == False %} 
-                        <span class="badge bg-danger">Cancelado</span>
-                        {% else %} 
-                        <span class="badge bg-warning">No Autorizado Aún</span> 
-                        {% endif %}
-                    </td>
-                    {% else %}
-                    <td><span class="badge bg-warning">Llevar Material a Almacén</span></td>
-                    {% endif %}
-                    {% if gasto.tipo.tipo == "NOMINA" %}
-                     <td class="d-none d-lg-table-cell"> <span class="badge bg-primary">NOMINA</span></td>
-                    {% elif gasto.tipo.tipo == "IMPUESTOS" %}
-                    <td class="d-none d-lg-table-cell"> <span class="badge bg-primary"> {{gasto.proveedor.nombre.razon_social}}</span></td>
-                    {% elif gasto.colaborador %}
-                    <td class="d-none d-lg-table-cell">{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
-                    {% else %}
-                    <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
-                    {% endif %}
-                    <td>${{gasto.get_total_solicitud}}</td>
-                    <td>${{gasto.monto_pagado|floatformat:2}}</td>
-                    {% if not usuario.distritos.nombre == "MATRIZ" %}
-                    <td>
-                       
-                        Gerente 
-                        {% if gasto.autorizar2 %} 
-                        <span class="badge bg-primary">Autorizado</span> 
-                        {% elif gasto.autorizar2 == False %} 
-                        <span class="badge bg-danger">Cancelado</span>
-                        {% else %} 
-                        <span class="badge bg-warning">No Autorizado Aún</span> 
-                        {% endif %} 
-                    </td> 
-                    {% endif %}
-                    <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-gastos' gasto.id %}">
-                            Conceptos
-                        </a>
-                    </td>
-                    <td>
-                        {% if gasto.facturas.exists %}
-                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
-                        {% else %}
-                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
-                        {% endif %}
-                    </td>
-                     {% if usuario_view %}
-                    <td>
-                       
-                            {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
-                            <a type="button" class="btn" style="background-color: #f8d7da; border: 1px solid #721c24; color: #721c24;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&color=rosa&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Rosa">
-                                <i class="fa-regular fa-file-import"></i>
-                            </a> 
-                            {% endif %}
-                       
-                    </td>
-                     <td>
-                        <a type="button" class="btn" style="background-color: #d1ecf1; border: 1px solid #0c5460; color: #0c5460;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&&color=azul&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Azul">
-                            <i class="fa-regular fa-file-import"></i>
-                        </a> 
-                    </td>
-                     {% endif %}
-                    <td>
-                        <button type = "button" class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{gasto.id|unlocalize}}" data-pdf-url="{% url 'ver_gasto_pdf' gasto.id %}">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        <!-- Modal -->
-                        <div class="modal fade" id="pdfModal{{gasto.id|unlocalize}}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-xl modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Registro de Gasto</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-
-                                    <div class="modal-body" style="height:80vh;">
-                                        <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
-                                    </div>
-                                </div>
-                            </div>
+{% if usuario_view %}
+    {% for gasto in gastos_list %}
+        {% for pago in gasto.pagosg.all %}
+            {% if pago.comprobante_pago %}
+            <div class="modal fade" id="pagoPdfModal{{ pago.id|unlocalize }}" tabindex="-1"
+                 aria-labelledby="pagoPdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content sv-modal">
+                        <div class="modal-header">
+                            <h2 class="modal-title" id="pagoPdfModalLabel{{ pago.id|unlocalize }}">
+                                <i class="fa-solid fa-file-invoice-dollar me-2"></i>Comprobante de pago
+                            </h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
-                               
+                        <div class="modal-body p-0">
+                            <iframe src="{{ pago.comprobante_pago.url }}#zoom=80"
+                                    title="Comprobante de pago" width="100%" height="700"
+                                    class="border-0"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endif %}
 
-                    </td>      
-                    {% if usuario_view %}
-                    <td>
-                 
-                        {% for pago in gasto.pagosg.all %}
-                            {% if pago.comprobante_pago %}
-                            <ul class="nav nav-pills">
-                                <!-- Botón para abrir el visor de PDF -->
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                </button>
-                            </ul>
-                            <!-- Modal con visor de PDF -->
-                            <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
-                                <div class="modal-dialog modal-xl">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <iframe src="{{ pago.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                      
-                        </td>
-                        
-                        {% endif %}
-                    {% endfor %}
-             
-                
-            </tbody>
-        </table>
-    </div>
-    <div class="d-flex justify-content-center mt-4">
-     
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if gastos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
-
-                {% for item in gastos_list.paginator.page_range %}
-                    {% if gastos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > gastos_list.number|add:'-2' and item < gastos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if gastos_list.paginator.num_pages > gastos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{gastos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{gastos_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
-                {% if gastos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
-
-    </div>
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document">
-
-    </div>
-</div>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(element) {
+        bootstrap.Tooltip.getOrCreateInstance(element);
+    });
+
+    const pdfModal = document.getElementById('gastoPdfModal');
+    const pdfFrame = document.getElementById('gastoPdfFrame');
+    const pdfStatus = document.getElementById('gastoPdfStatus');
+    let pdfObjectUrl = null;
+    let pdfController = null;
+
+    pdfModal.addEventListener('show.bs.modal', async function(event) {
+        const trigger = event.relatedTarget;
+        const pdfUrl = trigger ? trigger.dataset.pdfUrl : '';
+
+        pdfFrame.classList.add('d-none');
+        pdfStatus.classList.remove('d-none');
+        pdfStatus.innerHTML = '<span class="spinner-border text-success" role="status" aria-hidden="true"></span>' +
+            '<span class="sv-empty-title mt-3">Cargando vista previa…</span>';
+        pdfController = new AbortController();
+
+        try {
+            const response = await fetch(pdfUrl, {
+                method: 'GET',
+                credentials: 'same-origin',
+                signal: pdfController.signal
+            });
+
+            if (!response.ok) {
+                throw new Error('No fue posible obtener el documento (' + response.status + ').');
+            }
+
+            const pdfBlob = await response.blob();
+            pdfObjectUrl = URL.createObjectURL(new Blob([pdfBlob], {type: 'application/pdf'}));
+            pdfFrame.src = pdfObjectUrl;
+            pdfStatus.classList.add('d-none');
+            pdfFrame.classList.remove('d-none');
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            pdfStatus.innerHTML = '<span class="sv-empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>' +
+                '<span class="sv-empty-title">No fue posible mostrar el registro</span>' +
+                '<span class="sv-empty-text"></span>';
+            pdfStatus.querySelector('.sv-empty-text').textContent = error.message;
+        }
+    });
+
+    pdfModal.addEventListener('hidden.bs.modal', function() {
+        if (pdfController) {
+            pdfController.abort();
+            pdfController = null;
+        }
+        pdfFrame.src = '';
+        pdfFrame.classList.add('d-none');
+        if (pdfObjectUrl) {
+            URL.revokeObjectURL(pdfObjectUrl);
+            pdfObjectUrl = null;
+        }
+    });
 });
-document.addEventListener("show.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const button = event.relatedTarget;
-  const url = button?.getAttribute("data-pdf-url");
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (url && frame) {
-    frame.src = url;
-  }
-});
-
-document.addEventListener("hidden.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (frame) {
-    frame.src = "about:blank";
-  }
-});
-
 </script>
 {% endblock %}
-</body>
-</html>

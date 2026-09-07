@@ -1,152 +1,361 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
+
 {% load static %}
-{% load widget_tweaks %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Mi Viatico Anual{% endblock %}
-</head>
-<body>
+
+{% block title %}Mis viáticos anuales{% endblock %}
+
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
 
-<div class="row my-4">
-    <div class="col-md-4">
-        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class="col-12">
-    <div class="card">
-        <div class="card-header">
-            <!-- Formulario solo para el botón de Excel -->
-            <form method="POST" class="d-inline">
-                {% csrf_token %}
-                <ul class="nav nav-pills d-flex justify-content-center">
-                    <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel">
-                            <i class="fa-solid fa-file-excel fa-2xl"></i>
-                        </button>
-                    </li></form>
-                    <!-- Botones Gastos y Viáticos fuera del formulario -->
-                    <li class="nav-item mx-2">
-                        <a href="{% url 'mis-comprobaciones-gasto' %}" class="btn btn-outline-secondary">Gastos</a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <button type="button" class="btn btn-primary">Viaticos</button>
-                    </li>
-                </ul>
-        </div>
-    </div>
-</div>
+<main class="sv-page sv-page-with-navbar">
 
-<div class="col-12">
-    <div class ="card">
-        <div class="card-header">
-            <h5>Mis Viaticos {{ año_anterior }} | {{ año_actual }}</h5>
+    <!-- Encabezado de página -->
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-suitcase-rolling"></i>
+                </span>
+
+                Mis viáticos
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta y administra tus comprobaciones de viáticos correspondientes
+                a {{ año_anterior }} y {{ año_actual }}.
+            </p>
         </div>
-        <form method = "POST" id="formViaticos">
+
+        <!-- Exportar Excel -->
+        <form method="POST">
             {% csrf_token %}
-        <div class="card-body">
-           
-            <div class="d-flex justify-content-center mt-2">
 
-               
-                <p class="mx-3"><strong>Total Monto Viáticos:</strong> ${{ total_monto_viaticos|floatformat:2 }}</p>
-                <p class="mx-3"><strong>Total de Facturas:</strong> ${{ total_todas_facturas|floatformat:2 }}</p>
-                <button type="submit" class="btn btn-outline-primary me-2" title="Imprimir seleccionados" name="btnImprimir" id="btnImprimir">
-                    <i class="fa-duotone fa-solid fa-print fa-xl"></i>
-                </button>
-                <button type="submit" class="btn btn-outline-primary me-2" title="Enviar seleccionados" name="btnCorreo" id="btnEnviar">
-                    <i class="fa-solid fa-envelope fa-xl"></i>
-                </button>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="enviarContabilidad" name="enviarContabilidad" value="1">
-                    <label class="form-check-label" for="enviarContabilidad">Tesorería</label>
+            <button
+                type="submit"
+                class="sv-btn sv-btn-success"
+                name="btnExcel"
+                title="Exportar reporte a Excel"
+            >
+                <i class="fa-solid fa-file-excel"></i>
+                Exportar Excel
+            </button>
+        </form>
+    </header>
+
+    <!-- Navegación Gastos / Viáticos -->
+    <section class="sv-card mb-4">
+        <div class="sv-card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+                <div>
+                    <span class="sv-cell-title">
+                        Tipo de comprobación
+                    </span>
+
+                    <span class="sv-cell-subtitle">
+                        Selecciona la información que deseas consultar.
+                    </span>
                 </div>
-                
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="enviarRH" name="enviarRH" value="1">
-                    <label class="form-check-label" for="enviarRH">RH</label>
+
+                <nav class="d-flex flex-wrap gap-2" aria-label="Tipo de comprobación">
+                    <a
+                        href="{% url 'mis-comprobaciones-gasto' %}"
+                        class="sv-btn sv-btn-secondary"
+                    >
+                        <i class="fa-solid fa-receipt"></i>
+                        Gastos
+                    </a>
+
+                    <span class="sv-btn sv-btn-primary">
+                        <i class="fa-solid fa-suitcase"></i>
+                        Viáticos
+                    </span>
+                </nav>
+
+            </div>
+        </div>
+    </section>
+
+    <form method="POST" id="formViaticos">
+        {% csrf_token %}
+
+        <!-- Resumen -->
+        <section class="sv-summary-grid mb-4">
+
+            <article class="sv-summary-card">
+                <div class="sv-summary-icon">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+
+                <div>
+                    <span class="sv-summary-label">
+                        Total de viáticos
+                    </span>
+
+                    <strong class="sv-summary-value">
+                        ${{ total_monto_viaticos|floatformat:2 }}
+                    </strong>
+                </div>
+            </article>
+
+            <article class="sv-summary-card">
+                <div class="sv-summary-icon">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+
+                <div>
+                    <span class="sv-summary-label">
+                        Total de facturas
+                    </span>
+
+                    <strong class="sv-summary-value">
+                        ${{ total_todas_facturas|floatformat:2 }}
+                    </strong>
+                </div>
+            </article>
+
+        </section>
+
+        <!-- Tabla principal -->
+        <section class="sv-card">
+
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        Comprobaciones de viáticos
+                    </h2>
+
+                    <p class="sv-card-subtitle">
+                        Periodo {{ año_anterior }} – {{ año_actual }}
+                    </p>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+
+                    <button
+                        type="submit"
+                        class="sv-btn sv-btn-secondary"
+                        name="btnImprimir"
+                        id="btnImprimir"
+                        title="Imprimir seleccionados"
+                    >
+                        <i class="fa-solid fa-print"></i>
+                        Imprimir
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="sv-btn sv-btn-primary"
+                        name="btnCorreo"
+                        id="btnEnviar"
+                        title="Enviar seleccionados"
+                    >
+                        <i class="fa-solid fa-envelope"></i>
+                        Enviar
+                    </button>
+
                 </div>
             </div>
-            <table class="table bg-white">
-                <thead class="text-black" style="background-color: #F5F5F5;">
-                    <tr>
-                        <th scope="col">Viatico</th>
-                        <th scope="col">Motivo</th>
-                        <th scope="col">Solicitado</th>
-                        <th scope="col">Importe</th>
-                        <th scope="col">Monto XML</th>
-                        <th scope="col">Facturas</th>
-                        <th>Seleccionar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for viatico in viaticos %}
-                    <tr>
-                        <th scope="row">{{viatico.folio}}</th>
-                        <th scope="row">{{viatico.motivo}}</th>
-                        <td>{{viatico.staff.staff.staff.first_name}} {{viatico.staff.staff.staff.last_name}}</td>
-                        <td>${{viatico.get_total|floatformat:2}}</td>
-                        <td>${{viatico.suma_total_facturas|floatformat:2}}</td>
-                        <td>
-                            {% if viatico.facturas.exists %}
-                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
-                            {% else %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <input type="checkbox" name="gastos" value="{{ viatico.id|unlocalize }}">
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        </form>
-    </div>
-</div>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('formViaticos');
-        const btnImprimir = document.getElementById('btnImprimir');
 
-        form.addEventListener('submit', function (e) {
-            // Detecta qué botón fue presionado
-            const clickedButton = document.activeElement;
+            <!-- Destinatarios -->
+            <div class="sv-selection-toolbar">
+                <div>
+                    <span class="sv-cell-title">
+                        Destinatarios del correo
+                    </span>
 
-            if (clickedButton === btnImprimir) {
-                form.setAttribute('target', '_blank'); // abre nueva pestaña
-            } else {
-                form.removeAttribute('target'); // default: misma ventana
-            }
+                    <span class="sv-cell-subtitle">
+                        Aplica únicamente al enviar los registros seleccionados.
+                    </span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-3">
+
+                    <label class="sv-check-option" for="enviarContabilidad">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="enviarContabilidad"
+                            name="enviarContabilidad"
+                            value="1"
+                        >
+
+                        <span>
+                            <i class="fa-solid fa-building-columns"></i>
+                            Tesorería
+                        </span>
+                    </label>
+
+                    <label class="sv-check-option" for="enviarRH">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="enviarRH"
+                            name="enviarRH"
+                            value="1"
+                        >
+
+                        <span>
+                            <i class="fa-solid fa-users"></i>
+                            Recursos Humanos
+                        </span>
+                    </label>
+
+                </div>
+            </div>
+
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <thead>
+                        <tr>
+                            <th>Viático</th>
+                            <th>Motivo</th>
+                            <th>Solicitado por</th>
+                            <th class="text-end">Importe</th>
+                            <th class="text-end">Monto XML</th>
+                            <th class="text-center">Facturas</th>
+                            <th class="text-center">Seleccionar</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for viatico in viaticos %}
+                        <tr>
+                            <td>
+                                <span class="sv-badge sv-badge-primary">
+                                    V-{{ viatico.folio }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="sv-cell-title">
+                                    {{ viatico.motivo|default:"Sin motivo registrado" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="sv-user">
+                                    <span class="sv-user-avatar">
+                                        {{ viatico.staff.staff.staff.first_name|first }}
+                                        {{ viatico.staff.staff.staff.last_name|first }}
+                                    </span>
+
+                                    <span>
+                                        <span class="sv-cell-title">
+                                            {{ viatico.staff.staff.staff.first_name }}
+                                            {{ viatico.staff.staff.staff.last_name }}
+                                        </span>
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="text-end">
+                                <strong>
+                                    ${{ viatico.get_total|floatformat:2 }}
+                                </strong>
+                            </td>
+
+                            <td class="text-end">
+                                <strong>
+                                    ${{ viatico.suma_total_facturas|floatformat:2 }}
+                                </strong>
+                            </td>
+
+                            <td class="text-center">
+                                {% if viatico.facturas.exists %}
+                                    <a
+                                        class="sv-btn sv-btn-success sv-btn-icon"
+                                        href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="Consultar facturas"
+                                        aria-label="Consultar facturas del viático {{ viatico.folio }}"
+                                    >
+                                        <i class="fa-solid fa-file-circle-check"></i>
+                                    </a>
+                                {% else %}
+                                    <a
+                                        class="sv-btn sv-btn-danger sv-btn-icon"
+                                        href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="No tiene facturas"
+                                        aria-label="Agregar facturas al viático {{ viatico.folio }}"
+                                    >
+                                        <i class="fa-solid fa-file-circle-xmark"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="gastos"
+                                    value="{{ viatico.id|unlocalize }}"
+                                    aria-label="Seleccionar viático {{ viatico.folio }}"
+                                >
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="sv-empty-state">
+                                    <i class="fa-solid fa-suitcase"></i>
+
+                                    <strong>
+                                        No hay viáticos registrados
+                                    </strong>
+
+                                    <span>
+                                        No se encontraron comprobaciones para el periodo seleccionado.
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+    </form>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
         });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("formViaticos");
+
+    if (!form) {
+        return;
+    }
+
+    form.addEventListener("submit", function (event) {
+        const submitter = event.submitter;
+
+        if (submitter && submitter.id === "btnImprimir") {
+            form.setAttribute("target", "_blank");
+        } else {
+            form.removeAttribute("target");
+        }
     });
+});
 </script>
+
 {% endblock %}
-</body>
-</html>

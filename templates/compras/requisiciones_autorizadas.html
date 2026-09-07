@@ -1,301 +1,319 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
-{% load static %}
 {% load tt_extras %}
 {% load widget_tweaks %}
-<html>
-<head>
+
 {% block title %}Requisiciones autorizadas{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<!--<div class = "row mt-2 bg-white">
-    <ul class="nav nav-pills" >
-        <li class="nav-item mx-2 pl-5">
-            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                <i class="fa-solid fa-file-excel fa-2xl"></i>
-            </button>
-        </li>
-        <li class="nav-item mx-2">
-            <button type="button" class="btn btn-outline-danger">
-                <i class="fa-solid fa-file-pdf fa-2xl"></i>
-            </button>
-        </li>
-    </ul>
-</div>-->
-
-
-
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row">
-    <div class="col">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-2">
-        <div class="card">
-            <div class="card-header text-center">
-                <h5>Tipo de cambio</h5>
-            </div>
-            <div class="card-body text-center">
-                <h6 class="card-subtitle text-muted" style="font-size: 2em;">{{tags}}</h6>
-            </div>
-            <div class="card-footer text-muted text-center">
-                Información extraída del <a href="https://www.dof.gob.mx/#gsc.tab=0" class="card-link">DOF</a>
-            </div>
+<main class="sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                Requisiciones autorizadas
+            </h1>
+            <p class="sv-page-subtitle">Consulta requisiciones autorizadas, administra sus productos y genera órdenes de compra.</p>
         </div>
-    </div>
 
-    <div class=" col-3" >
-        <div class="card text-center" style="width:20rem">
-            <div class="card-header">
-                <h5 class="card-title">Menú Botones</h5>
-            </div>
-            <div class="card-body">
-                <ul class="nav nav-pills text-center">
-                    <li class="nav-item mx-2">
-                        <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                            <!--<a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'requisicion-autorizada' %}">Requis</a>-->
-                            <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos</a>
-                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
-                            <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">Devueltas</a>
-                        </div>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a type="button" class="btn btn-outline-info mt-2" href="{% url 'catalogo-precios' %}">
-                          <i class="fa-duotone fa-solid fa-chart-line"></i>  
-                        </a>
-                    </li>
-                    <li>
-                        <a type="button" class="btn btn-outline-info mt-2" href="{% url 'requisiciones-status' %}">
-                          Requis NO autorizadas
-                        </a>
-                    </li>
-                </ul>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-circle-check"></i>
+            {{ requis_list.paginator.count }} requisición{{ requis_list.paginator.count|pluralize:"es" }}
+        </span>
+    </header>
 
-            </div>
-            <div class="card-footer text-muted">
-                <h6>&nbsp;</h6>
-            </div>
+    <section class="row g-3 mb-4">
+        <div class="col-12 col-md-4 col-xxl-2">
+            <article class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-dollar-sign"></i>Tipo de cambio</h2>
+                </div>
+                <div class="sv-card-body text-center">
+                    <span class="d-block fs-3 fw-bold">{{ tags|default:"No disponible" }}</span>
+                    <small class="d-block mt-1 text-muted">
+                        Información extraída del
+                        <a href="https://www.dof.gob.mx/#gsc.tab=0" target="_blank" rel="noopener noreferrer">DOF</a>
+                    </small>
+                </div>
+            </article>
         </div>
-    </div>
 
-    <div class="col-7" >
-        <div class="card text-center">
-            <div class="card-header">
-                <h5 class="card-title">Filtros</h5>
-            </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                    <div class="row">
-                        <div class="col-lg-3 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.requisicion|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
-                                    <label style="color: #121212;" for="id_producto">Requisición</label>
+        <div class="col-12 col-md-8 col-xxl-3">
+            <article class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-table-cells-large"></i>Tablas de información</h2>
+                </div>
+                <nav class="sv-card-body d-flex flex-wrap gap-2" aria-label="Navegación de compras">
+                    <a class="sv-btn sv-btn-outline" href="{% url 'productos-pendientes' %}">
+                        <i class="fa-solid fa-box-open"></i>Productos
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'matriz-compras' %}">
+                        <i class="fa-solid fa-table"></i>Matriz
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'compras-devueltas' %}">
+                        <i class="fa-solid fa-rotate-left"></i>Devueltas
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'catalogo-precios' %}">
+                        <i class="fa-solid fa-chart-line"></i>Catálogo
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'requisiciones-status' %}">
+                        <i class="fa-solid fa-clock-rotate-left"></i>No autorizadas
+                    </a>
+                </nav>
+            </article>
+        </div>
+
+        <div class="col-12 col-xxl-7">
+            <article class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>Filtros de búsqueda</h2>
+                </div>
+                <div class="sv-card-body">
+                    <form method="GET">
+                        <div class="sv-filter-grid">
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                                <div class="form-floating">
+                                    {{ myfilter.form.requisicion|add_class:"form-control"|append_attr:"placeholder=Requisición" }}
+                                    <label for="{{ myfilter.form.requisicion.id_for_label }}">Requisición</label>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder= Solicitud"}}
-                                    <label style="color: #121212;" for="id_producto">Solicitud</label>
+
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating">
+                                    {{ myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder=Solicitud" }}
+                                    <label for="{{ myfilter.form.solicitud.id_for_label }}">Solicitud</label>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.solicitante|add_class:"form-control"|append_attr:"placeholder= Solicitante"}}
-                                    <label style="color: #121212;" for="id_producto">Solicitante</label>
+
+                            <div class="sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <div class="form-floating">
+                                    {{ myfilter.form.solicitante|add_class:"form-control"|append_attr:"placeholder=Solicitante" }}
+                                    <label for="{{ myfilter.form.solicitante.id_for_label }}">Solicitante</label>
                                 </div>
                             </div>
+
+                            <button id="btnBuscar" class="sv-btn sv-btn-primary" type="submit">
+                                <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                            </button>
+                            <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}">
+                                <i class="fa-solid fa-eraser"></i>Limpiar
+                            </a>
                         </div>
-                     
-                        <div class="col-1">
-                            <button  id="btnBuscar" class="btn btn-outline-success btn-block mt-1 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer text-muted">
-                    <h6>&nbsp;</h6>
-            </div>
+                    </form>
+                </div>
+            </article>
         </div>
-    </div>
+    </section>
 
-</div>
+    <section class="sv-card">
+        <header class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i>Resultados</h2>
+        </header>
 
-<div class = "row mt-2">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">RQ</th>
-                    <th scope="col">Solicitud</th>
-                    <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th class="d-none d-lg-table-cell">Operación</th>
-                    <th scope="col">Autorizado</th>
-                    <th scope="col">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in requis_list %}
-                <tr>
-                    <th scope="row">{{req.folio}}</th>
-                    <th scope="row">{{req.orden.folio}}</th>
-                    <th class="d-none d-lg-table-cell">{{req.orden.staff.staff.staff.first_name}} {{req.orden.staff.staff.staff.last_name}}</th>
-                    <td>{{req.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{req.orden.subproyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{req.orden.operacion}}</td>
-                    <td>{{req.approved_at}} {{req.approved_at_time}} </td>
-                    <td>
-                      
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'articulos-restantes' req.id %}?next={{ request.path }}">Productos</a>
-                            </li>
-                            {% if perfil.tipo.comprador %}
-                            <li id="crear_oc_{{req.id}}" class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-success" onclick="crear_oc('{{req.id}}')" href="{% url 'oc' req.id %}">Crear OC</a>
-                            </li>
-                            <li id="wait_lbl_{{req.id}}" class="nav-item m-1 d-none">
-                                <div class="alert alert-primary" role="alert">
-                                    En proceso ...
-                                </div>
-                            </li>
-                            {% if req.comprado_parcial %}
-                            <li class="nav-item m-1">
-                                <a id="delete_btn_{{req.id}}" type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-cancelar-compras' req.id %}">
-                                    <i class="fa-solid fa-trash-can"></i>
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th>RQ</th>
+                        <th>Solicitud</th>
+                        <th>Solicitado por</th>
+                        <th>Proyecto</th>
+                        <th>Subproyecto</th>
+                        <th>Operación</th>
+                        <th>Autorizado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requis_list %}
+                    <tr>
+                        <td><span class="sv-folio">RQ-{{ req.folio }}</span></td>
+                        <td><span class="sv-cell-title">SL-{{ req.orden.folio }}</span></td>
+                        <td>
+                            <div class="sv-user">
+                                <span class="sv-user-avatar">
+                                    {{ req.orden.staff.staff.staff.first_name|first }}{{ req.orden.staff.staff.staff.last_name|first }}
+                                </span>
+                                <span class="sv-user-name">
+                                    {{ req.orden.staff.staff.staff.first_name }} {{ req.orden.staff.staff.staff.last_name }}
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="sv-cell-title">{{ req.orden.proyecto.nombre }}</span></td>
+                        <td><span class="sv-cell-subtitle">{{ req.orden.subproyecto.nombre }}</span></td>
+                        <td><span class="sv-cell-subtitle">{{ req.orden.operacion }}</span></td>
+                        <td>
+                            <div class="sv-date">
+                                <strong><i class="fa-regular fa-calendar me-1"></i>{{ req.approved_at|date:"d/m/Y" }}</strong>
+                                <small>
+                                    {% if req.approved_at_time %}
+                                        {{ req.approved_at_time }}
+                                    {% else %}
+                                        {{ req.approved_at|time:"H:i" }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sv-actions">
+                                <a class="sv-btn sv-btn-info" href="{% url 'articulos-restantes' req.id %}?next={{ request.path|urlencode }}">
+                                    <i class="fa-solid fa-box-open"></i>Productos
                                 </a>
-                            </li>
-                            {% endif %}
-                            <li class="nav-item m-1">
-                                <a id="delete_item_{{req.id}}" type="button" class="btn btn-outline-danger" href="{% url 'eliminar-articulos' req.id %}">
-                                    <i class="fa-solid fa-eraser"></i>
-                                </a>
-                            </li>
-                            <li class="nav-item m-1">
-                                <a class="btn btn-outline-warning" href="{% url 'requis_devolver' req.id %}" >
-                                    Devolver
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+
+                                {% if perfil.tipo.comprador %}
+                                    <span id="crear_oc_{{ req.id }}">
+                                        <a class="sv-btn sv-btn-success" href="{% url 'oc' req.id %}" onclick="crear_oc('{{ req.id }}')">
+                                            <i class="fa-solid fa-cart-plus"></i>Crear OC
+                                        </a>
+                                    </span>
+
+                                    <span id="wait_lbl_{{ req.id }}" class="d-none">
+                                        <span class="sv-badge sv-badge-primary">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>En proceso
+                                        </span>
+                                    </span>
+
+                                    {% if req.comprado_parcial %}
+                                        <a class="sv-btn sv-btn-danger sv-btn-icon" data-bs-toggle="modal" data-bs-target="#dialog"
+                                           hx-target="#document" hx-get="{% url 'requisicion-cancelar-compras' req.id %}"
+                                           title="Cancelar compras" aria-label="Cancelar compras">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    <a id="delete_item_{{ req.id }}" class="sv-btn sv-btn-danger sv-btn-icon"
+                                       href="{% url 'eliminar-articulos' req.id %}" title="Eliminar artículos" aria-label="Eliminar artículos">
+                                        <i class="fa-solid fa-eraser"></i>
+                                    </a>
+
+                                    <a class="sv-btn sv-btn-warning" href="{% url 'requis_devolver' req.id %}">
+                                        <i class="fa-solid fa-rotate-left"></i>Devolver
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-inbox"></i></span>
+                            <span class="sv-empty-title">No se encontraron requisiciones autorizadas</span>
+                            <span class="sv-empty-text">Modifica los filtros o espera a que exista una requisición disponible.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if requis_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de requisiciones">
+            <ul class="pagination sv-pagination">
                 {% if requis_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url requis_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" title="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url requis_list.previous_page_number 'page' request.GET.urlencode %}" title="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if requis_list.number > 3 %}
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}">1</a></li>
+                    {% if requis_list.number > 4 %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    {% endif %}
                 {% endif %}
 
                 {% for item in requis_list.paginator.page_range %}
-                    {% if requis_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > requis_list.number|add:'-2' and item < requis_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% if item >= requis_list.number|add:'-2' and item <= requis_list.number|add:'2' %}
+                        {% if requis_list.number == item %}
+                            <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
 
-                {% if requis_list.paginator.num_pages > requis_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{requis_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url requis_list.paginator.num_pages 'page' request.GET.urlencode %}">{{requis_list.paginator.num_pages}}</a></li>
+                {% if requis_list.number < requis_list.paginator.num_pages|add:'-2' %}
+                    {% if requis_list.number < requis_list.paginator.num_pages|add:'-3' %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    {% endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url requis_list.paginator.num_pages 'page' request.GET.urlencode %}">
+                            {{ requis_list.paginator.num_pages }}
+                        </a>
+                    </li>
                 {% endif %}
 
                 {% if requis_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url requis_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url requis_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url requis_list.next_page_number 'page' request.GET.urlencode %}" title="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url requis_list.paginator.num_pages 'page' request.GET.urlencode %}" title="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
                 {% endif %}
             </ul>
         </nav>
-    </div>
+        {% endif %}
+    </section>
+</main>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-    </div>
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
 </div>
 
-
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
+(function () {
+    const modalElement = document.getElementById("dialog");
 
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    if (!modalElement) {
+        return;
+    }
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
 
-//var myModal = document.getElementById('dialog')
+    htmx.on("htmx:beforeSwap", function (event) {
+        if (event.detail.target.id === "document" && !event.detail.xhr.response) {
+            modal.hide();
+        }
+    });
+})();
 
-//myModal.addEventListener('hidden.bs.modal', function (event) {
-//  location.reload();
-//})
-function crear_oc(folio){
-    var crearbtn = document.getElementById('crear_oc_'+folio);
-    var alert_wait = document.getElementById('wait_lbl_'+folio);
-    var delete_btn = document.getElementById('delete_btn_'+folio);
-    var delete_item = document.getElementById('delete_item_'+folio);
-    crearbtn.classList.add('d-none');
-    delete_item.classList.add('d-none');
-    //delete_btn.classList.add('d-none');
-    alert_wait.classList.remove('d-none');
+function crear_oc(folio) {
+    const crearButton = document.getElementById("crear_oc_" + folio);
+    const waitLabel = document.getElementById("wait_lbl_" + folio);
+    const deleteItem = document.getElementById("delete_item_" + folio);
+
+    if (crearButton) crearButton.classList.add("d-none");
+    if (deleteItem) deleteItem.classList.add("d-none");
+    if (waitLabel) waitLabel.classList.remove("d-none");
 }
-
 </script>
 {% endblock %}
-</body>
-</html>

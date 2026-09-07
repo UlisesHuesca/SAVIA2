@@ -1,134 +1,140 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
-{% load static %}
-<html>
-<head>
-{% block title %}Requisiciones{% endblock %}
-</head>
-<body>
-{% block content %}
-<div>&nbsp;</div>
-<div>&nbsp;</div>
-<div>&nbsp;</div>
-    <div class="row my-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class ="card-header">
-                    <h5>Autorización de Requisiciones</h5>
-                </div>
-                <div class="card-body">
-                    <div class = "row mt-2 bg-white">
-                        <form method=POST>
-                            {% csrf_token %}
-                        <ul class="nav nav-pills"> 
-                            <li class="nav-item mx-2 pl-5">
-                                <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                                    <i class="fa-solid fa-file-excel fa-2xl"></i>
-                                </button>
-                            </li>
-                            <li class="nav-item mx-2">
-                                <button type="button" class="btn btn-outline-danger">
-                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<h6>&nbsp;</h6>
-<div class = "card mt-2">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th>Folio RQ</th>
-                    <th>Folio SL</th>
-                    <th scope="col">Solicitado por</th>
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th class="d-none d-lg-table-cell">Operación</th>
-                    <th class="d-none d-lg-table-cell">Creado</th>
-                    <th class="d-none d-lg-table-cell">Comentarios</th>
-                    <th scope="col">Detalles</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in requis %}
-                <tr>
-                    <th>{{req.folio}}</th>
-                    <th>{{req.orden.folio}}</th>
-                    <td>{{req.orden.staff.staff.staff.first_name}} {{req.orden.staff.staff.staff.last_name}}</td>
-                    <td>{{req.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{req.orden.subproyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{req.orden.operacion}}</td>
-                    <td class="d-none d-lg-table-cell">{{req.orden.created_at}} </td>
-                    <td class="d-none d-lg-table-cell">{% if req.orden.comentario %}{{req.orden.comentario}}{%else%}Sin comentarios{%endif%}</td>
-                    <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-creada-detalle' req.id %}">Productos</a>
-                    </td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-danger  btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-cancelar' req.id %}">
+{% block title %}Autorización de requisiciones{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-file-signature"></i></span>
+                Autorización de requisiciones
+            </h1>
+            <p class="sv-page-subtitle">Revisa los productos y autoriza o rechaza las requisiciones pendientes.</p>
+        </div>
+
+        <span class="sv-badge sv-badge-warning">
+            <i class="fa-solid fa-clock"></i>
+            {{ requis|length }} pendiente{{ requis|length|pluralize }}
+        </span>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i>Requisiciones pendientes</h2>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th>Folio Req.</th>
+                        <th>Folio Solicitud</th>
+                        <th>Solicitado por</th>
+                        <th>Proyecto</th>
+                        <th>Subproyecto</th>
+                        <th>Operación</th>
+                        <th>Creado</th>
+                        <th>Comentarios</th>
+                        <th class="text-center">Detalles</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for req in requis %}
+                    <tr>
+                        <td><span class="sv-folio">{{ req.folio }}</span></td>
+                        <td><span class="sv-cell-title">{{ req.orden.folio }}</span></td>
+
+                        <td>
+                            <div class="sv-user">
+                                <span class="sv-user-avatar">
+                                    {{ req.orden.staff.staff.staff.first_name|first }}{{ req.orden.staff.staff.staff.last_name|first }}
+                                </span>
+                                <span class="sv-user-name">
+                                    {{ req.orden.staff.staff.staff.first_name }} {{ req.orden.staff.staff.staff.last_name }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td><span class="sv-cell-title">{{ req.orden.proyecto.nombre }}</span></td>
+                        <td><span class="sv-cell-title">{{ req.orden.subproyecto.nombre }}</span></td>
+                        <td><span class="sv-cell-subtitle">{{ req.orden.operacion }}</span></td>
+
+                        <td>
+                            <div class="sv-date">
+                                <strong><i class="fa-regular fa-calendar me-1"></i>{{ req.orden.created_at|date:"d/m/Y" }}</strong>
+                                <small>{{ req.orden.created_at|time:"H:i" }} hrs.</small>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if req.orden.comentario %}
+                                <span class="sv-cell-subtitle" title="{{ req.orden.comentario }}">
+                                    {{ req.orden.comentario|truncatechars:45 }}
+                                </span>
+                            {% else %}
+                                <span class="sv-cell-subtitle fst-italic">Sin comentarios</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <a class="sv-btn sv-btn-info" data-bs-toggle="modal" data-bs-target="#dialog"
+                               hx-target="#document" hx-get="{% url 'requisicion-creada-detalle' req.id %}">
+                                <i class="fa-solid fa-box-open"></i>Productos
+                            </a>
+                        </td>
+
+                        <td>
+                            <div class="sv-actions justify-content-center">
+                                <a class="sv-btn sv-btn-danger sv-btn-icon" data-bs-toggle="modal" data-bs-target="#dialog"
+                                   hx-target="#document" hx-get="{% url 'requisicion-cancelar' req.id %}"
+                                   title="Rechazar requisición" aria-label="Rechazar requisición">
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
-                            </li>
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-autorizar' req.id %}">
+
+                                <a class="sv-btn sv-btn-success sv-btn-icon" data-bs-toggle="modal" data-bs-target="#dialog"
+                                   hx-target="#document" hx-get="{% url 'requisicion-autorizar' req.id %}"
+                                   title="Autorizar requisición" aria-label="Autorizar requisición">
                                     <i class="fa-solid fa-check"></i>
                                 </a>
-                            </li>
-                          
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                            </div>
+                        </td>
+                    </tr>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-check"></i></span>
+                            <span class="sv-empty-title">No hay requisiciones pendientes</span>
+                            <span class="sv-empty-text">Todas las requisiciones han sido revisadas.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
+<div class="modal fade" id="dialog" tabindex="-1" aria-labelledby="requisicionModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" id="document" role="document">
+        <!-- HTMX insertará aquí el contenido -->
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-</div>
-
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 {% endblock %}
-</body>
-</html>

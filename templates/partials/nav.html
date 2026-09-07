@@ -8,17 +8,11 @@
     <!--<script src="https://kit.fontawesome.com/259463dc50.js" crossorigin="anonymous"></script>-->
     <!--<script src="https://kit.fontawesome.com/b6755a6261.js" crossorigin="anonymous"></script>-->
 </head>
-<nav class="navbar fixed-top navbar-dark 
-    {% if usuario.distritos.nombre != 'NEGRO' %}
-        bg-dark
-    {% else %}
-        " style = "background-color: #000000 !important;
-    {% endif %}
-">
+<nav class="navbar fixed-top navbar-dark sv-navbar">
     {% if user.is_authenticated %}
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'dashboard-index' %}">
-                {% if usuario.distritos.nombre == "NEGRO" %}
+                {% if usuario.distritos.nombre == "Yerod" %}
                 <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
                 {% else %}
                 <img src="{% static 'images/SAVIA_Logo.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
@@ -260,8 +254,7 @@
                                 <!--<a class="dropdown-item" href="{% url 'crear-plantilla' %}">Crear Plantilla</a>
                                 <a class="dropdown-item" href="{% url 'matriz-plantillas' %}">Matriz Plantillas</a>-->
                                 <a class="dropdown-item" href="{% url 'solicitud-product-selection' %}">{% trans "Crear Solicitud" %}</a>
-                                <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">{% trans "Solicitudes por producto" %}</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">{% trans "Matriz Solicitudes" %}</a>
+                               
                                 <a class="dropdown-item" href="{% url 'requisiciones-devueltas' %}">{% trans "Requisiciones devueltas" %}
                                     {% if conteo_requis_devueltas > 0 %}
                                     <span class="badge bg-danger">({{conteo_requis_devueltas}})</span>
@@ -273,7 +266,6 @@
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{% url 'crear-gasto' %}">{% trans "Crear Solicitud de Gasto/Reembolso" %}</a>
                                 <a class="dropdown-item" href="{% url 'solicitud-viatico' %}">{% trans "Crear Viático" %}</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">{% trans "Matriz Viáticos" %}</a>
                             <div class="dropdown-divider"></div>
                         </div>
                   
@@ -597,12 +589,15 @@
                     <div>
                     {% endif %}
                         <a class="dropdown-item" href="{% url 'solicitud-matriz' %}">Matriz Solicitudes</a>
+                        <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">{% trans "Matriz Solicitudes por producto" %}</a>
                         <a class="dropdown-item" href="{% url 'requisiciones-status' %}">
                             Matriz Requisiciones
                         </a>
+                        {% if usuario.tipo.compras == True %}
                         <a class="dropdown-item" href="{% url 'requisiciones-productos' %}">
                             Matriz Productos Requisiciones
                         </a>
+                        {% endif %}
                         <a class="dropdown-item" href="{% url 'reporte-entradas-servicios' %}">Matriz Entradas Servicios</a>
                         {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" or usuario.tipo.nombre == "Control" %}
                             <div>

@@ -1,0 +1,92 @@
+{% extends "emails/base_email.html" %}
+
+{% block titulo_documento %}Nueva orden de compra{% endblock %}
+
+{% block titulo_correo %}Nueva orden de compra{% endblock %}
+
+{% block subtitulo_correo %}OC {{ compra.folio }}{% endblock %}
+
+{% block contenido %}
+    <p style="margin: 0 0 18px; color: #344054; font-size: 17px; line-height: 1.6;">
+        Estimado(a) <strong style="color: {{ color_acento }};">{{ contacto_proveedor }}</strong>:
+    </p>
+
+    <p style="margin: 0 0 8px; color: #475467; font-size: 15px; line-height: 1.7;">
+        Proveedor: <strong>{{ nombre_proveedor }}</strong>
+    </p>
+
+    <p style="margin: 0 0 22px; color: #475467; font-size: 15px; line-height: 1.7;">
+        Has sido seleccionado para surtir la orden de compra adjunta.
+    </p>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; background-color: #F9FAFB; border: 1px solid #EAECF0; border-radius: 10px;">
+        <tr>
+            <td style="padding: 21px 23px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Orden de compra</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ compra.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="padding: 0 0 12px; color: #667085; font-size: 13px;">Requisición</td>
+                        <td style="padding: 0 0 12px; color: #101828; font-size: 14px; font-weight: 700;">{{ compra.req.folio }}</td>
+                    </tr>
+
+                    <tr>
+                        <td width="155" style="color: #667085; font-size: 13px;">Solicitud</td>
+                        <td style="color: #101828; font-size: 14px; font-weight: 700;">{{ compra.req.orden.folio }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    {% if productos_criticos %}
+        <p style="margin: 24px 0 12px; color: #344054; font-size: 15px; line-height: 1.6; font-weight: 700;">Requerimientos de productos críticos</p>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; overflow: hidden; border: 1px solid #EAECF0; border-radius: 10px; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th align="left" style="padding: 12px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Producto crítico</th>
+                    <th align="left" style="padding: 12px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Requerimiento</th>
+                    <th align="left" style="padding: 12px; background-color: {{ color_encabezado_tabla }}; color: #FFFFFF; font-size: 12px;">Comentarios</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for articulo in productos_criticos %}
+                    {% with producto=articulo.producto.producto.articulos.producto.producto %}
+                        {% for requerimiento in producto.producto_calidad.requerimientos_calidad.all %}
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #EAECF0; color: #344054; font-size: 13px;">{{ producto.nombre|default:producto.codigo }}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #EAECF0; color: #344054; font-size: 13px;">{{ requerimiento.requerimiento.nombre }}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #EAECF0; color: #667085; font-size: 13px;">{{ requerimiento.comentarios|default:"Sin comentarios" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #EAECF0; color: #344054; font-size: 13px;">{{ producto.nombre|default:producto.codigo }}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #EAECF0; color: #667085; font-size: 13px;">Sin requerimiento</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #EAECF0; color: #667085; font-size: 13px;">Sin comentarios</td>
+                            </tr>
+                        {% endfor %}
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin-top: 22px; background-color: {{ color_fondo_acento }}; border-left: 4px solid {{ color_acento }}; border-radius: 7px;">
+        <tr>
+            <td style="padding: 15px 17px; color: #344054; font-size: 14px; line-height: 1.6;">
+                La orden de compra y las políticas aplicables se encuentran adjuntas a este correo.
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin: 25px 0 4px; color: #475467; font-size: 14px; line-height: 1.6;">Atentamente,</p>
+
+    <p style="margin: 0; color: #101828; font-size: 15px; line-height: 1.6; font-weight: 700;">{{ nombre_creador }}</p>
+
+    <p style="margin: 3px 0 0; color: #667085; font-size: 13px; line-height: 1.6;">{{ nombre_empresa }}</p>
+{% endblock %}

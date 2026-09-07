@@ -3,268 +3,311 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Entradas Pendientes{% endblock %}
-</head>
-<body>
+{% block title %}Entradas pendientes{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class = "col bg-white" id="response-div">
-    <div class="card">
-        <div class="card-header">
-            <h5>Pendientes de Entrada</h5>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                </span>
+                Entradas pendientes
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta las órdenes pendientes y registra la recepción de materiales.
+            </p>
         </div>
-        <div class="card-body">
-            {% csrf_token %}
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-file-circle-check"></i>
+            {{ compras|length }} OC pendientes
+        </span>
+    </header>
+
+    <section class="sv-card mb-4" id="response-div">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-filter"></i>
+                Filtros de búsqueda
+            </h2>
+        </div>
+
+        <div class="sv-card-body">
             <form method="GET">
-            <div class="row">
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio OC"}}
-                            <label style="color: #121212;" for="id_staff">Folio OC</label>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio OC" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio OC</label>
+                            </div>
                         </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-file-lines"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder=Solicitud" }}
+                                <label for="{{ myfilter.form.solicitud.id_for_label }}">Solicitud</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor" }}
+                                <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.req|add_class:"form-control"|append_attr:"placeholder=Requisición" }}
+                                <label for="{{ myfilter.form.req.id_for_label }}">Requisición</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                                <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto" }}
+                                <label for="{{ myfilter.form.subproyecto.id_for_label }}">Subproyecto</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.atrasado|add_class:"form-control"|append_attr:"placeholder=Atrasadas" }}
+                                <label for="{{ myfilter.form.atrasado.id_for_label }}">Atrasadas</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>Limpiar
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                        </button>
                     </div>
                 </div>
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder= Solicitud"}}
-                            <label style="color: #121212;" for="id_solicitud">Solicitud</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                            <label style="color: #121212;" for="id_staff">Proveedor</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
-                            <label style="color: #121212;" for="id_staff">Requisición</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
-                        </div>
-                    </div>
-                </div>       
-            
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
-                            <label style="color: #121212;" for="id_proyecto">Subproyecto</label>
-                        </div>
-                    </div>
-                </div>  
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.atrasado|add_class:"form-control"|append_attr:"placeholder= Atrasadas"}}
-                        <label style="color: #121212;" for="id_subproyecto">Atrasadas</label>
-                        </div>
-                    </div>
-                </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
-                </div>
-                <hr>
-                </form>
-                <form method=POST onsubmit="mostrarIndicadorCarga();">
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2 mt-1">
-                            <button name="btnExcel" type="submit" class="btn btn-outline-success btn-lg" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li style="text-align: center;" class="alert alert-primary col-lg-2 col-sm-12" role="alert">
-                            <strong>Número de OC: {{compras|length}}</strong>
-                        </li>
-                    <!--    <li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
-                    </ul>
-                    
-                </form>
-            </div>
+            </form>
         </div>
-        
-    </div>
-    <!-- Aquí terminan el encabezado de los filtros -->
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
+        <div class="sv-card-body border-top">
+            <form method="POST" onsubmit="mostrarIndicadorCarga();">
+                {% csrf_token %}
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
+                    <button id="btnExcel" name="btnExcel" type="submit"
+                            class="sv-btn sv-btn-success" value="Reporte Excel">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Exportar reporte
+                    </button>
+                    <span class="sv-badge sv-badge-primary">
+                        <i class="fa-solid fa-list-ol"></i>
+                        Número de OC: {{ compras|length }}
+                    </span>
+                </div>
+            </form>
+        </div>
+    </section>
 
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera... &nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-list-check"></i>
+                Órdenes pendientes
+            </h2>
+            <span class="sv-badge sv-badge-dark">
+                Página {{ compras_list.number }} de {{ compras_list.paginator.num_pages }}
+            </span>
+        </div>
 
-<div class = "col">
-    <div class="card">
-        <div class ="table-responsive-sm">
-            <table class="table bg-white">
-            <thead class="text-black sticky-top" style="height: 80px;background-color: #F5F5F5;">
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+            <thead>
                 <tr>
                     <th scope="col">Compra</th>
-                    <th class="d-none d-lg-table-cell">Req.</th>
-                    <th scope="col">Sol.</th>
+                    <th class="d-none d-lg-table-cell">Requisición</th>
+                    <th scope="col">Solicitud</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
                     <th scope="col">Proyecto</th>
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
                     <th class="d-none d-lg-table-cell">Autorizado</th>
                     <th scope="col">Proveedor</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Acciones</th>
                     <th scope="col">Atraso</th>
                 </tr>
             </thead>
             <tbody>
                 {% for compra in compras_list %}
                 <tr>
-                    <td id="folio" class="compra-row" folio="{{compra.folio}}">{{compra.folio}}</th>
-                    <td id="fecha_pago_{{compra.folio}}" dias_entrega="{{compra.dias_de_entrega}}" fecha_pago="{{compra|date:'Y-m-d'}}" class="d-none d-lg-table-cell">{{compra.req.folio}}</td>
-                    <td id="tipo_pago_{{compra.folio}}" tipo_pago="{{compra.cond_de_pago.nombre}}" status_pago = "{{compra.pagada}}">{{compra.req.orden.folio}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</td>
-                    <td>{{compra.req.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
-                    <td id="fecha_autorizacion_{{compra.folio}}" fecha_autorizacion="{{compra.autorizado_at_2|date:'Y-m-d'}}" class="d-none d-lg-table-cell">{{compra.autorizado_at_2}} </td>
+                    <td class="compra-row" data-folio="{{ compra.folio }}">
+                        <span class="sv-folio">{{ compra.folio }}</span>
+                    </td>
+                    <td id="fecha_pago_{{ compra.folio }}"
+                        data-dias-entrega="{{ compra.dias_de_entrega }}"
+                        data-fecha-pago="{{ compra|date:'Y-m-d' }}"
+                        class="d-none d-lg-table-cell">
+                        {{ compra.req.folio }}
+                    </td>
+                    <td id="tipo_pago_{{ compra.folio }}"
+                        data-tipo-pago="{{ compra.cond_de_pago.nombre }}"
+                        data-status-pago="{{ compra.pagada }}">
+                        {{ compra.req.orden.folio }}
+                    </td>
+                    <td id="fecha_autorizacion_{{ compra.folio }}"
+                        data-fecha-autorizacion="{{ compra.autorizado_at_2|date:'Y-m-d' }}"
+                        class="d-none d-lg-table-cell">
+                        <div class="sv-user">
+                            <span class="sv-user-avatar">
+                                {{ compra.req.orden.staff.staff.staff.first_name|first }}{{ compra.req.orden.staff.staff.staff.last_name|first }}
+                            </span>
+                            <span class="sv-user-name">
+                                {{ compra.req.orden.staff.staff.staff.first_name }}
+                                {{ compra.req.orden.staff.staff.staff.last_name }}
+                            </span>
+                        </div>
+                    </td>
+                    <td><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
+                    <td class="d-none d-lg-table-cell"><span class="sv-cell-subtitle">{{ compra.req.orden.subproyecto.nombre }}</span></td>
+                    <td class="d-none d-lg-table-cell">
+                        <div class="sv-date">
+                            <strong>{{ compra.autorizado_at_2|date:"d/m/Y" }}</strong>
+                            <small>{{ compra.autorizado_at_2|time:"H:i" }} hrs.</small>
+                        </div>
+                    </td>
                     {% if compra.proveedor.nombre.razon_social == "COLABORADOR" %}
-                    <td>{{compra.deposito_comprador.staff.staff.first_name}} {{compra.deposito_comprador.staff.staff.last_name}}</td>
+                    <td><span class="sv-cell-title">{{ compra.deposito_comprador.staff.staff.first_name }} {{ compra.deposito_comprador.staff.staff.last_name }}</span></td>
                     {% else %}
-                    <td>{{compra.proveedor.nombre}}</td>
+                    <td><span class="sv-cell-title">{{ compra.proveedor.nombre }}</span></td>
                     {% endif %}
                     <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'articulos-entrada' compra.id %}">Entrada</a>
-                            </li>
-                            <!-- Añadir el botón de productos aquí -->
-                            <li class="nav-item m-1">
-                            <a id="productosBtn" type="button" class="btn btn-outline-success" href="{% url 'productos' compra.id %}">Productos</a>
-                            </li>
-                            <!-- Añadir el botón de NC aquí -->
-                            <li class="nav-item m-1">
-                            <a id="ncBtn" type="button" class="btn btn-outline-warning" href="{% url 'no-conformidad' compra.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Botón para levantar NC relacionadas con calidad" class="tooltip-container">NC</a>
-                            </li> 
-                        </ul>
+                        <div class="sv-actions">
+                            <a class="sv-btn sv-btn-info sv-btn-icon"
+                               href="{% url 'articulos-entrada' compra.id %}"
+                               title="Registrar entrada" aria-label="Registrar entrada">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </a>
+                            <a class="sv-btn sv-btn-success sv-btn-icon"
+                               href="{% url 'productos' compra.id %}"
+                               title="Ver productos" aria-label="Ver productos">
+                                <i class="fa-solid fa-box-open"></i>
+                            </a>
+                            <a class="sv-btn sv-btn-warning sv-btn-icon"
+                               href="{% url 'no-conformidad' compra.id %}"
+                               data-bs-toggle="tooltip" data-bs-placement="top"
+                               title="Levantar no conformidad" aria-label="Levantar no conformidad">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </a>
+                        </div>
                     </td>
-                    <td id="retraso_{{compra.folio}}"  class="d-none">
-                        <ul class="nav nav-pills">
-                            <li>
-                                <div  class="alert alert-warning" role="alert">
-                                    <i class="fa-solid fa-clock-rotate-left"></i><span id="text_span_{{compra.folio}}"></span>
-                                </div>
-                            </li>
-                        </ul>
+                    <td id="retraso_{{ compra.folio }}" class="d-none">
+                        <span class="sv-badge sv-badge-warning">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span id="text_span_{{ compra.folio }}"></span> días
+                        </span>
                     </td>
                 </tr>
-
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="sv-empty">
+                        <span class="sv-empty-icon"><i class="fa-solid fa-circle-check"></i></span>
+                        <span class="sv-empty-title">No hay entradas pendientes</span>
+                        <span class="sv-empty-text">Prueba modificando los filtros de búsqueda.</span>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
             </table>
-
         </div>
-   
-    </div>
-</div>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center">
+    </section>
+
+    {% if compras_list.paginator.num_pages > 1 %}
+    <nav class="mt-3" aria-label="Paginación de órdenes pendientes">
+        <ul class="pagination justify-content-center mb-0">
             {% if compras_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+            <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a></li>
+            <li class="page-item"><a class="page-link" href="{% my_url compras_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a></li>
             {% endif %}
 
             {% for item in compras_list.paginator.page_range %}
                 {% if compras_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
                 {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
                 {% endif %}
             {% endfor %}
 
-            {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
-            {% endif %}
-
             {% if compras_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            <li class="page-item"><a class="page-link" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a></li>
+            <li class="page-item"><a class="page-link" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a></li>
             {% endif %}
         </ul>
     </nav>
+    {% endif %}
+</main>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
+     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "NEGRO" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Negro" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="Vordcab" width="96" class="img-fluid rounded">
+                {% endif %}
+                <div>
+                    <strong>Generando reporte</strong>
+                    <p class="sv-cell-subtitle mb-0">
+                        Por favor espera… <i class="fa-solid fa-mug-hot"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!--Este es el modal-->
@@ -276,32 +319,36 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
 var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
 dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
+    const scrollSpy = bootstrap.ScrollSpy.getInstance(dataSpyEl);
+    if (scrollSpy) scrollSpy.refresh();
 });
 ;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    const modalElement = document.getElementById('dialog');
+    const modal = new bootstrap.Modal(modalElement);
 
     htmx.on('htmx:beforeSwap',(e)=>{
         if (e.detail.target.id === "document" && !e.detail.xhr.response)
         modal.hide()
-    })
-})()
+    });
 
-function preventDoubleClick(button) {
-    setTimeout(function() {
-        button.disabled = true;
-    }, 50);
-}
-
-//var myModal = document.getElementById('dialog')
-
-//myModal.addEventListener('hidden.bs.modal', function (event) {
-//  location.reload();
-//})
+})();
 
 // Función para obtener el valor de una cookie por su nombre
 function getCookie(name) {
@@ -320,88 +367,74 @@ function getCookie(name) {
 }
 
 function mostrarIndicadorCarga() {
-    var btn = document.getElementById('btnExcel')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
+    const loadingElement = document.getElementById('loadingIndicator');
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
     verificarDescargaIniciada();
-    btn.classList.add('d-none')
 }
 
 function verificarDescargaIniciada(){
     const checkDescarga = setInterval(() => {
         const descargaIniciada = getCookie('descarga_iniciada');
         if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
+            const loadingElement = document.getElementById('loadingIndicator');
+            bootstrap.Modal.getOrCreateInstance(loadingElement).hide();
             document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
             clearInterval(checkDescarga);
-
         }
-    }, 1000); // Revisar cada segundo
+    }, 1000);
 }
 
 function indicador_retraso(folio) {
-    
-    var obj_dias_entrega = document.getElementById('fecha_pago_'+folio);
-    var obj_tipo_pago = document.getElementById('tipo_pago_'+folio);
-    var retraso_icon = document.getElementById('retraso_'+folio);
-    var obj_fecha_autorizacion = document.getElementById('fecha_autorizacion_'+folio);
-    var dias_entrega = obj_dias_entrega.getAttribute('dias_entrega');
-    var fecha_autorizacion = new Date(obj_fecha_autorizacion.getAttribute('fecha_autorizacion'));
-    var fecha_pago = new Date(obj_dias_entrega.getAttribute('fecha_pago'))
-    var elementoSpan = document.getElementById("text_span_" + folio);
-    var tipo_pago = obj_tipo_pago.getAttribute('tipo_pago');
-    console.log(tipo_pago)
-    var status_pago = obj_tipo_pago.getAttribute('status_pago');
-    var hoy = new Date()
-    hoy.setHours(0,0,0,0);
-    //console.log(hoy)
+    const datosEntrega = document.getElementById('fecha_pago_' + folio);
+    const datosPago = document.getElementById('tipo_pago_' + folio);
+    const indicador = document.getElementById('retraso_' + folio);
+    const datosAutorizacion = document.getElementById('fecha_autorizacion_' + folio);
+    const textoDias = document.getElementById('text_span_' + folio);
 
-    
-    if (tipo_pago == "CONTADO") {
-        console.log(fecha_pago, fecha_pago.getDate(), Number(dias_entrega))
-        fecha_pago.setDate(fecha_pago.getDate() + Number(dias_entrega));
-        var fecha_limite = new Date(fecha_pago);
-        console.log(fecha_limite)
-        fecha_limite.setHours(0,0,0,0)
-    } else if (tipo_pago == "CREDITO"){
-        
-        fecha_autorizacion.setDate(fecha_autorizacion.getDate() + Number(dias_entrega));
-        console.log(fecha_autorizacion, dias_entrega, )
-        var fecha_limite = new Date(fecha_autorizacion);
-        console.log(fecha_limite)
-        fecha_limite.setHours(0,0,0,0)
+    if (!datosEntrega || !datosPago || !indicador || !datosAutorizacion || !textoDias) return;
+
+    const diasEntrega = Number(datosEntrega.dataset.diasEntrega || 0);
+    const tipoPago = datosPago.dataset.tipoPago;
+    const fechaPago = new Date(datosEntrega.dataset.fechaPago);
+    const fechaAutorizacion = new Date(datosAutorizacion.dataset.fechaAutorizacion);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    let fechaLimite = null;
+
+    if (tipoPago === 'CONTADO' && !Number.isNaN(fechaPago.getTime())) {
+        fechaPago.setDate(fechaPago.getDate() + diasEntrega);
+        fechaLimite = fechaPago;
+    } else if (tipoPago === 'CREDITO' && !Number.isNaN(fechaAutorizacion.getTime())) {
+        fechaAutorizacion.setDate(fechaAutorizacion.getDate() + diasEntrega);
+        fechaLimite = fechaAutorizacion;
     }
-    console.log(folio, fecha_limite)
-    if (fecha_limite > hoy){
-        retraso_icon.classList.add('d-none');   
-    } else {
-        retraso_icon.classList.remove('d-none');
-        var retraso = hoy - fecha_limite
-        var diferenciasDias =retraso/(1000*60*60*24)
-        diferenciasDias = Math.round(diferenciasDias);
-        elementoSpan.innerHTML = diferenciasDias; 
 
-        }  
-    
-}   
-    
+    if (!fechaLimite) return;
+
+    fechaLimite.setHours(0, 0, 0, 0);
+
+    if (fechaLimite > hoy) {
+        indicador.classList.add('d-none');
+        return;
+    }
+
+    const milisegundosPorDia = 1000 * 60 * 60 * 24;
+    const diasRetraso = Math.round((hoy - fechaLimite) / milisegundosPorDia);
+
+    textoDias.textContent = diasRetraso;
+    indicador.classList.remove('d-none');
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-  var filasCompra = document.querySelectorAll('.compra-row');
-  
-    
+    document.querySelectorAll('.compra-row').forEach(function(fila) {
+        indicador_retraso(fila.dataset.folio);
+    });
 
-  filasCompra.forEach(function(fila){
-    var folio = fila.getAttribute('folio');
-    indicador_retraso(folio)
-  });
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(element) {
+        bootstrap.Tooltip.getOrCreateInstance(element);
+    });
 });
 
 </script>
 {% endblock %}
-</body>
-</html>

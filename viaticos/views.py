@@ -10,6 +10,7 @@ import socket
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse, FileResponse
 from django.conf import settings
+from django.contrib.staticfiles import finders
 
 from user.models import Profile
 from solicitudes.models import Proyecto, Subproyecto, Operacion
@@ -1549,6 +1550,67 @@ def generar_pdf_viatico(pk):
     c = canvas.Canvas(buf, pagesize=letter)
     #Here ends conf.
     viatico = Solicitud_Viatico.objects.get(id=pk)
+    # =============== Marca según distrito ===============
+
+    distrito_nombre = (
+        viatico.staff.distritos.nombre
+        if viatico.staff and viatico.staff.distritos
+        else ''
+    )
+
+    es_yerod = distrito_nombre.strip().casefold() == 'yerod'
+
+    if es_yerod:
+        # SAVIA Yerod
+        color_principal = Color(
+            26 / 255,
+            26 / 255,
+            26 / 255,
+        )
+        color_acento = Color(
+            40 / 255,
+            140 / 255,
+            69 / 255,
+        )
+        color_folio = color_acento
+
+        logo_path = finders.find(
+            'images/SAVIA_Negro_Verde.jpg'
+        )
+
+        logo_width = 1.75 * cm
+        logo_height = 1.75 * cm
+
+        # Centra el logo cuadrado dentro del espacio anterior.
+        logo_x = 45 + ((3 * cm) - logo_width) / 2
+
+    else:
+        # SAVIA VORDCAB
+        color_principal = Color(
+            22 / 255,
+            50 / 255,
+            79 / 255,
+        )
+        color_acento = Color(
+            62 / 255,
+            146 / 255,
+            204 / 255,
+        )
+        color_folio = Color(
+            152 / 255,
+            15 / 255,
+            15 / 255,
+        )
+
+        logo_path = finders.find(
+            'images/logo_vordcab.jpg'
+        )
+
+        logo_width = 3 * cm
+        logo_height = 1.5 * cm
+        logo_x = 45
+
+
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho = True, autorizada=True)
     vales = ValeRosa.objects.filter(viatico = viatico)
@@ -1558,9 +1620,7 @@ def generar_pdf_viatico(pk):
     styles = getSampleStyleSheet()
     width, height = letter
 
-   #Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
-    rojo = Color(0.59375, 0.05859375, 0.05859375)
+  
     #Encabezado
     c.setFillColor(black)
     c.setLineWidth(.2)
@@ -1576,20 +1636,10 @@ def generar_pdf_viatico(pk):
     c.drawString(420,caja_iso-10,'SUP. ADMON')
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
-    #c.drawString(150,caja_iso-20,'Número de documento')
-    #c.drawString(160,caja_iso-30,'F-ADQ-N4-01.02')
-    #c.drawString(245,caja_iso-20,'Clasificación del documento')
-    #c.drawString(275,caja_iso-30,'Controlado')
-    #c.drawString(355,caja_iso-20,'Nivel del documento')
-    #c.drawString(380,caja_iso-30, 'N5')
-    #c.drawString(440,caja_iso-20,'Revisión No.')
-    #c.drawString(452,caja_iso-30,'000')
-    #c.drawString(510,caja_iso-20,'Fecha de Emisión')
-    #c.drawString(525,caja_iso-30,'01/2024')
-
+  
     caja_proveedor = caja_iso - 50
     c.setFont('Helvetica',12)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
     c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
@@ -1601,7 +1651,16 @@ def generar_pdf_viatico(pk):
     c.setLineWidth(.3) #Grosor
     c.line(20,caja_proveedor-8,20,460) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
     c.line(585,caja_proveedor-8,585,460) #Linea 2 contorno
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+    if logo_path:
+        c.drawImage(
+            logo_path,
+            logo_x,
+            730,
+            width=logo_width,
+            height=logo_height,
+            preserveAspectRatio=True,
+            mask='auto',
+        )
 
     c.setFillColor(white)
     c.setFont('Helvetica-Bold',11)
@@ -1638,7 +1697,7 @@ def generar_pdf_viatico(pk):
     
     c.setFont('Helvetica-Bold',12)
     c.drawString(500,caja_proveedor-20,'FOLIO:')
-    c.setFillColor(rojo)
+    c.setFillColor(color_acento)
     c.setFont('Helvetica-Bold',12)
     c.drawString(540,caja_proveedor-20, str(viatico.folio))
 
@@ -1767,7 +1826,7 @@ def generar_pdf_viatico(pk):
         high = high - 18
 
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_acento)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
     #Primer renglón
@@ -1802,7 +1861,7 @@ def generar_pdf_viatico(pk):
     options_conditions_paragraph = Paragraph(comentario, styleN)
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,30,500,30, fill=True, stroke=False)
     c.setFillColor(white)
     # Personalizar el estilo de los párrafos
@@ -1827,7 +1886,7 @@ def generar_pdf_viatico(pk):
         #ENCABEZADO
         ('TEXTCOLOR',(0,0),(-1,0), white),
         ('FONTSIZE',(0,0),(-1,0), 10),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        ('BACKGROUND',(0,0),(-1,0), color_principal),
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
@@ -1920,7 +1979,7 @@ def generar_pdf_viatico(pk):
     table_totales.drawOn(c, 20, y_totales_pos)
 
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(25,high-70,540,20, fill=True, stroke=False)
     c.setFillColor(white)
     c.drawCentredString(320,high-65,'Comentario General')

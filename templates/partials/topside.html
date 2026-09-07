@@ -1,23 +1,12 @@
 {% load static %}
 {% load i18n %}
-<html>
-<head>
-<meta name="csrf-token" content="{{ csrf_token }}">
-{% block title %}
 
-{% endblock %}
-
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-
-
-
-</head>
-
-<body>
-{% block content %}
-<div class="row my-4">
-    <div class="col-md-4">
+<section
+    class="sv-dashboard-home"
+    aria-labelledby="savia-dashboard-title"
+    data-csrf-token="{{ csrf_token }}"
+>
+<div class="d-none">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% if messages %}
             {% for message in messages %}
@@ -25,7 +14,7 @@
                 <script>
                 Swal.fire({
                     "title": "Error",
-                    "text": "{{ message }}",
+                    "text": "{{ message|escapejs }}",
                     "icon": "error",
                 })
                 </script>
@@ -33,7 +22,7 @@
                 <script>
                 Swal.fire({
                     "title": "Facturas repetidas",
-                    "text": "{{ message }}",
+                    "text": "{{ message|escapejs }}",
                     "icon": "warning",
                 })
                 </script>
@@ -41,62 +30,60 @@
                 <script>
                 Swal.fire({
                     "title": "Excelente",
-                    "text": "{{ message }}",
+                    "text": "{{ message|escapejs }}",
                     "icon": "success",
                 })
                 </script>
                 {% endif %}
             {% endfor %}
         {% endif %}
-    </div>
 </div>
-<div class="container">
+<div class="sv-dashboard-container">
     
-    <div class="row m-4">
-        <div class="col-md-12 col-lg-10">
-            <div class="card" style="opacity: 0.8; background: hsla(0, 0%, 100%, 0.55); 
-            backdrop-filter: blur(30px);">
-                <div class="card-header text-center">
+    <div class="sv-dashboard-shell">
+        <div class="sv-dashboard-shell-inner">
+            <div class="sv-card sv-dashboard-panel">
+                <div class="sv-dashboard-hero">
                     <strong>
-                        {% if usuario.distritos.nombre == "NEGRO" %}
-                         <img class="rounded-circle" src="{% static 'images/SAVIA_Negro_verde.jpg' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">
-                        <h1 style="color: #337931">SAVIA 2.0</h1>
+                        {% if usuario.distritos.nombre == "Yerod" %}
+                         <img class="sv-dashboard-logo" src="{% static 'images/SAVIA_Negro_verde.jpg' %}" id="logo" alt="SAVIA">
+                        <h1 id="savia-dashboard-title" class="sv-dashboard-brand sv-dashboard-brand-negro">SAVIA 2.1/h1>
                          {% else %}
-                        <img class="rounded-circle" src="{% static 'images/SAVIA_Logo.jpg' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">
-                        <h1 style="color: #122D45">SAVIA 2.0</h1>
+                        <img class="sv-dashboard-logo" src="{% static 'images/SAVIA_Logo.jpg' %}" id="logo" alt="SAVIA">
+                        <h1 id="savia-dashboard-title" class="sv-dashboard-brand sv-dashboard-brand-vordcab">SAVIA 2.1</h1>
                         {% endif %}
                         
                         {% if usuario.tipo.proveedor_externo %}
-                            {% if prealta %}<h4>Portal de Proveedor de Grupo Vordcab | PREALTA</h4>
-                            {% else %}<h4>Portal de Proveedor de Grupo Vordcab</h4>
+                            {% if prealta %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab <span class="sv-badge sv-badge-warning">PREALTA</span></p>
+                            {% else %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab</p>
                             {% endif %}
                         {% endif %}
                     </strong>
                 </div>
-                <div class="card-body">
+                <div class="sv-dashboard-actions">
                     {% if usuario.tipo.comprador == True %}
-                    <div class="row mt-1">
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizada'  %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Requisiciones Autorizadas <i class="fa-solid fa-bag-shopping"></i></h4>
-                                    <h3></h3>
+                    <div class="sv-dashboard-grid">
+                        <div class="sv-dashboard-slot">
+                            <a class="sv-dashboard-link" href="{% url 'requisicion-autorizada'  %}">
+                                <div class="sv-dashboard-action">
+                                    <h4 class="sv-dashboard-action-title">Requisiciones Autorizadas <i class="fa-solid fa-bag-shopping"></i></h4>
+                                    <div class="sv-dashboard-action-status"></div>
                                 </div>
                             </a>
                         </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark" href="{% url 'matriz-compras' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Reporte de Compras<i class="fa-solid fa-cart-shopping"></i></h4>
-                                    <h3></h3>
+                        <div class="sv-dashboard-slot">
+                            <a class="sv-dashboard-link" href="{% url 'matriz-compras' %}">
+                                <div class="sv-dashboard-action">
+                                    <h4 class="sv-dashboard-action-title">Reporte de Compras<i class="fa-solid fa-cart-shopping"></i></h4>
+                                    <div class="sv-dashboard-action-status"></div>
                                 </div>
                             </a>
                         </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark" href="{% url 'comparativos' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Comparativos <i class="fa-solid fa-scale-unbalanced-flip"></i></h4>
-                                    <h3></h3>
+                        <div class="sv-dashboard-slot">
+                            <a class="sv-dashboard-link" href="{% url 'comparativos' %}">
+                                <div class="sv-dashboard-action">
+                                    <h4 class="sv-dashboard-action-title">Comparativos <i class="fa-solid fa-scale-unbalanced-flip"></i></h4>
+                                    <div class="sv-dashboard-action-status"></div>
                                 </div>
                             </a>
                         </div>
@@ -104,80 +91,80 @@
                     {% else %}
                         {% if usuario.tipo.proveedor_externo == False %}
                             {% if usuario.tipo.subdirector %}
-                            <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'autorizacion-oc1' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Compras por Autorizar </h4>
+                            <div class="sv-dashboard-grid">
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'autorizacion-oc1' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Compras por Autorizar </h4>
                                             {% if conteo_oc1 == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_oc1}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_oc1}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
                                 
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'gastos-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Gastos por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'gastos-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Gastos por Autorizar </h4>
                                             {% if conteo_gastos_pendientes == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_gastos_pendientes}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_gastos_pendientes}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Viáticos por Autorizar<span class="badge bg-primary">1</span></h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'viaticos-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Viáticos por Autorizar</h4>
                                             {% if conteo_viaticos == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_viaticos}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_viaticos}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
                             </div>
                             {% elif usuario.tipo.oc_gerencia %}
-                            <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'autorizacion-oc1' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Compras por Autorizar </h4>
+                            <div class="sv-dashboard-grid">
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'autorizacion-oc1' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Compras por Autorizar </h4>
                                             {% if conteo_oc == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_oc}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_oc}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
                                 
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'gastos-pendientes-autorizar2' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Gastos por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'gastos-pendientes-autorizar2' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Gastos por Autorizar </h4>
                                             {% if conteo_gastos_gerencia == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_gastos_gerencia}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_gastos_gerencia}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar2' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Viáticos por Autorizar</h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'viaticos-pendientes-autorizar2' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Viáticos por Autorizar</h4>
                                             {% if conteo_viaticos_gerencia == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
@@ -185,50 +172,50 @@
                             </div>
                             {% elif usuario.tipo.superintendente and usuario.distritos.nombre != "MATRIZ" or usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" %}
                             
-                            <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Solicitudes por Autorizar </h4>
+                            <div class="sv-dashboard-grid">
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Solicitudes por Autorizar </h4>
                                             {% if conteo_solicitudes == 0 %}
-                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                                <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_solicitudes}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                 <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizacion' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Requis por Autorizar </h4>
+                                 <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="{% url 'requisicion-autorizacion' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Requis por Autorizar </h4>
                                                 {% if conteo_requis_pendientes == 0 %}
-                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                                 {% else %}
-                                                    <h3><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></div>
                                                 {% endif %}
                                             </div>
                                         </a>
                                 </div>
                                 {% if usuario.tipo.superintendente %}
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'gastos-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Gastos por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'gastos-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Gastos por Autorizar </h4>
                                             {% if conteo_gastos_pendientes == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_gastos_pendientes}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_gastos_pendientes}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
                                 {% else %}
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'mis-comprobaciones-gasto' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Mis Comprobaciones </h4>
-                                            <h3><span class="badge bg-secondary"><i class="fa-solid fa-money-bill"></i></span></h3>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'mis-comprobaciones-gasto' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Mis Comprobaciones </h4>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-money-bill"></i></span></div>
                                         </div>
                                     </a>
                                 </div>
@@ -236,68 +223,68 @@
 
                             </div>
                             {% elif usuario.tipo.supervisor and usuario.distritos.nombre != "MATRIZ" %}
-                            <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Solicitudes por Autorizar </h4>
+                            <div class="sv-dashboard-grid">
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Solicitudes por Autorizar </h4>
                                             {% if conteo_solicitudes == 0 %}
-                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                                <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_solicitudes}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'mis-comprobaciones-gasto' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Mis Comprobaciones </h4>
-                                            <h3><span class="badge bg-secondary"><i class="fa-solid fa-money-bill"></i></span></h3>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'mis-comprobaciones-gasto' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Mis Comprobaciones </h4>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-money-bill"></i></span></div>
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Perfil</h4>
-                                            <h3><span class="badge bg-secondary"><i class="fa-solid fa-user"></i></span> </h3>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'user-profile' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Perfil</h4>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-user"></i></span> </div>
                                         </div>
                                     </a>
                                 </div>
                             </div>
                             {% else %}
-                                <div class="row mt-1">
-                                    <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'staff' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Personal <i class="fa-solid fa-users"></i></h4> 
-                                                <h3><span class="badge bg-primary">{{conteo_usuario}}</span></h3>
+                                <div class="sv-dashboard-grid">
+                                    <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="{% url 'staff' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Personal <i class="fa-solid fa-users"></i></h4> 
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-primary">{{conteo_usuario}}</span></div>
                                             </div>
                                         </a>
                                     </div>
-                                    <!--<div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="#">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Personal <i class="fa-solid fa-users"></i></h4>
-                                                <h3>{{conteo_usuario}}</h3>
+                                    <!--<div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="#">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Personal <i class="fa-solid fa-users"></i></h4>
+                                                <div class="sv-dashboard-action-status">{{conteo_usuario}}</div>
                                             </div>
                                         </a>
                                     </div>-->
-                                    <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Perfil</h4>
-                                                <h3><span class="badge bg-secondary"><i class="fa-solid fa-user"></i></span> </h3>
+                                    <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link"  href="{% url 'user-profile' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Perfil</h4>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-user"></i></span> </div>
                                             </div>
                                         </a>
                                     </div>
 
-                                    <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'solicitudes-pendientes' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>{% trans "Solicitudes" %} <i class="fa-solid fa-truck-fast"></i></h4>
-                                                <h3>{{solicitudes_generadas}}</h3>
+                                    <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="{% url 'solicitudes-pendientes' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">{% trans "Solicitudes" %} <i class="fa-solid fa-truck-fast"></i></h4>
+                                                <div class="sv-dashboard-action-status">{{solicitudes_generadas}}</div>
                                             </div>
                                         </a>
                                     </div>
@@ -308,141 +295,141 @@
                     {% endif %}
                     {% if usuario.tipo.proveedor_externo == False %}
                          {% if usuario.tipo.subdirector %}
-                            <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar2' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Viáticos por Autorizar<span class="badge bg-primary">2</span></h4>
+                            <div class="sv-dashboard-grid">
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'viaticos-pendientes-autorizar2' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Viáticos por Autorizar</h4>
                                             {% if conteo_viaticos_gerencia == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizacion' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Requis por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="{% url 'requisicion-autorizacion' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Requis por Autorizar </h4>
                                                 {% if conteo_requis_pendientes == 0 %}
-                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                                 {% else %}
-                                                    <h3><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></div>
                                                 {% endif %}
                                             </div>
                                         </a>
                                 </div>
-                                <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Solicitudes por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Solicitudes por Autorizar </h4>
                                                 {% if conteo_solicitudes == 0 %}
-                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                                 {% else %}
-                                                    <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_solicitudes}})</span></div>
                                                 {% endif %}
                                             </div>
                                         </a>
                                 </div>
                             </div>
                             {% elif usuario.tipo.oc_gerencia %}
-                            <div class="row mt-2">
+                            <div class="sv-dashboard-grid">
                                
                                 
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'vales-rosa-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Vales por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'vales-rosa-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Vales por Autorizar </h4>
                                             {% if conteo_vales == 0 %}
                                                 {% if usuario.distritos.nombre == "NEGRO" %}
-                                                <h3><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </div>
                                                 {% else %}
-                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                                 {% endif %}
                                             {% else %}
-                                                <h3><span class="badge bg-danger">({{conteo_vales}})</span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_vales}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizacion' %}">
-                                            <div class="card my-card shadow text-center p-3">
-                                                <h4>Requis por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                        <a class="sv-dashboard-link" href="{% url 'requisicion-autorizacion' %}">
+                                            <div class="sv-dashboard-action">
+                                                <h4 class="sv-dashboard-action-title">Requis por Autorizar </h4>
                                                 {% if conteo_requis_pendientes == 0 %}
                                                       {% if usuario.distritos.nombre == "NEGRO" %}
-                                                        <h3><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </h3>
+                                                        <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </div>
                                                         {% else %}
-                                                        <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                        <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                                         {% endif %}
                                                  
                                                 {% else %}
-                                                    <h3><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></h3>
+                                                    <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></div>
                                                 {% endif %}
                                             </div>
                                         </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Solicitudes por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Solicitudes por Autorizar </h4>
                                             {% if conteo_solicitudes == 0 %}
                                                 {% if usuario.distritos.nombre == "NEGRO" %}
-                                                        <h3><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </h3>
+                                                        <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </div>
                                                         {% else %}
-                                                        <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                        <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                                 {% endif %}
                                             {% else %}
-                                                <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_solicitudes}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <!--<div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'staff' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Personal <i class="fa-solid fa-users"></i></h4> 
-                                            <h3><span class="badge bg-primary">{{conteo_usuario}}</span></h3>
+                                <!--<div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'staff' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Personal <i class="fa-solid fa-users"></i></h4> 
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary">{{conteo_usuario}}</span></div>
                                         </div>
                                     </a>
                                 </div>-->
                             </div>
                             {% elif usuario.tipo.superintendente and usuario.distritos.nombre != "MATRIZ" %}
-                            <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Viáticos por Autorizar</h4>
+                            <div class="sv-dashboard-grid">
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'viaticos-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Viáticos por Autorizar</h4>
                                             {% if conteo_viaticos == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_viaticos}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_viaticos}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
                                 {% if usuario.tipo.oc_superintendencia %}
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'autorizacion-oc1' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Compras por Autorizar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'autorizacion-oc1' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Compras por Autorizar </h4>
                                             {% if conteo_oc1 == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_oc1}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_oc1}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'compras-por-pagar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Compras por Pagar </h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'compras-por-pagar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Compras por Pagar </h4>
                                             {% if conteo_pagos2 == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_pagos2}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_pagos2}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
@@ -450,21 +437,21 @@
                                 {% endif %}
                             </div>
                             {% else %}
-                            <div class="row mt-2">
+                            <div class="sv-dashboard-grid">
                                 
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'solicitud-product-selection' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>{% trans "Crear Solicitud" %} <i class="fa-solid fa-pen-to-square"></i></h4>
-                                            <h3></h3>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'solicitud-product-selection' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">{% trans "Crear Solicitud" %} <i class="fa-solid fa-pen-to-square"></i></h4>
+                                            <div class="sv-dashboard-action-status"></div>
                                         </div>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'solicitudes-pendientes' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>{% trans "Solicitud Status" %}<i class="fa-solid fa-shoe-prints"></i></h4>
-                                            <h3></h3>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link"  href="{% url 'solicitudes-pendientes' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">{% trans "Solicitud Status" %}<i class="fa-solid fa-shoe-prints"></i></h4>
+                                            <div class="sv-dashboard-action-status"></div>
                                         </div>
                                     </a>
                                 </div>   
@@ -474,13 +461,13 @@
                     {% endif %} 
                     {% if usuario.tipo.proveedor_externo %}
                         {% if prealta %}
-                        <div class="row mt-2">
+                        <div class="sv-dashboard-grid">
                             
-                            <div class="col-md-4">
-                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
-                                    <div class="card my-card shadow text-center p-3">
+                            <div class="sv-dashboard-slot">
+                                <a id="btnVerPolitica" href="#" role="button" class="sv-dashboard-link" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
+                                    <div class="sv-dashboard-action">
                                         
-                                        <h4>Políticas y Códigos 
+                                        <h4 class="sv-dashboard-action-title">Políticas y Códigos 
                                             {% if mostrar_modal %}<i class="fa-solid fa-circle-1 text-danger"></i>
                                             {% else %}<i class="fa-solid fa-circle-1 text-success"></i>
                                             {% endif %}
@@ -488,31 +475,31 @@
 
                                        
                                        
-                                        <h3></h3>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-4">
-                                <a class="text-decoration-none text-dark"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
-                                    <div class="card my-card shadow text-center p-3">
-                                        <h4>Subir Documentos 
+                            <div class="sv-dashboard-slot">
+                                <a class="sv-dashboard-link"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
+                                    <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">Subir Documentos 
                                             {% if usuario.proveedor.documentos_completos %}<i class="fa-solid fa-circle-2 text-success"></i>
                                             {% else %}<i class="fa-solid fa-circle-2 text-danger"></i>
                                             {% endif %}
                                         </h4>
-                                        <h3></h3>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-4">
-                                <a class="text-decoration-none text-dark"  href="{% url 'cuestionario' usuario.proveedor.id %}">
-                                    <div class="card my-card shadow text-center p-3">
-                                        <h4>{% trans "Cuestionario DD" %} 
+                            <div class="sv-dashboard-slot">
+                                <a class="sv-dashboard-link"  href="{% url 'cuestionario' usuario.proveedor.id %}">
+                                    <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">{% trans "Cuestionario DD" %} 
                                             {% if usuario.proveedor.cuestionario_dd %}<i class="fa-solid fa-circle-3 text-success"></i>
                                             {% else %}<i class="fa-solid fa-circle-3 text-danger"></i>
                                             {% endif %}
                                         </h4>
-                                        <h3></h3>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                     
                                 </a>
@@ -521,51 +508,51 @@
 
                         </div>
                         {% else %}
-                        <div class="row mt-2">
-                            <div class="col-md-4">
-                                <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}" title="Ordenes de Compra">
-                                    <div class="card my-card shadow text-center p-3">
-                                        <h4>Ordenes de Compra <i class="fa-solid fa-user"></i></h4>
-                                        <h3></h3>
+                        <div class="sv-dashboard-grid">
+                            <div class="sv-dashboard-slot">
+                                <a class="sv-dashboard-link"  href="{% url 'matriz-oc-proveedores' %}" title="Ordenes de Compra">
+                                    <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">Ordenes de Compra <i class="fa-solid fa-user"></i></h4>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-4">
-                                <a class="text-decoration-none text-dark"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
-                                    <div class="card my-card shadow text-center p-3">
-                                        <h4>Información <i class="fa-solid fa-user"></i></h4>
-                                        <h3></h3>
+                            <div class="sv-dashboard-slot">
+                                <a class="sv-dashboard-link"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
+                                    <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">Información <i class="fa-solid fa-user"></i></h4>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-4">
-                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info"  title="Políticas y Códigos">
-                                    <div class="card my-card shadow text-center p-3">
-                                        <h4>Políticas y Códigos <i class="fa-duotone fa-solid fa-book"></i></h4>
-                                        <h3></h3>
+                            <div class="sv-dashboard-slot">
+                                <a id="btnVerPolitica" href="#" role="button" class="sv-dashboard-link" title="Políticas y Códigos">
+                                    <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">Políticas y Códigos <i class="fa-duotone fa-solid fa-book"></i></h4>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-4 mt-2">
-                                <a class="text-decoration-none text-dark"  href="{% url 'cuestionario' usuario.proveedor.id %}">
-                                    <div class="card my-card shadow text-center p-3">
-                                        <h4>{% trans "Cuestionario DD" %} 
+                            <div class="sv-dashboard-slot">
+                                <a class="sv-dashboard-link"  href="{% url 'cuestionario' usuario.proveedor.id %}">
+                                    <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">{% trans "Cuestionario DD" %} 
                                             {% if usuario.proveedor.cuestionario_dd %}<i class="fa-solid fa-circle-3 text-success"></i>
                                             {% else %}<i class="fa-solid fa-circle-3 text-danger"></i>
                                             {% endif %}
                                         </h4>
-                                        <h3></h3>
+                                        <div class="sv-dashboard-action-status"></div>
                                     </div>
                                 </a>
                             </div>
                             {% if invitaciones_direccion %}
-                                <div class="col-md-4 mt-2">
-                                    <a class="text-decoration-none text-dark" href="{% url 'registro-solo-direccion' usuario.proveedor.id %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                        <h4>
+                                <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'registro-solo-direccion' usuario.proveedor.id %}">
+                                        <div class="sv-dashboard-action">
+                                        <h4 class="sv-dashboard-action-title">
                                             Agregar dirección 
                                         </h4>
-                                        <h3></h3>
+                                        <div class="sv-dashboard-action-status"></div>
                                         </div>
                                     </a>
                                 </div>
@@ -578,15 +565,15 @@
                     {% if usuario.tipo.proveedor_externo == False %}
                         {% if usuario.tipo.subdirector %}
                        
-                            <div class="row mt-2">
-                                 <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'vales-rosa-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Vales por Autorizar </h4>
+                            <div class="sv-dashboard-grid">
+                                 <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'vales-rosa-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Vales por Autorizar </h4>
                                             {% if conteo_vales == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_vales}})</span></h3>
+                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_vales}})</span></div>
                                             {% endif %}
                                         </div>
                                     </a>
@@ -607,7 +594,7 @@
                             <!--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
                         </div>
                         <div class="modal-body p-0">
-                            <iframe id="iframePolitica" src="" style="border:none;" width="100%" height="750px"></iframe>
+                            <iframe id="iframePolitica" class="sv-dashboard-pdf" src="" title="Documento de política"></iframe>
                         </div>
                         <div class="modal-footer">
                             <div class="form-check me-auto">
@@ -615,14 +602,14 @@
                                 Acepto haber leído y comprendido la política antisoborno.
                               </label>
                             </div>
-                            <button type="button" class="btn btn-secondary" id="btnCerrarModal">
+                            <button type="button" class="sv-btn sv-btn-secondary" id="btnCerrarModal">
                                 Cerrar
                             </button>
 
-                              <button type="button" class="btn btn-secondary" id="btnSiguiente">
+                              <button type="button" class="sv-btn sv-btn-outline" id="btnSiguiente">
                                 Siguiente
                             </button>
-                            <button type="button" class="btn btn-primary" id="btnAceptarPolitica">Aceptar</button>
+                            <button type="button" class="sv-btn sv-btn-primary" id="btnAceptarPolitica">Aceptar</button>
                         </div>
                     </div>
                 </div>
@@ -646,7 +633,7 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id="btnCerrarModalInicial">Entendido</button>
+                        <button type="button" class="sv-btn sv-btn-primary" id="btnCerrarModalInicial">Entendido</button>
                     </div>
                     </div>
                 </div>
@@ -705,7 +692,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const btnVerPolitica = document.getElementById('btnVerPolitica');
   const btnCerrarModal = document.getElementById('btnCerrarModal');
   const btnSiguiente = document.getElementById('btnSiguiente');
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  const csrfToken = document.querySelector('.sv-dashboard-home').dataset.csrfToken;
   btnCerrarModal.addEventListener('click', function () {
         modal.hide();
     });
@@ -747,8 +734,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             // ✅ feedback inmediato
             btnAceptar.disabled = true;
             btnAceptar.textContent = "Ya aceptada";
-            btnAceptar.classList.remove('btn-primary');
-            btnAceptar.classList.add('btn-success');
+            btnAceptar.classList.remove('sv-btn-primary');
+            btnAceptar.classList.add('sv-btn-success');
         })
         .catch(err => {
             console.error(err);
@@ -816,13 +803,13 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (politica.aceptada) {
         btnAceptar.disabled = true;
         btnAceptar.textContent = "Ya aceptada";
-        btnAceptar.classList.remove('btn-primary');
-        btnAceptar.classList.add('btn-success');
+        btnAceptar.classList.remove('sv-btn-primary');
+        btnAceptar.classList.add('sv-btn-success');
       } else {
         btnAceptar.disabled = false;
         btnAceptar.textContent = "Aceptar";
-        btnAceptar.classList.remove('btn-success');
-        btnAceptar.classList.add('btn-primary');
+        btnAceptar.classList.remove('sv-btn-success');
+        btnAceptar.classList.add('sv-btn-primary');
       }
 
       // 5️⃣ Mostrar modal (al final)
@@ -849,6 +836,4 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
 </script>
-{% endblock %}
-</body>
-</html>
+</section>
