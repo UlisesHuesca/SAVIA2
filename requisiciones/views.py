@@ -208,8 +208,8 @@ def solicitud_autorizada(request):
             articulos__orden__distrito=usuario.distritos, 
             articulos__orden__complete=True).order_by('-id')
 
-    #else:
-        #productos = Requis.objects.filter(complete=None)
+    else:
+        productos = Requis.objects.none()
     myfilter = ArticulosparaSurtirFilter(request.GET, queryset=productos)
     productos = myfilter.qs
     #Here is where call a function to generate XLSX, using Openpyxl library
