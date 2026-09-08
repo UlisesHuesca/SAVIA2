@@ -1,104 +1,172 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load widget_tweaks %}
 {% load static %}
-<html>
-<head>
-{% block title %}Facturas{% endblock %}
-</head>
-<body>
-{% block content %}
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
 
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
+{% block title %}Facturas{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<div class="w-100" role="document">
+    <div class="modal-content sv-modal">
         <div class="modal-header">
-            <h5 class="modal-title">Folio Articulo: {{articulo.id}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+            <div>
+                <h2 class="modal-title">
+                    <i class="fa-solid fa-file-invoice me-2"></i>
+                    Facturas del artículo
+                </h2>
+                <span class="sv-modal-subtitle">Folio del artículo: {{ articulo.id }}</span>
+            </div>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
-        <div class="modal-body">
-             <table class='table table-dark table-striped'>
+
+        <div class="modal-body p-0">
+            <div class="sv-table-wrap">
+                <table class="sv-table">
                     <thead>
                         <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-3">Fecha</th>
-                            <th scope="col-2">Comentario</th>
-                            <th scope="col-2">Nombre Documento</th>
-                            <th scope="col">Tamaño(bytes)</th>
-                            <th scope="col">PDF</th>
-                            <th scope="col">XML</th>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Comentario</th>
+                            <th>Documento</th>
+                            <th>Tamaño</th>
+                            <th>PDF</th>
+                            <th>XML</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for f in facturas %}
+                        {% for f in facturas %}
                         <tr>
-                            <th scope="row">{{f.id}}</th>
-                            <td>{{f.fecha_subido}}</td>
-                            <td>{{f.comentario}}</td>
-                            <td>{{f.factura_pdf.name}}</td>
-                            <td>{{f.factura_pdf.size}}</td>
+                            <td><span class="sv-folio">{{ f.id }}</span></td>
                             <td>
-                                <a href="{{f.factura_pdf.url}}" download class="btn btn-outline-danger">
-                                     <i class="fa-solid fa-file-pdf fa-2xl"></i>
-
-                                </a>
+                                <div class="sv-date">
+                                    <strong>{{ f.fecha_subido|date:"d/m/Y" }}</strong>
+                                    <small>{{ f.fecha_subido|time:"H:i" }} hrs.</small>
+                                </div>
                             </td>
                             <td>
-                                <a href="{{f.factura_xml.url}}" download class="btn btn-outline-light">
-                                     <i class="fa-solid fa-file-code fa-2xl"></i>
-
+                                {% if f.comentario %}
+                                {{ f.comentario }}
+                                {% else %}
+                                <span class="sv-cell-subtitle">Sin comentario</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.factura_pdf %}
+                                <span class="sv-cell-title">{{ f.factura_pdf.name }}</span>
+                                {% else %}
+                                <span class="sv-cell-subtitle">Sin archivo PDF</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.factura_pdf %}
+                                {{ f.factura_pdf.size|filesizeformat }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.factura_pdf %}
+                                <a href="{{ f.factura_pdf.url }}" download
+                                   class="sv-btn sv-btn-danger sv-btn-icon"
+                                   title="Descargar PDF" aria-label="Descargar PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
                                 </a>
+                                {% else %}
+                                <span class="sv-cell-subtitle">N/D</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.factura_xml %}
+                                <a href="{{ f.factura_xml.url }}" download
+                                   class="sv-btn sv-btn-outline sv-btn-icon"
+                                   title="Descargar XML" aria-label="Descargar XML">
+                                    <i class="fa-solid fa-file-code"></i>
+                                </a>
+                                {% else %}
+                                <span class="sv-cell-subtitle">N/D</span>
+                                {% endif %}
                             </td>
                         </tr>
-                   {% endfor %}
-                   </tbody>
-            </table>
-        </div>
-        <div class="modal-footer">
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="sv-empty">
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-file-circle-xmark"></i>
+                                </span>
+                                <span class="sv-empty-title">No hay facturas registradas</span>
+                                <span class="sv-empty-text">Carga los archivos PDF y XML correspondientes.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-            <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
+            <form hx-post="{{ request.path }}"
+                  hx-encoding="multipart/form-data"
+                  enctype="multipart/form-data">
                 {% csrf_token %}
-                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
-                {{form.factura_pdf|add_class:'form-control'}}         
-                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
-                 {{form.factura_xml|add_class:'form-control'}}
-                <div class="row">
-                    <div class="col-auto my-2">
-                        <button type="submit" class="btn btn-light" style="background-color:#980f0f" data-bs-dismiss="modal"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+
+                <div class="sv-card-body border-top">
+                    <h3 class="sv-card-title mb-3">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Cargar nueva factura
+                    </h3>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.factura_pdf.id_for_label }}" class="form-label fw-semibold">
+                                Factura PDF
+                            </label>
+                            {{ form.factura_pdf|add_class:'form-control' }}
+                            {% if form.factura_pdf.errors %}
+                            <div class="text-danger small mt-1">{{ form.factura_pdf.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.factura_xml.id_for_label }}" class="form-label fw-semibold">
+                                Factura XML
+                            </label>
+                            {{ form.factura_xml|add_class:'form-control' }}
+                            {% if form.factura_xml.errors %}
+                            <div class="text-danger small mt-1">{{ form.factura_xml.errors }}</div>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="col-auto my-2">
-                        <button type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-dismiss="modal">Cerrar</button>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3 mb-0">
+                        {{ form.non_field_errors }}
                     </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cerrar
+                    </button>
+                    <button type="submit" class="sv-btn sv-btn-primary">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Cargar factura
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 {% endblock %}
-</body>
-</html>

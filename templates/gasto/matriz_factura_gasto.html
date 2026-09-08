@@ -3,300 +3,393 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Matriz de gastos autorizados{% endblock %}
-</head>
-<body>
+
+{% block title %}Facturas de gasto{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class="container">
-    <div class="card">
-        <div class="card-header" ver="{{ next_url }}">
-            <h5>Facturas de Gasto: {{ gasto.folio }}</h5>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <p class="sv-page-eyebrow">Control documental</p>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </span>
+                Facturas de gasto G{{ gasto.folio }}
+            </h1>
+            <p class="sv-page-subtitle">
+                Solicitante: {{ gasto.staff.staff.staff.first_name }}
+                {{ gasto.staff.staff.staff.last_name }}
+            </p>
         </div>
-        <div class="card-body">
-            <!-- Formulario único para envío de toda la información -->
-            <form method="POST">
-                {% csrf_token %}
-                <div><h4>Solicitante: {{ gasto.staff.staff.staff.first_name }} {{ gasto.staff.staff.staff.last_name }}</h4></div>
-                <!-- Información de facturas de gasto -->
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Monto|Fecha</th>
-                            <th scope="col">Ficha de pago</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pago in pagos %}
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-file-invoice"></i>
+                {{ facturas|length }} facturas
+            </span>
+            {% if gasto.cerrar_facturacion %}
+            <span class="sv-badge sv-badge-warning">
+                <i class="fa-solid fa-lock"></i>
+                Facturación cerrada
+            </span>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-receipt"></i>
+                Comprobantes de pago
+            </h2>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Monto</th>
+                        <th>Fecha de pago</th>
+                        <th>Comprobante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in pagos %}
                         {% if pago.comprobante_pago %}
                         <tr>
-                            <th scope="col">{{pago.monto}}| {% if pago.pagado_real %}{{pago.pagado_real}}{% else %}Sin p{% endif %}</th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                </button>
-                                {% if usuario.tipo.tesoreria %}
-                                <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                </a>
-                                {% endif %}
-                                <!-- Modal con visor de PDF -->
-                                <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ pago.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <td><span class="sv-cell-title">${{ pago.monto|floatformat:2 }}</span></td>
+                            <td>
+                                {% if pago.pagado_real %}
+                                <div class="sv-date">
+                                    <strong>{{ pago.pagado_real|date:"d/m/Y" }}</strong>
                                 </div>
-                            </th>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">Sin fecha</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="sv-actions">
+                                    <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                            data-bs-toggle="modal" data-bs-target="#pdfPreviewModal"
+                                            data-document-url="{{ pago.comprobante_pago.url }}"
+                                            data-document-title="Comprobante de pago"
+                                            title="Ver comprobante" aria-label="Ver comprobante">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    </button>
+
+                                    {% if usuario.tipo.tesoreria %}
+                                    <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                            data-bs-toggle="modal" data-bs-target="#dialog"
+                                            hx-target="#document"
+                                            hx-get="{% url 'edit-comprobante-pago' pago.id %}"
+                                            title="Cambiar comprobante" aria-label="Cambiar comprobante">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
                         </tr>
                         {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-money-check-dollar"></i></span>
+                            <span class="sv-empty-title">No hay comprobantes de pago</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-                <!-- Tabla de artículos de gasto -->
-                <table class="table bg-white">
-                    <thead class="text-black" style="background-color: #F5F5F5;">
-                        <tr>
-                            <th scope="col">Gasto ID</th>
-                            <th scope="col">ID Artículo</th>
-                            <th scope="col">Artículo</th>
-                            <th scope="col">Descripción</th>
-                            <th scope="col">Subtotal</th>
-                            <th scope="col">Importe Gasto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for gasto in articulos_gasto %}
-                        <tr>
-                            <th>{{ gasto.gasto.folio }}</th>
-                            <th scope="row">{{ gasto.id }}</th>
-                            <td>{{ gasto.producto }}</td>
-                            <td>{{ gasto.descripcion }}</td>
-                            <td class="subtotal-linea" total="{{ gasto.get_subtotal|unlocalize }}">${{ gasto.get_subtotal|floatformat:2 }}</td>
-                            <td class="total-linea" total="{{ gasto.total_parcial|unlocalize }}">${{ gasto.total_parcial|floatformat:2 }}</td>
-                        </tr>
-                        {% endfor %}
-                        <tr>
-                            <td colspan="4"></td>
-                            <th>Total</th>
-                            <td id="total"></td>
-                        </tr>
-                    </tbody>
-                </table>
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-list"></i>
+                Artículos del gasto
+            </h2>
+        </div>
 
-                <!-- Botón para descargar todas las facturas -->
-                <div class="nav-item ms-auto">
-                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                        <i class="fas fa-file-archive"></i> Descargar Facturas
-                    </button>
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Gasto</th>
+                        <th>ID</th>
+                        <th>Artículo</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end">Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for articulo_gasto in articulos_gasto %}
+                    <tr>
+                        <td><span class="sv-folio">G{{ articulo_gasto.gasto.folio }}</span></td>
+                        <td>{{ articulo_gasto.id }}</td>
+                        <td><span class="sv-cell-title">{{ articulo_gasto.producto }}</span></td>
+                        <td>{{ articulo_gasto.descripcion }}</td>
+                        <td class="subtotal-linea text-end"
+                            data-total="{{ articulo_gasto.get_subtotal|unlocalize }}">
+                            ${{ articulo_gasto.get_subtotal|floatformat:2 }}
+                        </td>
+                        <td class="total-linea text-end"
+                            data-total="{{ articulo_gasto.total_parcial|unlocalize }}">
+                            <strong>${{ articulo_gasto.total_parcial|floatformat:2 }}</strong>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                            <span class="sv-empty-title">No hay artículos registrados</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sv-card-footer">
+            <div class="d-flex flex-wrap justify-content-end gap-4">
+                <div>
+                    <span class="sv-cell-subtitle">Subtotal</span>
+                    <strong id="subtotalArticulos">$0.00</strong>
                 </div>
+                <div>
+                    <span class="sv-cell-subtitle">Total del gasto</span>
+                    <strong id="totalArticulos">$0.00</strong>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                <!-- Tabla de datos XML y autorización -->
-                <table class="table bg-white">
-                    <thead class="text-black" style="background-color: #F5F5F5;">
+    <form method="POST">
+        {% csrf_token %}
+
+        <section class="sv-card mb-4">
+            <div class="sv-card-header">
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                    Documentación fiscal
+                </h2>
+                <button type="submit" name="btn_descargar_todo" class="sv-btn sv-btn-primary">
+                    <i class="fa-solid fa-file-zipper"></i>
+                    Descargar facturas
+                </button>
+            </div>
+
+            <div class="sv-table-wrap">
+                <table class="sv-table sv-table-xwide">
+                    <thead>
                         <tr>
-                            <th scope="col">Concepto [XML]</th>
-                            
-                            <th>Fecha de Carga</th>
-                            <th scope="col">Proveedor [XML]</th>
-                            <th>Fecha Timbrado[XML]</th>
-                            <th scope="col">Monto [XML]</th>
-                            <th>Método de Pago</th>
+                            <th>Concepto</th>
+                            <th>Fecha de carga</th>
+                            <th>Proveedor</th>
+                            <th>Timbrado</th>
+                            <th class="text-end">Monto</th>
+                            <th>Método</th>
                             <th>PDF</th>
                             <th>XML</th>
-                            <th>PDF-Render</th>
-                            {% if usuario.tipo.tesoreria %}
-                            <th>Validar</th>
-                            {% else %}
-                            <th>Validado</th>
-                            {% endif %}
+                            <th>PDF renderizado</th>
+                            <th>{% if usuario.tipo.tesoreria %}Validar{% else %}Validado{% endif %}</th>
                             <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for factura in facturas %}
                         <tr>
-                            <td>{% if factura.archivo_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
-                            <td>{{factura.fecha_subida|date:"d/m/Y"}}</td>
-                            <td>{% if factura.archivo_xml %}
-                                 {{ factura.emisor.nombre_emisor }} 
-                                {% endif %}
-                            </td>
-                            <td>{% if factura.archivo_xml %}
-                                    {{ factura.fecha_timbrado|date:"d/m/Y" }}
-                                {% endif %}
-                            </td> 
-                            {% if factura.archivo_xml %}
-                                <td class="total-xml" total="{{ factura.emisor.total }}">${{ factura.emisor.total }}</td>
-                            {% else %}
-                                <td>{{ factura.monto }}</td>
-                            {% endif %}
                             <td>
-                            {% if factura.archivo_xml %}
-                                {{ factura.emisor.metodo_pago}}
-                                
-                                {% endif %}
-                            <!-- Archivos PDF y XML -->
-                            <td>
-                                <ul class="nav nav-pills">
-                                    {% if factura.archivo_pdf %}
-                                  
-                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}" title="Ver Factura">
-                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                                        </button>
-                                   
-                                    <!-- Modal con visor de PDF -->
-                                    <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-xl">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Comprobante de Pago</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <iframe src="{{ factura.archivo_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                            </td>
-                            <td>
-                            {% if factura.archivo_xml %}
-                                    
-                                <a href="{{ factura.archivo_xml.url }}" download class="btn btn-outline-secondary">
-                                    <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
-                                </a>
-                                    
-                            {% endif %}
-                                
-                            </td>
-
-                            <!-- PDF Render -->
-                            <td>
-                                <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
-                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                                </a>
-                            </td>
-                             <td>
-                            <!-- Checkbox de autorización -->
-                            {% if usuario.tipo.tesoreria %}
-                           
-                                <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %}>
-                            
-                            {% else %}
-                                {% if factura.autorizada %}
-                                    <span class="text-success"><i class="fa-solid fa-check"></i></span>
+                                {% if factura.archivo_xml %}
+                                <span class="sv-cell-title">{{ factura.emisor.resultados }}</span>
                                 {% else %}
-                                    <span class="text-danger"> ⏳ </i></span>
+                                <span class="sv-cell-subtitle">Sin XML</span>
                                 {% endif %}
-                            {% endif %}
-                         
                             </td>
-                          
-                            <!-- Botón de eliminación -->
+                            <td>{{ factura.fecha_subida|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if factura.archivo_xml %}
+                                {{ factura.emisor.nombre_emisor }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if factura.archivo_xml %}
+                                {{ factura.fecha_timbrado|date:"d/m/Y" }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            {% if factura.archivo_xml %}
+                            <td class="total-xml text-end" data-total="{{ factura.emisor.total }}">
+                                <strong>${{ factura.emisor.total }}</strong>
+                            </td>
+                            {% else %}
+                            <td class="text-end">${{ factura.monto|floatformat:2 }}</td>
+                            {% endif %}
+                            <td>
+                                {% if factura.archivo_xml %}
+                                <span class="sv-badge sv-badge-neutral">{{ factura.emisor.metodo_pago }}</span>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if factura.archivo_pdf %}
+                                <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                        data-bs-toggle="modal" data-bs-target="#pdfPreviewModal"
+                                        data-document-url="{{ factura.archivo_pdf.url }}"
+                                        data-document-title="Factura PDF"
+                                        title="Ver factura" aria-label="Ver factura">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </button>
+                                {% else %}
+                                <span class="sv-cell-subtitle">N/D</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if factura.archivo_xml %}
+                                <a href="{{ factura.archivo_xml.url }}" download
+                                   class="sv-btn sv-btn-outline sv-btn-icon"
+                                   title="Descargar XML" aria-label="Descargar XML">
+                                    <i class="fa-solid fa-file-code"></i>
+                                </a>
+                                {% else %}
+                                <span class="sv-cell-subtitle">N/D</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'generar_cfdi_gasto' factura.id %}" download
+                                   class="sv-btn sv-btn-info sv-btn-icon"
+                                   title="Descargar PDF renderizado" aria-label="Descargar PDF renderizado">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
+                            <td>
+                                {% if usuario.tipo.tesoreria %}
+                                <div class="form-check d-flex justify-content-center">
+                                    <input type="checkbox" class="form-check-input"
+                                           name="autorizar_factura_{{ factura.id|unlocalize }}"
+                                           aria-label="Autorizar factura"
+                                           {% if factura.autorizada %}checked{% endif %}>
+                                </div>
+                                {% elif factura.autorizada %}
+                                <span class="sv-badge sv-badge-success">
+                                    <i class="fa-solid fa-check"></i> Validada
+                                </span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if factura.autorizada != True or usuario.tipo.nombre == "CONTADOR" %}
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize }})">
+                                <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                        data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                        onclick="setDeleteUrl('{{ factura.id|unlocalize }}')"
+                                        title="Eliminar factura" aria-label="Eliminar factura">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                                 {% endif %}
                             </td>
                         </tr>
-                        {% endfor %}
-                        <tr class="total-row" style="display: none;">
-                            <td colspan="4"></td>
-                            <th>Total Subtotal</th>
-                            <td id="subtotal" style="display: none;"></td> <!-- Oculto inicialmente -->
-                        </tr>
-                        <tr class="total-row" style="display: none;">
-                            <td colspan="4"></td>
-                            <th>Total Artículos</th>
-                            <td id="total" style="display: none;"></td> <!-- Oculto inicialmente -->
-                        </tr>
+                        {% empty %}
                         <tr>
-                            <td colspan="2"></td>
-                            <th>Total XML</th>
-                            <td scope="col" id="total2"></td>
+                            <td colspan="11" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">No hay facturas cargadas</span>
+                                <span class="sv-empty-text">Carga una factura para iniciar la validación.</span>
+                            </td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
+            </div>
 
-                <!-- Botón para subir nueva factura -->
-                 {% if gasto.cerrar_facturacion %}
-                    <div class="alert alert-warning" role="alert">
-                        <strong>Atención:</strong> La facturación de este gasto ha sido cerrada. No se pueden subir nuevas facturas.
+            <div class="sv-card-footer">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <div>
+                        <span class="sv-cell-subtitle">Total comprobado en XML</span>
+                        <strong id="totalXml">$0.00</strong>
                     </div>
-                {% else %}
-                <ul class="nav">
-                    <li class="nav-item">
-                        <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}" title ="Subir nuevas facturas">
-                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
-                        </a>
-                    </li>
-                </ul>
-                {% endif %}
-               
 
-                <!-- Cierre del formulario y botón de cierre de facturas -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                        {% if gasto.cerrar_facturacion %}
+                        <span class="sv-badge sv-badge-warning">
+                            <i class="fa-solid fa-lock"></i>
+                            No se permiten nuevas facturas
+                        </span>
+                        {% else %}
+                        <button type="button" class="sv-btn sv-btn-success"
+                                data-bs-toggle="modal" data-bs-target="#dialog"
+                                hx-target="#document"
+                                hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            Subir facturas
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
                 {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
-                <div class="row ms-3 my-2">
-                    <div class="form-check form-switch col-sm">
-                        <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas | Validado por: {{ gasto.verificacion_facturas.staff.staff.first_name }} {{ gasto.verificacion_facturas.staff.staff.last_name }}</strong></label>
-                        {{ form.facturas_completas|add_class:"form-check-input" }}
-                    </div>
+                <div class="form-check form-switch mt-3">
+                    {{ form.facturas_completas|add_class:"form-check-input" }}
+                    <label for="{{ form.facturas_completas.id_for_label }}" class="form-check-label">
+                        <strong>Facturas completas</strong>
+                        {% if gasto.verificacion_facturas %}
+                        · Validado por {{ gasto.verificacion_facturas.staff.staff.first_name }}
+                        {{ gasto.verificacion_facturas.staff.staff.last_name }}
+                        {% endif %}
+                    </label>
                 </div>
                 {% endif %}
 
-                 <h6>&nbsp;</h6>
-                <table class="table table-bordered">
+                <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
+                    {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "RH" %}
+                    <button type="submit" name="btn_factura_completa" class="sv-btn sv-btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Guardar estatus
+                    </button>
+                    {% endif %}
+                    <button type="submit" name="salir" class="sv-btn sv-btn-outline">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </section>
+    </form>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-ticket"></i>
+                Vales rosa
+            </h2>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
                 <thead>
-                    <tr style="background-color: #f8d7da;">
+                    <tr>
                         <th>ID</th>
                         <th>Motivo</th>
-                        <th>Monto</th>
+                        <th class="text-end">Monto</th>
                         <th>Estado</th>
                         <th>Eliminar</th>
                         <th>Vale</th>
@@ -305,269 +398,326 @@
                 </thead>
                 <tbody id="valesRosaLista">
                     {% for vale in gasto.vales_rosa.all %}
-                    {% if vale.color == "rosa" %}
-                    <tr>
-                        <td>{{ vale.id }}</td>
-                        <td>{{ vale.motivo }}</td>
-                        <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
-                        <td>
-                         {% if vale.esta_aprobado %}
-                                ✅ Aprobado
-                            {% elif vale.esta_aprobado == False %}
-                                ❌ Rechazado 
-                            {% else %}
-                                ⏳ Pendiente
-                            {% endif %}
-                        </td>
-                        <td>
-                            <form method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name ="vale_id" value="{{vale.id|unlocalize}}">
-                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </form>
-                        </td>
-                        <td>
-                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}" class="btn btn-outline-danger" target="_blank">
-                                 <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                            </a>
-                        </td>
-                        </td>
-                                
-                            {% if vale.comprobante_pdf %}
-                            <ul class="nav nav-pills">
-                                  
-                                        
-                                <li class="nav-item mx-1">
-                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ vale.id|unlocalize }}" title="Ver comprobante de pago">
-                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                        {% if vale.color == "rosa" %}
+                        <tr>
+                            <td><span class="sv-folio">{{ vale.id }}</span></td>
+                            <td>{{ vale.motivo }}</td>
+                            <td class="monto-vale text-end">${{ vale.monto|floatformat:2 }}</td>
+                            <td>
+                                {% if vale.esta_aprobado %}
+                                <span class="sv-badge sv-badge-success">Aprobado</span>
+                                {% elif vale.esta_aprobado == False %}
+                                <span class="sv-badge sv-badge-danger">Rechazado</span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vale_id" value="{{ vale.id|unlocalize }}">
+                                    <button type="submit" name="btn_deletevalerosa"
+                                            class="sv-btn sv-btn-danger sv-btn-icon"
+                                            onclick="return confirm('¿Eliminar vale rosa?')"
+                                            title="Eliminar vale" aria-label="Eliminar vale">
+                                        <i class="fa-regular fa-trash-can"></i>
                                     </button>
-                                </li>
-                            </ul>
-
-                                        <!-- Modal con visor de PDF -->
-                                        <div class="modal fade" id="pdfModal{{ vale.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ vale.id|unlocalize }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-xl">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="pdfModalLabel{{ vale.id|unlocalize }}">Comprobante</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <iframe src="{{ vale.comprobante_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                        
-                           
-                            {% else %}  
-                            <span class="text-secondary">Sin comprobante</span>
-                            {% endif %}
-                        </td>
-
-                    </tr>
-                    {% endif %}
+                                </form>
+                            </td>
+                            <td>
+                                <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}"
+                                   class="sv-btn sv-btn-danger sv-btn-icon" target="_blank"
+                                   rel="noopener" title="Abrir vale" aria-label="Abrir vale">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
+                            <td>
+                                {% if vale.comprobante_pdf %}
+                                <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                        data-bs-toggle="modal" data-bs-target="#pdfPreviewModal"
+                                        data-document-url="{{ vale.comprobante_pdf.url }}"
+                                        data-document-title="Comprobante del vale rosa"
+                                        title="Ver comprobante" aria-label="Ver comprobante">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </button>
+                                {% else %}
+                                <span class="sv-cell-subtitle">Sin comprobante</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
                     {% empty %}
-                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
-                   
+                    <tr>
+                        <td colspan="7" class="sv-empty">
+                            <span class="sv-empty-title">Sin vales registrados</span>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <table class="table table-bordered">
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-ticket-simple"></i>
+                Vales azules
+            </h2>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
                 <thead>
-                    <tr  style="background-color:#0c5460; color: white">
+                    <tr>
                         <th>ID</th>
                         <th>Motivo</th>
-                        <th>Monto</th>
-                        <th>Fecha de Pago</th>
+                        <th class="text-end">Monto</th>
+                        <th>Fecha de pago</th>
                         <th>Estado</th>
                         <th>Eliminar</th>
                         <th>Vale</th>
                     </tr>
                 </thead>
-                <tbody id="valesRosaLista">
+                <tbody id="valesAzulesLista">
                     {% for vale in gasto.vales_rosa.all %}
-                    {% if vale.color == "azul" %}
-                    <tr>
-                        <td>{{ vale.id }}</td>
-                        <td>{{ vale.motivo }}</td>
-                        <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
-                        <td>{% if vale.fecha_pago %}{{ vale.fecha_pago|date:"d/m/Y" }}{% else %}Sin fecha definida{% endif %}</td>
-                        <td>
-                            {% if vale.esta_aprobado %}
-                                ✅ Validado
-                            {% else %}
-                                {% if usuario.tipo.tesoreria %}
-                                    <a href="{% url 'vale_azul_abono' vale.id %}?next={{ request.path }}" class="btn btn-outline-primary">
-                                        Validar abono
-                                    </a>
+                        {% if vale.color == "azul" %}
+                        <tr>
+                            <td><span class="sv-folio">{{ vale.id }}</span></td>
+                            <td>{{ vale.motivo }}</td>
+                            <td class="monto-vale text-end">${{ vale.monto|floatformat:2 }}</td>
+                            <td>
+                                {% if vale.fecha_pago %}
+                                {{ vale.fecha_pago|date:"d/m/Y" }}
                                 {% else %}
-                                    <span class="text-secondary">⏳ Pendiente</span>
+                                <span class="sv-cell-subtitle">Sin fecha definida</span>
                                 {% endif %}
-                                
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if not vale.esta_aprobado %}
-                            <form method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name ="vale_id" value="{{vale.id|unlocalize}}">
-                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale azul?')" >
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </td>
-                       
-                        <td>
-                            {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}" class="btn btn-outline-danger" target="_blank">
-                                 <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                            </a>
-                            {% endif %}
+                            </td>
+                            <td>
+                                {% if vale.esta_aprobado %}
+                                <span class="sv-badge sv-badge-success">Validado</span>
+                                {% elif usuario.tipo.tesoreria %}
+                                <a href="{% url 'vale_azul_abono' vale.id %}?next={{ request.path }}"
+                                   class="sv-btn sv-btn-primary">
+                                    <i class="fa-solid fa-check"></i>
+                                    Validar abono
+                                </a>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not vale.esta_aprobado %}
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vale_id" value="{{ vale.id|unlocalize }}">
+                                    <button type="submit" name="btn_deletevalerosa"
+                                            class="sv-btn sv-btn-danger sv-btn-icon"
+                                            onclick="return confirm('¿Eliminar vale azul?')"
+                                            title="Eliminar vale" aria-label="Eliminar vale">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin" %}
+                                <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}"
+                                   class="sv-btn sv-btn-info sv-btn-icon" target="_blank"
+                                   rel="noopener" title="Abrir vale" aria-label="Abrir vale">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="sv-empty">
+                            <span class="sv-empty-title">Sin vales registrados</span>
                         </td>
                     </tr>
-                    {% endif %}
-                    {% empty %}
-                        <tr><td colspan="4" class="text-center">Sin vales azules aún</td></tr>
-                   
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </section>
+</main>
 
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
+         role="document" hx-target="this"></div>
+</div>
 
-                <!-- Botón de cierre -->
-                <hr>
-                <ul class="nav">
-                {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" or  usuario.tipo.nombre == "RH" %}
-                    <li class="nav-item ms-4">
-                        <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
-                    </li>
-                {% endif %}
-                    <li class="nav-item ms-4">      
-                        <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
-                    </li>
-                </ul>
-            </form>
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1"
+     aria-labelledby="pdfPreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="pdfPreviewTitle">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Vista previa
+                    </h2>
+                    <span class="sv-modal-subtitle">Documento asociado al gasto</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body sv-document-viewer">
+                <div class="sv-document-loading" id="pdfPreviewLoading">
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <span>Cargando documento…</span>
+                </div>
+                <iframe class="sv-document-frame d-none" id="pdfPreviewFrame"
+                        title="Vista previa del documento"></iframe>
+            </div>
         </div>
     </div>
 </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-<!-- Modal de Confirmación eliminación-->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+<div class="modal fade" id="confirmModal" tabindex="-1"
+     aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Eliminar Factura</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h2 class="modal-title" id="confirmModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    Eliminar factura
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
+                <p class="sv-cell-subtitle mt-0">
+                    Indica el motivo por el que se eliminará esta factura.
+                </p>
                 <form id="deleteForm" method="POST">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="comentario" class="form-label">Comentario</label>
-                        <input type="text" class="form-control" id="comentario" name="comentario" placeholder="Escribe un comentario" required>
-                    </div>
+                    <label for="comentario" class="form-label fw-semibold">Comentario</label>
+                    <input type="text" class="form-control" id="comentario" name="comentario"
+                           placeholder="Escribe un comentario" required>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="enviarFormulario()">Eliminar</button>
+                <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="sv-btn sv-btn-danger" onclick="enviarFormulario()">
+                    <i class="fa-solid fa-trash-can"></i>
+                    Eliminar
+                </button>
             </div>
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+function calcularTotal(selector, targetId) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
 
-var myModal = document.getElementById('dialog')
+    let total = 0;
+    document.querySelectorAll(selector).forEach(function (element) {
+        total += Number(element.dataset.total || 0);
+    });
+    target.textContent = "$" + total.toFixed(2);
+}
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-      location.reload();
-    })
+calcularTotal(".subtotal-linea", "subtotalArticulos");
+calcularTotal(".total-linea", "totalArticulos");
+calcularTotal(".total-xml", "totalXml");
 
-var elementos = document.getElementsByClassName('subtotal-linea');
-var xml = document.getElementsByClassName('total-xml');
-var elementos_t = document.getElementsByClassName('total-linea');
-
-function total(elementos,id){
-    console.log(elementos)
-    var lbltotal = document.getElementById(id)
-    var total = 0;
-
-    for (var i = 0 ; i < elementos.length; i++){
-        total += Number(elementos[i].getAttribute('total'));
-        console.log(elementos[i].getAttribute('total'))
-    };
-    console.log(total)
-    lbltotal.innerText = `$${total.toFixed(2)}`
-
-};
-
-total(elementos,'subtotal');
-total(elementos_t,'total')
-total(xml, 'total2');
-//Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
-    const deleteForm = document.getElementById('deleteForm');
-    const baseUrl = "{% url 'eliminar-factura-gasto' 0 %}"; // URL base con un placeholder
+    const deleteForm = document.getElementById("deleteForm");
+    const baseUrl = "{% url 'eliminar-factura-gasto' 999999 %}";
+    const nextParam = new URLSearchParams(window.location.search).get("next");
+    let deleteUrl = baseUrl.replace("999999", facturaId);
 
-    // Obtener el parámetro 'next' de la URL actual
-    const urlParams = new URLSearchParams(window.location.search);
-    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
-
-    // Construir la URL de eliminación con el ID de la factura
-    let deleteUrl = baseUrl.replace('0', facturaId);
-    
-    // Agregar el parámetro 'next' si existe
     if (nextParam) {
-        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
+        deleteUrl += "?next=" + encodeURIComponent(nextParam);
     }
-
-    // Establecer la acción del formulario
     deleteForm.action = deleteUrl;
 }
 
-
-
 function enviarFormulario() {
-    const comentario = document.getElementById('comentario').value;
-    if (!comentario) {
-        alert("Por favor, escribe un comentario antes de continuar.");
-    } else {
-        document.getElementById('deleteForm').submit();  
+    const comentario = document.getElementById("comentario");
+    if (!comentario.value.trim()) {
+        comentario.focus();
+        Swal.fire({
+            title: "Comentario requerido",
+            text: "Escribe un comentario antes de eliminar la factura.",
+            icon: "warning"
+        });
+        return;
     }
+    document.getElementById("deleteForm").submit();
 }
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
-    htmx.on('htmx:afterSwap', (e) => {
-    if (e.detail.target.id === "document") {
-        const response = e.detail.xhr.responseText;
-        if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
-            modal.hide();
-        }
-    }
-});
+document.addEventListener("DOMContentLoaded", function () {
+    const dialogElement = document.getElementById("dialog");
+    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
 
-})()
-
-const confirmModal = document.getElementById('confirmModal');
-if (confirmModal) {
-    confirmModal.addEventListener('hidden.bs.modal', function (event) {
-        location.reload();  
+    dialogElement.addEventListener("hidden.bs.modal", function () {
+        window.location.reload();
     });
-}
+
+    htmx.on("htmx:afterSwap", function (event) {
+        if (!event.detail.target || event.detail.target.id !== "document") return;
+        const response = event.detail.xhr.responseText || "";
+        if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
+            dialog.hide();
+        }
+    });
+
+    const previewModal = document.getElementById("pdfPreviewModal");
+    const previewTitle = document.getElementById("pdfPreviewTitle");
+    const previewFrame = document.getElementById("pdfPreviewFrame");
+    const previewLoading = document.getElementById("pdfPreviewLoading");
+    let objectUrl = null;
+
+    previewModal.addEventListener("show.bs.modal", async function (event) {
+        const button = event.relatedTarget;
+        const url = button ? button.dataset.documentUrl : "";
+        const title = button ? button.dataset.documentTitle : "Vista previa";
+
+        previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + title;
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+
+        previewFrame.classList.add("d-none");
+        previewFrame.removeAttribute("src");
+        previewLoading.classList.remove("d-none");
+
+        try {
+            const response = await fetch(url, { credentials: "same-origin" });
+            if (!response.ok) throw new Error("No fue posible cargar el documento.");
+
+            const blob = await response.blob();
+            objectUrl = URL.createObjectURL(blob);
+            previewFrame.src = objectUrl + "#zoom=85";
+            previewFrame.classList.remove("d-none");
+            previewLoading.classList.add("d-none");
+        } catch (error) {
+            previewLoading.classList.add("d-none");
+            bootstrap.Modal.getInstance(previewModal)?.hide();
+            Swal.fire({ title: "Error", text: error.message, icon: "error" });
+        }
+    });
+
+    previewModal.addEventListener("hidden.bs.modal", function () {
+        previewFrame.removeAttribute("src");
+        previewFrame.classList.add("d-none");
+        previewLoading.classList.remove("d-none");
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    });
+});
 </script>
 {% endblock %}
-</body>
-</html>

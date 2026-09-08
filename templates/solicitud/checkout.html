@@ -85,9 +85,17 @@
                             </div>
 
                             {% if usuario.distritos.nombre != "Yerod" %}
-                            <div class="sv-input-group">
-                                <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
-                                <div class="form-floating flex-grow-1">{{ form.sector }}</div>
+                            <div class="sv-input-group input-group w-100">
+                                <span class="input-group-text">
+                                    <i class="fa-solid fa-building"></i>
+                                </span>
+
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    {{ form.sector_texto|add_class:"form-control"|append_attr:"placeholder=Sector" }}
+                                    <label for="{{ form.sector_texto.id_for_label }}">
+                                        Sector
+                                    </label>
+                                </div>
                             </div>
                             {% endif %}
 
@@ -642,40 +650,7 @@ $(document).ready(function() {
     }
 });
 
-$(document).ready(function() {
-    var orden = document.getElementById('order');
-    var orden_id = orden.getAttribute('orden');
-    $('#id_sector').select2({
-        allowClear: true,
-        width: '100%',
-        placeholder: 'Sector',
-        data: datosSectores,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    //Se rellena el local storage con los datos
-    $('#id_sector').on('select2:select', function(e){
-        var data = e.params.data;
-        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
-        cambio_en_formulario(data,'sector') //Acá lo que hago es mediante esta función guardo los valores en el local storage
-    });
-    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
-    var sectorSelect = $('#id_sector');
-    //Si hay datos se rellena el campo con los datos del local storage
-    if (datos) {
-        if (datos.sector){
-            var option = new Option(datos.sector_text, datos.sector, true, true);
-            sectorSelect.append(option).trigger('change');
-            $('#id_sector').on('select2:unselect', function(e){
 
-                datos.sector = '';
-                datos.sector_text ='';
-                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
-
-            })
-        }
-    }
-});
 
 $(document).ready(function() {
     var orden = document.getElementById('order');

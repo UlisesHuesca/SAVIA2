@@ -1,73 +1,135 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load widget_tweaks %}
 {% load static %}
-<html>
-<head>
-{% block title %}Facturas{% endblock %}
-</head>
-<body>
-{% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title": "Error",
-                    "text": "{{ message }}",
-                    "icon": "error",
-                })
-                </script>
-                {% elif message.tags == "warning" %}
-                <script>
-                Swal.fire({
-                    "title": "Facturas repetidas",
-                    "text": "{{ message }}",
-                    "icon": "warning",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title": "Excelente",
-                    "text": "{{ message }}",
-                    "icon": "success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
 
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
+{% block title %}Carga de facturas{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Facturas repetidas{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<div class="modal-content sv-modal">
         <div class="modal-header">
-            <h5 class="modal-title">Folio</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+            <div>
+                <p class="sv-page-eyebrow">Documentación fiscal</p>
+                <h5 class="modal-title sv-card-title">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    Cargar facturas
+                </h5>
+                <p class="sv-page-subtitle mb-0">
+                    Selecciona los archivos PDF y XML que deseas registrar.
+                </p>
+            </div>
+
+            <button class="btn-close" type="button" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
         </div>
-        <div class="modal-body">
-            <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
-                {% csrf_token %}
-                <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
-                <input type="file" name="archivo_pdf" class="form-control" multiple>
-                <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
-                <input type="file" name="archivo_xml" class="form-control" multiple>
-                <div class="row">
-                    <div class="col-auto my-2">
-                        <button type="submit" name="btn_registrar" class="btn btn-light" style="background-color:#980f0f"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+
+        <form hx-post="{{ request.path }}"
+              hx-encoding="multipart/form-data"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-6">
+                        <label for="archivo_pdf" class="form-label fw-semibold">
+                            <i class="fa-solid fa-file-pdf text-danger me-2"></i>
+                            Facturas PDF
+                        </label>
+                        <input id="archivo_pdf" type="file" name="archivo_pdf"
+                               class="form-control" accept="application/pdf,.pdf" multiple>
+                        <div class="form-text">
+                            Puedes seleccionar varios documentos PDF.
+                        </div>
                     </div>
-                    <div class="col-auto my-2">
-                        <button type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-dismiss="modal">Cerrar</button>
+
+                    <div class="col-12 col-lg-6">
+                        <label for="archivo_xml" class="form-label fw-semibold">
+                            <i class="fa-solid fa-file-code text-primary me-2"></i>
+                            Facturas XML
+                        </label>
+                        <input id="archivo_xml" type="file" name="archivo_xml"
+                               class="form-control" accept="application/xml,text/xml,.xml" multiple>
+                        <div class="form-text">
+                            Puedes seleccionar varios archivos XML.
+                        </div>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
+
+                <div class="sv-empty mt-4" id="uploadSummary" aria-live="polite">
+                    <span class="sv-empty-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </span>
+                    <span class="sv-empty-title">Archivos pendientes de seleccionar</span>
+                    <span class="sv-empty-text">
+                        Los nombres originales de los archivos se conservarán durante el envío.
+                    </span>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex flex-column flex-sm-row justify-content-end gap-2">
+                <button type="button" class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cerrar
+                </button>
+                <button type="submit" name="btn_registrar"
+                        class="sv-btn sv-btn-primary" id="btnRegistrarFacturas">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Registrar facturas
+                </button>
+            </div>
+        </form>
 </div>
+
+<script>
+(function () {
+    const form = document.querySelector('form[hx-post]');
+    const pdfInput = document.getElementById('archivo_pdf');
+    const xmlInput = document.getElementById('archivo_xml');
+    const summary = document.getElementById('uploadSummary');
+    const submitButton = document.getElementById('btnRegistrarFacturas');
+
+    if (!form || !pdfInput || !xmlInput || !summary || !submitButton) return;
+
+    function updateSummary() {
+        const pdfCount = pdfInput.files.length;
+        const xmlCount = xmlInput.files.length;
+        const total = pdfCount + xmlCount;
+
+        summary.querySelector('.sv-empty-title').textContent = total
+            ? `${total} archivo${total === 1 ? '' : 's'} seleccionado${total === 1 ? '' : 's'}`
+            : 'Archivos pendientes de seleccionar';
+
+        summary.querySelector('.sv-empty-text').textContent = total
+            ? `${pdfCount} PDF · ${xmlCount} XML`
+            : 'Los nombres originales de los archivos se conservarán durante el envío.';
+    }
+
+    pdfInput.addEventListener('change', updateSummary);
+    xmlInput.addEventListener('change', updateSummary);
+
+    form.addEventListener('htmx:beforeRequest', function () {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Registrando…';
+    });
+
+    form.addEventListener('htmx:afterRequest', function () {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Registrar facturas';
+    });
+})();
+</script>
 {% endblock %}
-</body>
-</html>
