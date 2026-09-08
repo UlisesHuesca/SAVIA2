@@ -2162,70 +2162,140 @@ def matriz_pagos(request):
             return redirect('matriz-pagos') 
         elif 'btnImprimir' in request.POST:
             pago_ids = request.POST.getlist('imprimir_ids')
-            print("Pagos seleccionados para imprimir:", pago_ids)  # Debug: Verificar los IDs recibidos
             pagos = Pago.objects.filter(id__in=pago_ids)
 
             if not pagos.exists():
-                return HttpResponse("No se seleccionaron pagos válidos.", content_type="text/plain")
+                return HttpResponse(
+                    "No se seleccionaron pagos válidos.",
+                    content_type="text/plain"
+                )
 
             merger = PdfMerger()
 
             for pago in pagos:
-                # 1. Comprobante de pago
-                if pago.comprobante_pago and os.path.exists(pago.comprobante_pago.path):
-                    merger.append(pago.comprobante_pago.path, import_outline=False)
+                # Evita repetir un complemento asociado a varias facturas
+                # dentro del mismo paquete de pago.
+                complementos_agregados = set()
 
-                # 2. Carátula + facturas
+                # 1. Comprobante de pago
+                if (
+                    pago.comprobante_pago
+                    and os.path.exists(pago.comprobante_pago.path)
+                ):
+                    merger.append(
+                        pago.comprobante_pago.path,
+                        import_outline=False
+                    )
+
+                # 2. Obtener carátula y facturas
                 if pago.gasto:
                     buffer = render_pdf_gasto(pago.gasto.id)
                     facturas = pago.gasto.facturas.filter(hecho=True)
+
                 elif pago.oc:
                     buffer = generar_pdf_nueva(pago.oc)
                     facturas = pago.oc.facturas.filter(hecho=True)
+
                 elif pago.viatico:
                     buffer = generar_pdf_viatico(pago.viatico.id)
                     facturas = pago.viatico.facturas.filter(hecho=True)
+
                 else:
                     buffer = None
                     facturas = []
 
-                # Carátula (guardar buffer en archivo temporal)
+                # 3. Agregar carátula
                 if buffer:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_caratula:
+                    with tempfile.NamedTemporaryFile(
+                        delete=False,
+                        suffix=".pdf"
+                    ) as temp_caratula:
                         temp_caratula.write(buffer.read())
                         temp_caratula.flush()
                         caratula_path = temp_caratula.name
-                    merger.append(caratula_path, import_outline=False)
 
-                # Facturas
+                    merger.append(
+                        caratula_path,
+                        import_outline=False
+                    )
+
+                # 4. Agregar facturas y sus complementos
                 for factura in facturas:
+                    factura_path = None
+
                     if pago.gasto and factura.archivo_pdf:
-                        path = factura.archivo_pdf.path
+                        factura_path = factura.archivo_pdf.path
 
                     elif (pago.oc or pago.viatico) and factura.factura_pdf:
-                        path = factura.factura_pdf.path
+                        factura_path = factura.factura_pdf.path
 
-                    else:
-                        continue
+                    # Agregar PDF de la factura
+                    if factura_path:
+                        extension = os.path.splitext(factura_path)[1].lower()
 
-                    ext = os.path.splitext(path)[1].lower()
+                        if (
+                            extension == ".pdf"
+                            and os.path.exists(factura_path)
+                        ):
+                            merger.append(
+                                factura_path,
+                                import_outline=False
+                            )
+                        else:
+                            print(
+                                f"Factura omitida: {factura.id} -> "
+                                f"{factura_path}"
+                            )
 
-                    if ext != ".pdf":
-                        print(f"Se omitió porque no es PDF: Factura {factura.id} -> {path}")
-                        continue
+                    # Agregar complementos relacionados con la factura
+                    complementos = (
+                        factura.complementos
+                        .filter(hecho=True)
+                        .exclude(complemento_pdf="")
+                        .order_by("fecha_subido", "id")
+                    )
 
-                    merger.append(path, import_outline=False)
+                    for complemento in complementos:
+                        if complemento.id in complementos_agregados:
+                            continue
 
-            # Guardar PDF combinado final en archivo temporal
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_final:
+                        if not complemento.complemento_pdf:
+                            continue
+
+                        complemento_path = complemento.complemento_pdf.path
+                        extension = os.path.splitext(complemento_path)[1].lower()
+
+                        if (
+                            extension != ".pdf"
+                            or not os.path.exists(complemento_path)
+                        ):
+                            print(
+                                f"Complemento omitido: {complemento.id} -> "
+                                f"{complemento_path}"
+                            )
+                            continue
+
+                        merger.append(
+                            complemento_path,
+                            import_outline=False
+                        )
+
+                        complementos_agregados.add(complemento.id)
+
+            # 5. Guardar PDF combinado
+            with tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".pdf"
+            ) as temp_final:
                 merger.write(temp_final.name)
                 temp_file_path = temp_final.name
 
             merger.close()
 
-            # Guardar ruta del PDF final en la sesión
-            request.session['temp_pdf_path'] = temp_file_path
-            return redirect('mostrar-pdf')
+            request.session["temp_pdf_path"] = temp_file_path
+            return redirect("mostrar-pdf")
+
+           
         elif 'enviar_a_control' in request.POST:
             ids = request.POST.getlist('compra_ids')
             if ids:
