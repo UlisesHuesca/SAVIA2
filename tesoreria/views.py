@@ -2247,19 +2247,19 @@ def matriz_pagos(request):
                                 f"{factura_path}"
                             )
 
-                    # Agregar complementos relacionados con la factura
-                    complementos = (
-                        factura.complementos
-                        .filter(hecho=True)
-                        .exclude(complemento_pdf="")
-                        .order_by("fecha_subido", "id")
-                    )
+                    if pago.oc:
+                        complementos = (
+                            factura.complementos
+                            .filter(hecho=True)
+                            .exclude(complemento_pdf__isnull=True)
+                            .exclude(complemento_pdf="")
+                            .order_by("fecha_subido", "id")
+                        )
+                    else:
+                        complementos = []
 
                     for complemento in complementos:
                         if complemento.id in complementos_agregados:
-                            continue
-
-                        if not complemento.complemento_pdf:
                             continue
 
                         complemento_path = complemento.complemento_pdf.path
@@ -2269,10 +2269,6 @@ def matriz_pagos(request):
                             extension != ".pdf"
                             or not os.path.exists(complemento_path)
                         ):
-                            print(
-                                f"Complemento omitido: {complemento.id} -> "
-                                f"{complemento_path}"
-                            )
                             continue
 
                         merger.append(
