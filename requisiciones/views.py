@@ -1354,7 +1354,9 @@ def requisicion_cancelar(request, pk):
 
 def descargar_solicitud_pdf(request, pk):
     solicitud = get_object_or_404(Order, id=pk)
-    buf = render_pdf_view(pk)  # tu función
+    es_savia_negro = solicitud.distrito.nombre == "Yerod"
+    
+    buf = render_pdf_view(pk, es_savia_negro)  # tu función
    
     return FileResponse(buf, as_attachment=True, filename='Solicitud_' + str(solicitud.folio) + '.pdf')
 
