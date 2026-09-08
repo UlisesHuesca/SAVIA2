@@ -186,7 +186,7 @@
                         </td>
                         <td class="text-nowrap">{{ item.porcentaje|multiply:100 }}%</td>
                         <td class="text-center">
-                            {% if usuario.tipo.producto %}
+                            {% if usuario.tipo.productos %}
                             <a
                                 class="sv-btn sv-btn-icon sv-btn-outline"
                                 href="{% url 'dashboard-product-update' item.id %}"
