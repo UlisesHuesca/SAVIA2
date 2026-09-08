@@ -4,152 +4,203 @@
 {% load djmoney %}
 {% load l10n %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Facturas{% endblock %}
-</head>
-<body>
+
+{% block title %}Facturas de compra{% endblock %}
 
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-<hr>
-<hr>
-<hr>
-<hr>
-<div class="container">
-    <div class="card">
-        <form method="POST">
-        <div class="card-header d-flex align-items-center">
-            <h5 class="card-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Facturas de Compra: {{compra.folio}}</h5>
-            <ul class="nav ms-auto">
-                <li class="nav-item ms-4">      
-                    <button type="submit" name="salir" class="btn btn-outline-secondary">
-                        <i class="fa-duotone fa-solid fa-xmark-large"></i>
-                    </button>
-                </li>
-            </ul>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <form method="POST" id="facturasCompraForm">
+        {% csrf_token %}
+
+        <header class="sv-page-header">
+            <div>
+                <p class="sv-page-eyebrow">Control documental</p>
+                <h1 class="sv-page-title" id="compra" value="{{ compra.id|unlocalize }}"
+                    compra_pagos="{{ compra_pagos }}">
+                    <span class="sv-page-title-icon">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </span>
+                    Facturas de compra OC {{ compra.folio }}
+                </h1>
+                <p class="sv-page-subtitle">
+                    Consulta comprobantes, valida facturas y administra sus complementos.
+                </p>
+            </div>
+
+            <div class="sv-page-actions">
+                <span class="sv-badge sv-badge-primary">
+                    <i class="fa-solid fa-hashtag"></i>
+                    OC {{ compra.folio }}
+                </span>
+                <button type="submit" name="salir" class="sv-btn sv-btn-outline">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Cerrar
+                </button>
+            </div>
+        </header>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-xl-5">
+                <section class="sv-card h-100">
+                    <div class="sv-card-header">
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-building"></i>
+                            Información de la compra
+                        </h2>
+                    </div>
+                    <div class="sv-card-body">
+                        <div class="mb-4">
+                            <span class="sv-cell-subtitle d-block">Proveedor</span>
+                            <span class="sv-cell-title">
+                                {{ compra.proveedor.nombre.razon_social|default:"Sin proveedor" }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="sv-cell-subtitle d-block">Importe de la compra</span>
+                            <span class="sv-page-title" id="importe"
+                                  value="{{ compra.costo_plus_adicionales|unlocalize }}"
+                                  moneda="{{ compra.moneda.nombre }}">
+                                ${{ compra.costo_plus_adicionales|floatformat:2 }}
+                            </span>
+                            <span class="sv-badge sv-badge-neutral mt-2">
+                                {{ compra.moneda.nombre }}
+                            </span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-7">
+                <section class="sv-card h-100">
+                    <div class="sv-card-header">
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-receipt"></i>
+                            Comprobantes de pago
+                        </h2>
+                    </div>
+
+                    <div class="sv-table-wrap">
+                        <table class="sv-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th class="text-end">Monto</th>
+                                    <th>Comprobante</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pago in pagos %}
+                                    {% if pago.comprobante_pago %}
+                                    <tr>
+                                        <td>
+                                            {% if pago.fecha_pdf %}
+                                            <span class="sv-cell-title">{{ pago.fecha_pdf }}</span>
+                                            <span class="sv-cell-subtitle d-block">Fecha del comprobante</span>
+                                            {% elif pago.pagado_date %}
+                                            <span class="sv-cell-title">{{ pago.pagado_date|date:"d/m/Y" }}</span>
+                                            <span class="sv-cell-subtitle d-block">Fecha del sistema</span>
+                                            {% else %}
+                                            <span class="sv-badge sv-badge-warning">Sin fecha</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>${{ pago.monto|floatformat:2 }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="sv-actions">
+                                                <button type="button"
+                                                        class="sv-btn sv-btn-info sv-btn-icon"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#pdfPreviewModal"
+                                                        data-document-url="{{ pago.comprobante_pago.url }}"
+                                                        data-document-title="Comprobante de pago"
+                                                        title="Visualizar comprobante"
+                                                        aria-label="Visualizar comprobante">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+
+                                                {% if usuario.tipo.tesoreria %}
+                                                <button type="button"
+                                                        class="sv-btn sv-btn-outline sv-btn-icon"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#dialog"
+                                                        hx-target="#document"
+                                                        hx-get="{% url 'edit-comprobante-pago' pago.id %}"
+                                                        title="Cambiar comprobante"
+                                                        aria-label="Cambiar comprobante">
+                                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="sv-empty">
+                                        <span class="sv-empty-title">Sin pagos registrados</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
         </div>
 
-        
-            {% csrf_token %}
-            <div class="card-body">
-                <!-- Proveedor Info -->
-                <table class="table table-striped">
-                    <tbody>
-                        <tr>
-                            <th>Proveedor:</th>
-                            <th>{{compra.proveedor.nombre.razon_social}}</th>
-                        </tr>
-                    </thead>
-                   
-                        <tr>
-                            <th >Importe Compra</th>
-                            <th id="importe" value="{{compra.costo_plus_adicionales}}" moneda="{{compra.moneda.nombre}}">${{compra.costo_plus_adicionales|floatformat:2}}</th>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <!-- Pagos Section -->
-                <table class='table table-striped'>
-                    <thead>
-                        <th>
-                            Fecha
-                            
-                        </th>
-                        <th>
-                            Monto
-                        </th>
-                        <th>
-                            Pago
-                        </th>
-                    </thead>
-                    <tbody>
-
-                        {% for pago in pagos %}
-                        <tr>
-                            {% if pago.comprobante_pago %}
-                            <th>{% if pago.fecha_pdf %}Comprobante: {{pago.fecha_pdf}}{% else %}Sistema: {{pago.pagado_date|date:"d/m/Y"}}{% endif %}</th>
-                            <th>{{pago.monto}}</th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-duotone fa-solid fa-file-invoice-dollar fa-xl"></i>
-                                </button>
-                                {% if usuario.tipo.tesoreria %}
-                                <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                </a>
-                                {% endif %}
-                                <!-- Modal con visor de PDF -->
-                                <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ pago.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <!-- Importe Compra Section -->
-                <hr>
-                
-
-                <!-- Descargar Facturas Button -->
-                <div class="nav-item ms-auto">
-                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                        <i class="fas fa-file-archive"></i> Descargar Facturas
-                    </button>
+        <section class="sv-card">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-folder-open"></i>
+                        Documentación fiscal
+                    </h2>
+                    <p class="sv-page-subtitle mb-0">
+                        Facturas, representaciones impresas y complementos de pago.
+                    </p>
                 </div>
 
-                <!-- Facturas Table -->
-                <table class='table table-striped'>
+                <div class="sv-actions">
+                    <button type="submit" name="btn_descargar_todo" class="sv-btn sv-btn-primary">
+                        <i class="fa-solid fa-file-zipper"></i>
+                        Descargar facturas
+                    </button>
+
+                    <button type="button" class="sv-btn sv-btn-success"
+                            data-bs-toggle="modal" data-bs-target="#dialog"
+                            hx-target="#document"
+                            hx-get="{% url 'factura-nueva' compra.id %}">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Subir factura
+                    </button>
+                </div>
+            </div>
+
+            <div class="sv-table-wrap">
+                <table class="sv-table sv-table-xwide">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Fecha Timbrado</th>
-                            <th>Fecha Subida</th>
-                            <th>Método de Pago</th>
+                            <th>Fechas</th>
+                            <th>Método</th>
                             <th>Comentario</th>
-                            <th>PDF</th>
-                            <th>XML</th>
-                            <th>PDF-S2</th>
-                            {% if usuario.tipo.tesoreria %}
-                            <th>Validar</th>
-                            {% endif %}
+                            <th>Documentos</th>
+                            {% if usuario.tipo.tesoreria %}<th>Validar</th>{% endif %}
                             <th>Complementos</th>
                             <th>Eliminar</th>
                         </tr>
@@ -157,192 +208,294 @@
                     <tbody>
                         {% for p in facturas %}
                         <tr>
-                            <th scope="row">{{p.id}}</th>
-                            <td>{{p.emisor.fecha_timbrado}}</td>
-                            <td>{{p.fecha_subida|date:"d/m/Y"}}</td>
-                            <td>{{p.emisor.metodo_pago}}</td>
-                            <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
+                            <td><span class="sv-folio">{{ p.id }}</span></td>
                             <td>
-                                {% if p.factura_pdf %}
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.id|unlocalize }}" title="Ver representación impresa Factura">
-                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                                </button>
-                               
-                                <!-- Modal con visor de PDF -->
-                                <div class="modal fade" id="pdfModal{{p.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{p.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel{{p.id|unlocalize }}">Ver factura</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ p.factura_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
+                                <span class="sv-cell-title d-block">
+                                    {{ p.emisor.fecha_timbrado|default:"Sin timbrado" }}
+                                </span>
+                                <span class="sv-cell-subtitle">
+                                    Subida: {{ p.fecha_subida|date:"d/m/Y" }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if p.emisor.metodo_pago %}
+                                <span class="sv-badge sv-badge-neutral">{{ p.emisor.metodo_pago }}</span>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if p.comentario %}{{ p.comentario }}{% else %}
+                                <span class="sv-cell-subtitle">Sin comentario</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if p.factura_xml %}
-                                <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info" title="Descargar XML Factura">
-                                    <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
-                                </a>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'generar_cfdi' p.id %}" download class="btn btn-outline-info" title="Descargar representación impresa S2 Factura">
-                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                                </a>
-                            </td>
-                            {% if usuario.tipo.tesoreria %}
-                            <td>
-                                <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ p.id | unlocalize }}" {% if p.autorizada %}checked{% endif %}>
-                            </td>
-
-                            {% endif %}
-                           
-                            <td>
-                                {% if p.emisor.metodo_pago == "PPD" or p.emisor.metodo_pago == "Por definir" %}
-                                    {% if p.complementos.exists %}
-                                        <a href="{% url 'matriz-complementos' p.id %}" class="btn btn-outline-info" title="Complementos de pago">
-                                            <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
-                                        </a>
-                                        {% else %}
-                                        <a href="{% url 'matriz-complementos' p.id %}" class="btn btn-outline-danger" title="No hay complementos de pago">
-                                            <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
-                                        </a>
+                                <div class="sv-actions">
+                                    {% if p.factura_pdf %}
+                                    <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                            data-bs-toggle="modal" data-bs-target="#pdfPreviewModal"
+                                            data-document-url="{{ p.factura_pdf.url }}"
+                                            data-document-title="Factura #{{ p.id|unlocalize }}"
+                                            title="Visualizar PDF original" aria-label="Visualizar PDF original">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </button>
                                     {% endif %}
 
+                                    {% if p.factura_xml %}
+                                    <a href="{{ p.factura_xml.url }}" download
+                                       class="sv-btn sv-btn-info sv-btn-icon"
+                                       title="Descargar XML" aria-label="Descargar XML">
+                                        <i class="fa-solid fa-file-code"></i>
+                                    </a>
+                                    {% endif %}
+
+                                    <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                            data-bs-toggle="modal" data-bs-target="#pdfPreviewModal"
+                                            data-document-url="{% url 'generar_cfdi' p.id %}"
+                                            data-document-title="Representación SAVIA #{{ p.id|unlocalize }}"
+                                            title="Visualizar representación SAVIA"
+                                            aria-label="Visualizar representación SAVIA">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+
+                            {% if usuario.tipo.tesoreria %}
+                            <td>
+                                <div class="form-check d-flex justify-content-center">
+                                    <input type="checkbox" class="form-check-input"
+                                           name="autorizar_factura_{{ p.id|unlocalize }}"
+                                           aria-label="Autorizar factura {{ p.id|unlocalize }}"
+                                           {% if p.autorizada %}checked{% endif %}>
+                                </div>
+                            </td>
+                            {% endif %}
+
+                            <td>
+                                {% if p.emisor.metodo_pago == 'PPD' or p.emisor.metodo_pago == 'Por definir' %}
+                                <a href="{% url 'matriz-complementos' p.id %}"
+                                   class="sv-btn {% if p.complementos.exists %}sv-btn-info{% else %}sv-btn-danger{% endif %} sv-btn-icon"
+                                   title="{% if p.complementos.exists %}Ver complementos{% else %}Sin complementos registrados{% endif %}"
+                                   aria-label="Complementos de pago">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </a>
+                                {% else %}
+                                <span class="sv-cell-subtitle">No aplica</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ p.id | unlocalize }})">
-                                    <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>
+                                <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                        data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                        data-factura-id="{{ p.id|unlocalize }}"
+                                        title="Eliminar factura" aria-label="Eliminar factura">
+                                    <i class="fa-solid fa-trash-can"></i>
                                 </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if usuario.tipo.tesoreria %}8{% else %}7{% endif %}" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">Sin facturas registradas</span>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
 
-                <!-- Facturas Completa Toggle -->
-                {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
-                <div class="row ms-3 my-2">
-                    <div class="form-check form-switch col-sm">
-                        <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
-                        {{form.facturas_completas|add_class:"form-check-input"}}
-                    </div>
+            <div class="sv-card-footer d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                {% if usuario.tipo.nombre == 'RH' or usuario.tipo.nombre == 'Admin' %}
+                <div class="form-check form-switch">
+                    {{ form.facturas_completas|add_class:"form-check-input" }}
+                    <label for="{{ form.facturas_completas.id_for_label }}" class="form-check-label fw-semibold">
+                        Facturas completas
+                    </label>
                 </div>
+                {% else %}
+                <span></span>
                 {% endif %}
-                <!-- Subir Nueva Factura and Cerrar Buttons -->
-                <hr>
-                <ul class="nav">
-                    <li class="nav-item">
-                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}" title="Subir nueva factura">
-                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
-                        </a>
-                    </li>
-                    {% if usuario.tipo.tesoreria %}
-                        <li class="nav-item ms-4">
-                            <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
-                        </li>
-                    {% endif %}
-                   
-                </ul>
-            </div>
-        </form>
-    </div>
-</div>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
 
-    </div>
+                {% if usuario.tipo.tesoreria %}
+                <button type="submit" name="btn_factura_completa" class="sv-btn sv-btn-success">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Guardar estatus
+                </button>
+                {% endif %}
+            </div>
+        </section>
+    </form>
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
+         role="document" hx-target="this"></div>
 </div>
-<!-- Modal de Confirmación eliminación-->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1"
+     aria-labelledby="pdfPreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Eliminar Factura</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div>
+                    <h2 class="modal-title" id="pdfPreviewTitle">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Vista previa
+                    </h2>
+                    <span class="sv-modal-subtitle">Documento asociado a la compra</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body">
-                <form id="deleteForm" method="POST">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="comentario" class="form-label">Comentario</label>
-                        <input type="text" class="form-control" id="comentario" name="comentario" placeholder="Escribe un comentario" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="enviarFormulario()">Eliminar</button>
+            <div class="modal-body sv-document-viewer">
+                <div class="sv-document-loading" id="pdfPreviewLoading">
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <span>Cargando documento…</span>
+                </div>
+                <iframe class="sv-document-frame d-none" id="pdfPreviewFrame"
+                        title="Vista previa del documento"></iframe>
             </div>
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="modal fade" id="confirmModal" tabindex="-1"
+     aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="confirmModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    Eliminar factura
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="sv-cell-subtitle mt-0">
+                    Escribe el motivo por el que se eliminará esta factura.
+                </p>
+                <form id="deleteForm" method="POST">
+                    {% csrf_token %}
+                    <label for="comentario" class="form-label fw-semibold">Comentario</label>
+                    <input type="text" class="form-control" id="comentario" name="comentario"
+                           placeholder="Escribe un comentario" required>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="sv-btn sv-btn-danger" id="confirmDeleteButton">
+                    <i class="fa-solid fa-trash-can"></i>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    ;(function(){
-        const modal = new bootstrap.Modal(document.getElementById('dialog'))
-    
-        htmx.on('htmx:beforeSwap',(e)=>{
-            if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-        })
-    })()
+document.addEventListener('DOMContentLoaded', function () {
+    const dialogElement = document.getElementById('dialog');
 
-    var myModal = document.getElementById('dialog')
-    
-    myModal.addEventListener('hidden.bs.modal', function (event) {
-        setTimeout(function() {
-            location.reload();  // Recargar la página después de 2 segundos
-        }, 2000);  // 2000 milisegundos = 2 segundos
-    })
+    if (dialogElement) {
+        const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
 
-//Parte del modal factura eliminar
-function setDeleteUrl(facturaId) {
+        dialogElement.addEventListener('hidden.bs.modal', function () {
+            window.location.reload();
+        });
+
+        if (typeof htmx !== 'undefined') {
+            htmx.on('htmx:beforeSwap', function (event) {
+                if (event.detail.target && event.detail.target.id === 'document' && !event.detail.xhr.response) {
+                    dialog.hide();
+                }
+            });
+        }
+    }
+
+    const confirmModal = document.getElementById('confirmModal');
     const deleteForm = document.getElementById('deleteForm');
-    const baseUrl = "{% url 'factura-eliminar' 0 %}"; // URL base con un placeholder
+    const commentInput = document.getElementById('comentario');
+    const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+    const deleteUrlTemplate = "{% url 'factura-eliminar' 999999 %}";
 
-    // Obtener el parámetro 'next' de la URL actual
-    const urlParams = new URLSearchParams(window.location.search);
-    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
+    if (confirmModal && deleteForm) {
+        confirmModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const facturaId = button ? button.dataset.facturaId : '';
+            const nextParam = new URLSearchParams(window.location.search).get('next');
+            let deleteUrl = deleteUrlTemplate.replace('999999', facturaId);
 
-    // Construir la URL de eliminación con el ID de la factura
-    let deleteUrl = baseUrl.replace('0', facturaId);
-    
-    // Agregar el parámetro 'next' si existe
-    if (nextParam) {
-        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
+            if (nextParam) deleteUrl += '?next=' + encodeURIComponent(nextParam);
+            deleteForm.action = deleteUrl;
+        });
     }
 
-    // Establecer la acción del formulario
-    deleteForm.action = deleteUrl;
-}
-
-function enviarFormulario() {
-    const comentario = document.getElementById('comentario').value;
-    if (!comentario) {
-        alert("Por favor, escribe un comentario antes de continuar.");
-    } else {
-        document.getElementById('deleteForm').submit();  
+    if (confirmDeleteButton && deleteForm && commentInput) {
+        confirmDeleteButton.addEventListener('click', function () {
+            if (!commentInput.value.trim()) {
+                commentInput.focus();
+                Swal.fire({
+                    title: 'Comentario requerido',
+                    text: 'Escribe un comentario antes de eliminar la factura.',
+                    icon: 'warning'
+                });
+                return;
+            }
+            deleteForm.submit();
+        });
     }
-}
 
-// Recargar la página cuando se cierre el modal de confirmación
-var confirmModal = document.getElementById('confirmModal');
-confirmModal.addEventListener('hidden.bs.modal', function (event) {
-    location.reload();  
+    const previewModal = document.getElementById('pdfPreviewModal');
+    const previewTitle = document.getElementById('pdfPreviewTitle');
+    const previewFrame = document.getElementById('pdfPreviewFrame');
+    const previewLoading = document.getElementById('pdfPreviewLoading');
+    let objectUrl = null;
+
+    if (previewModal && previewTitle && previewFrame && previewLoading) {
+        previewModal.addEventListener('show.bs.modal', async function (event) {
+            const button = event.relatedTarget;
+            const url = button ? button.dataset.documentUrl : '';
+            const title = button ? button.dataset.documentTitle : 'Vista previa';
+
+            previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + title;
+
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+
+            previewFrame.classList.add('d-none');
+            previewFrame.removeAttribute('src');
+            previewLoading.classList.remove('d-none');
+
+            try {
+                if (!url) throw new Error('No se encontró el documento.');
+                const response = await fetch(url, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error('No fue posible cargar el documento.');
+
+                const blob = await response.blob();
+                const pdfBlob = blob.type === 'application/pdf'
+                    ? blob
+                    : new Blob([blob], { type: 'application/pdf' });
+
+                objectUrl = URL.createObjectURL(pdfBlob);
+                previewFrame.src = objectUrl + '#zoom=85';
+                previewFrame.classList.remove('d-none');
+                previewLoading.classList.add('d-none');
+            } catch (error) {
+                previewLoading.classList.add('d-none');
+                bootstrap.Modal.getInstance(previewModal)?.hide();
+                Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+            }
+        });
+
+        previewModal.addEventListener('hidden.bs.modal', function () {
+            previewFrame.removeAttribute('src');
+            previewFrame.classList.add('d-none');
+            previewLoading.classList.remove('d-none');
+
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
-</body>
-</html>
