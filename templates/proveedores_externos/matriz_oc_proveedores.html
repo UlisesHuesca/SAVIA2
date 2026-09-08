@@ -4,353 +4,447 @@
 {% load widget_tweaks %}
 {% load tt_extras %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Matriz de compras{% endblock %}
-</head>
-<body>
-{% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-    <div class = "card">
-        
-            <div class="card-header">
-                <h5>Portal de Proveedor: {{proveedor}} </h5>
-                <h6>Filtro de Compras</h6>
-            </div>
-            <div class="card-body">
-               
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                                <label style="color: #121212;" for="id_id">Proveedor</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
-                                <label style="color: #121212;" for="id_id">Requisición</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row g-12">
-                   
 
-                    <div class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.moneda|add_class:"form-control"|append_attr:"placeholder= Moneda"}}
-                                <label style="color: #121212;" for="id_id">Moneda</label>
+{% block title %}Portal de proveedor{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <p class="sv-page-eyebrow">Portal de proveedor</p>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-building-circle-check"></i>
+                </span>
+                Órdenes de compra
+            </h1>
+            <p class="sv-page-subtitle">
+                {{ proveedor }} · Consulta órdenes, facturas, pagos y evidencias.
+            </p>
+        </div>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-cart-shopping"></i>
+                {{ compras_list.paginator.count }} compras
+            </span>
+            <span class="sv-badge sv-badge-dark">
+                Saldo: ${{ suma_compras_no_pagadas|floatformat:2 }}
+            </span>
+        </div>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-filter"></i>
+                Filtros de compras
+            </h2>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.pagada|add_class:"form-control"|append_attr:"placeholder= Status Pago"}}
-                                <label style="color: #121212;" for="id_id">Status Pago</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor" }}
+                                <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-duotone fa-solid fa-location-pen"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
-                                <label style="color: #121212;" for="id_id">Distrito</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-file-lines"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.req|add_class:"form-control"|append_attr:"placeholder=Requisición" }}
+                                <label for="{{ myfilter.form.req.id_for_label }}">Requisición</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-coins"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda" }}
+                                <label for="{{ myfilter.form.moneda.id_for_label }}">Moneda</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-credit-card"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.pagada|add_class:"form-control"|append_attr:"placeholder=Status de pago" }}
+                                <label for="{{ myfilter.form.pagada.id_for_label }}">Status de pago</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito" }}
+                                <label for="{{ myfilter.form.distrito.id_for_label }}">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <!--onclick="regenerar()"-->
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg mt-1"  onclick="guardar_variable();" type="submit" value="Buscar">
-                            <i class="fa-duotone fa-solid fa-magnifying-glass fa-xl"></i>
+
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>
+                            Limpiar
+                        </a>
+                        <button id="btnBuscar" class="sv-btn sv-btn-primary"
+                                onclick="guardar_variable();" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
                         </button>
                     </div>
                 </div>
-                <hr>
-                </form>
-                <form method=POST onsubmit="mostrarIndicadorCarga();">
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item m-1">
-                            <button type="submit" id="reporte_compras" class="btn btn-outline-success d-none" value='Reporte Excel' >
-                                <i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item m-1">
-                            <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success d-none">
-                                <i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        
-                        <!-- Mensaje de estado (opcional) -->
-                        <!--<div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
-                         Botón de descarga (inicialmente oculto)
-                        <a type="button" href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="btn btn-outline-success d-none m-1">
-                            <i class="fa-solid fa-cloud-arrow-down"></i>
-                        </a>-->
-                        <li class="nav-item mx-2">
-                            <div class="alert alert-primary">
-                                <strong>Saldo:</strong> ${{suma_compras_no_pagadas|floatformat:2 }}
-                            </div>
-                        </li>
-                        <li class="nav-item m-1">
-                            <a href="https://youtu.be/fWBc_fR0FqA" target="_blank" class="btn btn-outline-danger" title="Subir facturas y complementos de pago">
-                           <i class="fa-brands fa-youtube"></i> Tutorial
-                            </a>
-                        </li>
-                        
-                    </ul>
-                    <!--<div class="col-sm-2 col-md-3 col-lg-2 mt-3">
-                        <div class="card text-white" style="background-color:#3E92CC">
-                            <div class="card-body">
-                                <h5 class="card-title">Indicador de Cumplimiento</h5>
-                                <p class="card-text display-4">{{ cumplimiento|floatformat:2 }}%</p>
-                            </div>
-                        </div>
-                    </div>-->
-                </form>
-            </div>
+            </form>
         </div>
-</div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
 
+        <div class="sv-card-body border-top">
+            <form method="POST" onsubmit="mostrarIndicadorCarga();">
+                {% csrf_token %}
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" id="reporte_compras"
+                                class="sv-btn sv-btn-success d-none" value="Reporte Excel">
+                            <i class="fa-solid fa-file-excel"></i>
+                            Generar reporte
+                        </button>
+                        <button type="submit" id="btnExcel" name="btnExcel"
+                                value="Reporte Excel" class="sv-btn sv-btn-success d-none">
+                            <i class="fa-solid fa-file-excel"></i>
+                            Exportar compras
+                        </button>
+                    </div>
 
-    
+                    <a href="https://youtu.be/fWBc_fR0FqA" target="_blank" rel="noopener noreferrer"
+                       class="sv-btn sv-btn-danger" title="Subir facturas y complementos de pago">
+                        <i class="fa-brands fa-youtube"></i>
+                        Ver tutorial
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-list-check"></i>
+                Compras del proveedor
+            </h2>
+            <span class="sv-badge sv-badge-dark">
+                Página {{ compras_list.number }} de {{ compras_list.paginator.num_pages }}
+            </span>
+        </div>
 
-<div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Compra</th>
-                    <th class="d-none d-lg-table-cell">Distrito</th>
-                    <th class="d-none d-lg-table-cell">Creada</th>
-                    <th scope="col">Costo</th>
-                    <th>Pagado</th>
-                    <th scope="col">Moneda</th>
-                    <th class="d-none d-lg-table-cell">T.C.</th>
-                    <th class="d-none d-lg-table-cell">Status Pago</th>
-                    <th class="d-none d-lg-table-cell">Status Autorización</th>
-                    <th class="d-none d-lg-table-cell">Status Entrega</th>
-                    <th class="d-none d-lg-table-cell">Días de Entrega</th>
-                    <th class="d-none d-lg-table-cell">Fecha de pago</th>
-                    <th class="d-none d-lg-table-cell">Complemento de Pago</th>
-                    <th scope="col">Productos</th>
-                    <th>Documentos</th>
-                    <th>Evidencia</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for compra in compras_list %}
-                <tr>
-                    <th >{{compra.folio}}</th>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.distrito.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
-                    
-                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
-                    <td>${{compra.get_monto_pagos.total_pagos|floatformat:2}}</td>
-                    <td>{{compra.moneda.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
-                    {% if compra.para_pago %}
-                    <td class="d-none d-lg-table-cell"><span class="badge bg-success">Programada para Pago</span></td>
-                    {% elif compra.pagada %}
-                    <td class="d-none d-lg-table-cell"><span class="badge bg-primary">Pagada</span></td>
-                    {% else %}
-                    <td class="d-none d-lg-table-cell">No Pagada</td>
-                    {% endif %}
-                    <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
-                    <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% elif compra.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{compra.entrada_parcial}}%</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
-                    <td class="d-none d-lg-table-cell">{% if compra.dias_de_entrega %}{{compra.dias_de_entrega}}{% else %} ND {% endif %} </td>
-                    <td class="d-none d-lg-table-cell">{{compra.fechas_pago}}</td>
-                    <td>
-                        {% if not compra.es_ppd %}
-                            <p>No Aplica</p>
-                        {% else %}
-                        {% with tiene_complemento=False %}
-                            {% for factura in compra.facturas.all %}
-                                {% if not tiene_complemento and factura.complementos.exists %}
-                                    <p>Sí</p>
-                                    {% with tiene_complemento=True %}{% endwith %}
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th>Compra</th>
+                        <th>Importes</th>
+                        <th>Moneda / T.C.</th>
+                        <th>Pago</th>
+                        <th>Autorización / Entrega</th>
+                        <th>Complemento</th>
+                        <th>Productos</th>
+                        <th>Documentos</th>
+                        <th>Evidencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for compra in compras_list %}
+                    <tr>
+                        <td>
+                            <span class="sv-folio">{{ compra.folio }}</span>
+                            <span class="sv-cell-title mt-2">{{ compra.req.orden.distrito.nombre }}</span>
+                            <span class="sv-cell-subtitle">Creada: {{ compra.created_at|date:"d/m/Y" }}</span>
+                        </td>
+
+                        <td>
+                            <span class="sv-cell-title">OC: ${{ compra.costo_plus_adicionales|floatformat:2 }}</span>
+                            <span class="sv-cell-subtitle">Pagado: ${{ compra.get_monto_pagos.total_pagos|floatformat:2 }}</span>
+                        </td>
+
+                        <td>
+                            <span class="sv-badge sv-badge-dark">{{ compra.moneda.nombre }}</span>
+                            <span class="sv-cell-subtitle">
+                                T.C.: {% if compra.tipo_de_cambio %}{{ compra.tipo_de_cambio }}{% else %}N/D{% endif %}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if compra.para_pago %}
+                            <span class="sv-badge sv-badge-success">Programada para pago</span>
+                            {% elif compra.pagada %}
+                            <span class="sv-badge sv-badge-primary">Pagada</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">No pagada</span>
+                            {% endif %}
+                            <span class="sv-cell-subtitle">{{ compra.fechas_pago }}</span>
+                        </td>
+
+                        <td>
+                            {% if compra.autorizado2 %}
+                            <span class="sv-badge sv-badge-primary">Autorizada por Gerencia</span>
+                            {% elif compra.autorizado1 == False or compra.autorizado2 == False %}
+                            <span class="sv-badge sv-badge-danger">Cancelada</span>
+                            {% elif compra.autorizado1 %}
+                            <span class="sv-badge sv-badge-success">Autorizada por Superintendencia</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Pendiente de autorización</span>
+                            {% endif %}
+
+                            <span class="sv-cell-subtitle mt-2">
+                                {% if compra.entrada_completa %}
+                                    Entregada
+                                {% elif compra.entrada_parcial > 0 %}
+                                    Avance de entrega: {{ compra.entrada_parcial }}%
+                                {% else %}
+                                    Pendiente de entrega
                                 {% endif %}
-                            {% endfor %}
-                        {% endwith %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
-                    </td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
+                            </span>
+                            <span class="sv-cell-subtitle">
+                                Plazo: {% if compra.dias_de_entrega %}{{ compra.dias_de_entrega }} días{% else %}N/D{% endif %}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if not compra.es_ppd %}
+                            <span class="sv-badge sv-badge-neutral">No aplica</span>
+                            {% else %}
+                                {% with tiene_complemento=False %}
+                                    {% for factura in compra.facturas.all %}
+                                        {% if not tiene_complemento and factura.complementos.exists %}
+                                        <span class="sv-badge sv-badge-success">Sí</span>
+                                            {% with tiene_complemento=True %}{% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-info"
+                                    data-bs-toggle="modal" data-bs-target="#dialog"
+                                    hx-target="#document"
+                                    hx-get="{% url 'productos-oc' compra.id %}">
+                                <i class="fa-solid fa-box-open"></i>
+                                Productos
+                            </button>
+                        </td>
+
+                        <td>
+                            <div class="sv-actions">
                                 {% if compra.estado_facturas == "sin_facturas" %}
-                                    <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                        <i class="fa-solid fa-file-circle-xmark"></i>
-                                    </a>
-                                {% elif compra.estado_facturas == "pendientes" or compra.estado_facturas == "todas_autorizadas" %}
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Cargadas">
-                                        <i class="fa-solid fa-file-circle-exclamation"></i>
-                                    </a>
-                                {% endif %}
-                            </li>
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra">
-                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                <a class="sv-btn sv-btn-danger sv-btn-icon"
+                                   href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
+                                   data-bs-toggle="tooltip" title="No tiene facturas"
+                                   aria-label="No tiene facturas">
+                                    <i class="fa-solid fa-file-circle-xmark"></i>
                                 </a>
-                            </li>
-                        </ul>
-                    </td>
-                    <td>
-                        <a type="button" class="btn btn-outline-info" href="{% url 'evidencias-proveedor' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Evidencias de Compra"><i class="fa-regular fa-images"></i></a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+                                {% elif compra.estado_facturas == "pendientes" or compra.estado_facturas == "todas_autorizadas" %}
+                                <a class="sv-btn sv-btn-info sv-btn-icon"
+                                   href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
+                                   data-bs-toggle="tooltip" title="Facturas cargadas"
+                                   aria-label="Facturas cargadas">
+                                    <i class="fa-solid fa-file-circle-exclamation"></i>
+                                </a>
+                                {% endif %}
+
+                                <a class="sv-btn sv-btn-info sv-btn-icon"
+                                   href="{% url 'oc-pdf' compra.id %}"
+                                   data-bs-toggle="tooltip" title="Orden de compra"
+                                   aria-label="Orden de compra">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </div>
+                        </td>
+
+                        <td>
+                            <a class="sv-btn sv-btn-info sv-btn-icon"
+                               href="{% url 'evidencias-proveedor' compra.id %}"
+                               data-bs-toggle="tooltip" title="Evidencias de compra"
+                               aria-label="Evidencias de compra">
+                                <i class="fa-regular fa-images"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                            <span class="sv-empty-title">No se encontraron compras</span>
+                            <span class="sv-empty-text">Prueba modificando los filtros de búsqueda.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if compras_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de compras">
+            <ul class="pagination sv-pagination justify-content-center">
                 {% if compras_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url compras_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </a>
+                </li>
                 {% endif %}
 
                 {% for item in compras_list.paginator.page_range %}
                     {% if compras_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
                     {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
                     {% endif %}
                 {% endfor %}
 
-                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
                 {% if compras_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página">
+                        <i class="fa-solid fa-angles-right"></i>
+                    </a>
+                </li>
                 {% endif %}
             </ul>
         </nav>
-    </div>
+        {% endif %}
+    </section>
+</main>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
+         role="document" hx-target="this"></div>
+</div>
 
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
+     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/SAVIA_Logo.jpg' %}"
+                     alt="SAVIA Vordcab" width="72" height="72" class="rounded-circle">
+                {% endif %}
+                <div>
+                    <strong>Generando reporte</strong>
+                    <p class="sv-cell-subtitle mb-0">
+                        Por favor espera… <i class="fa-solid fa-mug-hot"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+;(function () {
+    const dialogElement = document.getElementById("dialog");
+    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
 
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
-myModal.addEventListener('hidden.bs.modal', function (event) {
-      location.reload();
-    })
-    
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-})
+    htmx.on("htmx:beforeSwap", function (event) {
+        if (event.detail.target && event.detail.target.id === "document" && !event.detail.xhr.response) {
+            dialog.hide();
+        }
+    });
 
-// Función para obtener el valor de una cookie por su nombre
+    dialogElement.addEventListener("hidden.bs.modal", function () {
+        window.location.reload();
+    });
+
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+        bootstrap.Tooltip.getOrCreateInstance(element);
+    });
+
+    document.querySelectorAll('[data-bs-spy="scroll"]').forEach(function (element) {
+        const scrollSpy = bootstrap.ScrollSpy.getInstance(element);
+        if (scrollSpy) scrollSpy.refresh();
+    });
+})();
+
 function getCookie(name) {
     let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
         for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            if (cookie.substring(0, name.length + 1) === name + "=") {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
             }
@@ -360,178 +454,129 @@ function getCookie(name) {
 }
 
 function mostrarIndicadorCarga() {
-    var btn = document.getElementById('btnExcel')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
+    const button = document.getElementById("btnExcel");
+    const loadingElement = document.getElementById("loadingIndicator");
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
     verificarDescargaIniciada();
-    btn.classList.add('d-none')
+    if (button) button.classList.add("d-none");
 }
 
-function verificarDescargaIniciada(){
-    const checkDescarga = setInterval(() => {
-        const descargaIniciada = getCookie('descarga_iniciada');
-        if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
-            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
+function verificarDescargaIniciada() {
+    const checkDescarga = setInterval(function () {
+        if (getCookie("descarga_iniciada") === "true") {
+            const loadingElement = document.getElementById("loadingIndicator");
+            bootstrap.Modal.getOrCreateInstance(loadingElement).hide();
+            document.cookie = "descarga_iniciada=; Max-Age=-99999999;";
             clearInterval(checkDescarga);
-
         }
-    }, 1000); // Revisar cada segundo
+    }, 1000);
 }
 
-function guardar_variable(){
-    localStorage.setItem('mostrarBotonExcel', 'true');
+function guardar_variable() {
+    localStorage.setItem("mostrarBotonExcel", "true");
 }
 
-function aparecer_excel(){
-    var btn = document.getElementById('btnExcel')
-    btn.classList.remove('d-none')
+function aparecer_excel() {
+    const button = document.getElementById("btnExcel");
+    if (button) button.classList.remove("d-none");
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    var mostrarBotonExcel = localStorage.getItem('mostrarBotonExcel');
-    if (mostrarBotonExcel === 'true') {
-        var btn = document.getElementById('btnExcel');
-        btn.classList.remove('d-none');
-
-        // Opcional: resetear el valor en el almacenamiento local si solo quieres mostrar el botón una vez
-        localStorage.removeItem('mostrarBotonExcel');
+document.addEventListener("DOMContentLoaded", function () {
+    if (localStorage.getItem("mostrarBotonExcel") === "true") {
+        aparecer_excel();
+        localStorage.removeItem("mostrarBotonExcel");
     }
-});
 
+    const reporte = localStorage.getItem("reporte_compras");
+    const reporteButton = document.getElementById("reporte_compras");
+    if (reporte && reporteButton) reporteButton.classList.remove("d-none");
 
-document.addEventListener('DOMContentLoaded', function() {
-  
-    var fileDownloadUrl = localStorage.getItem('fileDownloadUrl');
-    var downloadButton = document.getElementById('downloadButton');
-    var btn_reporte = document.getElementById('reporte_compras');
-    var reporte = localStorage.getItem('reporte_compras') 
-   
-    if (reporte){
-        btn_reporte.classList.remove('d-none');
-    }
-    if (fileDownloadUrl) {
+    const fileDownloadUrl = localStorage.getItem("fileDownloadUrl");
+    const downloadButton = document.getElementById("downloadButton");
+    if (fileDownloadUrl && downloadButton) {
         downloadButton.href = fileDownloadUrl;
-        downloadButton.classList.remove('d-none');
+        downloadButton.classList.remove("d-none");
     }
-    
 });
 
-function regenerar(){
-    var buscar = document.getElementById('btnBuscar');
-    var reporte_compras = document.getElementById('reporte_compras');
-    reporte_compras.classList.remove('d-none');
-    localStorage.removeItem('fileDownloadUrl')
-    localStorage.setItem('reporte_compras', true)
-    limpiarBack()  
+function regenerar() {
+    const reporteButton = document.getElementById("reporte_compras");
+    if (reporteButton) reporteButton.classList.remove("d-none");
+    localStorage.removeItem("fileDownloadUrl");
+    localStorage.setItem("reporte_compras", "true");
+    limpiarBack();
 }
 
-function downloadLimpiar(){
-    limpiarBack()
-    localStorage.removeItem('fileDownloadUrl')
-    var downloadButton = document.getElementById('downloadButton');
-    downloadButton.classList.add('d-none');
-   
+function downloadLimpiar() {
+    limpiarBack();
+    localStorage.removeItem("fileDownloadUrl");
+    const downloadButton = document.getElementById("downloadButton");
+    if (downloadButton) downloadButton.classList.add("d-none");
 }
 
-function limpiarBack(){
-    localStorage.removeItem('task_id')
-    const url = '/compras/clear_task_id/';
-    fetch( url, {  // Reemplaza con la URL correcta
-        method: 'GET', // o 'POST', dependiendo de cómo esté configurada tu vista
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin' // Necesario para incluir cookies de sesión
+function limpiarBack() {
+    localStorage.removeItem("task_id");
+    fetch("/compras/clear_task_id/", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin"
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    .then(function (response) {
+        if (!response.ok) throw new Error("HTTP error: " + response.status);
         return response.json();
     })
-    .then(data => {
-        console.log('Task ID cleared:', data);
-        // Aquí puedes agregar más lógica si es necesario después de borrar el task_id
-    })
-    .catch(error => {
-        console.error('Error al borrar task_id:', error);
+    .catch(function (error) {
+        console.error("Error al borrar task_id:", error);
     });
 }
 
+function intentos(cantidad) {
+    let intentoActual = 0;
+    let maxIntentos;
+    let intervalo;
 
-
-
-function intentos(cantidad){
-var intentos = 0;
-    var maxIntentos
-    var intervalo
-    console.log(cantidad)
-    if (cantidad >= 20000){
-        maxintentos = 150;
+    if (cantidad >= 20000) {
+        maxIntentos = 150;
         intervalo = 10000;
-    } else if (cantidad >= 15000){
-        maxintentos = 120;
+    } else if (cantidad >= 15000) {
+        maxIntentos = 120;
         intervalo = 8000;
-    } else if (cantidad >= 10000){
+    } else if (cantidad >= 10000) {
         maxIntentos = 100;
         intervalo = 8000;
-    } else if (cantidad >= 5000){
-            maxIntentos = 80;
-            intervalo = 5000;
-    } else{
-            maxIntentos = 50
-            intervalo = 2500;
+    } else if (cantidad >= 5000) {
+        maxIntentos = 80;
+        intervalo = 5000;
+    } else {
+        maxIntentos = 50;
+        intervalo = 2500;
     }
-const statusEndpoint = '/compras/verificar_estado/'; // Asegúrate de cambiar esto por tu endpoint real
-esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint)
+
+    esperarYVerificar(intervalo, maxIntentos, intentoActual, "/compras/verificar_estado/");
 }
 
-function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
-    setTimeout(async () => {
+function esperarYVerificar(intervalo, maxIntentos, intentoActual, statusEndpoint) {
+    setTimeout(async function () {
         try {
             const response = await fetch(statusEndpoint);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error("HTTP error: " + response.status);
             const data = await response.json();
-            console.log(data)
-            if (data.status === 'SUCCESS') {
-                var url = data.result.file_url
-                console.log(url)
-                var downloadButton = document.getElementById('downloadButton');
-                localStorage.setItem('fileDownloadUrl', data.result.file_url);
-                downloadButton.classList.remove('d-none');
-                document.getElementById('statusMessage_tag').classList.add('d-none');
-                downloadButton.href = url;
-                localStorage.removeItem('task_id');
 
-            } else if (data.status === 'FAILURE') {
-                console.error('La tarea ha fallado.');
-            } else {
-                console.log('La tarea todavía está pendiente...');
-                document.getElementById('statusMessage_tag').classList.remove('d-none');
-                intentos++;
-                if (intentos < maxIntentos) {
-                    esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint); // Vuelve a intentar
-                } else {
-                    console.log('Número máximo de intentos alcanzado.');
+            if (data.status === "SUCCESS") {
+                const downloadButton = document.getElementById("downloadButton");
+                localStorage.setItem("fileDownloadUrl", data.result.file_url);
+                localStorage.removeItem("task_id");
+                if (downloadButton) {
+                    downloadButton.href = data.result.file_url;
+                    downloadButton.classList.remove("d-none");
                 }
+            } else if (data.status !== "FAILURE" && intentoActual + 1 < maxIntentos) {
+                esperarYVerificar(intervalo, maxIntentos, intentoActual + 1, statusEndpoint);
             }
         } catch (error) {
-            console.error('Error al verificar el estado de la tarea:', error);
+            console.error("Error al verificar el estado de la tarea:", error);
         }
     }, intervalo);
 }
-
-
-
-
 </script>
 {% endblock %}
-</body>
-</html>
