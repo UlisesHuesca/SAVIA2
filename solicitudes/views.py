@@ -349,7 +349,36 @@ def checkout(request):
             #order.created_at_time = datetime.now().time() 
             lineas_productos = []
             order.folio = folio_number
-            productos_html = '<ul>'
+            static_path = settings.STATIC_ROOT
+
+            es_savia_negro = bool(
+                order.distrito
+                and order.distrito.nombre.strip().upper() == "YEROD"
+            )
+
+            contexto_base = obtener_tema_correo(
+                static_path,
+                es_savia_negro,
+            )
+
+            nombre_solicitante = (
+                f"{order.staff.staff.staff.first_name} "
+                f"{order.staff.staff.staff.last_name}"
+            )
+
+            articulos_correo = [
+                {
+                    "nombre": producto.producto.producto.nombre,
+                    "cantidad": producto.cantidad,
+                }
+                for producto in productos
+            ]
+
+            contexto_base.update({
+                "solicitud": order,
+                "nombre_solicitante": nombre_solicitante,
+                "articulos": articulos_correo,
+            })
             if usuario.tipo.supervisor == True or usuario.distritos.nombre == "BRASIL": #Si el usuario es supervisor
                
                 for producto in productos:
@@ -418,32 +447,7 @@ def checkout(request):
                 order.autorizar = True
                 order.approved_at = date.today()
                 order.approved_at_time = datetime.now().time()
-                static_path = settings.STATIC_ROOT
-                es_savia_negro = (order.distrito and order.distrito.nombre.strip().upper() == 'Yerod')
 
-                contexto_base = obtener_tema_correo(static_path,es_savia_negro,)
-
-                nombre_solicitante = (
-                    f"{order.staff.staff.staff.first_name} "
-                    f"{order.staff.staff.staff.last_name}"
-                )
-
-                articulos_correo = [
-                    {
-                        "nombre": producto.producto.producto.nombre,
-                        "cantidad": producto.cantidad,
-                    } 
-                    for producto in productos
-                ]
-
-                contexto_base.update({
-                    "solicitud": order,
-                    "nombre_solicitante": nombre_solicitante,
-                    "articulos": articulos_correo,
-                })
-
-
-              
                 nombre_autorizador = (
                     f"{usuario.staff.staff.first_name} "
                     f"{usuario.staff.staff.last_name}"
