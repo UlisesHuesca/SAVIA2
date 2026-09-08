@@ -4,674 +4,679 @@
 {% load widget_tweaks %}
 {% load tt_extras %}
 {% load l10n %}
-<html>
-<head>
+
 {% block title %}Matriz de compras{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-    <div class = "card">
-            <div class="card-header">
-                <h5>Filtro de Compras</h5>
-            </div>
-            <div class="card-body">
-               
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                                <label style="color: #121212;" for="id_id">Proveedor</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
-                                <label style="color: #121212;" for="id_id">Requisición</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                                <label style="color: #121212;" for="id_id">Proyecto</label>
-                            </div>
-                        </div>
-                    </div>
-                
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
-                                <label style="color: #121212;" for="id_id">Subproyecto</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.moneda|add_class:"form-control"|append_attr:"placeholder= Moneda"}}
-                                <label style="color: #121212;" for="id_id">Moneda</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-md-6 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-md-6 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                            </div>
-                        </div>
-                    </div>
-                    {% if usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Control" %}
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
-                                <label style="color: #121212;" for="id_id">Distrito</label>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.pagada|add_class:"form-control"|append_attr:"placeholder= Status Pago"}}
-                                <label style="color: #121212;" for="id_id">pagada</label>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    <div class="col-2">
-                        <!--onclick="regenerar()"-->
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
-                </div>
-                <hr>
-                </form>
-                <form method=POST onsubmit="mostrarIndicadorCarga();">
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item m-1">
-                            <button type="submit" id="reporte_compras" class="btn btn-outline-success d-none" value='Reporte Excel' >
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item m-1">
-                            <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success d-none">
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <!-- Mensaje de estado (opcional) -->
-                        <div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
-                        <!-- Botón de descarga (inicialmente oculto) -->
-                        <a type="button" href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="btn btn-outline-success d-none m-1">
-                            <i class="fa-solid fa-cloud-arrow-down"></i>
-                        </a>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
-                        <li class="nav-item m-1 d-lg-none">
-                            <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
-                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>
-                                <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
-                              </div>
-                        </li>
-                        <li class="nav-item m-1 d-none d-lg-block">
-                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                <!--<a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>-->
-                                <!--<a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>-->
-                                <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">Devueltas</a>
-                              </div>
-                        </li>
-                    </ul>
-                    <!--<div class="col-sm-2 col-md-3 col-lg-2 mt-3">
-                        <div class="card text-white" style="background-color:#3E92CC">
-                            <div class="card-body">
-                                <h5 class="card-title">Indicador de Cumplimiento</h5>
-                               
-                            </div>
-                        </div>
-                    </div>-->
-                </form>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Adquisiciones</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                Matriz de compras
+            </h1>
+            <p class="sv-page-subtitle">Consulta autorizaciones, proveedores, entrega, pagos y documentación de las órdenes de compra.</p>
+        </div>
+
+        <span class="sv-badge sv-badge-primary">
+            {{ compras_list.paginator.count }} registros
+        </span>
+    </header>
+
+    <nav class="sv-card mb-4" aria-label="Navegación de compras">
+        <div class="sv-card-body">
+            <div class="sv-actions">
+                <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}">
+                    <i class="fa-solid fa-clipboard-check"></i>Requisiciones
+                </a>
+                <a class="sv-btn sv-btn-outline" href="{% url 'productos-pendientes' %}">
+                    <i class="fa-solid fa-box"></i>Productos RQ
+                </a>
+                <span class="sv-btn sv-btn-primary" aria-current="page">
+                    <i class="fa-solid fa-table-list"></i>Matriz
+                </span>
+                <a class="sv-btn sv-btn-outline" href="{% url 'matriz-oc-productos' %}">
+                    <i class="fa-solid fa-boxes-packing"></i>Productos OC
+                </a>
+                <a class="sv-btn sv-btn-warning" href="{% url 'compras-devueltas' %}">
+                    <i class="fa-solid fa-rotate-left"></i>OC devueltas
+                </a>
             </div>
         </div>
-</div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
+    </nav>
 
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">Búsqueda</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtro de compras</h2>
+            </div>
+        </div>
 
-    
+        <div class="sv-card-body">
+            <form method="GET" class="sv-filter-grid sv-filter-grid-4">
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                        <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
+                    </div>
+                </div>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor" }}
+                        <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-file-lines"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.req|add_class:"form-control"|append_attr:"placeholder=Requisición" }}
+                        <label for="{{ myfilter.form.req.id_for_label }}">Requisición</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                        <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto" }}
+                        <label for="{{ myfilter.form.subproyecto.id_for_label }}">Subproyecto</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-coins"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda" }}
+                        <label for="{{ myfilter.form.moneda.id_for_label }}">Moneda</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                    </div>
+                </div>
+
+                {% if usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Control" %}
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito" }}
+                        <label for="{{ myfilter.form.distrito.id_for_label }}">Distrito</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-money-check-dollar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.pagada|add_class:"form-control"|append_attr:"placeholder=Estado de pago" }}
+                        <label for="{{ myfilter.form.pagada.id_for_label }}">Estado de pago</label>
+                    </div>
+                </div>
                 {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
 
-<div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Compra</th>
-                    <th class="d-none d-lg-table-cell">Req</th>
-                    <th class="d-none d-lg-table-cell">Sol</th>
-                    <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
-                    <th class="d-none d-lg-table-cell">Distrito</th>
-                    {% endif %}
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th class="d-none d-lg-table-cell">Operación</th>
-                    <th class="d-none d-lg-table-cell">Creada</th>
-                    <th class="d-none d-lg-table-cell">A.F.</th>
-                    <th scope="col">Req. Autorizada</th>
-                    <th scope="col">Proveedor</th>
-                    <th class="d-none d-lg-table-cell">Status Prov</th>
-                    <th class="d-none d-lg-table-cell">Status Orig</th>
-                    <th scope="col">Costo</th>
-                    <th scope="col">Moneda</th>
-                    <th class="d-none d-lg-table-cell">T.C.</th>
-                    <th class="d-none d-lg-table-cell">Status Pago</th>
-                    <th class="d-none d-lg-table-cell">Status Autorización</th>
-                    <th class="d-none d-lg-table-cell">Status Entrega</th>
-                    <th class="d-none d-lg-table-cell">Días de Entrega</th>
-                    <th class="d-none d-lg-table-cell">Complemento de Pago</th>
-                    <th scope="col">Detalle</th>
-                    <th>Documentos</th>
-                    <th>Comparativo</th>
-                    <th>Devolver</th>
-                    <th>Cancelar</th>
-                    <th>Evidencia</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for compra in compras_list %}
-                <tr>
-                    <th >{{compra.folio}}</th>
-                    <th class="d-none d-lg-table-cell">{{compra.req.folio}}</th>
-                    <th class="d-none d-lg-table-cell">{{compra.req.orden.folio}}</th>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</td>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
-                    <td>{{compra.req.orden.distrito.nombre}}</td>
-                    {% endif %}
-                    <td>{{compra.req.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.operacion}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
-                    <td class="d-none d-lg-table-cell">{{compra.req.orden.activo}}</td>
-                    <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
-                    <td>{{compra.proveedor}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.proveedor.estatus}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.estatus_original}}</td>
-                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
-                    <td>{{compra.moneda.nombre}}</td>
-                    <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
-                    {% if compra.pagada %}
-                    <td class="d-none d-lg-table-cell">Pagada</td>
-                    {% else %}
-                    <td class="d-none d-lg-table-cell">No Pagada</td>
-                    {% endif %}
-                    <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.regresar_oc %}<span class="badge bg-secondary">OC devuelta</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
-                    <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
-                    <td>
-                        {% with tiene_complemento=False %}
+                <div class="sv-actions">
+                    <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                        <i class="fa-solid fa-eraser"></i>Limpiar
+                    </a>
+                    <button id="btnBuscar" class="sv-btn sv-btn-primary" onclick="guardar_variable();" type="submit" value="Buscar">
+                        <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                    </button>
+                </div>
+            </form>
+
+            <form method="POST" class="sv-actions mt-3" onsubmit="mostrarIndicadorCarga();">
+                {% csrf_token %}
+                <button type="submit" id="reporte_compras" class="sv-btn sv-btn-success d-none" value="Reporte Excel">
+                    <i class="fa-solid fa-arrows-rotate"></i>Regenerar reporte
+                </button>
+                <button type="submit" id="btnExcel" name="btnExcel" value="Reporte Excel" class="sv-btn sv-btn-success d-none">
+                    <i class="fa-solid fa-file-excel"></i>Generar Excel
+                </button>
+                <span id="statusMessage_tag" class="sv-badge sv-badge-primary d-none">Reporte en proceso…</span>
+                <a href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="sv-btn sv-btn-success d-none">
+                    <i class="fa-solid fa-cloud-arrow-down"></i>Descargar reporte
+                </a>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">Resultados</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i> Órdenes de compra</h2>
+            </div>
+            <span class="sv-badge sv-badge-dark">Página {{ compras_list.number }} de {{ compras_list.paginator.num_pages }}</span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-xwide">
+                <thead>
+                    <tr>
+                        <th>Compra</th>
+                        <th>Req.</th>
+                        <th>Sol.</th>
+                        <th>Solicitado por</th>
+                        {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
+                        <th>Distrito</th>
+                        {% endif %}
+                        <th>Proyecto</th>
+                        <th>Subproyecto</th>
+                        <th>Operación</th>
+                        <th>Creada</th>
+                        <th>A.F.</th>
+                        <th>Req. autorizada</th>
+                        <th>Proveedor</th>
+                        <th>Estado proveedor</th>
+                        <th>Estado original</th>
+                        <th>Costo</th>
+                        <th>Moneda</th>
+                        <th>T.C.</th>
+                        <th>Pago</th>
+                        <th>Autorización</th>
+                        <th>Entrega</th>
+                        <th>Días</th>
+                        <th>Complemento</th>
+                        <th class="text-center">Detalle</th>
+                        <th class="text-center">Documentos</th>
+                        <th class="text-center">Comparativo</th>
+                        <th class="text-center">Devolver</th>
+                        <th class="text-center">Cancelar</th>
+                        <th class="text-center">Evidencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for compra in compras_list %}
+                    <tr>
+                        <td><span class="sv-folio">{{ compra.folio }}</span></td>
+                        <td><span class="sv-folio">{{ compra.req.folio }}</span></td>
+                        <td>{{ compra.req.orden.folio }}</td>
+                        <td>
+                            <span class="sv-cell-title">{{ compra.req.orden.staff.staff.staff.first_name }} {{ compra.req.orden.staff.staff.staff.last_name }}</span>
+                        </td>
+                        {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
+                        <td><span class="sv-badge sv-badge-neutral">{{ compra.req.orden.distrito.nombre }}</span></td>
+                        {% endif %}
+                        <td><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
+                        <td>{{ compra.req.orden.subproyecto.nombre }}</td>
+                        <td>{{ compra.req.orden.operacion|default:"—" }}</td>
+                        <td>
+                            <div class="sv-date">
+                                <strong>{{ compra.created_at|date:"d/m/Y" }}</strong>
+                               
+                            </div>
+                        </td>
+                        <td>{{ compra.req.orden.activo|default:"—" }}</td>
+                        <td>
+                            {% if compra.req.approved_at %}
+                            <div class="sv-date">
+                                <strong>{{ compra.req.approved_at|date:"d/m/Y" }}</strong>
+                                <small>{{ compra.req.approved_at_time }}</small>
+                            </div>
+                            {% else %}
+                            <span class="sv-cell-subtitle">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="sv-cell-title">{{ compra.proveedor }}</span></td>
+                        <td>{{ compra.proveedor.estatus }}</td>
+                        <td>{{ compra.estatus_original|default:"—" }}</td>
+                        <td class="text-nowrap"><span class="sv-cell-title">${{ compra.costo_plus_adicionales|floatformat:2 }}</span></td>
+                        <td><span class="sv-badge sv-badge-neutral">{{ compra.moneda.nombre }}</span></td>
+                        <td>{{ compra.tipo_de_cambio|default:"—" }}</td>
+                        <td>
+                            {% if compra.pagada %}
+                            <span class="sv-badge sv-badge-success">Pagada</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">No pagada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if compra.autorizado2 %}
+                            <span class="sv-badge sv-badge-success">Gerencia</span>
+                            {% elif compra.regresar_oc %}
+                            <span class="sv-badge sv-badge-neutral">OC devuelta</span>
+                            {% elif compra.autorizado1 == False or compra.autorizado2 == False %}
+                            <span class="sv-badge sv-badge-danger">Cancelada</span>
+                            {% elif compra.autorizado1 %}
+                            <span class="sv-badge sv-badge-primary">Superintendencia</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if compra.entrada_completa %}
+                            <span class="sv-badge sv-badge-success">Entregada</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ compra.dias_de_entrega|default:"—" }}</td>
+                        <td class="text-center js-complement-cell">
                             {% for factura in compra.facturas.all %}
-                                {% if not tiene_complemento and factura.complementos.exists %}
-                                    <p>Sí</p>
-                                    {% with tiene_complemento=True %}{% endwith %}
+                                {% if factura.complementos.exists %}
+                                <span class="d-none" data-has-complement></span>
                                 {% endif %}
                             {% endfor %}
-                        {% endwith %}
-                    </td>
-                    <td>
-                        <a id="myBtn" type="button" title= "Productos y Comentarios" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">
-                            <i class="fa-duotone fa-solid fa-circle-info"></i>
-                        </a>
-                    </td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <ul class="nav nav-pills">
-                                    <li class="nav-item mx-1">
-                                        {% if compra.estado_facturas == "sin_facturas" %}
-                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                                <i class="fa-solid fa-file-circle-xmark"></i>
-                                            </a>
-                                        {% elif compra.estado_facturas == "todas_autorizadas" %}
-                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
-                                                <i class="fa-solid fa-file-circle-check"></i>
-                                            </a>
-                                        {% elif compra.estado_facturas == "pendientes" %}
-                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
-                                                <i class="fa-solid fa-file-circle-exclamation"></i>
-                                            </a>
-                                        {% endif %}
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item m-2">
-                                <button type = "button" class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{compra.id|unlocalize}}" data-pdf-url="{% url 'ver_oc_pdf' compra.id %}">
+                        </td>
+                        <td class="text-center">
+                            <button
+                                type="button"
+                                class="sv-btn sv-btn-icon sv-btn-outline"
+                                data-bs-toggle="modal"
+                                data-bs-target="#dialog"
+                                hx-target="#document"
+                                hx-get="{% url 'productos-oc' compra.id %}"
+                                title="Productos y comentarios"
+                            >
+                                <i class="fa-solid fa-circle-info"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <div class="sv-actions justify-content-center">
+                                {% if compra.estado_facturas == "sin_facturas" %}
+                                <a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" title="No tiene facturas">
+                                    <i class="fa-solid fa-file-circle-xmark"></i>
+                                </a>
+                                {% elif compra.estado_facturas == "todas_autorizadas" %}
+                                <a class="sv-btn sv-btn-icon sv-btn-success" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" title="Todas las facturas validadas">
+                                    <i class="fa-solid fa-file-circle-check"></i>
+                                </a>
+                                {% elif compra.estado_facturas == "pendientes" %}
+                                <a class="sv-btn sv-btn-icon sv-btn-warning" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" title="Facturas pendientes de validar">
+                                    <i class="fa-solid fa-file-circle-exclamation"></i>
+                                </a>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-icon sv-btn-primary js-document-preview"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#documentPreviewModal"
+                                    data-document-url="{% url 'ver_oc_pdf' compra.id %}"
+                                    data-document-title="Orden de compra {{ compra.folio }}"
+                                    title="Vista previa de la orden"
+                                >
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
-                                  <!-- Modal -->
-                                <div class="modal fade" id="pdfModal{{compra.id|unlocalize}}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Orden de compra</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-
-                                            <div class="modal-body" style="height:80vh;">
-                                               <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                               
-
-                            </li>
-                        </ul>
-                    </td>
-                    {% if usuario.tipo.comprador or usuario.tipo.oc_superintendencia %}
-                    <td>
-
-                    {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
-                        {% if compra.comparativo_model %}
-                            
-                                <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'mostrar-comparativo' compra.id %}">
+                            </div>
+                        </td>
+                        {% if usuario.tipo.comprador or usuario.tipo.oc_superintendencia %}
+                        <td class="text-center">
+                            {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
+                                {% if compra.comparativo_model %}
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-icon sv-btn-success"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#dialog"
+                                    hx-target="#document"
+                                    hx-get="{% url 'mostrar-comparativo' compra.id %}"
+                                    title="Consultar comparativo"
+                                >
                                     <i class="fa-solid fa-scale-balanced"></i>
-                                </a>
-                            
+                                </button>
+                                {% else %}
+                                <span class="sv-cell-subtitle">—</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if compra.pagada == False and compra.regresar_oc == False %}
+                            <button
+                                type="button"
+                                class="sv-btn sv-btn-icon sv-btn-warning"
+                                data-bs-toggle="modal"
+                                data-bs-target="#dialog"
+                                hx-target="#document"
+                                hx-get="{% url 'back-oc' compra.id %}"
+                                title="Devolver orden"
+                            >
+                                <i class="fa-solid fa-backward"></i>
+                            </button>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if compra.pagada == False %}
+                            <button
+                                type="button"
+                                class="sv-btn sv-btn-icon sv-btn-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#dialog"
+                                hx-target="#document"
+                                hx-swap="innerHTML"
+                                hx-get="{% url 'cancelar-oc2' compra.id %}"
+                                title="Cancelar orden"
+                            >
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        {% else %}
+                        <td class="text-center"><span class="sv-cell-subtitle">—</span></td>
+                        <td class="text-center"><span class="sv-cell-subtitle">—</span></td>
+                        <td class="text-center"><span class="sv-cell-subtitle">—</span></td>
                         {% endif %}
-                    {% endif %}
-                    </td>
-                    <td>
-                        {% if compra.pagada == False and compra.regresar_oc == False %}
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}"><i class="fa-solid fa-backward"></i></a>
-                        {% endif %}                   
-                    </td>
-                    <td>
-                        {% if compra.pagada == False %}
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
-                        {% endif %}     
-                    </td>
-                    
-                    {% else %}
-                    <td></td>
-                    <td></td>   
-                    <td></td>
-                    {% endif %}
-                    <td>
-                        <a type="button" class="btn btn-outline-info" href="{% url 'evidencias-proveedor' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Evidencias de Compra"><i class="fa-regular fa-images"></i></a>
-                    </td>
-                </tr>
-               
-                {% endfor %}
-            </tbody>
-        </table>
-        
+                        <td class="text-center">
+                            <a class="sv-btn sv-btn-icon sv-btn-info" href="{% url 'evidencias-proveedor' compra.id %}" title="Evidencias de compra">
+                                <i class="fa-regular fa-images"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if usuario.tipo.nombre == 'PROVEEDORES' or usuario.tipo.nombre == 'VIS_ADQ' or usuario.tipo.nombre == 'Control' %}28{% else %}27{% endif %}" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                            <strong class="sv-empty-title">No se encontraron compras</strong>
+                            <span class="sv-empty-text">Modifica los filtros para consultar otros resultados.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+        {% if compras_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de compras">
+            <ul class="pagination sv-pagination justify-content-center mb-0">
                 {% if compras_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url compras_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a>
+                </li>
                 {% endif %}
 
-                {% for item in compras_list.paginator.page_range %}
-                    {% if compras_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                {% for pagina in compras_list.paginator.page_range %}
+                    {% if compras_list.number == pagina %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ pagina }}</span></li>
+                    {% elif pagina > compras_list.number|add:'-2' and pagina < compras_list.number|add:'2' %}
+                    <li class="page-item"><a class="page-link" href="{% my_url pagina 'page' request.GET.urlencode %}">{{ pagina }}</a></li>
                     {% endif %}
                 {% endfor %}
-
-                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
-                {% endif %}
 
                 {% if compras_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a>
+                </li>
                 {% endif %}
             </ul>
         </nav>
+        {% endif %}
+    </section>
+
+    <div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
     </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
+    <div class="modal fade" id="documentPreviewModal" tabindex="-1" aria-labelledby="documentPreviewTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentPreviewTitle">Orden de compra</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body sv-document-viewer">
+                    <div class="sv-document-loading" id="documentPreviewLoading">
+                        <div class="spinner-border" role="status" aria-hidden="true"></div>
+                        <span>Cargando documento…</span>
+                    </div>
+                    <iframe class="sv-document-frame d-none" id="documentPreviewFrame" title="Vista previa de la orden de compra"></iframe>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
+    <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body d-flex align-items-center gap-3">
+                    {% if usuario.distritos.nombre == "Yerod" %}
+                    <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                    {% else %}
+                    <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
+                    {% endif %}
+                    <div>
+                        <strong>Generando reporte</strong>
+                        <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
-</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+document.addEventListener("DOMContentLoaded", function () {
+    const dialogElement = document.getElementById("dialog");
+    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
+    const previewModal = document.getElementById("documentPreviewModal");
+    const previewTitle = document.getElementById("documentPreviewTitle");
+    const previewFrame = document.getElementById("documentPreviewFrame");
+    const previewLoading = document.getElementById("documentPreviewLoading");
+    let objectUrl = null;
 
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
-myModal.addEventListener('hidden.bs.modal', function (event) {
-      location.reload();
-    })
-    
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-})
+    htmx.on("htmx:beforeSwap", function (event) {
+        if (event.detail.target.id === "document" && !event.detail.xhr.response) {
+            dialog.hide();
+        }
+    });
 
-document.addEventListener("show.bs.modal", function (event) {
-  const modal = event.target;
+    dialogElement.addEventListener("hidden.bs.modal", function () {
+        location.reload();
+    });
 
-  if (!modal.id.startsWith("pdfModal")) return;
+    document.querySelectorAll(".js-complement-cell").forEach(function (cell) {
+        const hasComplement = cell.querySelector("[data-has-complement]");
+        cell.innerHTML = hasComplement
+            ? '<span class="sv-badge sv-badge-success">Sí</span>'
+            : '<span class="sv-badge sv-badge-neutral">No</span>';
+    });
 
-  const button = event.relatedTarget;
-  const url = button?.getAttribute("data-pdf-url");
-  const frame = modal.querySelector(".pdfFrame");
+    previewModal.addEventListener("show.bs.modal", async function (event) {
+        const button = event.relatedTarget;
+        const url = button?.dataset.documentUrl;
+        previewTitle.textContent = button?.dataset.documentTitle || "Orden de compra";
 
-  if (url && frame) {
-    frame.src = url;
-  }
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+
+        previewFrame.classList.add("d-none");
+        previewFrame.removeAttribute("src");
+        previewLoading.classList.remove("d-none");
+
+        if (!url) return;
+
+        try {
+            const response = await fetch(url, { credentials: "same-origin" });
+            if (!response.ok) throw new Error("No fue posible cargar la orden de compra.");
+
+            const blob = await response.blob();
+            objectUrl = URL.createObjectURL(blob);
+            previewFrame.src = objectUrl + "#zoom=85";
+            previewFrame.classList.remove("d-none");
+            previewLoading.classList.add("d-none");
+        } catch (error) {
+            previewLoading.classList.add("d-none");
+            bootstrap.Modal.getInstance(previewModal)?.hide();
+            Swal.fire({ title: "Error", text: error.message, icon: "error" });
+        }
+    });
+
+    previewModal.addEventListener("hidden.bs.modal", function () {
+        previewFrame.removeAttribute("src");
+        previewFrame.classList.add("d-none");
+        previewLoading.classList.remove("d-none");
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    });
+
+    const mostrarBotonExcel = localStorage.getItem("mostrarBotonExcel");
+    const btnExcel = document.getElementById("btnExcel");
+    const reporteCompras = document.getElementById("reporte_compras");
+    const downloadButton = document.getElementById("downloadButton");
+    const fileDownloadUrl = localStorage.getItem("fileDownloadUrl");
+
+    if (mostrarBotonExcel === "true") {
+        btnExcel.classList.remove("d-none");
+        localStorage.removeItem("mostrarBotonExcel");
+    }
+
+    if (localStorage.getItem("reporte_compras")) {
+        reporteCompras.classList.remove("d-none");
+    }
+
+    if (fileDownloadUrl) {
+        downloadButton.href = fileDownloadUrl;
+        downloadButton.classList.remove("d-none");
+    }
 });
 
-document.addEventListener("hidden.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (frame) {
-    frame.src = "about:blank";
-  }
-});
-
-// Función para obtener el valor de una cookie por su nombre
 function getCookie(name) {
     let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
+
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
         for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            if (cookie.substring(0, name.length + 1) === name + "=") {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
             }
         }
     }
+
     return cookieValue;
 }
 
 function mostrarIndicadorCarga() {
-    var btn = document.getElementById('btnExcel')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
+    const btn = document.getElementById("btnExcel");
+    const loadingElement = document.getElementById("loadingIndicator");
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
     verificarDescargaIniciada();
-    btn.classList.add('d-none')
+    btn.classList.add("d-none");
 }
 
-function verificarDescargaIniciada(){
-    const checkDescarga = setInterval(() => {
-        const descargaIniciada = getCookie('descarga_iniciada');
-        if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
-            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
+function verificarDescargaIniciada() {
+    const checkDescarga = setInterval(function () {
+        const iniciada = getCookie("iniciada") === "true";
+        const descargaIniciada = getCookie("descarga_iniciada") === "true";
+
+        if (iniciada || descargaIniciada) {
+            const loadingElement = document.getElementById("loadingIndicator");
+            bootstrap.Modal.getOrCreateInstance(loadingElement).hide();
+            document.cookie = "iniciada=; Max-Age=-99999999; path=/;";
+            document.cookie = "descarga_iniciada=; Max-Age=-99999999; path=/;";
             clearInterval(checkDescarga);
-
         }
-    }, 1000); // Revisar cada segundo
+    }, 1000);
 }
 
-function guardar_variable(){
-    localStorage.setItem('mostrarBotonExcel', 'true');
+function guardar_variable() {
+    localStorage.setItem("mostrarBotonExcel", "true");
 }
 
-function aparecer_excel(){
-    var btn = document.getElementById('btnExcel')
-    btn.classList.remove('d-none')
+function aparecer_excel() {
+    document.getElementById("btnExcel").classList.remove("d-none");
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    var mostrarBotonExcel = localStorage.getItem('mostrarBotonExcel');
-    if (mostrarBotonExcel === 'true') {
-        var btn = document.getElementById('btnExcel');
-        btn.classList.remove('d-none');
+function regenerar() {
+    document.getElementById("reporte_compras").classList.remove("d-none");
+    localStorage.removeItem("fileDownloadUrl");
+    localStorage.setItem("reporte_compras", "true");
 
-        // Opcional: resetear el valor en el almacenamiento local si solo quieres mostrar el botón una vez
-        localStorage.removeItem('mostrarBotonExcel');
+    if (typeof window.limpiarBack === "function") {
+        window.limpiarBack();
     }
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    
-    
-    
-    
-    
-   
-    var fileDownloadUrl = localStorage.getItem('fileDownloadUrl');
-    var downloadButton = document.getElementById('downloadButton');
-    var btn_reporte = document.getElementById('reporte_compras');
-    var reporte = localStorage.getItem('reporte_compras') 
-    /*if (task){
-        intentos(cantidad)
-        localStorage.removeItem('reporte_compras')
-        var reporte = false 
-        btn_reporte.classList.add('d-none');
-    }*/
-    
-    if (reporte){
-        btn_reporte.classList.remove('d-none');
-    }
-    if (fileDownloadUrl) {
-        downloadButton.href = fileDownloadUrl;
-        downloadButton.classList.remove('d-none');
-    }
-    
-});
-
-function regenerar(){
-    var buscar = document.getElementById('btnBuscar');
-    var reporte_compras = document.getElementById('reporte_compras');
-    reporte_compras.classList.remove('d-none');
-    localStorage.removeItem('fileDownloadUrl')
-    localStorage.setItem('reporte_compras', true)
-    limpiarBack()  
 }
 
-function downloadLimpiar(){
-    limpiarBack()
-    localStorage.removeItem('fileDownloadUrl')
-    var downloadButton = document.getElementById('downloadButton');
-    downloadButton.classList.add('d-none');
-   
+function downloadLimpiar() {
+    if (typeof window.limpiarBack === "function") {
+        window.limpiarBack();
+    }
+
+    localStorage.removeItem("fileDownloadUrl");
+    document.getElementById("downloadButton").classList.add("d-none");
 }
 
-/*function limpiarBack(){
-    localStorage.removeItem('task_id')
-    const url = '/compras/clear_task_id/';
-    fetch( url, {  // Reemplaza con la URL correcta
-        method: 'GET', // o 'POST', dependiendo de cómo esté configurada tu vista
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin' // Necesario para incluir cookies de sesión
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Task ID cleared:', data);
-        // Aquí puedes agregar más lógica si es necesario después de borrar el task_id
-    })
-    .catch(error => {
-        console.error('Error al borrar task_id:', error);
-    });
-}*/
+function intentos(cantidad) {
+    let maxIntentos;
+    let intervalo;
 
-
-
-
-function intentos(cantidad){
-var intentos = 0;
-    var maxIntentos
-    var intervalo
-    console.log(cantidad)
-    if (cantidad >= 20000){
-        maxintentos = 150;
+    if (cantidad >= 20000) {
+        maxIntentos = 150;
         intervalo = 10000;
-    } else if (cantidad >= 15000){
-        maxintentos = 120;
+    } else if (cantidad >= 15000) {
+        maxIntentos = 120;
         intervalo = 8000;
-    } else if (cantidad >= 10000){
+    } else if (cantidad >= 10000) {
         maxIntentos = 100;
         intervalo = 8000;
-    } else if (cantidad >= 5000){
-            maxIntentos = 80;
-            intervalo = 5000;
-    } else{
-            maxIntentos = 50
-            intervalo = 2500;
+    } else if (cantidad >= 5000) {
+        maxIntentos = 80;
+        intervalo = 5000;
+    } else {
+        maxIntentos = 50;
+        intervalo = 2500;
     }
-const statusEndpoint = '/compras/verificar_estado/'; // Asegúrate de cambiar esto por tu endpoint real
-esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint)
+
+    if (typeof window.esperarYVerificar === "function") {
+        window.esperarYVerificar(intervalo, maxIntentos, 0, "/compras/verificar_estado/");
+    }
 }
-
-/*function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
-    setTimeout(async () => {
-        try {
-            const response = await fetch(statusEndpoint);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            console.log(data)
-            if (data.status === 'SUCCESS') {
-                var url = data.result.file_url
-                console.log(url)
-                var downloadButton = document.getElementById('downloadButton');
-                localStorage.setItem('fileDownloadUrl', data.result.file_url);
-                downloadButton.classList.remove('d-none');
-                document.getElementById('statusMessage_tag').classList.add('d-none');
-                downloadButton.href = url;
-                localStorage.removeItem('task_id');
-
-            } else if (data.status === 'FAILURE') {
-                console.error('La tarea ha fallado.');
-            } else {
-                console.log('La tarea todavía está pendiente...');
-                document.getElementById('statusMessage_tag').classList.remove('d-none');
-                intentos++;
-                if (intentos < maxIntentos) {
-                    esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint); // Vuelve a intentar
-                } else {
-                    console.log('Número máximo de intentos alcanzado.');
-                }
-            }
-        } catch (error) {
-            console.error('Error al verificar el estado de la tarea:', error);
-        }
-    }, intervalo);
-}*/
-
-
-
-
 </script>
 {% endblock %}
-</body>
-</html>

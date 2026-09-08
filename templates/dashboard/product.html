@@ -3,294 +3,388 @@
 {% load widget_tweaks %}
 {% load tt_extras %}
 {% load static %}
-<html>
-<head>
-{% block title %}Productos{% endblock %}
-</head>
-<body>
-{% block content %}
-<hr>
-<hr>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class = "col">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtro de Productos</h5>
-            </div>
-            <div class="card-body">
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Catálogo</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
+                Productos
+            </h1>
+            <p class="sv-page-subtitle">Administra los datos, clasificación y precios de referencia del catálogo.</p>
+        </div>
+
+        <div class="sv-page-actions">
+            {% if usuario.tipo.nombre == "Admin" %}
+            <button
+                type="button"
+                class="sv-btn sv-btn-outline"
+                data-bs-toggle="modal"
+                data-bs-target="#dialog"
+                hx-target="#document"
+                hx-swap="innerHTML"
+                hx-get="{% url 'upload_batch_products' %}"
+            >
+                <i class="fa-solid fa-file-arrow-up"></i>
+                Carga masiva
+            </button>
+            {% endif %}
+
+            <a class="sv-btn sv-btn-primary" href="{% url 'add-product' %}">
+                <i class="fa-solid fa-circle-plus"></i>
+                Agregar producto
+            </a>
+
+            <form method="POST" onsubmit="mostrarIndicadorCarga();">
                 {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-md-12 col-lg-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
-                            <label style="color: #121212;" for="id_codigo">Código</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-12 col-lg-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                            <label style="color: #121212;" for="id_producto">Producto</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
-                            <label style="color: #121212;" for="id_familia">Familia</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                            <label style="color: #121212;" for="id_familia">Subfamilia</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button type="submit" name="btnExcel" class="sv-btn sv-btn-success" title="Generar reporte Excel">
+                    <i class="fa-solid fa-file-excel"></i>
+                    Excel
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">Búsqueda</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtro de productos</h2>
+            </div>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET" class="sv-filter-grid sv-filter-grid-4">
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código" }}
+                        <label for="{{ myfilter.form.codigo.id_for_label }}">Código</label>
                     </div>
                 </div>
-                <hr>
-                </form>
-                    
-                    
-                    <ul class="nav nav-pills">
 
-                        <li class="nav-item mx-2">
-                            {% if  usuario.tipo.nombre == "Admin" %}
-                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_products' %}">
-                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
-                            </a>
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-box-open"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                        <label for="{{ myfilter.form.nombre.id_for_label }}">Producto</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder=Familia" }}
+                        <label for="{{ myfilter.form.familia.id_for_label }}">Familia</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder=Subfamilia" }}
+                        <label for="{{ myfilter.form.subfamilia.id_for_label }}">Subfamilia</label>
+                    </div>
+                </div>
+
+                <div class="sv-actions">
+                    <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                        <i class="fa-solid fa-eraser"></i>
+                        Limpiar
+                    </a>
+                    <button class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">Resultados</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-list"></i> Catálogo de productos</h2>
+            </div>
+            <span class="sv-badge sv-badge-primary">{{ items_list.paginator.count }} registros</span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-xwide">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Familia</th>
+                        <th>Subfamilia</th>
+                        <th>Unidad</th>
+                        <th>IVA</th>
+                        <th class="text-center">Activo</th>
+                        <th class="text-center">Crítico</th>
+                        <th class="text-center">Servicio</th>
+                        <th>Precio de referencia</th>
+                        <th>Porcentaje</th>
+                        <th class="text-center">Editar</th>
+                        <th class="text-center">Editar precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_list %}
+                    <tr>
+                        <td><span class="sv-folio">{{ item.codigo }}</span></td>
+                        <td><span class="sv-cell-title">{{ item.nombre }}</span></td>
+                        <td>{{ item.familia|default:"—" }}</td>
+                        <td>{{ item.subfamilia|default:"—" }}</td>
+                        <td>{{ item.unidad }}</td>
+                        <td>{{ item.iva }}</td>
+                        <td class="text-center">
+                            {% if item.activo %}
+                            <span class="sv-badge sv-badge-success"><i class="fa-solid fa-check"></i> Sí</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">No</span>
                             {% endif %}
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-product' %}">
-                                <i class="fa-solid fa-plus"> Agregar Producto</i>
+                        </td>
+                        <td class="text-center">
+                            {% if item.critico %}
+                            <span class="sv-badge sv-badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Sí</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.servicio %}
+                            <span class="sv-badge sv-badge-primary">Sí</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            {% if item.precioref != None %}
+                            <span class="sv-cell-title">${{ item.precioref|floatformat:2 }}</span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">No definido</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap">{{ item.porcentaje|multiply:100 }}%</td>
+                        <td class="text-center">
+                            {% if usuario.tipo.producto %}
+                            <a
+                                class="sv-btn sv-btn-icon sv-btn-outline"
+                                href="{% url 'dashboard-product-update' item.id %}"
+                                title="Editar producto"
+                                aria-label="Editar producto"
+                            >
+                                <i class="fa-solid fa-pen-to-square"></i>
                             </a>
-                        </li>
-                        <li class="nav-item mx-2">
-                            <form method=POST onsubmit="mostrarIndicadorCarga();">
-                                {% csrf_token %}
-                                <button type="submit" name="btnExcel" class="btn btn-outline-success">
-                                    <i class="fa-solid fa-file-excel fa-2xl"></i>
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                    
-            </div>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Admin" %}
+                            <a
+                                class="sv-btn sv-btn-icon sv-btn-success"
+                                href="{% url 'precio-referencia' item.id %}"
+                                title="Editar precio de referencia"
+                                aria-label="Editar precio de referencia"
+                            >
+                                <i class="fa-solid fa-dollar-sign"></i>
+                            </a>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="13" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                            <strong class="sv-empty-title">No se encontraron productos</strong>
+                            <span class="sv-empty-text">Modifica los filtros para consultar otros resultados.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-</div>
 
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...</p>
-    </div>
-</div>
-
-<div class="col-lg-8  offset-md-2">
-    <div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Código</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Familia</th>
-                    <th scope="col">Subfamilia</th>
-                    <th scope="col">Unidad</th>
-                    <th scope="col">IVA</th>
-                    <th scope="col">Activo</th>
-                    <th scope="col">Critico</th>
-                    <th scope="col">Servicio</th>
-                    <th>Precio Referencia</th>
-                    <th>Porcentaje</th>
-                    <th scope="col">Editar</th>
-                    <th>Editar Precio Ref.</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items_list %}
-                <tr>
-                    <th scope="row">{{item.codigo}}</th>
-                    <td>{{item.nombre}}</td>
-                    <td>{{item.familia}}</td>
-                    <td>{{item.subfamilia}}</td>
-                    <td>{{item.unidad}}</td>
-                    <td>{{item.iva}}</td>
-                    <td>{{item.activo}}</td>
-                    <td>{{item.critico}}</td>
-                    <td>{{item.servicio}}</td>
-                    <td>{{item.precioref}}</td>
-                    <td>{{item.porcentaje|multiply:100}}%</td>
-                    {% if  usuario.tipo.producto == TRUE %}
-                    <td>
-                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-product-update' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
-                    </td>
-                    {% else %}
-                    <td></td>
-                    {% endif %}
-                    {% if usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Admin" %}
-                    <td>
-                        <a class="btn btn-outline-success" id="btnActualizar" type="button" href="{% url 'precio-referencia' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
-                    </td>
-                    {% else %}
-                    <td></td>
-                    {% endif %}
-                    
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
-</div>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center">
-            {% if items_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-            {% endif %}
-            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
-
-            {% for item in items_list.paginator.page_range %}
-                {% if items_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > items_list.number|add:'-2' and item < items_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+        {% if items_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de productos">
+            <ul class="pagination sv-pagination justify-content-center mb-0">
+                {% if items_list.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url items_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a>
+                </li>
                 {% endif %}
-            {% endfor %}
 
-            {% if items_list.paginator.num_pages > items_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{items_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}">{{items_list.paginator.num_pages}}</a></li>
-            {% endif %}
+                {% for pagina in items_list.paginator.page_range %}
+                    {% if items_list.number == pagina %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ pagina }}</span></li>
+                    {% elif pagina > items_list.number|add:'-2' and pagina < items_list.number|add:'2' %}
+                    <li class="page-item"><a class="page-link" href="{% my_url pagina 'page' request.GET.urlencode %}">{{ pagina }}</a></li>
+                    {% endif %}
+                {% endfor %}
 
-            {% if items_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
-        </ul>
-    </nav>
-<!--Este es el modal-->
-        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+                {% if items_list.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url items_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
 
+    <div
+        class="modal fade"
+        id="dialog"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" hx-target="this">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="sv-empty py-4">
+                        <span class="spinner-border" role="status" aria-hidden="true"></span>
+                        <strong class="sv-empty-title mt-3">Cargando información…</strong>
+                    </div>
+                </div>
             </div>
         </div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
-    $("#id_familia").change(function () {
-      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
-      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
+    </div>
 
-      $.ajax({                       // initialize an AJAX request
-        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
-        data: {
-          'familia_id': familiaId       // add the familia id to the GET parameters
-        },
-        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
-          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+    <div
+        class="modal fade"
+        id="loadingIndicator"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body d-flex align-items-center gap-3">
+                    {% if usuario.distritos.nombre == "Yerod" %}
+                    <img
+                        src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                        alt="SAVIA Yerod"
+                        width="72"
+                        height="72"
+                        class="rounded-circle"
+                    >
+                    {% else %}
+                    <img
+                        src="{% static 'images/logo_vordcab.jpg' %}"
+                        alt="SAVIA Vordcab"
+                        width="96"
+                        class="img-fluid rounded"
+                    >
+                    {% endif %}
+                    <div>
+                        <strong>Generando reporte</strong>
+                        <p class="sv-cell-subtitle mb-0">Por favor espera…</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).on("change", "#ProductForm #id_familia", function () {
+    const form = $(this).closest("#ProductForm");
+    const url = form.attr("data-subfamilias-url");
+    const familiaId = $(this).val();
+
+    if (!url) return;
+
+    $.ajax({
+        url: url,
+        data: { familia_id: familiaId },
+        success: function (data) {
+            form.find("#id_subfamilia").html(data);
         }
-      });
     });
+});
 
-    ;(function(){
-        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+document.addEventListener("DOMContentLoaded", function () {
+    const dialogElement = document.getElementById("dialog");
+    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
 
-        htmx.on('htmx:beforeSwap',(e)=>{
-            if (e.detail.target.id === "document" && !e.detail.xhr.response)
-                modal.hide()
-        })
-    })()
+    htmx.on("htmx:beforeSwap", function (event) {
+        if (event.detail.target.id === "document" && !event.detail.xhr.response) {
+            dialog.hide();
+        }
+    });
+});
 
-    var myModal = document.getElementById('dialog')
-
-    myModal.addEventListener('hidden.bs.modal', function (event) {
-        setTimeout(function(){
-            //location.reload();
-        },3000);
-    })
-    function getCookie(name) {
+function getCookie(name) {
     let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
+
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+
         for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+
+            if (cookie.substring(0, name.length + 1) === name + "=") {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
             }
         }
     }
+
     return cookieValue;
 }
 
-
 function mostrarIndicadorCarga() {
-    document.getElementById('loadingIndicator').style.display = 'block';
+    const loadingElement = document.getElementById("loadingIndicator");
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
     verificarDescargaIniciada();
 }
 
-function verificarDescargaIniciada(){
-    const checkDescarga = setInterval(() => {
-        const descargaIniciada = getCookie('iniciada');
-        if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
-            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
+function verificarDescargaIniciada() {
+    const checkDescarga = setInterval(function () {
+        const iniciada = getCookie("iniciada") === "true";
+        const descargaIniciada = getCookie("descarga_iniciada") === "true";
+
+        if (iniciada || descargaIniciada) {
+            const loadingElement = document.getElementById("loadingIndicator");
+            bootstrap.Modal.getOrCreateInstance(loadingElement).hide();
+            document.cookie = "iniciada=; Max-Age=-99999999; path=/;";
+            document.cookie = "descarga_iniciada=; Max-Age=-99999999; path=/;";
             clearInterval(checkDescarga);
         }
-    }, 1000); // Revisar cada segundo
+    }, 1000);
 }
-  </script>
+</script>
 {% endblock %}
-
-<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
-<!--style="background-color: #515151; color:white;"-->
-<!--style="background-color: #711F1B; color:white;"-->

@@ -5,318 +5,213 @@
 {% load tt_extras %}
 {% load l10n %}
 
-<html>
-<head>
 {% block title %}Matriz Pagos{% endblock %}
-</head>
-<body>
-
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class = "col" id="response-div">
-        <div class="card">
-            <div class="card-header">
-            <h5>Filtro de Pagos</h5>
-            </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row">
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                                <label style="color: #121212;" for="id_id">Proyecto</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
-                                <label style="color: #121212;" for="id_id">Tipo</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{ myfilter.form.tiene_facturas|add_class:"form-control"|append_attr:"placeholder= Tiene Facturas"}}
-                                <label style="color: #121212;" for="id_id">Tiene Facturas</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder= Facturas Completas"}}
-                                <label style="color: #121212;" for="id_id">Facturas Completas</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor/Colaborador"}}
-                                <label style="color: #121212;" for="id_id">Proveedor/Colaborador</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.cuenta|add_class:"form-control"|append_attr:"placeholder= Cuenta"}}
-                                <label style="color: #121212;" for="id_id">Cuenta</label>
-                            </div>
-                        </div>
-                    </div>
-                      <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
-                                <label style="color: #121212;" for="id_id">Distrito</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                            </div>
-                        </div>
-                    </div>
+<main class="sv-page sv-page-with-navbar" id="response-div">
+    <header class="sv-page-header">
+        <div>
+            <div class="sv-page-eyebrow">Tesorería</div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-money-check-dollar"></i></span>
+                Matriz de pagos
+            </h1>
+            <p class="sv-page-subtitle">Consulta, valida y envía pagos a Control de Documentos.</p>
+        </div>
+    </header>
 
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtro de pagos</h2>
+                <p class="sv-card-subtitle">Localiza registros por folio, responsable, cuenta o periodo.</p>
+            </div>
+        </div>
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="sv-filter-grid sv-filter-grid-4">
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}<label for="id_folio">Folio</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}<label for="id_proyecto">Proyecto</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder=Tipo" }}<label for="id_tipo">Tipo</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-file-invoice"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.tiene_facturas|add_class:"form-control"|append_attr:"placeholder=Tiene Facturas" }}<label for="id_tiene_facturas">Tiene facturas</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-file-circle-check"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder=Facturas Completas" }}<label for="id_facturas_completas">Facturas completas</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user-group"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor/Colaborador" }}<label for="id_proveedor">Proveedor / colaborador</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-building-columns"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta" }}<label for="id_cuenta">Cuenta</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                        <div class="form-floating flex-grow-1">{{ myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito" }}<label for="id_distrito">Distrito</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating flex-grow-1">{% render_field myfilter.form.start_date type="date" class="form-control" %}<label for="id_start_date">Desde</label></div>
+                    </div>
+                    <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                        <div class="form-floating flex-grow-1">{% render_field myfilter.form.end_date type="date" class="form-control" %}<label for="id_end_date">Hasta</label></div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button class="sv-btn sv-btn-primary" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
                     </div>
                 </div>
-                </form>
-            </div>
+            </form>
         </div>
-</div>
+    </section>
 
-<div class = "row my-4">
-<div class = "col-sm-12 col-lg-2">
-    <div class="card">
-        <form id = "reporteForm" method=POST>
-        {% csrf_token %}
-        <div class="card-header">
-            <h6>Reportes</h6>
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-xl-3">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-chart-line"></i> Reporte de pagos</h2>
+                </div>
+                <div class="sv-card-body">
+                    <form id="reporteForm" method="POST">
+                        {% csrf_token %}
+                        <button name="btnReporte" type="submit" class="sv-btn sv-btn-success" value="Reporte Excel" title="Reporte de Pagos">
+                            <i class="fa-solid fa-file-excel"></i> Generar Excel
+                        </button>
+                    </form>
+                </div>
+            </section>
         </div>
-        <div class="card-body">
-            <ul class="nav nav-pills">
-                    <li class="nav-item mx-2">
-                        <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel' title="Reporte de Pagos">
-                            <i class="fa-solid fa-file-excel fa-2xl"></i>
-                        </button>
-                    </li>
-                    <!--<li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger">
-                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                        </button>
-                    </li>-->
-                </ul>
-        </form>
+
+        <div class="col-12 col-xl-9">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-file-arrow-down"></i> Facturas y XML</h2>
+                        <p class="sv-card-subtitle">Descarga documentos o genera el concentrado XML.</p>
+                    </div>
+                </div>
+                <div class="sv-card-body">
+                    <form method="POST" onsubmit="mostrarIndicadorCarga()">
+                        {% csrf_token %}
+                        <div class="sv-filter-grid sv-filter-grid-4">
+                            <div class="input-group sv-input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                                <div class="form-floating flex-grow-1"><input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"><label for="fecha_inicio">Desde</label></div>
+                            </div>
+                            <div class="input-group sv-input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                                <div class="form-floating flex-grow-1"><input type="date" id="fecha_fin" name="fecha_fin" class="form-control"><label for="fecha_fin">Hasta</label></div>
+                            </div>
+                            <div class="input-group sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating flex-grow-1"><input id="folio" name="folio" class="form-control" placeholder="Folio"><label for="folio">Folio</label></div>
+                            </div>
+                            {% if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.nombre != "Tesoreria_Documentos" %}
+                            <div class="input-group sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                <div class="form-floating flex-grow-1">
+                                    <select id="distrito" name="distrito" class="form-select">
+                                        <option value="">Todos</option>
+                                        {% for distrito in distritos %}<option value="{{ distrito.id }}">{{ distrito.nombre }}</option>{% endfor %}
+                                    </select>
+                                    <label for="distrito">Distrito</label>
+                                </div>
+                            </div>
+                            <div class="input-group sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating flex-grow-1">
+                                    <select id="tesorero" name="tesorero" class="form-select">
+                                        <option value="">Todos</option>
+                                        {% for tesorero in tesoreros %}<option value="{{ tesorero.id }}">{{ tesorero.staff.staff.first_name }} {{ tesorero.staff.staff.last_name }}</option>{% endfor %}
+                                    </select>
+                                    <label for="tesorero">Tesorero</label>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="input-group sv-input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-folder-open"></i></span>
+                                <div class="form-floating flex-grow-1">
+                                    <select id="tipo_documento" name="tipo_documento" class="form-select">
+                                        <option value="">Todos</option><option value="gastos">Gastos</option><option value="compras">Compras</option><option value="viaticos">Viáticos</option>
+                                    </select>
+                                    <label for="tipo_documento">Tipo de documento</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <button type="submit" name="btnDescargarFacturas" class="sv-btn sv-btn-primary" title="Descargar Facturas"><i class="fa-solid fa-file-arrow-down"></i> Descargar facturas</button>
+                            <button name="btnReporteXML" type="submit" class="sv-btn sv-btn-success" value="Reporte Excel de XML" title="Generar reporte de XML"><i class="fa-solid fa-file-excel"></i> Reporte XML</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
         </div>
     </div>
-</div>
-<div class = "col-lg-8">
-    <div class = "card">
-    <form method=POST onsubmit="mostrarIndicadorCarga()">
-        {% csrf_token %}
-        <div class="card-header">
-            <h6>Facturas | Descarga</h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control">
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <input type="date" id="fecha_fin" name="fecha_fin" class="form-control">
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <input id="folio" name="folio" class="form-control">
-                        <label style="color: #121212;" for="id_subproyecto">Folio:</label>
-                    </div>
-                </div>
-            </div>
-            {% if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.nombre != "Tesoreria_Documentos"  %}
-            <div class="col-lg-3 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <select id="distrito" name="distrito" class="form-select">
-                            <option value="">Todos</option>
-                            {% for distrito in distritos %}
-                                <option value="{{ distrito.id }}">{{ distrito.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                        <label style="color: #121212;" for="id_id">Distrito</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <select id="tesorero" name="tesorero" class="form-select">
-                            <option value="">Todos</option>
-                            {% for tesorero in tesoreros %}
-                                <option value="{{ tesorero.id }}">{{ tesorero.staff.staff.first_name }} {{tesorero.staff.staff.last_name}}</option>
-                            {% endfor %}
-                        </select>
-                        <label style="color: #121212;" for="id_id">Tesorero</label>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-                <div class="col-lg-4 col-sm-12">
-               
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">       
-                            <select id="tipo_documento" name="tipo_documento" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="gastos">Gastos</option>
-                                <option value="compras">Compras</option>
-                                <option value="viaticos">Viáticos</option>
-                            </select>
-                            <label for="tipo_documento">Tipo de Documento:</label>
-                        </div>
-                    </div>
-                </div>
-                <!--<div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="validacion" name="validacion">
-                    <img src="{% static 'images/SAT.jpg' %}" alt="Validar SAT"
-                    style="width: 40px; height: auto; vertical-align: middle; margin-right: 8px;">
-                    <label class="form-check-label" for="validacion">Validar en SAT</label>
-                </div>-->
-            </div>
-            <div class="col-lg-3 col-sm-12 m-3">
-                <button type="submit" name="btnDescargarFacturas" class="btn btn-primary" title="Descargar Facturas"><i class="fa-solid fa-circle-chevron-down"></i></button>
-                 <button name="btnReporteXML" type="submit" class="btn btn-outline-success" value='Reporte Excel de XML' title ="Generar reporte de XML">
-                    <i class="fa-solid fa-file-excel fa-2xl"></i>
-                </button>
-            </div>
-            </div>
-        </div>        
-    </form>
-    </div>
-</div>
-</div>
-        
-    
-    <!-- Aquí terminan el encabezado de los filtros -->
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
+    {% if messages %}
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
 
-<div class = "card">
-    <form id="mass_payment_form" method="post" action="{% url 'matriz-pagos' %}">
-       
-        <ul class="nav nav-pills">
-            <li class="nav-item mx-2">
-                <div col-lg-2>
-                    <div class="alert alert-primary" role="alert">Total OC seleccionadas: <span id="oc_count">0</span></div>
+    <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body d-flex align-items-center gap-3 p-4">
+                    {% if usuario.distritos.nombre == "Yerod" %}
+                    <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA" width="72" height="72" class="rounded-circle">
+                    {% else %}
+                    <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA" width="72" height="72" class="rounded-circle">
+                    {% endif %}
+                    <div><strong>Generando reporte</strong><div class="text-muted">Por favor espera&hellip; <i class="fa-solid fa-mug-hot"></i></div></div>
+                    <div class="spinner-border ms-auto" role="status" aria-label="Procesando"></div>
                 </div>
-            </li>
-            <li class="nav-item mx-2">
-                <div col-lg-2>
-                    <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
+            </div>
+        </div>
+    </div>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-table-list"></i> Pagos registrados</h2>
+                <p class="sv-card-subtitle">Selecciona los movimientos y ejecuta la acción correspondiente.</p>
+            </div>
+        </div>
+        <form id="mass_payment_form" method="post" action="{% url 'matriz-pagos' %}">
+            {% csrf_token %}
+            <div class="sv-card-body border-bottom">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-list-check"></i> Seleccionados: <strong id="oc_count">0</strong></span>
+                    <span class="sv-badge sv-badge-success"><i class="fa-solid fa-dollar-sign"></i> Suma: <strong id="oc_sum">0.00</strong></span>
+                    <div class="d-flex flex-wrap gap-2 ms-lg-auto">
+                        <button type="submit" name="enviar_a_control" id="enviar_a_control" class="sv-btn sv-btn-primary"><i class="fa-solid fa-folder-tree"></i> Control de documentos</button>
+                        <button type="submit" name="validacion" id="validacion" class="sv-btn sv-btn-success"><i class="fa-solid fa-circle-check"></i> Validación</button>
+                        <button type="submit" name="btnImprimir" id="btnImprimir" class="sv-btn sv-btn-outline" title="Imprimir seleccionados"><i class="fa-solid fa-print"></i> Imprimir</button>
+                    </div>
                 </div>
-            </li>
-                <input type="submit" value="Control de Documentos" name="enviar_a_control" id="enviar_a_control" class="btn btn-primary mx-2">
-                <input type="submit" value="Validación" name="validacion" id="validacion" class="btn btn-primary mx-2">
-                <button type="submit" class="btn btn-outline-primary me-2" title="Imprimir seleccionados" name="btnImprimir" id="btnImprimir">  
-                    <i class="fa-solid fa-print fa-xl"></i>
-                </button>
-        </ul>
-       
-   
-    {% csrf_token %}
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
+            </div>
+            <div class="sv-table-wrap">
+        <table class="sv-table sv-table-xwide">
+            <thead>
                 <tr>
                     <th class="d-none d-lg-table-cell">Id</th>
                     <th scope="col">Compra/Gasto</th>
@@ -348,7 +243,7 @@
             <tbody>
                 {% for pago in pagos_list %}
                 <tr>
-                    <th class="d-none d-lg-table-cell">{{pago.id}}</th>
+                    <td class="d-none d-lg-table-cell"><span class="sv-badge sv-badge-neutral">{{ pago.id }}</span></td>
                     {% if pago.oc %}
                         <td>{{pago.oc.folio}}</td>
                         <td>{{pago.oc.req.orden.distrito.nombre}}</td>
@@ -362,16 +257,16 @@
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
                                     {% if pago.estado_facturas == "sin_facturas" %}
-                                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                        <a type="button" class="sv-btn sv-btn-danger sv-btn-icon" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
                                             <i class="fa-solid fa-file-circle-xmark"></i>
                                         </a>
                                     {% elif pago.estado_facturas == "todas_autorizadas" %}
-                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
+                                        <a type="button" class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
                                             <i class="fa-solid fa-file-circle-check"></i>
                                         </a>
                                     
                                     {% elif pago.estado_facturas == "pendientes" %}
-                                        <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
+                                        <a type="button" class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
                                             <i class="fa-solid fa-file-circle-exclamation"></i>
                                         </a>
                                     {% endif %}
@@ -379,14 +274,14 @@
                             </ul>
                         </td>   
                         <td class="d-none d-lg-table-cell">
-                            {% if pago.oc.entrada_completa %}<span class="badge bg-primary">Entregada</span>
+                            {% if pago.oc.entrada_completa %}<span class="sv-badge sv-badge-primary">Entregada</span>
                                 {% for entrada in pago.oc.vale_entrada.all %}
                                     {% if entrada.entrada_date %}
                                         {{ entrada.entrada_date|default_if_none:''|date:'d/m/Y' }}
                                     {% endif %}
                                 {% endfor %}
-                            {% elif pago.oc.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{pago.oc.entrada_parcial}}%</span>
-                            {% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}
+                            {% elif pago.oc.entrada_parcial > 0 %}<span class="sv-badge sv-badge-success">Avance: {{pago.oc.entrada_parcial}}%</span>
+                            {% else %}<span class="sv-badge sv-badge-warning">No entregado aún</span> {% endif %}
                         </td>
                     {% endif %}
                     {% if pago.gasto %}
@@ -406,15 +301,15 @@
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
                                     {% if pago.estado_facturas == "sin_facturas" %}
-                                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                        <a type="button" class="sv-btn sv-btn-danger sv-btn-icon" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
                                             <i class="fa-solid fa-file-circle-xmark"></i>
                                         </a>
                                     {% elif pago.estado_facturas == "todas_autorizadas" %}
-                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
+                                        <a type="button" class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
                                             <i class="fa-solid fa-file-circle-check"></i>
                                         </a>
                                     {% elif pago.estado_facturas == "pendientes" %}
-                                        <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
+                                        <a type="button" class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
                                             <i class="fa-solid fa-file-circle-exclamation"></i>
                                         </a>
                                     {% endif %}
@@ -441,15 +336,15 @@
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
                                     {% if pago.estado_facturas == "sin_facturas" %}
-                                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                        <a type="button" class="sv-btn sv-btn-danger sv-btn-icon" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
                                             <i class="fa-solid fa-file-circle-xmark"></i>
                                         </a>
                                     {% elif pago.estado_facturas == "todas_autorizadas" %}
-                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
+                                        <a type="button" class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
                                             <i class="fa-solid fa-file-circle-check"></i>
                                         </a>
                                     {% elif pago.estado_facturas == "pendientes" %}
-                                        <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
+                                        <a type="button" class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
                                             <i class="fa-solid fa-file-circle-exclamation"></i>
                                         </a>
                                     {% endif %}
@@ -460,20 +355,20 @@
                     {% endif %}
                     <td>
                         {% if pago.spei_devuelto %}
-                            <span class="badge bg-danger">
+                            <span class="sv-badge sv-badge-danger">
                                 SPEI Devuelto
                             </span>
                         {% elif pago.tipo == "Abono" %}
-                            <span class="badge bg-secondary">
+                            <span class="sv-badge sv-badge-neutral">
                                 Devolución
                             </span>
                         {% else %}
-                            <span class="badge bg-info">
+                            <span class="sv-badge sv-badge-primary">
                                 Pago
                             </span>
                         {% endif %}
                     </td>
-                    <td>${{pago.monto|floatformat:2}}</td>
+                    <td><strong>${{ pago.monto|floatformat:2 }}</strong></td>
                    
                     <td>{% if pago.pagado_real %}
                             {{pago.pagado_real|date:"d/m/Y"}}
@@ -484,21 +379,21 @@
                     <td>
                          {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                         
-                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}checked disabled{% endif %}>             
+                        <input class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para validación" {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}checked disabled{% endif %}>
                         {% endif %}
                     </td>
                     <td>
-                        <input  style="transform: scale(2); margin: 5px;" class="print_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="imprimir_ids" value="{{ pago.id|unlocalize }}">
+                        <input class="print_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="imprimir_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para imprimir">
                     </td>
                     <td>
                         <ul class="nav nav-pills">
                             {% if pago.oc %}
                             <li class="nav-item">
-                                <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.oc.id|unlocalize}}" data-pdf-url="{% url 'ver_oc_pdf' pago.oc.id %}" title="Ver OC en PDF">
+                                <button type="button" class="sv-btn sv-btn-info sv-btn-icon" data-bs-toggle="modal" data-bs-target="#pdfModalOc{{ pago.id|unlocalize }}" data-pdf-url="{% url 'ver_oc_pdf' pago.oc.id %}" title="Ver OC en PDF">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                                   <!-- Modal -->
-                                <div class="modal fade" id="pdfModal{{pago.oc.id|unlocalize}}" tabindex="-1" aria-hidden="true">
+                                <div class="modal fade" id="pdfModalOc{{ pago.id|unlocalize }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-xl modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header">
@@ -506,8 +401,8 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
 
-                                            <div class="modal-body" style="height:80vh;">
-                                               <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                            <div class="modal-body p-0 sv-document-viewer">
+                                               <iframe class="pdfFrame sv-document-frame" src="about:blank" title="Vista previa del documento"></iframe>
                                             </div>
                                         </div>
                                     </div>
@@ -520,13 +415,13 @@
                             {% endif %}
                             {% if pago.gasto %}
                             <li class="nav-item mx-1">
-                                <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.gasto.id|unlocalize}}" data-pdf-url="{% url 'ver_gasto_pdf' pago.gasto.id %}" title="Registro de gasto">
+                                <button type="button" class="sv-btn sv-btn-info sv-btn-icon" data-bs-toggle="modal" data-bs-target="#pdfModalGasto{{ pago.id|unlocalize }}" data-pdf-url="{% url 'ver_gasto_pdf' pago.gasto.id %}" title="Registro de gasto">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                              </li>
                             
                             <!-- Modal -->
-                            <div class="modal fade" id="pdfModal{{pago.gasto.id|unlocalize}}" tabindex="-1" aria-hidden="true">
+                            <div class="modal fade" id="pdfModalGasto{{ pago.id|unlocalize }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog modal-xl modal-dialog-centered">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -534,8 +429,8 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
 
-                                        <div class="modal-body" style="height:80vh;">
-                                            <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                        <div class="modal-body p-0 sv-document-viewer">
+                                            <iframe class="pdfFrame sv-document-frame" src="about:blank" title="Vista previa del documento"></iframe>
                                         </div>
                                     </div>
                                 </div>
@@ -546,14 +441,14 @@
                            
                             {% if pago.viatico %}
                             <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos3' pago.viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a>
+                                <button type="button" class="sv-btn sv-btn-info sv-btn-icon" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'detalles-viaticos3' pago.viatico.id %}" title="Detalle del viático"><i class="fa-solid fa-person-walking-luggage"></i></button>
                             </li>
                             <li class="nav-item mx-1">
-                                 <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.viatico.id|unlocalize}}" data-pdf-url="{% url 'ver_viatico_pdf' pago.viatico.id %}" title="Registro de viático">
+                                 <button type="button" class="sv-btn sv-btn-info sv-btn-icon" data-bs-toggle="modal" data-bs-target="#pdfModalViatico{{ pago.id|unlocalize }}" data-pdf-url="{% url 'ver_viatico_pdf' pago.viatico.id %}" title="Registro de viático">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                                 <!-- Modal -->
-                                <div class="modal fade" id="pdfModal{{pago.viatico.id|unlocalize}}" tabindex="-1" aria-hidden="true">
+                                <div class="modal fade" id="pdfModalViatico{{ pago.id|unlocalize }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-xl modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header">
@@ -561,8 +456,8 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
 
-                                            <div class="modal-body" style="height:80vh;">
-                                                <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                            <div class="modal-body p-0 sv-document-viewer">
+                                                <iframe class="pdfFrame sv-document-frame" src="about:blank" title="Vista previa del documento"></iframe>
                                             </div>
                                         </div>
                                     </div>
@@ -573,15 +468,15 @@
                     </td>
                     <td>
                             {% if pago.comprobante_pago %}
-                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
+                            <button type="button" class="sv-btn sv-btn-info sv-btn-icon" data-bs-toggle="modal" data-bs-target="#pdfModalPago{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                             </button>
                             <!-- Modal con visor de PDF -->
-                            <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
+                            <div class="modal fade" id="pdfModalPago{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabelPago{{ pago.id|unlocalize }}" aria-hidden="true">
                                 <div class="modal-dialog modal-xl">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">  
+                                            <h5 class="modal-title" id="pdfModalLabelPago{{ pago.id|unlocalize }}">
                                                 {% if pago.spei_devuelto %}
                                                     Comprobante de SPEI devuelto
                                                 {% else %}
@@ -602,7 +497,7 @@
                     </td>
                     <td class="text-center">
                         {% if pago.spei_devuelto %}
-                            <span class="badge bg-danger" data-bs-toggle="tooltip" title="El banco receptor devolvió este SPEI">
+                            <span class="sv-badge sv-badge-danger" data-bs-toggle="tooltip" title="El banco receptor devolvió este SPEI">
                                 <i class="fa-solid fa-arrow-rotate-left"></i>SPEI Devuelto
                             </span>
 
@@ -614,7 +509,7 @@
 
                         {% elif pago.hecho and pago.comprobante_pago %}
                             {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
-                                <button type="button" class="btn btn-outline-danger" title="Marcar como SPEI devuelto" data-url="{% url 'marcar-spei-devuelto' pago.id %}"
+                                <button type="button" class="sv-btn sv-btn-danger sv-btn-icon" title="Marcar como SPEI devuelto" data-url="{% url 'marcar-spei-devuelto' pago.id %}"
                                     data-next="{{ request.get_full_path }}" data-csrf="{{ csrf_token }}" onclick="confirmarSpeiDevuelto(this)">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </button>
@@ -629,12 +524,12 @@
                         {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                             {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}
                                 {% if pago.oc %}
-                                <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                
                                 {% elif pago.gasto %}
-                                <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                 {% elif pago.viatico %}
-                                <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                 {% endif %}
                             {% endif %}
                         {% endif %}
@@ -651,412 +546,292 @@
                     </td>
 
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="20">
+                        <div class="sv-empty">
+                            <div class="sv-empty-icon"><i class="fa-solid fa-money-check-dollar"></i></div>
+                            <div class="sv-empty-title">No se encontraron pagos</div>
+                            <div class="sv-empty-text">Ajusta los filtros para consultar otros movimientos.</div>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+        </div>
+        <nav class="sv-pagination-wrap" aria-label="Paginación de pagos">
+            <ul class="pagination sv-pagination">
                 {% if pagos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a></li>
                 {% endif %}
 
                 {% for item in pagos_list.paginator.page_range %}
                     {% if pagos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
                     {% elif item > pagos_list.number|add:'-2' and item < pagos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                        <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
                     {% endif %}
                 {% endfor %}
 
                 {% if pagos_list.paginator.num_pages > pagos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{pagos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{pagos_list.paginator.num_pages}}</a></li>
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                <li class="page-item"><a class="page-link" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ pagos_list.paginator.num_pages }}</a></li>
                 {% endif %}
 
                 {% if pagos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a></li>
                 {% endif %}
             </ul>
         </nav>
-    </div>
     </form>
+    </section>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
+    <div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+        </div>
     </div>
-</div>
 
-<div class="modal fade" id="customAlert" tabindex="-1" aria-labelledby="customAlertLabel" aria-hidden="true">
-
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo de SAVIA" style="height: 40px; margin-right: 10px;" class="rounded-circle">            
-          <h5 class="modal-title" id="customAlertLabel">SAVIA 2.0</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="customAlert" tabindex="-1" aria-labelledby="customAlertLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    {% if usuario.distritos.nombre == "Yerod" %}
+                    <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA" width="40" height="40" class="rounded-circle me-2">
+                    {% else %}
+                    <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA" width="40" height="40" class="rounded-circle me-2">
+                    {% endif %}
+                    <h5 class="modal-title" id="customAlertLabel">Fechas requeridas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">Selecciona la fecha de inicio y la fecha final para generar el reporte.</div>
+                <div class="modal-footer">
+                    <button type="button" class="sv-btn sv-btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-          Por favor, seleccione tanto la fecha de inicio como la fecha final para generar el reporte.
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
-        </div>
-      </div>
     </div>
-  </div>
-
-</div>
+</main>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
+function agregarCampoOculto(formulario, nombre, valor, clase) {
+    const campo = document.createElement('input');
+    campo.type = 'hidden';
+    campo.name = nombre;
+    campo.value = valor;
+    if (clase) campo.className = clase;
+    formulario.appendChild(campo);
+}
 
 function confirmarSpeiDevuelto(boton) {
     Swal.fire({
-        title: "¿Marcar SPEI como devuelto?",
-        icon: "warning",
-
-        html: `
-            <p>
-                El folio regresará a Pendientes de Pago.
-            </p>
-
-            <div class="text-start mt-3">
-                <label for="swal-fecha-spei" class="form-label">
-                    Fecha y hora de devolución
-                </label>
-
-                <input
-                    type="datetime-local"
-                    id="swal-fecha-spei"
-                    class="form-control"
-                >
-
-                <div class="form-text">
-                    Si dejas el campo vacío, se utilizará la fecha y hora actuales.
-                </div>
-            </div>
-        `,
-
+        title: '¿Marcar SPEI como devuelto?',
+        icon: 'warning',
+        html: '<p>El folio regresará a Pendientes de Pago.</p>' +
+              '<div class="text-start mt-3"><label for="swal-fecha-spei" class="form-label">Fecha y hora de devolución</label>' +
+              '<input type="datetime-local" id="swal-fecha-spei" class="form-control">' +
+              '<div class="form-text">Si dejas el campo vacío, se utilizará la fecha y hora actuales.</div></div>',
         showCancelButton: true,
-        confirmButtonText: "Sí, marcar como devuelto",
-        cancelButtonText: "Cancelar",
-        confirmButtonColor: "#dc3545",
-        cancelButtonColor: "#6c757d",
+        confirmButtonText: 'Sí, marcar como devuelto',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
         reverseButtons: true,
-
         preConfirm: function () {
-            return document
-                .getElementById("swal-fecha-spei")
-                .value;
+            return document.getElementById('swal-fecha-spei').value;
         }
     }).then(function (resultado) {
-        if (!resultado.isConfirmed) {
-            return;
-        }
-
-        const formulario = document.createElement("form");
-
-        formulario.method = "POST";
+        if (!resultado.isConfirmed) return;
+        const formulario = document.createElement('form');
+        formulario.method = 'POST';
         formulario.action = boton.dataset.url;
-        formulario.style.display = "none";
-
-        agregarCampoOculto(
-            formulario,
-            "csrfmiddlewaretoken",
-            boton.dataset.csrf
-        );
-
-        agregarCampoOculto(
-            formulario,
-            "next",
-            boton.dataset.next
-        );
-
-        agregarCampoOculto(
-            formulario,
-            "fecha_spei_devuelto",
-            resultado.value || ""
-        );
-
+        formulario.className = 'd-none';
+        agregarCampoOculto(formulario, 'csrfmiddlewaretoken', boton.dataset.csrf);
+        agregarCampoOculto(formulario, 'next', boton.dataset.next);
+        agregarCampoOculto(formulario, 'fecha_spei_devuelto', resultado.value || '');
         document.body.appendChild(formulario);
         formulario.submit();
     });
 }
 
-function agregarCampoOculto(formulario, nombre, valor) {
-    const campo = document.createElement("input");
-
-    campo.type = "hidden";
-    campo.name = nombre;
-    campo.value = valor;
-
-    formulario.appendChild(campo);
-}
-
-document.addEventListener("show.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const button = event.relatedTarget;
-  const url = button?.getAttribute("data-pdf-url");
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (url && frame) {
-    frame.src = url;
-  }
+document.addEventListener('show.bs.modal', function (event) {
+    const modal = event.target;
+    if (!modal.id || !modal.id.startsWith('pdfModal')) return;
+    const button = event.relatedTarget;
+    const url = button ? button.getAttribute('data-pdf-url') : null;
+    const frame = modal.querySelector('.pdfFrame');
+    if (url && frame) frame.src = url;
 });
 
-document.addEventListener("hidden.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (frame) {
-    frame.src = "about:blank";
-  }
+document.addEventListener('hidden.bs.modal', function (event) {
+    const modal = event.target;
+    if (!modal.id || !modal.id.startsWith('pdfModal')) return;
+    const frame = modal.querySelector('.pdfFrame');
+    if (frame) frame.src = 'about:blank';
 });
-
-
-var myModal = document.getElementById('dialog')
-
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
 
 function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
+    const prefix = name + '=';
+    const cookies = document.cookie ? document.cookie.split(';') : [];
+    for (let i = 0; i < cookies.length; i += 1) {
+        const cookie = cookies[i].trim();
+        if (cookie.indexOf(prefix) === 0) return decodeURIComponent(cookie.substring(prefix.length));
     }
-    return cookieValue;
+    return null;
+}
+
+function ocultarIndicadorCarga() {
+    const elemento = document.getElementById('loadingIndicator');
+    if (!elemento) return;
+    const modal = bootstrap.Modal.getInstance(elemento);
+    if (modal) modal.hide();
 }
 
 function mostrarIndicadorCarga() {
-    var btn = document.getElementById('btnExcel')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
+    const elemento = document.getElementById('loadingIndicator');
+    if (!elemento) return;
+    bootstrap.Modal.getOrCreateInstance(elemento).show();
     verificarDescargaIniciada();
-    btn.classList.add('d-none')
 }
 
-function verificarDescargaIniciada(){
-    const checkDescarga = setInterval(() => {
-        const descargaIniciada = getCookie('descarga_iniciada');
-        if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
-            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
-            clearInterval(checkDescarga);
-
+function verificarDescargaIniciada() {
+    let intentos = 0;
+    const checkDescarga = window.setInterval(function () {
+        intentos += 1;
+        if (getCookie('descarga_iniciada') === 'true') {
+            ocultarIndicadorCarga();
+            document.cookie = 'descarga_iniciada=; Max-Age=0; path=/';
+            window.clearInterval(checkDescarga);
+        } else if (intentos >= 300) {
+            ocultarIndicadorCarga();
+            window.clearInterval(checkDescarga);
         }
-    }, 1000); // Revisar cada segundo
+    }, 1000);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    var reportForm = document.getElementById("reporteForm");
-    var startDateField = document.getElementById('id_start_date');
-    var endDateField = document.getElementById('id_end_date');
-    
-    const checkboxes = document.querySelectorAll('.payment_checkbox');
-    const checkboxes_validation = document.querySelectorAll('.validacion_checkbox');
-    const ocCountElement = document.getElementById('oc_count');  // Ajusta el id si es necesario
-    const ocSumElement = document.getElementById('oc_sum');
-    const layoutPagosButton = document.getElementById('enviar_a_pago_button');
-    const ValidacionButton = document.getElementById('validacion');
-    const ImprimirButton = document.getElementById('btnImprimir');
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-bs-spy="scroll"]').forEach(function (elemento) {
+        const instancia = bootstrap.ScrollSpy.getInstance(elemento);
+        if (instancia) instancia.refresh();
+    });
+
+    const detailModal = document.getElementById('dialog');
+    if (detailModal) {
+        detailModal.addEventListener('hidden.bs.modal', function () { location.reload(); });
+    }
+
     const form = document.getElementById('mass_payment_form');
+    const paymentCheckboxes = Array.from(document.querySelectorAll('.payment_checkbox'));
+    const validationCheckboxes = Array.from(document.querySelectorAll('.validacion_checkbox'));
+    const printCheckboxes = Array.from(document.querySelectorAll('.print_checkbox'));
+    const countElement = document.getElementById('oc_count');
+    const sumElement = document.getElementById('oc_sum');
 
-    // Inicializar o recuperar la lista de IDs seleccionados como strings
-    let selectedIds = JSON.parse(localStorage.getItem('selectedPayments')) || [];
-    let selectedIds_validation = JSON.parse(localStorage.getItem('selectedPaymentsValidation')) || [];
-    selectedIds = selectedIds.map(id => id.toString().trim());
-    selectedIds_validation = selectedIds_validation.map(id => id.toString().trim());
-
-    // Al cargar la página, marcar los checkboxes ya guardados
-    checkboxes.forEach(checkbox => {
-        const id = checkbox.getAttribute('data-id').toString().trim();
-        if (selectedIds.includes(id)) {
-            checkbox.checked = true;
+    function leerSeleccion(clave) {
+        try {
+            const valor = JSON.parse(localStorage.getItem(clave)) || [];
+            return valor.map(function (id) { return String(id).trim(); });
+        } catch (error) {
+            localStorage.removeItem(clave);
+            return [];
         }
-    });
-    checkboxes_validation.forEach(checkbox => {
-        const id = checkbox.getAttribute('data-id').toString().trim();
+    }
 
-        if (!checkbox.disabled && selectedIds_validation.map(String).includes(id)) {
-            checkbox.checked = true;
-        }
-    });
-    // Actualizar conteo y suma al cargar
-    updateCountAndSum();
+    let selectedPayments = leerSeleccion('selectedPayments');
+    let selectedValidation = leerSeleccion('selectedPaymentsValidation');
+    let selectedPrint = leerSeleccion('selectedPaymentsPrint');
 
-    
+    function restaurarSeleccion(checks, seleccion) {
+        checks.forEach(function (checkbox) {
+            const id = String(checkbox.dataset.id).trim();
+            if (!checkbox.disabled && seleccion.indexOf(id) !== -1) checkbox.checked = true;
+        });
+    }
 
-    // Manejar selección/deselección
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const id = checkbox.getAttribute('data-id').toString().trim();
+    function enlazarSeleccion(checks, clave, obtenerSeleccion, asignarSeleccion, alCambiar) {
+        checks.forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const id = String(checkbox.dataset.id).trim();
+                let seleccion = obtenerSeleccion();
+                if (checkbox.checked && seleccion.indexOf(id) === -1) seleccion.push(id);
+                if (!checkbox.checked) seleccion = seleccion.filter(function (item) { return item !== id; });
+                asignarSeleccion(seleccion);
+                localStorage.setItem(clave, JSON.stringify(seleccion));
+                if (alCambiar) alCambiar();
+            });
+        });
+    }
 
-            if (checkbox.checked) {
-                // Añadir el ID si no existe
-                if (!selectedIds.includes(id)) {
-                    selectedIds.push(id);
-                }
+    function actualizarResumen() {
+        let suma = 0;
+        selectedPayments.forEach(function (id) {
+            const checkbox = paymentCheckboxes.find(function (item) { return String(item.dataset.id).trim() === id; });
+            if (checkbox) suma += parseFloat(checkbox.dataset.monto) || 0;
+        });
+        if (countElement) countElement.textContent = selectedPayments.length;
+        if (sumElement) sumElement.textContent = suma.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function agregarFaltantes(nombre, seleccion, checks) {
+        form.querySelectorAll('.sv-temporal-' + nombre).forEach(function (campo) { campo.remove(); });
+        const presentes = checks.filter(function (checkbox) { return checkbox.checked && !checkbox.disabled; })
+            .map(function (checkbox) { return String(checkbox.value).trim(); });
+        seleccion.forEach(function (id) {
+            if (presentes.indexOf(id) === -1) agregarCampoOculto(form, nombre, id, 'sv-temporal-' + nombre);
+        });
+    }
+
+    restaurarSeleccion(paymentCheckboxes, selectedPayments);
+    restaurarSeleccion(validationCheckboxes, selectedValidation);
+    restaurarSeleccion(printCheckboxes, selectedPrint);
+
+    enlazarSeleccion(paymentCheckboxes, 'selectedPayments', function () { return selectedPayments; }, function (valor) { selectedPayments = valor; }, actualizarResumen);
+    enlazarSeleccion(validationCheckboxes, 'selectedPaymentsValidation', function () { return selectedValidation; }, function (valor) { selectedValidation = valor; });
+    enlazarSeleccion(printCheckboxes, 'selectedPaymentsPrint', function () { return selectedPrint; }, function (valor) { selectedPrint = valor; });
+    actualizarResumen();
+
+    const controlButton = document.getElementById('enviar_a_control');
+    const validationButton = document.getElementById('validacion');
+    const printButton = document.getElementById('btnImprimir');
+
+    if (controlButton) {
+        controlButton.addEventListener('click', function () {
+            agregarFaltantes('compra_ids', selectedPayments, paymentCheckboxes);
+            localStorage.removeItem('selectedPayments');
+        });
+    }
+    if (validationButton) {
+        validationButton.addEventListener('click', function () {
+            agregarFaltantes('pago_ids', selectedValidation, validationCheckboxes);
+            localStorage.removeItem('selectedPaymentsValidation');
+        });
+    }
+    if (printButton) {
+        printButton.addEventListener('click', function () {
+            agregarFaltantes('imprimir_ids', selectedPrint, printCheckboxes);
+            form.setAttribute('target', '_blank');
+            window.setTimeout(function () { form.removeAttribute('target'); }, 1000);
+            localStorage.removeItem('selectedPaymentsPrint');
+        });
+    }
+
+    const reportForm = document.getElementById('reporteForm');
+    const startDateField = document.getElementById('id_start_date');
+    const endDateField = document.getElementById('id_end_date');
+    if (reportForm && startDateField && endDateField) {
+        reportForm.addEventListener('submit', function (event) {
+            if (!startDateField.value || !endDateField.value) {
+                event.preventDefault();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('customAlert')).show();
             } else {
-                // Quitar el ID si ya no está seleccionado
-                selectedIds = selectedIds.filter(pid => pid !== id);
-            }
-
-            // Guardar en localStorage
-            localStorage.setItem('selectedPayments', JSON.stringify(selectedIds));
-
-            // Actualizar contador
-            updateCount();
-            updateCountAndSum();
-        });
-    });
-
-     function updateCountAndSum() {
-        let sum = 0;
-
-        checkboxes.forEach(checkbox => {
-            const id = checkbox.getAttribute('data-id').toString().trim();
-            const monto = parseFloat(checkbox.getAttribute('data-monto')) || 0;
-
-            if (checkbox.checked) {
-                sum += monto;
+                mostrarIndicadorCarga();
             }
         });
-
-        ocCountElement.textContent = selectedIds.length;
-        ocSumElement.textContent = sum.toFixed(2);
     }
-
-    // Actualizar el contador en el template
-    function updateCount() {
-        ocCountElement.textContent = selectedIds.length;
-    }
-
-    // Al enviar el formulario
-    layoutPagosButton.addEventListener('click', function(event) {
-        // Evitar envío inmediato
-        event.preventDefault();
-
-        // Añadir inputs ocultos al form con los IDs seleccionados
-        selectedIds.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'compra_ids';  // Django espera una lista con este nombre
-            input.value = id;
-            form.appendChild(input);
-        });
-
-        // Limpiar el localStorage para el siguiente ciclo
-        localStorage.removeItem('selectedPayments');
-
-        // Enviar el formulario
-        form.submit();
-    });
-    
-     // Al enviar el formulario
-    ValidacionButton.addEventListener('click', function(event) {
-        // Evitar envío inmediato
-        event.preventDefault();
-
-
-        // Limpiar inputs previos por si ya existían
-        //document.querySelectorAll('.input-pago-temp').forEach(e => e.remove());
-        // Añadir inputs ocultos al form con los IDs seleccionados
-        selectedIds_validation.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            
-            input.name = 'pago_ids';  // Django espera una lista con este nombre
-            input.value = id;
-            form.appendChild(input);
-        });
-
-        // VER QUÉ SE ENVÍA
-        const formData = new FormData(form);
-
-        console.log('====== DATOS DEL FORM ======');
-
-        for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-        }
-
-        console.log('selectedIds_validation:', selectedIds_validation);
-
-        // Enviar el formulario
-        form.submit();
-    });
-
-     // Al enviar el formulario
-    ImprimirButton.addEventListener('click', function(event) {
-        // Evitar envío inmediato
-        event.preventDefault();
-
-        // Añadir inputs ocultos al form con los IDs seleccionados
-        selectedIds_validation.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'imprimir_ids';  // Django espera una lista con este nombre
-            input.value = id;
-            form.appendChild(input);
-        });
-
-        // Abrir en nueva pestaña
-        form.setAttribute('target', '_blank');
-
-
-        // Enviar el formulario
-        form.submit();
-    });
-
-
-
-    
-    reportForm.addEventListener('submit', function(event) {
-        var startDate = startDateField.value;
-        var endDate = endDateField.value;
-
-        if (!startDate || !endDate) {
-            event.preventDefault();  // Evita que el formulario se envíe
-            // Mostrar el modal personalizado
-            var customAlertModal = new bootstrap.Modal(document.getElementById('customAlert'), {});
-            customAlertModal.show();
-        } else {
-            // Si las fechas están presentes, muestra el indicador de carga
-            mostrarIndicadorCarga();
-        }
-    });
 });
-
-
 </script>
 {% endblock %}
-</body>
-</html>
