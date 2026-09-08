@@ -479,11 +479,18 @@
                                 </form>
                             </td>
                             <td>
-                                <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}"
-                                   class="sv-btn sv-btn-danger sv-btn-icon" target="_blank"
-                                   rel="noopener" title="Abrir vale" aria-label="Abrir vale">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#pdfPreviewModal"
+                                    data-document-url="{% url 'descargar_vale_rosa_pdf' vale.id|unlocalize vale.color %}"
+                                    data-document-title="Vale {{ vale.color }} #{{ vale.id|unlocalize }}"
+                                    title="Visualizar vale"
+                                    aria-label="Visualizar vale"
+                                >
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </td>
                             <td>
                                 {% if vale.comprobante_pdf %}

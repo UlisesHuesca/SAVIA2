@@ -4,125 +4,318 @@
 {% load crispy_forms_tags %}
 {% load l10n %}
 {% load i18n %}
-<html>
-<head>
-{% block title %}{% trans "Vale Rosa" %}{% endblock %}
-</head>
-<body>
+
+{% block title %}
+    {% if color == 'azul' %}{% trans "Vale Azul" %}{% else %}{% trans "Vale Rosa" %}{% endif %}
+{% endblock %}
+
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="col-lg-6 offset-3">
-<div class="card mt-4" id="cardValeRosa">
-        <div class="card-header">
-            <h4>Vale Azul | {% if tipo == "gasto" %}Gasto:{% else %}Viático:{% endif %} {{objeto.folio}}</h4>
-        </div>
-        <div class="card-body">
-            <form method="POST" id="formValeRosa" enctype="multipart/form-data">
-                {% csrf_token %}
-                {% if color == 'rosa' %}
-                <div class="row my-2">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.motivo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Motivo"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Motivo" %}*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="row my-2">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Monto" %}*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% if color == 'azul' %}
-                <div class="row my-2">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-days"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field form.fecha_pago type="date" class="form-control" %}
-                                <label style="color: #121212;" for="id_comentario">Fecha de Pago</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                                
-                <div id="subir_pdf" class="row">
-                    <div class="input-group mb-3" style="height:60px" >
-                        {{form.comprobante_pdf|add_class:"form-control"}}
-                        <label class="input-group-text" for="id_soporte" style="color:#980F0F"><i class="fa-solid fa-cloud-arrow-up"></i></label>
-                    </div>
-                </div>
-            
-                <div class="text-end">
-                    <button type="submit" name="btn_valerosa" class="btn btn-outline-success" title ="Agregar Vale Rosa">
-                        <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
-                    </button>
-                </div>
-            </form>
-            {% if color == "azul" %}
-            <h5 class="mt-4">Vales Azules Registrados</h5>
-            {% else %}
-            <h5 class="mt-4">Vales Rosa Registrados</h5>
-            {% endif %}
-            <table class="table table-bordered">
-                <thead>
-                    {% if color == "azul" %}
-                    <tr style="background-color: #0c5460;"> 
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <p class="sv-page-eyebrow">Control de vales</p>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    {% if color == 'azul' %}
+                    <i class="fa-solid fa-money-check-dollar"></i>
                     {% else %}
-                    <tr style="background-color: #f8d7da;">
+                    <i class="fa-solid fa-receipt"></i>
                     {% endif %}
-                        <th>ID</th>
-                        <th>Motivo</th>
-                        <th>Monto</th>
-                        {% if color == 'azul' %}
-                        <th>Fecha de Pago</th>
-                        {% endif %}
-                        <th>Status</th>
-                        <th>Eliminar</th>
-                        <th>Comprobante S2</th>
-                        <th>Comprobante PDF</th>
-                    </tr>
-                </thead>
-                <tbody id="valesRosaLista">
-                   {% if tipo == 'gasto' %}
-                        {% for vale in objeto.vales_rosa.all %}
-                        {% if vale.color == color %}
-                            {% include "gasto/vale_rosa_row.html" with vale=vale %}
-                        {% endif %}
-                        {% empty %}
-                        <tr><td colspan="4" class="text-center">Sin vales aún</td></tr>
-                        {% endfor %}
-
-                    {% elif tipo == 'viatico' %}
-                        {% for vale in objeto.vales_rosa_viatico.all %}
-                        {% if vale.color == color %}
-                            {% include "gasto/vale_rosa_row.html" with vale=vale %}
-                        {% endif %}
-                        {% empty %}
-                        <tr><td colspan="4" class="text-center">Sin vales aún</td></tr>
-                        {% endfor %}
-                    {% endif %}
-                    </tbody>
-                    
-                </tbody>
-            </table>
+                </span>
+                {% if color == 'azul' %}Vale Azul{% else %}Vale Rosa{% endif %}
+            </h1>
+            <p class="sv-page-subtitle">
+                {% if tipo == 'gasto' %}Gasto{% else %}Viático{% endif %}
+                con folio {{ objeto.folio }}
+            </p>
         </div>
 
+        <div class="sv-page-actions">
+            <span class="sv-badge {% if color == 'azul' %}sv-badge-primary{% else %}sv-badge-warning{% endif %}">
+                <i class="fa-solid fa-hashtag"></i>
+                {{ objeto.folio }}
+            </span>
+        </div>
+    </header>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-5">
+            <section class="sv-card h-100" id="cardValeRosa">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            Registrar vale
+                        </h2>
+                        <p class="sv-page-subtitle mb-0">
+                            Captura la información y adjunta el comprobante correspondiente.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST" id="formValeRosa" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="sv-card-body">
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        {% if color == 'rosa' %}
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-comment"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.motivo|add_class:"form-control grupo-entrada"|append_attr:"placeholder=Motivo" }}
+                                <label for="{{ form.motivo.id_for_label }}">{% trans "Motivo" %}*</label>
+                            </div>
+                        </div>
+                        {% if form.motivo.errors %}
+                        <div class="invalid-feedback d-block mb-3">{{ form.motivo.errors|striptags }}</div>
+                        {% endif %}
+                        {% endif %}
+
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder=Monto" }}
+                                <label for="{{ form.monto.id_for_label }}">{% trans "Monto" %}*</label>
+                            </div>
+                        </div>
+                        {% if form.monto.errors %}
+                        <div class="invalid-feedback d-block mb-3">{{ form.monto.errors|striptags }}</div>
+                        {% endif %}
+
+                        {% if color == 'azul' %}
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field form.fecha_pago type="date" class="form-control" %}
+                                <label for="{{ form.fecha_pago.id_for_label }}">Fecha de pago</label>
+                            </div>
+                        </div>
+                        {% if form.fecha_pago.errors %}
+                        <div class="invalid-feedback d-block mb-3">{{ form.fecha_pago.errors|striptags }}</div>
+                        {% endif %}
+                        {% endif %}
+
+                        <div class="mb-2">
+                            <label for="{{ form.comprobante_pdf.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fa-solid fa-file-pdf text-danger me-2"></i>
+                                Comprobante PDF
+                            </label>
+                            {{ form.comprobante_pdf|add_class:"form-control"|attr:"accept:application/pdf,.pdf" }}
+                            <div class="form-text">Adjunta el soporte correspondiente al vale.</div>
+                        </div>
+                        {% if form.comprobante_pdf.errors %}
+                        <div class="invalid-feedback d-block">{{ form.comprobante_pdf.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="sv-card-footer d-flex justify-content-end">
+                        <button type="submit" name="btn_valerosa" class="sv-btn sv-btn-primary">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Registrar vale
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            Vales {% if color == 'azul' %}azules{% else %}rosa{% endif %} registrados
+                        </h2>
+                        <p class="sv-page-subtitle mb-0">
+                            Consulta el estado y los comprobantes asociados.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="sv-table-wrap">
+                    <table class="sv-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Motivo</th>
+                                <th class="text-end">Monto</th>
+                                {% if color == 'azul' %}<th>Fecha de pago</th>{% endif %}
+                                <th>Estado</th>
+                                <th>Eliminar</th>
+                                <th>Comprobante S2</th>
+                                <th>Comprobante PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="valesRosaLista">
+                            {% if tipo == 'gasto' %}
+                                {% for vale in objeto.vales_rosa.all %}
+                                    {% if vale.color == color %}
+                                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if color == 'azul' %}8{% else %}7{% endif %}" class="sv-empty">
+                                        <span class="sv-empty-title">Sin vales registrados</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% elif tipo == 'viatico' %}
+                                {% for vale in objeto.vales_rosa_viatico.all %}
+                                    {% if vale.color == color %}
+                                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if color == 'azul' %}8{% else %}7{% endif %}" class="sv-empty">
+                                        <span class="sv-empty-title">Sin vales registrados</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="{% if color == 'azul' %}8{% else %}7{% endif %}" class="sv-empty">
+                                    <span class="sv-empty-title">No fue posible identificar el tipo de solicitud</span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="valePreviewModal" tabindex="-1"
+     aria-labelledby="valePreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="valePreviewTitle">
+                        <i class="fa-solid fa-file-pdf me-2"></i>
+                        Vista previa del vale
+                    </h2>
+                    <span class="sv-modal-subtitle">
+                        Vale {% if color == 'azul' %}azul{% else %}rosa{% endif %}
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body sv-document-viewer">
+                <div class="sv-document-loading" id="valePreviewLoading">
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <span>Cargando vale…</span>
+                </div>
+
+                <iframe class="sv-document-frame d-none" id="valePreviewFrame"
+                        title="Vista previa del vale"></iframe>
+            </div>
+        </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    const modalElement = document.getElementById('valePreviewModal');
+    const frame = document.getElementById('valePreviewFrame');
+    const loading = document.getElementById('valePreviewLoading');
+    const title = document.getElementById('valePreviewTitle');
+    let objectUrl = null;
+
+    if (!modalElement || !frame || !loading || !title) return;
+
+    /*
+     * El enlace generado por vale_rosa_row.html ocupa la penúltima columna
+     * (Comprobante S2). Se intercepta para conservar el parcial actual y
+     * evitar que la respuesta attachment inicie una descarga.
+     */
+    document.addEventListener('click', function (event) {
+        const link = event.target.closest(
+            '#valesRosaLista tr td:nth-last-child(2) a[href]'
+        );
+
+        if (!link) return;
+
+        event.preventDefault();
+        link.dataset.documentUrl = link.href;
+        link.dataset.documentTitle = 'Vale {% if color == "azul" %}azul{% else %}rosa{% endif %}';
+
+        bootstrap.Modal.getOrCreateInstance(modalElement).show(link);
+    });
+
+    modalElement.addEventListener('show.bs.modal', async function (event) {
+        const button = event.relatedTarget;
+        const documentUrl = button ? button.dataset.documentUrl : '';
+        const documentTitle = button ? button.dataset.documentTitle : 'Vista previa del vale';
+
+        title.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + documentTitle;
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+
+        frame.classList.add('d-none');
+        frame.removeAttribute('src');
+        loading.classList.remove('d-none');
+
+        try {
+            if (!documentUrl) throw new Error('No se encontró el documento del vale.');
+
+            const response = await fetch(documentUrl, {
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error('No fue posible cargar el vale.');
+            }
+
+            const blob = await response.blob();
+            const pdfBlob = blob.type === 'application/pdf'
+                ? blob
+                : new Blob([blob], { type: 'application/pdf' });
+
+            objectUrl = URL.createObjectURL(pdfBlob);
+            frame.src = objectUrl + '#zoom=90';
+            frame.classList.remove('d-none');
+            loading.classList.add('d-none');
+        } catch (error) {
+            loading.classList.add('d-none');
+            bootstrap.Modal.getInstance(modalElement)?.hide();
+
+            Swal.fire({
+                title: 'No se pudo visualizar',
+                text: error.message,
+                icon: 'error'
+            });
+        }
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        frame.removeAttribute('src');
+        frame.classList.add('d-none');
+        loading.classList.remove('d-none');
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    });
+})();
+</script>
 {% endblock %}
-</body>
-</html>
