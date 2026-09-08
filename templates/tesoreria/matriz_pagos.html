@@ -195,6 +195,65 @@
                 <h2 class="sv-card-title"><i class="fa-solid fa-table-list"></i> Pagos registrados</h2>
                 <p class="sv-card-subtitle">Selecciona los movimientos y ejecuta la acción correspondiente.</p>
             </div>
+            <div class="dropdown">
+                <button type="button" class="sv-btn sv-btn-outline dropdown-toggle"
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-table-columns"></i> Columnas
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-2 shadow">
+                    <div class="small fw-bold text-muted px-2 py-1">Mostrar columnas</div>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="id"> ID
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="distrito"> Distrito
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitado"> Solicitado por
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="subproyecto"> Subproyecto
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="autorizado"> Autorizado por
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="entrada"> Estado de entrada
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="tipo"> Tipo de movimiento
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="fecha" checked> Fecha de pago
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="validar"> Validar
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="imprimir" checked> Imprimir
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="registro" checked> Registro
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="pago" checked> Comprobante de pago
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="spei"> SPEI devuelto
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="control"> Control de documentos
+                    </label>
+                    <label class="dropdown-item d-flex align-items-center gap-2">
+                        <input class="form-check-input mt-0" type="checkbox" data-column-toggle="fecha-control"> Fecha de control
+                    </label>
+                    <div class="dropdown-divider"></div>
+                    <button type="button" class="dropdown-item text-center" id="resetPaymentColumns">
+                        <i class="fa-solid fa-arrow-rotate-left me-1"></i> Restablecer vista compacta
+                    </button>
+                </div>
+            </div>
         </div>
         <form id="mass_payment_form" method="post" action="{% url 'matriz-pagos' %}">
             {% csrf_token %}
@@ -210,48 +269,48 @@
                 </div>
             </div>
             <div class="sv-table-wrap">
-        <table class="sv-table sv-table-xwide">
+        <table class="sv-table sv-table-wide" id="paymentsTable">
             <thead>
                 <tr>
-                    <th class="d-none d-lg-table-cell">Id</th>
+                    <th class="sv-col-id d-none">ID</th>
                     <th scope="col">Compra/Gasto</th>
-                    <th>Distrito</th>
-                    <th class="d-none d-lg-table-cell">Solicitado</th>
+                    <th class="sv-col-distrito d-none">Distrito</th>
+                    <th class="sv-col-solicitado d-none">Solicitado por</th>
                     <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th scope="col">Autorizado</th>
+                    <th class="sv-col-subproyecto d-none">Subproyecto</th>
+                    <th class="sv-col-autorizado d-none">Autorizado por</th>
                     <th scope="col">Proveedor/Colaborador</th>
                    
                     <!--<th scope="col">Facturas Completas</th>-->
                     
                     <th>Facturas</th>
-                    <th class="d-none d-md-table-cell">Status Entrada</th>
-                    <th>Tipo</th>
+                    <th class="sv-col-entrada d-none">Estado de entrada</th>
+                    <th class="sv-col-tipo d-none">Tipo</th>
                     <th scope="col">Importe</th>
-                    <th scope="col">Fecha</th>
+                    <th class="sv-col-fecha" scope="col">Fecha</th>
                     
-                    <th>Validar</th>
-                    <th>Imprimir</th>
+                    <th class="sv-col-validar d-none">Validar</th>
+                    <th class="sv-col-imprimir">Imprimir</th>
                    
-                    <th>Registro</th>
-                    <th scope="col">Pago</th>
-                    <th>SPEI Devuelto</th>
-                    <th>Control de Documentos</th>
-                    <th>Fecha Control</th>
+                    <th class="sv-col-registro">Registro</th>
+                    <th class="sv-col-pago" scope="col">Pago</th>
+                    <th class="sv-col-spei d-none">SPEI devuelto</th>
+                    <th class="sv-col-control d-none">Control de documentos</th>
+                    <th class="sv-col-fecha-control d-none">Fecha de control</th>
                 </tr>
             </thead>
             <tbody>
                 {% for pago in pagos_list %}
                 <tr>
-                    <td class="d-none d-lg-table-cell"><span class="sv-badge sv-badge-neutral">{{ pago.id }}</span></td>
+                    <td class="sv-col-id d-none"><span class="sv-badge sv-badge-neutral">{{ pago.id }}</span></td>
                     {% if pago.oc %}
                         <td>{{pago.oc.folio}}</td>
-                        <td>{{pago.oc.req.orden.distrito.nombre}}</td>
-                        <td class="d-none d-lg-table-cell">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
+                        <td class="sv-col-distrito d-none">{{pago.oc.req.orden.distrito.nombre}}</td>
+                        <td class="sv-col-solicitado d-none">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
                         
                         <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
-                        <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
+                        <td class="sv-col-subproyecto d-none">{{pago.oc.req.orden.subproyecto.nombre}}</td>
+                        <td class="sv-col-autorizado d-none">{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
                         <td>{{pago.oc.proveedor}}</td>
                         <td>
                             <ul class="nav nav-pills">
@@ -273,7 +332,7 @@
                                 </li>
                             </ul>
                         </td>   
-                        <td class="d-none d-lg-table-cell">
+                        <td class="sv-col-entrada d-none">
                             {% if pago.oc.entrada_completa %}<span class="sv-badge sv-badge-primary">Entregada</span>
                                 {% for entrada in pago.oc.vale_entrada.all %}
                                     {% if entrada.entrada_date %}
@@ -286,12 +345,12 @@
                     {% endif %}
                     {% if pago.gasto %}
                         <td>G{{pago.gasto.folio}}</td>
-                        <td>{{pago.gasto.distrito.nombre}}</td>
-                        <td class="d-none d-lg-table-cell">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
+                        <td class="sv-col-distrito d-none">{{pago.gasto.distrito.nombre}}</td>
+                        <td class="sv-col-solicitado d-none">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
                         
                         <td>{{pago.proyectos}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.subproyectos}}</td>
-                        <td>{{pago.gasto.superintendente.staff.staff.first_name}} {{pago.gasto.superintendente.staff.staff.last_name}}</td>
+                        <td class="sv-col-subproyecto d-none">{{pago.subproyectos}}</td>
+                        <td class="sv-col-autorizado d-none">{{pago.gasto.superintendente.staff.staff.first_name}} {{pago.gasto.superintendente.staff.staff.last_name}}</td>
                         {% if pago.gasto.colaborador %}
                             <td>{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}</td>
                         {% else %}
@@ -316,17 +375,17 @@
                                 </li>
                             </ul>
                         </td>
-                        <td></td>
+                        <td class="sv-col-entrada d-none"></td>
                     {% endif %}
 
                     {% if pago.viatico %}
                         <td>V{{pago.viatico.folio}}</td>
-                        <td>{{pago.viatico.distrito.nombre}}</td>
-                        <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
+                        <td class="sv-col-distrito d-none">{{pago.viatico.distrito.nombre}}</td>
+                        <td class="sv-col-solicitado d-none">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
                         
                         <td>{{pago.viatico.proyecto.nombre}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>
-                        <td>{{pago.viatico.superintendente.staff.staff.first_name}} {{pago.viatico.superintendente.staff.staff.last_name}}</td>
+                        <td class="sv-col-subproyecto d-none">{{pago.viatico.subproyecto.nombre}}</td>
+                        <td class="sv-col-autorizado d-none">{{pago.viatico.superintendente.staff.staff.first_name}} {{pago.viatico.superintendente.staff.staff.last_name}}</td>
                         {% if pago.viatico.colaborador %}
                             <td>{{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}</td>
                         {% else %}
@@ -351,9 +410,9 @@
                                 </li>
                             </ul>
                         </td>
-                        <td></td>
+                        <td class="sv-col-entrada d-none"></td>
                     {% endif %}
-                    <td>
+                    <td class="sv-col-tipo d-none">
                         {% if pago.spei_devuelto %}
                             <span class="sv-badge sv-badge-danger">
                                 SPEI Devuelto
@@ -370,22 +429,22 @@
                     </td>
                     <td><strong>${{ pago.monto|floatformat:2 }}</strong></td>
                    
-                    <td>{% if pago.pagado_real %}
+                    <td class="sv-col-fecha">{% if pago.pagado_real %}
                             {{pago.pagado_real|date:"d/m/Y"}}
                         {% elif pago.pagado_date %}
                             {{pago.pagado_date|date:"d/m/Y"}}
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="sv-col-validar d-none">
                          {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                         
                         <input class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para validación" {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}checked disabled{% endif %}>
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="sv-col-imprimir">
                         <input class="print_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="imprimir_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para imprimir">
                     </td>
-                    <td>
+                    <td class="sv-col-registro">
                         <ul class="nav nav-pills">
                             {% if pago.oc %}
                             <li class="nav-item">
@@ -466,7 +525,7 @@
                             {% endif %}
                         </ul>
                     </td>
-                    <td>
+                    <td class="sv-col-pago">
                             {% if pago.comprobante_pago %}
                             <button type="button" class="sv-btn sv-btn-info sv-btn-icon" data-bs-toggle="modal" data-bs-target="#pdfModalPago{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -495,7 +554,7 @@
                             
                 
                     </td>
-                    <td class="text-center">
+                    <td class="sv-col-spei d-none text-center">
                         {% if pago.spei_devuelto %}
                             <span class="sv-badge sv-badge-danger" data-bs-toggle="tooltip" title="El banco receptor devolvió este SPEI">
                                 <i class="fa-solid fa-arrow-rotate-left"></i>SPEI Devuelto
@@ -519,7 +578,7 @@
                         {% endif %}
                     </td>
                  
-                    <td>
+                    <td class="sv-col-control d-none">
                         
                         {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                             {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}
@@ -535,7 +594,7 @@
                         {% endif %}
                     </td>
                   
-                   <td>
+                   <td class="sv-col-fecha-control d-none">
                        
                             {% if pago.fecha_control_documentos %}
                                 {{ pago.fecha_control_documentos|date:"d/m/Y" }}
@@ -832,6 +891,76 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    const columnDefaults = {
+        id: false,
+        distrito: false,
+        solicitado: false,
+        subproyecto: false,
+        autorizado: false,
+        entrada: false,
+        tipo: false,
+        fecha: true,
+        validar: false,
+        imprimir: true,
+        registro: true,
+        pago: true,
+        spei: false,
+        control: false,
+        'fecha-control': false
+    };
+    const columnStorageKey = 'saviaMatrizPagosColumnas';
+    let columnPreferences = Object.assign({}, columnDefaults);
+
+    try {
+        const savedPreferences = JSON.parse(localStorage.getItem(columnStorageKey));
+        if (savedPreferences && typeof savedPreferences === 'object') {
+            Object.keys(columnDefaults).forEach(function (column) {
+                if (typeof savedPreferences[column] === 'boolean') {
+                    columnPreferences[column] = savedPreferences[column];
+                }
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(columnStorageKey);
+    }
+
+    function updatePaymentColumn(column, visible) {
+        document.querySelectorAll('.sv-col-' + column).forEach(function (cell) {
+            cell.classList.toggle('d-none', !visible);
+        });
+    }
+
+    const columnToggles = Array.from(document.querySelectorAll('[data-column-toggle]'));
+
+    function applyColumnPreferences() {
+        columnToggles.forEach(function (checkbox) {
+            const column = checkbox.dataset.columnToggle;
+            const visible = columnPreferences[column] === true;
+            checkbox.checked = visible;
+            updatePaymentColumn(column, visible);
+        });
+    }
+
+    columnToggles.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const column = checkbox.dataset.columnToggle;
+            columnPreferences[column] = checkbox.checked;
+            updatePaymentColumn(column, checkbox.checked);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+        });
+    });
+
+    const resetColumnsButton = document.getElementById('resetPaymentColumns');
+    if (resetColumnsButton) {
+        resetColumnsButton.addEventListener('click', function () {
+            columnPreferences = Object.assign({}, columnDefaults);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+            applyColumnPreferences();
+        });
+    }
+
+    applyColumnPreferences();
 });
 </script>
 {% endblock %}
