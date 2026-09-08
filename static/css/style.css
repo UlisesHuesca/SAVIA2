@@ -443,6 +443,12 @@ body {
     font-size: 14px;
 }
 
+.sv-input-group .form-floating > .form-select {
+    padding-top: 1.3rem;
+    padding-bottom: 0.2rem;
+    line-height: 1.25;
+}
+
 .sv-input-group .form-control:focus,
 .sv-input-group .form-select:focus {
     border-color: var(--sv-accent);

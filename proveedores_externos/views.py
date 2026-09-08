@@ -87,7 +87,18 @@ def matriz_oc_proveedores(request):
     
     compras_no_pagadas = compras.filter(pagada=False, entrada_completa = True)
     #suma_compras_no_pagadas = compras_no_pagadas.aggregate(total=Sum('costo_oc'))['total'] or 0
-    suma_compras_no_pagadas = sum(c.costo_plus_adicionales for c in compras_no_pagadas)
+    suma_compras_no_pagadas = sum(
+        (
+            c.costo_plus_adicionales
+            or decimal.Decimal("0.00")
+        ) - (
+            c.get_monto_pagos.get("total_pagos")
+            or decimal.Decimal("0.00")
+        )
+        for c in compras_no_pagadas
+    )
+    #suma_compras_no_pagadas = compras_no_pagadas.aggregate(total=Sum('costo_oc'))['total'] or 0
+    #suma_compras_no_pagadas = sum(c.costo_plus_adicionales for c in compras_no_pagadas)
     print(suma_compras_no_pagadas)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
