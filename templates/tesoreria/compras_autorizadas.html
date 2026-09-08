@@ -157,39 +157,82 @@
                     <i class="fa-solid fa-list-check"></i>
                     Matriz de compras autorizadas
                 </h2>
-                {% if usuario.tipo.tesoreria %}
-                <button type="submit" name="btnDescargarFacturas" class="sv-btn sv-btn-primary">
-                    <i class="fa-solid fa-file-arrow-down"></i>
-                    Descargar facturas
-                </button>
-                {% endif %}
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="dropdown">
+                        <button type="button" class="sv-btn sv-btn-outline dropdown-toggle"
+                                data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                                aria-expanded="false">
+                            <i class="fa-solid fa-table-columns"></i> Columnas
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-2 shadow">
+                            <div class="small fw-bold text-muted px-2 py-1">Mostrar columnas</div>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitado" checked> Solicitado por
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="autorizado-por"> Autorizado por
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="autorizado" checked> Fecha de autorización
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="moneda"> Moneda
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="pagado" checked> Pagado
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="entrada" checked> Estado de entrada
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="condiciones" checked> Condiciones
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="facturas" checked> Facturas
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="documentos" checked> Documentos
+                            </label>
+                            {% if usuario.tipo.nombre != 'CONTADOR' %}
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="cancelar" checked> Cancelar
+                            </label>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input class="form-check-input mt-0" type="checkbox" data-column-toggle="descargar" checked> Descargar
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if usuario.tipo.tesoreria %}
+                    <button type="submit" name="btnDescargarFacturas" class="sv-btn sv-btn-primary">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        Descargar facturas
+                    </button>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="sv-table-wrap">
-                <table class="sv-table sv-table-xwide">
+                <table class="sv-table sv-table-wide">
                     <thead>
                         <tr>
                             <th>Compra</th>
-                            <th>Solicitado por</th>
-                            <th>Autorizado por</th>
-                            <th>Proyecto</th>
-                            <th>Subproyecto</th>
-                            <th>Autorizado</th>
+                            <th class="sv-col-solicitado">Solicitado por</th>
+                            <th class="sv-col-autorizado-por d-none">Autorizado por</th>
+                            <th>Proyecto / Subproyecto</th>
+                            <th class="sv-col-autorizado">Autorizado</th>
                             <th>Proveedor</th>
-                            <th>Importe OC</th>
-                            <th>Parcialidad</th>
-                            <th>Flete</th>
-                            <th>Moneda</th>
-                            <th>Pagado</th>
-                            <th>Estado de entrada</th>
-                            <th>Condiciones</th>
-                            <th>Facturas</th>
-                            <th>Evidencias</th>
+                            <th>Importes</th>
+                            <th class="sv-col-moneda d-none">Moneda</th>
+                            <th class="sv-col-pagado">Pagado</th>
+                            <th class="sv-col-entrada">Estado de entrada</th>
+                            <th class="sv-col-condiciones">Condiciones</th>
+                            <th class="sv-col-facturas">Facturas</th>
+                            <th class="sv-col-documentos">Documentos</th>
                             {% if usuario.tipo.nombre != 'CONTADOR' %}
                             <th>Acciones</th>
-                            <th>OC</th>
-                            <th>Cancelar</th>
-                            <th>Descargar</th>
+                            <th class="sv-col-cancelar">Cancelar</th>
+                            <th class="sv-col-descargar">Descargar</th>
                             {% endif %}
                         </tr>
                     </thead>
@@ -197,31 +240,23 @@
                         {% for compra in compras_list %}
                         <tr>
                             <td><span class="sv-folio">{{ compra.folio }}</span></td>
-                            <td>
-                                <div class="sv-user">
-                                    <span class="sv-user-avatar">
-                                        {{ compra.req.orden.staff.staff.staff.first_name|first }}{{ compra.req.orden.staff.staff.staff.last_name|first }}
-                                    </span>
-                                    <span class="sv-user-name">
-                                        {{ compra.req.orden.staff.staff.staff.first_name }}
-                                        {{ compra.req.orden.staff.staff.staff.last_name }}
-                                    </span>
-                                </div>
+                            <td class="sv-col-solicitado">
+                                <span class="sv-cell-title">
+                                    {{ compra.req.orden.staff.staff.staff.first_name }}
+                                    {{ compra.req.orden.staff.staff.staff.last_name }}
+                                </span>
+                            </td>
+                            <td class="sv-col-autorizado-por d-none">
+                                <span class="sv-cell-title">
+                                    {{ compra.oc_autorizada_por2.staff.staff.first_name }}
+                                    {{ compra.oc_autorizada_por2.staff.staff.last_name }}
+                                </span>
                             </td>
                             <td>
-                                <div class="sv-user">
-                                    <span class="sv-user-avatar">
-                                        {{ compra.oc_autorizada_por2.staff.staff.first_name|first }}{{ compra.oc_autorizada_por2.staff.staff.last_name|first }}
-                                    </span>
-                                    <span class="sv-user-name">
-                                        {{ compra.oc_autorizada_por2.staff.staff.first_name }}
-                                        {{ compra.oc_autorizada_por2.staff.staff.last_name }}
-                                    </span>
-                                </div>
+                                <span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span>
+                                <span class="sv-cell-subtitle">{{ compra.req.orden.subproyecto.nombre }}</span>
                             </td>
-                            <td><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
-                            <td><span class="sv-cell-subtitle">{{ compra.req.orden.subproyecto.nombre }}</span></td>
-                            <td>
+                            <td class="sv-col-autorizado">
                                 <div class="sv-date">
                                     <strong>
                                         <i class="fa-regular fa-calendar me-1"></i>
@@ -231,12 +266,14 @@
                                 </div>
                             </td>
                             <td><span class="sv-cell-title">{{ compra.proveedor }}</span></td>
-                            <td><strong>$ {{ compra.costo_plus_adicionales|floatformat:2 }}</strong></td>
-                            <td>$ {{ compra.parcial|floatformat:2 }}</td>
-                            <td>$ {{ compra.costo_fletes|floatformat:2 }}</td>
-                            <td><span class="sv-badge sv-badge-dark">{{ compra.moneda }}</span></td>
-                            <td><strong>$ {{ compra.monto_pagado|floatformat:2 }}</strong></td>
                             <td>
+                                <span class="sv-cell-title">OC: $ {{ compra.costo_plus_adicionales|floatformat:2 }}</span>
+                                <span class="sv-cell-subtitle">Parcialidad: $ {{ compra.parcial|floatformat:2 }}</span>
+                                <span class="sv-cell-subtitle">Flete: $ {{ compra.costo_fletes|floatformat:2 }}</span>
+                            </td>
+                            <td class="sv-col-moneda d-none"><span class="sv-badge sv-badge-dark">{{ compra.moneda }}</span></td>
+                            <td class="sv-col-pagado"><strong>$ {{ compra.monto_pagado|floatformat:2 }}</strong></td>
+                            <td class="sv-col-entrada">
                                 <div class="d-flex flex-column align-items-start gap-1">
                                     {% if compra.no_conformidad.all|length > 0 %}
                                     <span class="sv-badge sv-badge-danger">
@@ -269,9 +306,9 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td><span class="sv-cell-subtitle">{{ compra.cond_de_pago }}</span></td>
+                            <td class="sv-col-condiciones"><span class="sv-cell-subtitle">{{ compra.cond_de_pago }}</span></td>
 
-                            <td>
+                            <td class="sv-col-facturas">
                                 {% if compra.estado_facturas == "sin_facturas" %}
                                 <a class="sv-btn sv-btn-danger sv-btn-icon"
                                    href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.get_full_path|urlencode }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
@@ -294,12 +331,22 @@
                                 </a>
                                 {% endif %}
                             </td>
-                            <td>
-                                <a class="sv-btn sv-btn-info sv-btn-icon"
-                                   href="{% url 'evidencias-proveedor' compra.id %}"
-                                   title="Evidencias de compra" aria-label="Evidencias de compra">
-                                    <i class="fa-regular fa-images"></i>
-                                </a>
+                            <td class="sv-col-documentos">
+                                <div class="sv-actions flex-column align-items-start">
+                                    <a class="sv-btn sv-btn-info sv-btn-icon"
+                                       href="{% url 'evidencias-proveedor' compra.id %}"
+                                       title="Evidencias de compra" aria-label="Evidencias de compra">
+                                        <i class="fa-regular fa-images"></i>
+                                    </a>
+                                    {% if usuario.tipo.nombre != 'CONTADOR' %}
+                                    <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                            data-bs-toggle="modal" data-bs-target="#pdfModal"
+                                            data-pdf-url="{% url 'ver_oc_pdf' compra.id %}"
+                                            title="Ver orden de compra" aria-label="Ver orden de compra">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </td>
 
                             {% if usuario.tipo.nombre != 'CONTADOR' %}
@@ -327,15 +374,7 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td>
-                                <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
-                                        data-bs-toggle="modal" data-bs-target="#pdfModal"
-                                        data-pdf-url="{% url 'ver_oc_pdf' compra.id %}"
-                                        title="Ver orden de compra" aria-label="Ver orden de compra">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                            </td>
-                            <td>
+                            <td class="sv-col-cancelar">
                                 <a class="sv-btn sv-btn-danger sv-btn-icon"
                                    data-bs-toggle="modal" data-bs-target="#dialog"
                                    hx-target="#document" hx-swap="innerHTML"
@@ -344,7 +383,7 @@
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
                             </td>
-                            <td class="text-center">
+                            <td class="sv-col-descargar text-center">
                                 <input class="oc_checkbox_accion form-check-input fs-4"
                                        type="checkbox" name="compra_ids_accion"
                                        value="{{ compra.id|unlocalize }}"
@@ -354,7 +393,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="{% if usuario.tipo.nombre == 'CONTADOR' %}16{% else %}20{% endif %}"
+                            <td colspan="{% if usuario.tipo.nombre == 'CONTADOR' %}13{% else %}16{% endif %}"
                                 class="sv-empty">
                                 <span class="sv-empty-icon"><i class="fa-solid fa-circle-check"></i></span>
                                 <span class="sv-empty-title">No hay compras autorizadas</span>
@@ -517,6 +556,54 @@
             pdfFrame.src = "";
         });
     }
+
+    const columnDefaults = {
+        "solicitado": true,
+        "autorizado-por": false,
+        "autorizado": true,
+        "moneda": false,
+        "pagado": true,
+        "entrada": true,
+        "condiciones": true,
+        "facturas": true,
+        "documentos": true,
+        "cancelar": true,
+        "descargar": true
+    };
+    const storageKey = "saviaComprasColumnas";
+    let columnPreferences = Object.assign({}, columnDefaults);
+
+    try {
+        const savedPreferences = JSON.parse(localStorage.getItem(storageKey));
+        if (savedPreferences && typeof savedPreferences === "object") {
+            Object.keys(columnDefaults).forEach(function (column) {
+                if (typeof savedPreferences[column] === "boolean") {
+                    columnPreferences[column] = savedPreferences[column];
+                }
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(storageKey);
+    }
+
+    function updateColumn(column, visible) {
+        document.querySelectorAll(".sv-col-" + column).forEach(function (cell) {
+            cell.classList.toggle("d-none", !visible);
+        });
+    }
+
+    document.querySelectorAll("[data-column-toggle]").forEach(function (checkbox) {
+        const column = checkbox.dataset.columnToggle;
+        const visible = columnPreferences[column] !== false;
+        checkbox.checked = visible;
+        updateColumn(column, visible);
+
+        checkbox.addEventListener("change", function () {
+            columnPreferences[column] = checkbox.checked;
+            updateColumn(column, checkbox.checked);
+            localStorage.setItem(storageKey, JSON.stringify(columnPreferences));
+        });
+    });
 })();
 </script>
 {% endblock %}
