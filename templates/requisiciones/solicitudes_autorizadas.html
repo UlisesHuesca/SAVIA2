@@ -3,277 +3,329 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Solicitudes para Surtir{% endblock %}
-</head>
-<body>
+
+{% block title %}Solicitudes para surtir{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-    <!-- Aqui es el encabezado de los filtros -->
-<div class = "row mt-2 bg-white">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Salidas | Filtro de Solicitudes Autorizadas</h5>
-            </div>
-            <div class="card-body">
-        
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder=Solicitud"}}
-                                <label style="color: #121212;" for="id_solicitud">Solicitud</label>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-box-open"></i>
+                </span>
+                Solicitudes para surtir
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta los materiales autorizados y registra su salida de almacén.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list-check"></i>
+            {{ productos_list.paginator.count }} partidas
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-filter"></i>
+                Filtros de solicitudes autorizadas
+            </h2>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder=Solicitud" }}
+                                <label for="{{ myfilter.form.solicitud.id_for_label }}">Solicitud</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código"}}
-                                <label style="color: #121212;" for="id_solicitud">Código</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código" }}
+                                <label for="{{ myfilter.form.codigo.id_for_label }}">Código</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto"}}
-                                <label style="color: #121212;" for="id_producto">Producto</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                                <label for="{{ myfilter.form.producto.id_for_label }}">Producto</label>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Usuario"}}
-                                <label style="color: #121212;" for="id_producto">Usuario</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Usuario" }}
+                                <label for="{{ myfilter.form.nombre.id_for_label }}">Solicitado por</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto"}}
-                                <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                                <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto"}}
-                                <label style="color: #121212;" for="id_subproyecto">Subproyecto</label>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto" }}
+                                <label for="{{ myfilter.form.subproyecto.id_for_label }}">Subproyecto</label>
                             </div>
                         </div>
                     </div>
-                    
-                </div>
-                <div class="row g-12 my-2">
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_start_date">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_end_date">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2 mt-1">
-                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+                    <div class="col-12 col-xl-8 d-flex flex-column flex-sm-row justify-content-end align-items-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>
+                            Limpiar
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
+                        </button>
                     </div>
                 </div>
-                <hr>
-                </form>
-                <form method=POST>
+            </form>
+        </div>
+
+        <div class="sv-card-body border-top">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <form method="POST">
                     {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item m-1">
-                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        
-                        {% if usuario.tipo.almacenista == True %}
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'solicitud-autorizada' %}">Surtir</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitudes-autorizadas-pendientes' %}">Pendientes</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada-orden' %}">Requisitar</a>
-                                  </div>
-                            </li>
-                        </ul>
-                        {% else %}
-                        <div class="d-none">
-                        {% endif %}
-                    </ul>
+                    <button type="submit" name="btnExcel" class="sv-btn sv-btn-success" value="Reporte Excel">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Exportar reporte
+                    </button>
                 </form>
+
+                {% if usuario.tipo.almacenista == True %}
+                <nav class="d-flex flex-wrap gap-2" aria-label="Vistas de solicitudes de almacén">
+                    <a class="sv-btn sv-btn-primary" href="{% url 'solicitud-autorizada' %}" aria-current="page">
+                        <i class="fa-solid fa-box-open"></i>
+                        Surtir
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'solicitudes-autorizadas-pendientes' %}">
+                        <i class="fa-solid fa-clock"></i>
+                        Pendientes
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'solicitud-autorizada-orden' %}">
+                        <i class="fa-solid fa-cart-plus"></i>
+                        Requisitar
+                    </a>
+                </nav>
+                {% endif %}
             </div>
         </div>
-    </div>
-</div>
-    <!-- Aquí terminan el encabezado de los filtros -->
+    </section>
 
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-dolly"></i>
+                Material autorizado
+            </h2>
+            <span class="sv-badge sv-badge-dark">
+                Página {{ productos_list.number }} de {{ productos_list.paginator.num_pages }}
+            </span>
+        </div>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-
-<!-- Aquí empieza la generación de la tabla -->
-
-    <div class="col-md-12">
-        <div class="table-responsive-sm">
-        <table class="table table-striped table-hover bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio</th>
-                    <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Cantidad Solicitada</th>
-                    <th>Cantidad por Surtir</th>
-                    <th class="d-none d-lg-table-cell">Status</th>
-                    <th class="d-none d-lg-table-cell">Creado</th>
-                    <th scope="col">Acción</th>
-                    <th class="d-none d-lg-table-cell">Documentos</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for producto in productos_list %}
-                <tr>
-                    <th scope="row">{{producto.articulos.orden.folio}}</th>
-                    <td class="d-none d-lg-table-cell">{{producto.articulos.orden.staff.staff.staff.first_name}} {{producto.articulos.orden.staff.staff.staff.last_name}}</td>
-                    <td>{{producto.articulos.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{producto.articulos.orden.subproyecto.nombre}}</td>
-                    <td>{{producto.articulos.producto.producto}}</td>
-                    <td>{{producto.articulos.cantidad}}</td>
-                    <td>{{producto.cantidad}}</td>
-                    
-                    {% if producto.salida == True %}
-                    <td class="d-none d-lg-table-cell">Salida realizada</td>
-                    {% else %}
-                    <td class="d-none d-lg-table-cell">Salida no realizada aún</td>
-                    {% endif %}
-                    <td class="d-none d-lg-table-cell">{{producto.articulos.orden.created_at}}</td>
-                    <td>
-                        <ul class="nav nav-pills">
-                           
-                            <li class="nav-item m-1">
-                                {% if producto.surtir == True  or producto.seleccionado_por == usuario%}
-                                <div class='visible'>
-                                {% else %}
-                                <div class='invisible'>
-                                {% endif %}
-                                    <a type="button" class="btn btn-outline-success" href="{% url 'salida-material' producto.articulos.orden.id %}">Surtir</a>
-                                </div>
-                            </li>
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'devolucion-material' producto.articulos.orden.id %}">R<i class="fa-solid fa-backward"></i></a>
-                            </li>
-                        </ul>
-                    </td>
-                    <td class="d-none d-lg-table-cell">
-                        <ul class="nav nav-pills">
-                            <li class="nav-item mx-2">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' producto.articulos.orden.id %}">
-                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Solicitado por</th>
+                        <th>Proyecto / Subproyecto</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Solicitado</th>
+                        <th class="text-end">Por surtir</th>
+                        <th>Estado</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                        <th>Documento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos_list %}
+                    <tr>
+                        <td>
+                            <span class="sv-folio">{{ producto.articulos.orden.folio }}</span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ producto.articulos.orden.staff.staff.staff.first_name }}
+                                {{ producto.articulos.orden.staff.staff.staff.last_name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">{{ producto.articulos.orden.proyecto.nombre }}</span>
+                            <span class="sv-cell-subtitle">{{ producto.articulos.orden.subproyecto.nombre }}</span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">{{ producto.articulos.producto.producto }}</span>
+                        </td>
+                        <td class="text-end">{{ producto.articulos.cantidad }}</td>
+                        <td class="text-end"><strong>{{ producto.cantidad }}</strong></td>
+                        <td>
+                            {% if producto.salida == True %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Salida realizada
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">
+                                <i class="fa-solid fa-clock"></i>
+                                Pendiente
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="sv-date">
+                                <strong>{{ producto.articulos.orden.created_at|date:"d/m/Y" }}</strong>
+                                <small>{{ producto.articulos.orden.created_at|time:"H:i" }} hrs.</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sv-actions">
+                                {% if producto.surtir == True or producto.seleccionado_por == usuario %}
+                                <a class="sv-btn sv-btn-success"
+                                   href="{% url 'salida-material' producto.articulos.orden.id %}">
+                                    <i class="fa-solid fa-box-open"></i>
+                                    Surtir
                                 </a>
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div>
-    </div>
-    <div>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+                                {% endif %}
+                                <a class="sv-btn sv-btn-danger sv-btn-icon"
+                                   href="{% url 'devolucion-material' producto.articulos.orden.id %}"
+                                   title="Registrar devolución" aria-label="Registrar devolución">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <a class="sv-btn sv-btn-info sv-btn-icon"
+                               href="{% url 'solicitud-pdf' producto.articulos.orden.id %}"
+                               title="Ver solicitud PDF" aria-label="Ver solicitud PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                            <span class="sv-empty-title">No hay materiales para surtir</span>
+                            <span class="sv-empty-text">Prueba modificando los filtros de búsqueda.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if productos_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de solicitudes">
+            <ul class="pagination sv-pagination justify-content-center">
                 {% if productos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url productos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </a>
+                </li>
                 {% endif %}
 
                 {% for item in productos_list.paginator.page_range %}
                     {% if productos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ item }}</span>
+                    </li>
                     {% elif item > productos_list.number|add:'-2' and item < productos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a>
+                    </li>
                     {% endif %}
                 {% endfor %}
 
-                {% if productos_list.paginator.num_pages > productos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{productos_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
                 {% if productos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url productos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página">
+                        <i class="fa-solid fa-angles-right"></i>
+                    </a>
+                </li>
                 {% endif %}
             </ul>
         </nav>
-    </div>
+        {% endif %}
+    </section>
+</main>
 
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
-
-    </div>
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg" id="document" role="document"></div>
 </div>
 {% endblock %}
-
-</body>
-</html>
