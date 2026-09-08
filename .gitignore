@@ -3,6 +3,7 @@ env/
 media/
 facturas/
 xml/
+assert/
 *.sql.gz
 errors.log.save
 *.log
