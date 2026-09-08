@@ -1722,7 +1722,7 @@ def autorizar_oc1(request, pk):
                     })
 
                     html_message2 = render_to_string(
-                        "emails/proveedores/orden_compra_asignada.html",
+                        "emails/compras/orden_compra_asignada.html",
                         contexto_proveedor,
                     )
 
@@ -2018,7 +2018,7 @@ def autorizar_oc2(request, pk):
                 })
 
                 html_message2 = render_to_string(
-                    "emails/proveedores/orden_compra_asignada.html",
+                    "emails/compras/orden_compra_asignada.html",
                     contexto_proveedor,
                 )
 
