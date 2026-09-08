@@ -3,231 +3,371 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Pendiente Requisición{% endblock %}
-</head>
-<body>
+
+{% block title %}Solicitudes por requisitar{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<hr>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class = "col">
-    <!-- Aqui es el encabezado de los filtros -->
-    <div class = "card">
-        <div class="col-12">
-            <div class="card-header">
-                <h5>Filtro de Solicitudes por Requisitar</h5>
-            </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-md-12 col-lg-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Solicitud"}}
-                            <label style="color: #121212;" for="id_codigo">Solicitud</label>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-cart-plus"></i>
+                </span>
+                Solicitudes por requisitar
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta las solicitudes autorizadas y genera sus requisiciones de compra.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list-check"></i>
+            {{ ordenes.paginator.count }} solicitudes
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-filter"></i>
+                Filtros de solicitudes
+            </h2>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Solicitud" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Solicitud</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitante"}}
-                                <label style="color: #121212;" for="id_id">Solicitante</label>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder=Solicitante" }}
+                                <label for="{{ myfilter.form.staff.id_for_label }}">Solicitante</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.proyecto|add_class:'form-control'|append_attr:"placeholder= Proyecto"}}
-                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating">
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                                <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>
+                            Limpiar
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
+                        </button>
                     </div>
                 </div>
+            </form>
+        </div>
+
+        <div class="sv-card-body border-top">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="sv-btn sv-btn-success" name="btnExcel" value="Reporte Excel">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Exportar reporte
+                    </button>
                 </form>
+
+                <nav class="d-flex flex-wrap gap-2" aria-label="Vistas de solicitudes de almacén">
+                    <a class="sv-btn sv-btn-outline" href="{% url 'solicitud-autorizada' %}">
+                        <i class="fa-solid fa-box-open"></i>
+                        Surtir
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'solicitudes-autorizadas-pendientes' %}">
+                        <i class="fa-solid fa-clock"></i>
+                        Pendientes
+                    </a>
+                    <a class="sv-btn sv-btn-primary" href="{% url 'solicitud-autorizada-orden' %}" aria-current="page">
+                        <i class="fa-solid fa-cart-plus"></i>
+                        Requisitar
+                    </a>
+                </nav>
             </div>
         </div>
-                <hr>
-    <form method=POST>
-    {% csrf_token %}
-    <ul class="nav nav-pills" >
-        <li class="nav-item mx-2 my-2">
-            <button type="submit" class="btn btn-outline-success" name="btnExcel" value='Reporte Excel'>
-                <i class="fa-solid fa-file-excel fa-2xl"></i>
-            </button>
-        </li>
-        <!--<li class="nav-item mx-2 my-1">
-            <button type="button" class="btn btn-outline-danger">
-                <i class="fa-solid fa-file-pdf fa-2xl"></i>
-            </button>
-        </li>-->
-        <li class="nav-item mx-2 my-2">
-            <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada' %}">Surtir</a>
-                <a type="button" class="btn btn-outline-info" href="{% url 'solicitudes-autorizadas-pendientes' %}">Pendientes</a>
-                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'solicitud-autorizada-orden' %}">Requisitar</a>
-              </div>
-        </li>
-    </ul>
-    </form>
-    </div>
-</div>
+    </section>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-clipboard-list"></i>
+                Solicitudes autorizadas
+            </h2>
+            <span class="sv-badge sv-badge-dark">
+                Página {{ ordenes.number }} de {{ ordenes.paginator.num_pages }}
+            </span>
+        </div>
 
-<div class = "card col mt-2">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio</th>
-                    <th class="d-none d-md-table-cell">Solicitado por</th>
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-md-table-cell">Subproyecto</th>
-                    <th class="d-none d-md-table-cell">Operación</th>
-                    <th scope="col">Creado</th>
-                    <th scope="col">Acción</th>
-                    <th scope="col">Documentos</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orden in ordenes %}
-                <tr>
-                    <th scope="row">{{orden.folio}}</th>
-                    <td class="d-none d-md-table-cell">{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
-                    <td>{{orden.proyecto.nombre}}</td>
-                    <td class="d-none d-md-table-cell">{{orden.subproyecto.nombre}}</td>
-                    <td class="d-none d-md-table-cell">{{orden.operacion}}</td>
-                    <td>{{orden.created_at}} </td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-orden' orden.id %}">Detalle</a>
-                            </li>
-                            <li class="nav-item m-1">
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Solicitado por</th>
+                        <th>Proyecto / Subproyecto</th>
+                        <th>Operación</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                        <th>Documento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orden in ordenes %}
+                    <tr>
+                        <td><span class="sv-folio">{{ orden.folio }}</span></td>
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ orden.staff.staff.staff.first_name }}
+                                {{ orden.staff.staff.staff.last_name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">{{ orden.proyecto.nombre }}</span>
+                            <span class="sv-cell-subtitle">{{ orden.subproyecto.nombre }}</span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">{{ orden.operacion }}</span>
+                        </td>
+                        <td>
+                            <div class="sv-date">
+                                <strong>{{ orden.created_at|date:"d/m/Y" }}</strong>
+                                <small>{{ orden.created_at|time:"H:i" }} hrs.</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sv-actions">
+                                <button type="button" class="sv-btn sv-btn-info"
+                                        data-bs-toggle="modal" data-bs-target="#dialog"
+                                        hx-target="#document"
+                                        hx-get="{% url 'detalle-orden' orden.id %}">
+                                    <i class="fa-solid fa-eye"></i>
+                                    Detalle
+                                </button>
+
                                 {% if orden.requisitar == True %}
-                                <div class='visible'>
-                                {% else %}
-                                <div class='invisible'>
-                                {% endif %}
-                                    <a type="button" class="btn btn-outline-success" href="{% url 'requisicion-detalle' orden.id%}">Requisitar</a>
-                                </div>
-                            </li>
-                        </ul>
-                    </td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item mx-2">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}">
-                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                <a class="sv-btn sv-btn-success" href="{% url 'requisicion-detalle' orden.id %}">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                    Requisitar
                                 </a>
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center">
-            {% if ordenes.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-            {% endif %}
-    
-            {% for item in ordenes.paginator.page_range %}
-                {% if ordenes.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > ordenes.number|add:'-2' and item < ordenes.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#solicitudPdfModal"
+                                    data-document-url="{% url 'solicitud-pdf' orden.id %}"
+                                    data-document-title="Solicitud {{ orden.folio }}"
+                                    title="Vista previa de la solicitud"
+                                    aria-label="Vista previa de la solicitud">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-circle-check"></i></span>
+                            <span class="sv-empty-title">No hay solicitudes por requisitar</span>
+                            <span class="sv-empty-text">Prueba modificando los filtros de búsqueda.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if ordenes.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de solicitudes">
+            <ul class="pagination sv-pagination justify-content-center">
+                {% if ordenes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url ordenes.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </a>
+                </li>
                 {% endif %}
-            {% endfor %}
-    
-            {% if ordenes.paginator.num_pages > salidas_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes.paginator.num_pages}}</a></li>
-            {% endif %}
-    
-            {% if ordenes.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
-        </ul>
-    </nav>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
+                {% for item in ordenes.paginator.page_range %}
+                    {% if ordenes.number == item %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ item }}</span>
+                    </li>
+                    {% elif item > ordenes.number|add:'-2' and item < ordenes.number|add:'2' %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
 
+                {% if ordenes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url ordenes.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url ordenes.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página">
+                        <i class="fa-solid fa-angles-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document"></div>
+</div>
+
+<div class="modal fade" id="solicitudPdfModal" tabindex="-1"
+     aria-labelledby="solicitudPdfModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="solicitudPdfModalTitle">
+                        <i class="fa-solid fa-file-pdf me-2"></i>
+                        Vista previa de la solicitud
+                    </h2>
+                    <span class="sv-modal-subtitle">Documento generado por SAVIA</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body sv-document-viewer">
+                <div class="sv-document-loading" id="solicitudPdfLoading">
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <span>Cargando solicitud…</span>
+                </div>
+                <iframe class="sv-document-frame d-none" id="solicitudPdfFrame"
+                        title="Vista previa de la solicitud"></iframe>
+            </div>
+        </div>
     </div>
 </div>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modalElement = document.getElementById("solicitudPdfModal");
+    const modalTitle = document.getElementById("solicitudPdfModalTitle");
+    const frame = document.getElementById("solicitudPdfFrame");
+    const loading = document.getElementById("solicitudPdfLoading");
+    let objectUrl = null;
 
+    modalElement.addEventListener("show.bs.modal", async function (event) {
+        const button = event.relatedTarget;
+        const url = button ? button.dataset.documentUrl : "";
+        const title = button ? button.dataset.documentTitle : "";
 
-</div>
+        modalTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' +
+            (title || "Vista previa de la solicitud");
 
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+
+        frame.classList.add("d-none");
+        frame.removeAttribute("src");
+        loading.classList.remove("d-none");
+
+        if (!url) return;
+
+        try {
+            const response = await fetch(url, { credentials: "same-origin" });
+            if (!response.ok) {
+                throw new Error("No fue posible cargar la solicitud.");
+            }
+
+            const blob = await response.blob();
+            objectUrl = URL.createObjectURL(blob);
+            frame.src = objectUrl + "#zoom=85";
+            frame.classList.remove("d-none");
+            loading.classList.add("d-none");
+        } catch (error) {
+            loading.classList.add("d-none");
+            bootstrap.Modal.getInstance(modalElement)?.hide();
+            Swal.fire({
+                title: "Error",
+                text: error.message,
+                icon: "error"
+            });
+        }
+    });
+
+    modalElement.addEventListener("hidden.bs.modal", function () {
+        frame.removeAttribute("src");
+        frame.classList.add("d-none");
+        loading.classList.remove("d-none");
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    });
+});
+</script>
 {% endblock %}
-</body>
-</html>
