@@ -47,15 +47,22 @@
                     <strong>
                         {% if usuario.distritos.nombre == "Yerod" %}
                          <img class="sv-dashboard-logo" src="{% static 'images/SAVIA_Negro_verde.jpg' %}" id="logo" alt="SAVIA">
-                        <h1 id="savia-dashboard-title" class="sv-dashboard-brand sv-dashboard-brand-negro">SAVIA 2.1/h1>
+                        <h1 id="savia-dashboard-title" class="sv-dashboard-brand sv-dashboard-brand-negro">SAVIA 2.1</h1>
                          {% else %}
                         <img class="sv-dashboard-logo" src="{% static 'images/SAVIA_Logo.jpg' %}" id="logo" alt="SAVIA">
                         <h1 id="savia-dashboard-title" class="sv-dashboard-brand sv-dashboard-brand-vordcab">SAVIA 2.1</h1>
                         {% endif %}
                         
                         {% if usuario.tipo.proveedor_externo %}
-                            {% if prealta %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab <span class="sv-badge sv-badge-warning">PREALTA</span></p>
-                            {% else %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab</p>
+                            {% if usuario.distritos.nombre == "Yerod" %}
+
+                            {% else %}
+                                {% if prealta %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab <span class="sv-badge sv-badge-warning">PREALTA</span></p>
+                            
+                            
+                                {% else %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab</p>
+                            
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </strong>
@@ -464,7 +471,7 @@
                         <div class="sv-dashboard-grid">
                             
                             <div class="sv-dashboard-slot">
-                                <a id="btnVerPolitica" href="#" role="button" class="sv-dashboard-link" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
+                                <a id="btnVerPolitica" href="#" role="button" class="sv-dashboard-link" title="Políticas y Códigos">
                                     <div class="sv-dashboard-action">
                                         
                                         <h4 class="sv-dashboard-action-title">Políticas y Códigos 
@@ -650,8 +657,20 @@ function mostrarModalInicial() {
     const modalEl = document.getElementById('modalInicial');
     const btnCerrar = document.getElementById('btnCerrarModalInicial');
 
+    if (!modalEl || !btnCerrar) {
+      resolve();
+      return;
+    }
+
+    // Los modales no deben permanecer dentro de .sv-dashboard-home porque
+    // ese contenedor crea un contexto de apilamiento por su z-index.
+    // Bootstrap coloca el backdrop directamente en body.
+    if (modalEl.parentElement !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+
     // Bootstrap 5 modal
-    const modal = new bootstrap.Modal(modalEl, {
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl, {
       backdrop: 'static',  // no cerrar clic afuera
       keyboard: false      // no cerrar con ESC
     });
@@ -685,7 +704,16 @@ document.addEventListener('DOMContentLoaded', async function () {
   console.log("Ya cerraron el modal inicial, ahora sí continuo...");
   const iframe = document.getElementById('iframePolitica');
   const modalElement = document.getElementById('pdfModal');
-  const modal = new bootstrap.Modal(modalElement);
+
+  // Evita que el backdrop quede por encima del visor de políticas.
+  if (modalElement.parentElement !== document.body) {
+    document.body.appendChild(modalElement);
+  }
+
+  const modal = bootstrap.Modal.getOrCreateInstance(modalElement, {
+    backdrop: 'static',
+    keyboard: false
+  });
   const modalTitle = document.getElementById('pdfModalLabel');
   const btnAceptar = document.getElementById('btnAceptarPolitica');
   const labelPolitica = document.getElementById('labelPolitica');
