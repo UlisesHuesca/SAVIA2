@@ -153,27 +153,93 @@
                     Detalle de productos comprados
                 </h2>
             </div>
-            <span class="sv-badge sv-badge-neutral">
-                Página {{ articulos_list.number }} de {{ articulos_list.paginator.num_pages }}
-            </span>
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                <div class="dropdown">
+                    <button class="sv-btn sv-btn-outline dropdown-toggle" type="button"
+                            id="productColumnsButton" data-bs-toggle="dropdown"
+                            data-bs-auto-close="outside" aria-expanded="false">
+                        <i class="fa-solid fa-table-columns"></i>
+                        Columnas
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="productColumnsButton"
+                         style="min-width: 250px;">
+                        <p class="sv-cell-title mb-2">Mostrar columnas</p>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-rq"
+                                   data-column="rq" data-default="true" checked>
+                            <label class="form-check-label" for="col-rq">Requisición</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-solicitud"
+                                   data-column="solicitud" data-default="false">
+                            <label class="form-check-label" for="col-solicitud">Solicitud</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-solicitado"
+                                   data-column="solicitado" data-default="false">
+                            <label class="form-check-label" for="col-solicitado">Solicitado por</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-proyecto"
+                                   data-column="proyecto" data-default="true" checked>
+                            <label class="form-check-label" for="col-proyecto">Proyecto</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-subproyecto"
+                                   data-column="subproyecto" data-default="false">
+                            <label class="form-check-label" for="col-subproyecto">Subproyecto</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-operacion"
+                                   data-column="operacion" data-default="false">
+                            <label class="form-check-label" for="col-operacion">Operación</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-codigo"
+                                   data-column="codigo" data-default="true" checked>
+                            <label class="form-check-label" for="col-codigo">Código</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-precio"
+                                   data-column="precio" data-default="true" checked>
+                            <label class="form-check-label" for="col-precio">Precio unitario</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input js-product-column" type="checkbox" id="col-cantidad"
+                                   data-column="cantidad" data-default="true" checked>
+                            <label class="form-check-label" for="col-cantidad">Cantidad</label>
+                        </div>
+
+                        <button type="button" class="sv-btn sv-btn-outline w-100" id="resetProductColumns">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            Vista compacta
+                        </button>
+                    </div>
+                </div>
+
+                <span class="sv-badge sv-badge-neutral">
+                    Página {{ articulos_list.number }} de {{ articulos_list.paginator.num_pages }}
+                </span>
+            </div>
         </div>
 
         <div class="sv-table-wrap">
-            <table class="sv-table sv-table-wide">
+            <table class="sv-table" id="productPurchasesTable">
                 <thead>
                     <tr>
                         <th scope="col">OC</th>
-                        <th scope="col" class="d-none d-lg-table-cell">RQ</th>
-                        <th scope="col" class="d-none d-xl-table-cell">Solicitud</th>
-                        <th scope="col" class="d-none d-xl-table-cell">Solicitado por</th>
+                        <th scope="col" class="sv-col-rq">RQ</th>
+                        <th scope="col" class="sv-col-solicitud">Solicitud</th>
+                        <th scope="col" class="sv-col-solicitado">Solicitado por</th>
                         <th scope="col">Proveedor</th>
-                        <th scope="col">Proyecto</th>
-                        <th scope="col" class="d-none d-xl-table-cell">Subproyecto</th>
-                        <th scope="col" class="d-none d-xl-table-cell">Operación</th>
-                        <th scope="col">Código</th>
+                        <th scope="col" class="sv-col-proyecto">Proyecto</th>
+                        <th scope="col" class="sv-col-subproyecto">Subproyecto</th>
+                        <th scope="col" class="sv-col-operacion">Operación</th>
+                        <th scope="col" class="sv-col-codigo">Código</th>
                         <th scope="col">Producto</th>
-                        <th scope="col" class="text-end">P. U.</th>
-                        <th scope="col" class="text-end">Cantidad</th>
+                        <th scope="col" class="sv-col-precio text-end">P. U.</th>
+                        <th scope="col" class="sv-col-cantidad text-end">Cantidad</th>
                         <th scope="col" class="text-end">Total</th>
                     </tr>
                 </thead>
@@ -181,19 +247,19 @@
                     {% for item in articulos_list %}
                     <tr>
                         <td data-label="OC"><span class="sv-folio">{{ item.oc.folio }}</span></td>
-                        <td data-label="RQ" class="d-none d-lg-table-cell">{{ item.oc.req.folio }}</td>
-                        <td data-label="Solicitud" class="d-none d-xl-table-cell">{{ item.oc.req.orden.folio }}</td>
-                        <td data-label="Solicitado por" class="d-none d-xl-table-cell">
+                        <td data-label="RQ" class="sv-col-rq">{{ item.oc.req.folio }}</td>
+                        <td data-label="Solicitud" class="sv-col-solicitud">{{ item.oc.req.orden.folio }}</td>
+                        <td data-label="Solicitado por" class="sv-col-solicitado">
                             {{ item.oc.req.orden.staff.staff.staff.first_name }} {{ item.oc.req.orden.staff.staff.staff.last_name }}
                         </td>
                         <td data-label="Proveedor"><strong>{{ item.oc.proveedor.nombre.razon_social }}</strong></td>
-                        <td data-label="Proyecto">{{ item.oc.req.orden.proyecto.nombre }}</td>
-                        <td data-label="Subproyecto" class="d-none d-xl-table-cell">{{ item.oc.req.orden.subproyecto.nombre }}</td>
-                        <td data-label="Operación" class="d-none d-xl-table-cell">{{ item.oc.req.orden.operacion }}</td>
-                        <td data-label="Código"><span class="sv-cell-title">{{ item.producto.producto.articulos.producto.producto.codigo }}</span></td>
+                        <td data-label="Proyecto" class="sv-col-proyecto">{{ item.oc.req.orden.proyecto.nombre }}</td>
+                        <td data-label="Subproyecto" class="sv-col-subproyecto">{{ item.oc.req.orden.subproyecto.nombre }}</td>
+                        <td data-label="Operación" class="sv-col-operacion">{{ item.oc.req.orden.operacion }}</td>
+                        <td data-label="Código" class="sv-col-codigo"><span class="sv-cell-title">{{ item.producto.producto.articulos.producto.producto.codigo }}</span></td>
                         <td data-label="Producto">{{ item.producto.producto.articulos.producto.producto.nombre }}</td>
-                        <td data-label="P. U." class="text-end text-nowrap">${{ item.precio_unitario|floatformat:2 }}</td>
-                        <td data-label="Cantidad" class="text-end">{{ item.cantidad }}</td>
+                        <td data-label="P. U." class="sv-col-precio text-end text-nowrap">${{ item.precio_unitario|floatformat:2 }}</td>
+                        <td data-label="Cantidad" class="sv-col-cantidad text-end">{{ item.cantidad }}</td>
                         <td data-label="Total" class="text-end text-nowrap"><strong>${{ item.total|floatformat:2 }}</strong></td>
                     </tr>
                     {% empty %}
@@ -296,6 +362,62 @@
     const downloadButton = document.getElementById('downloadButton');
     const reportButton = document.getElementById('reporte_compras');
     const statusMessage = document.getElementById('statusMessage_tag');
+    const columnToggles = Array.from(document.querySelectorAll('.js-product-column'));
+    const resetColumnsButton = document.getElementById('resetProductColumns');
+    const columnStorageKey = 'saviaMatrizProductosComprasColumnas';
+
+    function defaultColumnState() {
+        return columnToggles.reduce(function (state, toggle) {
+            state[toggle.dataset.column] = toggle.dataset.default === 'true';
+            return state;
+        }, {});
+    }
+
+    function savedColumnState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(columnStorageKey));
+            return saved && typeof saved === 'object'
+                ? Object.assign(defaultColumnState(), saved)
+                : defaultColumnState();
+        } catch (error) {
+            localStorage.removeItem(columnStorageKey);
+            return defaultColumnState();
+        }
+    }
+
+    function applyColumnState(state, save) {
+        columnToggles.forEach(function (toggle) {
+            const column = toggle.dataset.column;
+            const visible = state[column] !== false;
+            toggle.checked = visible;
+            document.querySelectorAll('.sv-col-' + column).forEach(function (cell) {
+                cell.hidden = !visible;
+            });
+        });
+
+        if (save) localStorage.setItem(columnStorageKey, JSON.stringify(state));
+    }
+
+    function initializeColumnSelector() {
+        if (!columnToggles.length) return;
+
+        let state = savedColumnState();
+        applyColumnState(state, false);
+
+        columnToggles.forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                state[toggle.dataset.column] = toggle.checked;
+                applyColumnState(state, true);
+            });
+        });
+
+        if (resetColumnsButton) {
+            resetColumnsButton.addEventListener('click', function () {
+                state = defaultColumnState();
+                applyColumnState(state, true);
+            });
+        }
+    }
 
     function getCookie(name) {
         const prefix = name + '=';
@@ -400,6 +522,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        initializeColumnSelector();
+
         if (localStorage.getItem('mostrarBotonExcel') === 'true' && btnExcel) {
             btnExcel.classList.remove('d-none');
             localStorage.removeItem('mostrarBotonExcel');

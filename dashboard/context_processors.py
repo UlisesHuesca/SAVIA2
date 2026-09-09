@@ -125,7 +125,8 @@ def contadores_processor(request):
             oc = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos)
             oc_pendientes = Compra.objects.filter(pagada=False, autorizado2=True, req__orden__distrito = usuario.distritos)
             devoluciones = Devolucion.objects.filter(complete=True, autorizada=None, solicitud__distrito = usuario.distritos)
-            conteo_oc1 = oc_pendientes.filter(para_pago=True).count()
+            conteo_oc1 = oc.count() 
+            conteo_pagos = oc_pendientes.filter(para_pago=True).count()
             conteo_devoluciones = devoluciones.count()
             conteo_pagos2 = oc_pendientes.filter(para_pago = False).count()
             
@@ -249,7 +250,7 @@ def contadores_processor(request):
     'productosordenados':productosordenados,
     'productosordenadosres':productosordenadosres,
     'proveedores_altas':proveedores_altas,
-    'conteo_pagos2': conteo_pagos2,
+    
     'conteo_devoluciones': conteo_devoluciones,
     'solicitudes_generadas':solicitudes_generadas,
     'conteo_productos':conteo_productos,
@@ -272,6 +273,7 @@ def contadores_processor(request):
     'usuario':usuario,
     'conteo_requis': conteo_requis,
     'conteo_pagos':conteo_pagos,
+    'conteo_pagos2': conteo_pagos2,
     'conteo_vales':conteo_vales,
     'conteo_calidad': conteo_calidad,
     }

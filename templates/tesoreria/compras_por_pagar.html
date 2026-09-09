@@ -173,33 +173,100 @@
         <section class="sv-card">
             <div class="sv-card-header">
                 <h2 class="sv-card-title"><i class="fa-solid fa-cart-shopping"></i>Órdenes autorizadas</h2>
+                <div class="dropdown">
+                    <button class="sv-btn sv-btn-outline dropdown-toggle" type="button"
+                            id="payableColumnsButton" data-bs-toggle="dropdown"
+                            data-bs-auto-close="outside" aria-expanded="false">
+                        <i class="fa-solid fa-table-columns"></i>
+                        Columnas
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow"
+                         aria-labelledby="payableColumnsButton" style="min-width: 260px;">
+                        <p class="sv-cell-title mb-2">Mostrar columnas</p>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-solicitado"
+                                   data-column="solicitado" data-default="true" checked>
+                            <label class="form-check-label" for="payable-col-solicitado">Solicitado por</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-autorizador"
+                                   data-column="autorizador" data-default="false">
+                            <label class="form-check-label" for="payable-col-autorizador">Autorizado por</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-fecha"
+                                   data-column="fecha" data-default="true" checked>
+                            <label class="form-check-label" for="payable-col-fecha">Fecha de autorización</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-moneda"
+                                   data-column="moneda" data-default="false">
+                            <label class="form-check-label" for="payable-col-moneda">Moneda</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-pagado"
+                                   data-column="pagado" data-default="true" checked>
+                            <label class="form-check-label" for="payable-col-pagado">Pagado</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-condiciones"
+                                   data-column="condiciones" data-default="false">
+                            <label class="form-check-label" for="payable-col-condiciones">Condiciones</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-entrada"
+                                   data-column="entrada" data-default="true" checked>
+                            <label class="form-check-label" for="payable-col-entrada">Estado de entrada</label>
+                        </div>
+                        {% if usuario.tipo.para_pago %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-prioridad"
+                                   data-column="prioridad" data-default="false">
+                            <label class="form-check-label" for="payable-col-prioridad">Prioridad</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-cancelar"
+                                   data-column="cancelar" data-default="false">
+                            <label class="form-check-label" for="payable-col-cancelar">Cancelar</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input js-payable-column" type="checkbox" id="payable-col-descarga"
+                                   data-column="descarga" data-default="false">
+                            <label class="form-check-label" for="payable-col-descarga">Selección de descarga</label>
+                        </div>
+                        {% endif %}
+
+                        <button type="button" class="sv-btn sv-btn-outline w-100" id="resetPayableColumns">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            Vista compacta
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="sv-table-wrap">
-                <table class="sv-table sv-table-xwide">
+                <table class="sv-table" id="payablePurchasesTable">
                     <thead>
                         <tr>
                             <th>Compra</th>
-                            <th>Solicitado por</th>
-                            <th>Autorizado por</th>
-                            <th>Proyecto</th>
-                            <th>Subproyecto</th>
-                            <th>Autorizado</th>
+                            <th class="sv-col-solicitado">Solicitado por</th>
+                            <th class="sv-col-autorizador">Autorizado por</th>
+                            <th>Proyecto / Subproyecto</th>
+                            <th class="sv-col-fecha">Autorizado</th>
                             <th>Proveedor</th>
-                            <th>Importe OC</th>
-                            <th>Flete</th>
-                            <th>Moneda</th>
-                            <th>Pagado</th>
-                            <th>Condiciones</th>
-                            <th>Estado de entrada</th>
+                            <th>Importes</th>
+                            <th class="sv-col-moneda">Moneda</th>
+                            <th class="sv-col-pagado">Pagado</th>
+                            <th class="sv-col-condiciones">Condiciones</th>
+                            <th class="sv-col-entrada">Estado de entrada</th>
                             <th>Facturas</th>
                             <th>Detalles</th>
                             {% if usuario.tipo.para_pago %}
-                            <th>Prioridad</th>
-                            <th>Editar</th>
-                            <th>Cancelar</th>
+                            <th class="sv-col-prioridad">Prioridad</th>
+                            <th class="sv-col-cancelar">Cancelar</th>
                             <th>Para pago</th>
                             <th>Parcialidad</th>
-                            <th>Descarga</th>
+                            <th class="sv-col-descarga">Descarga</th>
                             {% endif %}
                         </tr>
                     </thead>
@@ -207,7 +274,7 @@
                         {% for compra in compras_list %}
                         <tr>
                             <td><span class="sv-folio">{{ compra.folio }}</span></td>
-                            <td>
+                            <td class="sv-col-solicitado">
                                 <div class="sv-user">
                                     <span class="sv-user-avatar">
                                         {{ compra.req.orden.staff.staff.staff.first_name|first }}{{ compra.req.orden.staff.staff.staff.last_name|first }}
@@ -218,7 +285,7 @@
                                     </span>
                                 </div>
                             </td>
-                            <td>
+                            <td class="sv-col-autorizador">
                                 <div class="sv-user">
                                     <span class="sv-user-avatar">
                                         {{ compra.oc_autorizada_por2.staff.staff.first_name|first }}{{ compra.oc_autorizada_por2.staff.staff.last_name|first }}
@@ -229,21 +296,25 @@
                                     </span>
                                 </div>
                             </td>
-                            <td><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
-                            <td><span class="sv-cell-subtitle">{{ compra.req.orden.subproyecto.nombre }}</span></td>
                             <td>
+                                <span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span>
+                                <span class="sv-cell-subtitle">{{ compra.req.orden.subproyecto.nombre }}</span>
+                            </td>
+                            <td class="sv-col-fecha">
                                 <div class="sv-date">
                                     <strong><i class="fa-regular fa-calendar me-1"></i>{{ compra.autorizado_at_2|date:"d/m/Y" }}</strong>
                                     <small>{{ compra.autorizado_at_2|time:"H:i" }} hrs.</small>
                                 </div>
                             </td>
                             <td><span class="sv-cell-title">{{ compra.proveedor }}</span></td>
-                            <td><strong>$ {{ compra.costo_plus_adicionales|floatformat:2 }}</strong></td>
-                            <td>$ {{ compra.costo_fletes|floatformat:2 }}</td>
-                            <td><span class="sv-badge sv-badge-dark">{{ compra.moneda }}</span></td>
-                            <td><strong>$ {{ compra.get_monto_pagos.total_pagos|floatformat:2 }}</strong></td>
-                            <td><span class="sv-cell-subtitle">{{ compra.cond_de_pago }}</span></td>
                             <td>
+                                <span class="sv-cell-title">OC: $ {{ compra.costo_plus_adicionales|floatformat:2 }}</span>
+                                <span class="sv-cell-subtitle">Flete: $ {{ compra.costo_fletes|floatformat:2 }}</span>
+                            </td>
+                            <td class="sv-col-moneda"><span class="sv-badge sv-badge-dark">{{ compra.moneda }}</span></td>
+                            <td class="sv-col-pagado"><strong>$ {{ compra.get_monto_pagos.total_pagos|floatformat:2 }}</strong></td>
+                            <td class="sv-col-condiciones"><span class="sv-cell-subtitle">{{ compra.cond_de_pago }}</span></td>
+                            <td class="sv-col-entrada">
                                 <div class="d-flex flex-column align-items-start gap-1">
                                     {% if compra.no_conformidad.all|length > 0 %}
                                     <span class="sv-badge sv-badge-danger">
@@ -332,7 +403,7 @@
                                 </div>
                             </td>
                             {% if usuario.tipo.para_pago %}
-                            <td>
+                            <td class="sv-col-prioridad">
                                 <span id="prioridad_{{ compra.id|unlocalize }}" class="sv-badge sv-badge-dark">
                                     {{ compra.tipo_prioridad.nombre }}
                                 </span>
@@ -346,9 +417,7 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-                            </td>
-                            <td>
-                                <div class="sv-actions">
+                                <div class="sv-actions mt-2">
                                     <button type="button" class="sv-btn sv-btn-success sv-btn-icon d-none"
                                             id="save_prioridad_{{ compra.id|unlocalize }}"
                                             onclick="guardar_prioridad('{{ compra.id|unlocalize }}')"
@@ -369,7 +438,7 @@
                                     </button>
                                 </div>
                             </td>
-                            <td>
+                            <td class="sv-col-cancelar">
                                 <a class="sv-btn sv-btn-danger sv-btn-icon"
                                    data-bs-toggle="modal" data-bs-target="#dialog"
                                    hx-target="#document" hx-swap="innerHTML"
@@ -402,7 +471,7 @@
                                        value="" step="0.01" min="0"
                                        aria-label="Parcialidad de la compra {{ compra.folio }}">
                             </td>
-                            <td class="text-center">
+                            <td class="sv-col-descarga text-center">
                                 <input class="oc_checkbox_accion form-check-input fs-4"
                                        type="checkbox" name="compra_ids_accion"
                                        value="{{ compra.id|unlocalize }}"
@@ -412,7 +481,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="{% if usuario.tipo.para_pago %}21{% else %}15{% endif %}" class="sv-empty">
+                            <td colspan="{% if usuario.tipo.para_pago %}18{% else %}13{% endif %}" class="sv-empty">
                                 <span class="sv-empty-icon"><i class="fa-solid fa-circle-check"></i></span>
                                 <span class="sv-empty-title">No hay compras pendientes de pago</span>
                                 <span class="sv-empty-text">Prueba modificando o limpiando los filtros.</span>
@@ -611,6 +680,68 @@
     pdfModal.addEventListener("hidden.bs.modal", function () {
         pdfFrame.src = "";
     });
+})();
+
+(function () {
+    const toggles = Array.from(document.querySelectorAll(".js-payable-column"));
+    const resetButton = document.getElementById("resetPayableColumns");
+    const storageKey = "saviaComprasPorPagarColumnas";
+
+    if (!toggles.length) {
+        return;
+    }
+
+    function getDefaults() {
+        return toggles.reduce(function (state, toggle) {
+            state[toggle.dataset.column] = toggle.dataset.default === "true";
+            return state;
+        }, {});
+    }
+
+    function getSavedState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(storageKey));
+            return saved && typeof saved === "object"
+                ? Object.assign(getDefaults(), saved)
+                : getDefaults();
+        } catch (error) {
+            localStorage.removeItem(storageKey);
+            return getDefaults();
+        }
+    }
+
+    function applyState(state, save) {
+        toggles.forEach(function (toggle) {
+            const column = toggle.dataset.column;
+            const visible = state[column] !== false;
+
+            toggle.checked = visible;
+            document.querySelectorAll(".sv-col-" + column).forEach(function (cell) {
+                cell.hidden = !visible;
+            });
+        });
+
+        if (save) {
+            localStorage.setItem(storageKey, JSON.stringify(state));
+        }
+    }
+
+    let state = getSavedState();
+    applyState(state, false);
+
+    toggles.forEach(function (toggle) {
+        toggle.addEventListener("change", function () {
+            state[toggle.dataset.column] = toggle.checked;
+            applyState(state, true);
+        });
+    });
+
+    if (resetButton) {
+        resetButton.addEventListener("click", function () {
+            state = getDefaults();
+            applyState(state, true);
+        });
+    }
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
