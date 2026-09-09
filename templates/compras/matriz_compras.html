@@ -184,68 +184,144 @@
                 <span class="sv-card-kicker">Resultados</span>
                 <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i> Órdenes de compra</h2>
             </div>
-            <span class="sv-badge sv-badge-dark">Página {{ compras_list.number }} de {{ compras_list.paginator.num_pages }}</span>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="dropdown">
+                    <button type="button" class="sv-btn sv-btn-outline dropdown-toggle"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                            aria-expanded="false">
+                        <i class="fa-solid fa-table-columns"></i> Columnas
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow w-auto">
+                        <div class="d-flex flex-column flex-md-row gap-4">
+                            <div>
+                                <div class="small fw-bold text-muted px-2 py-1">Información</div>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="folios" checked> Requisición y solicitud
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitado" checked> Solicitado por
+                                </label>
+                                {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="distrito"> Distrito
+                                </label>
+                                {% endif %}
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="subproyecto"> Subproyecto
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="operacion"> Operación
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="creada"> Fecha de creación
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="activo"> A.F.
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="req-autorizada"> Requisición autorizada
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="moneda"> Moneda
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="tipo-cambio"> Tipo de cambio
+                                </label>
+                            </div>
+                            <div>
+                                <div class="small fw-bold text-muted px-2 py-1">Estados y acciones</div>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="estado-proveedor"> Estado del proveedor
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="estado-original"> Estado original
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="pago" checked> Estado de pago
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="entrega" checked> Estado de entrega
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="dias"> Días de entrega
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="complemento"> Complemento
+                                </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="acciones"> Acciones adicionales
+                                </label>
+                                <div class="dropdown-divider"></div>
+                                <button type="button" class="dropdown-item text-center" id="resetPurchaseColumns">
+                                    <i class="fa-solid fa-arrow-rotate-left me-1"></i> Restablecer vista compacta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="sv-badge sv-badge-dark">Página {{ compras_list.number }} de {{ compras_list.paginator.num_pages }}</span>
+            </div>
         </div>
 
         <div class="sv-table-wrap">
-            <table class="sv-table sv-table-xwide">
+            <table class="sv-table sv-table-wide" id="purchasesTable">
                 <thead>
                     <tr>
                         <th>Compra</th>
-                        <th>Req.</th>
-                        <th>Sol.</th>
-                        <th>Solicitado por</th>
+                        <th class="sv-col-folios">Req.</th>
+                        <th class="sv-col-folios">Sol.</th>
+                        <th class="sv-col-solicitado">Solicitado por</th>
                         {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
-                        <th>Distrito</th>
+                        <th class="sv-col-distrito d-none">Distrito</th>
                         {% endif %}
                         <th>Proyecto</th>
-                        <th>Subproyecto</th>
-                        <th>Operación</th>
-                        <th>Creada</th>
-                        <th>A.F.</th>
-                        <th>Req. autorizada</th>
+                        <th class="sv-col-subproyecto d-none">Subproyecto</th>
+                        <th class="sv-col-operacion d-none">Operación</th>
+                        <th class="sv-col-creada d-none">Creada</th>
+                        <th class="sv-col-activo d-none">A.F.</th>
+                        <th class="sv-col-req-autorizada d-none">Req. autorizada</th>
                         <th>Proveedor</th>
-                        <th>Estado proveedor</th>
-                        <th>Estado original</th>
+                        <th class="sv-col-estado-proveedor d-none">Estado proveedor</th>
+                        <th class="sv-col-estado-original d-none">Estado original</th>
                         <th>Costo</th>
-                        <th>Moneda</th>
-                        <th>T.C.</th>
-                        <th>Pago</th>
+                        <th class="sv-col-moneda d-none">Moneda</th>
+                        <th class="sv-col-tipo-cambio d-none">T.C.</th>
+                        <th class="sv-col-pago">Pago</th>
                         <th>Autorización</th>
-                        <th>Entrega</th>
-                        <th>Días</th>
-                        <th>Complemento</th>
+                        <th class="sv-col-entrega">Entrega</th>
+                        <th class="sv-col-dias d-none">Días</th>
+                        <th class="sv-col-complemento d-none">Complemento</th>
                         <th class="text-center">Detalle</th>
                         <th class="text-center">Documentos</th>
-                        <th class="text-center">Comparativo</th>
-                        <th class="text-center">Devolver</th>
-                        <th class="text-center">Cancelar</th>
-                        <th class="text-center">Evidencia</th>
+                        <th class="sv-col-acciones d-none text-center">Comparativo</th>
+                        <th class="sv-col-acciones d-none text-center">Devolver</th>
+                        <th class="sv-col-acciones d-none text-center">Cancelar</th>
+                        <th class="sv-col-acciones d-none text-center">Evidencia</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for compra in compras_list %}
                     <tr>
                         <td><span class="sv-folio">{{ compra.folio }}</span></td>
-                        <td><span class="sv-folio">{{ compra.req.folio }}</span></td>
-                        <td>{{ compra.req.orden.folio }}</td>
-                        <td>
+                        <td class="sv-col-folios"><span class="sv-badge sv-badge-neutral">{{ compra.req.folio }}</span></td>
+                        <td class="sv-col-folios"><span class="sv-badge sv-badge-neutral">{{ compra.req.orden.folio }}</span></td>
+                        <td class="sv-col-solicitado">
                             <span class="sv-cell-title">{{ compra.req.orden.staff.staff.staff.first_name }} {{ compra.req.orden.staff.staff.staff.last_name }}</span>
                         </td>
                         {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
-                        <td><span class="sv-badge sv-badge-neutral">{{ compra.req.orden.distrito.nombre }}</span></td>
+                        <td class="sv-col-distrito d-none"><span class="sv-badge sv-badge-neutral">{{ compra.req.orden.distrito.nombre }}</span></td>
                         {% endif %}
                         <td><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
-                        <td>{{ compra.req.orden.subproyecto.nombre }}</td>
-                        <td>{{ compra.req.orden.operacion|default:"—" }}</td>
-                        <td>
+                        <td class="sv-col-subproyecto d-none">{{ compra.req.orden.subproyecto.nombre }}</td>
+                        <td class="sv-col-operacion d-none">{{ compra.req.orden.operacion|default:"—" }}</td>
+                        <td class="sv-col-creada d-none">
                             <div class="sv-date">
                                 <strong>{{ compra.created_at|date:"d/m/Y" }}</strong>
                                
                             </div>
                         </td>
-                        <td>{{ compra.req.orden.activo|default:"—" }}</td>
-                        <td>
+                        <td class="sv-col-activo d-none">{{ compra.req.orden.activo|default:"—" }}</td>
+                        <td class="sv-col-req-autorizada d-none">
                             {% if compra.req.approved_at %}
                             <div class="sv-date">
                                 <strong>{{ compra.req.approved_at|date:"d/m/Y" }}</strong>
@@ -256,19 +332,19 @@
                             {% endif %}
                         </td>
                         <td><span class="sv-cell-title">{{ compra.proveedor }}</span></td>
-                        <td>{{ compra.proveedor.estatus }}</td>
-                        <td>{{ compra.estatus_original|default:"—" }}</td>
+                        <td class="sv-col-estado-proveedor d-none">{{ compra.proveedor.estatus }}</td>
+                        <td class="sv-col-estado-original d-none">{{ compra.estatus_original|default:"—" }}</td>
                         <td class="text-nowrap"><span class="sv-cell-title">${{ compra.costo_plus_adicionales|floatformat:2 }}</span></td>
-                        <td><span class="sv-badge sv-badge-neutral">{{ compra.moneda.nombre }}</span></td>
-                        <td>{{ compra.tipo_de_cambio|default:"—" }}</td>
-                        <td>
+                        <td class="sv-col-moneda d-none"><span class="sv-badge sv-badge-neutral">{{ compra.moneda.nombre }}</span></td>
+                        <td class="sv-col-tipo-cambio d-none">{{ compra.tipo_de_cambio|default:"—" }}</td>
+                        <td class="sv-col-pago">
                             {% if compra.pagada %}
                             <span class="sv-badge sv-badge-success">Pagada</span>
                             {% else %}
                             <span class="sv-badge sv-badge-warning">No pagada</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="sv-col-entrega">
                             {% if compra.autorizado2 %}
                             <span class="sv-badge sv-badge-success">Gerencia</span>
                             {% elif compra.regresar_oc %}
@@ -288,8 +364,8 @@
                             <span class="sv-badge sv-badge-warning">Pendiente</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">{{ compra.dias_de_entrega|default:"—" }}</td>
-                        <td class="text-center js-complement-cell">
+                        <td class="sv-col-dias d-none text-center">{{ compra.dias_de_entrega|default:"—" }}</td>
+                        <td class="sv-col-complemento d-none text-center js-complement-cell">
                             {% for factura in compra.facturas.all %}
                                 {% if factura.complementos.exists %}
                                 <span class="d-none" data-has-complement></span>
@@ -339,7 +415,7 @@
                             </div>
                         </td>
                         {% if usuario.tipo.comprador or usuario.tipo.oc_superintendencia %}
-                        <td class="text-center">
+                        <td class="sv-col-acciones d-none text-center">
                             {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
                                 {% if compra.comparativo_model %}
                                 <button
@@ -360,7 +436,7 @@
                             <span class="sv-cell-subtitle">—</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td class="sv-col-acciones d-none text-center">
                             {% if compra.pagada == False and compra.regresar_oc == False %}
                             <button
                                 type="button"
@@ -377,7 +453,7 @@
                             <span class="sv-cell-subtitle">—</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td class="sv-col-acciones d-none text-center">
                             {% if compra.pagada == False %}
                             <button
                                 type="button"
@@ -396,11 +472,11 @@
                             {% endif %}
                         </td>
                         {% else %}
-                        <td class="text-center"><span class="sv-cell-subtitle">—</span></td>
-                        <td class="text-center"><span class="sv-cell-subtitle">—</span></td>
-                        <td class="text-center"><span class="sv-cell-subtitle">—</span></td>
+                        <td class="sv-col-acciones d-none text-center"><span class="sv-cell-subtitle">—</span></td>
+                        <td class="sv-col-acciones d-none text-center"><span class="sv-cell-subtitle">—</span></td>
+                        <td class="sv-col-acciones d-none text-center"><span class="sv-cell-subtitle">—</span></td>
                         {% endif %}
-                        <td class="text-center">
+                        <td class="sv-col-acciones d-none text-center">
                             <a class="sv-btn sv-btn-icon sv-btn-info" href="{% url 'evidencias-proveedor' compra.id %}" title="Evidencias de compra">
                                 <i class="fa-regular fa-images"></i>
                             </a>
@@ -584,6 +660,78 @@ document.addEventListener("DOMContentLoaded", function () {
         downloadButton.href = fileDownloadUrl;
         downloadButton.classList.remove("d-none");
     }
+
+    const columnDefaults = {
+        folios: true,
+        solicitado: true,
+        distrito: false,
+        subproyecto: false,
+        operacion: false,
+        creada: false,
+        activo: false,
+        "req-autorizada": false,
+        "estado-proveedor": false,
+        "estado-original": false,
+        moneda: false,
+        "tipo-cambio": false,
+        pago: true,
+        entrega: true,
+        dias: false,
+        complemento: false,
+        acciones: false
+    };
+    const columnStorageKey = "saviaMatrizComprasColumnas";
+    let columnPreferences = Object.assign({}, columnDefaults);
+
+    try {
+        const savedPreferences = JSON.parse(localStorage.getItem(columnStorageKey));
+        if (savedPreferences && typeof savedPreferences === "object") {
+            Object.keys(columnDefaults).forEach(function (column) {
+                if (typeof savedPreferences[column] === "boolean") {
+                    columnPreferences[column] = savedPreferences[column];
+                }
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(columnStorageKey);
+    }
+
+    function updatePurchaseColumn(column, visible) {
+        document.querySelectorAll(".sv-col-" + column).forEach(function (cell) {
+            cell.classList.toggle("d-none", !visible);
+        });
+    }
+
+    const columnToggles = Array.from(document.querySelectorAll("[data-column-toggle]"));
+
+    function applyColumnPreferences() {
+        columnToggles.forEach(function (checkbox) {
+            const column = checkbox.dataset.columnToggle;
+            const visible = columnPreferences[column] === true;
+            checkbox.checked = visible;
+            updatePurchaseColumn(column, visible);
+        });
+    }
+
+    columnToggles.forEach(function (checkbox) {
+        checkbox.addEventListener("change", function () {
+            const column = checkbox.dataset.columnToggle;
+            columnPreferences[column] = checkbox.checked;
+            updatePurchaseColumn(column, checkbox.checked);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+        });
+    });
+
+    const resetColumnsButton = document.getElementById("resetPurchaseColumns");
+    if (resetColumnsButton) {
+        resetColumnsButton.addEventListener("click", function () {
+            columnPreferences = Object.assign({}, columnDefaults);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+            applyColumnPreferences();
+        });
+    }
+
+    applyColumnPreferences();
 });
 
 function getCookie(name) {
