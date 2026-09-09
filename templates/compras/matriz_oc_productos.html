@@ -4,465 +4,441 @@
 {% load widget_tweaks %}
 {% load tt_extras %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Productos Compras{% endblock %}
-</head>
-<body>
+
+{% block title %}Productos de compras{% endblock %}
+
 {% block content %}
-<hr>
+<main class="sv-page">
+    <header class="sv-page-header">
+        <div>
+            <p class="sv-page-eyebrow">Compras</p>
+            <h1 class="sv-page-title">
+                <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                Productos de órdenes de compra
+            </h1>
+            <p class="sv-page-subtitle mb-0">
+                Consulta productos comprados, filtra órdenes y genera el reporte en Excel.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list" aria-hidden="true"></i>
+            {{ articulos_list.paginator.count }} registros
+        </span>
+    </header>
 
+    <section class="sv-card" id="response-div">
+        <div class="sv-card-header">
+            <div>
+                <p class="sv-page-eyebrow">Búsqueda</p>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter" aria-hidden="true"></i>
+                    Filtro de productos OC
+                </h2>
+            </div>
+        </div>
 
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.producto_codigo|add_class:"form-control"|append_attr:"placeholder=Código" }}
+                                <label for="{{ myfilter.form.producto_codigo.id_for_label }}">Código</label>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                                <label for="{{ myfilter.form.producto.id_for_label }}">Producto</label>
+                            </div>
+                        </div>
+                    </div>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.oc|add_class:"form-control"|append_attr:"placeholder=Folio OC" }}
+                                <label for="{{ myfilter.form.oc.id_for_label }}">Folio OC</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor" }}
+                                <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl-3" id="fecha-desde">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl-3" id="fecha-hasta">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-2 d-flex justify-content-end align-items-stretch gap-2">
+                        <a class="sv-btn sv-btn-outline flex-grow-1" href="{% url 'matriz-oc-productos' %}">
+                            <i class="fa-solid fa-eraser"></i>
+                            Limpiar
+                        </a>
+                        <button id="btnBuscar" class="sv-btn sv-btn-primary flex-grow-1"
+                                onclick="guardar_variable()" type="submit">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="sv-card-footer d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <form method="POST" onsubmit="mostrarIndicadorCarga()" class="d-flex flex-wrap align-items-center gap-2">
+                {% csrf_token %}
+                <button type="submit" id="reporte_compras" class="sv-btn sv-btn-success d-none" value="Reporte Excel">
+                    <i class="fa-solid fa-file-excel"></i>
+                    Regenerar reporte
+                </button>
+                <button type="submit" id="btnExcel" name="btnExcel" class="sv-btn sv-btn-success d-none" value="Reporte Excel">
+                    <i class="fa-solid fa-file-excel"></i>
+                    Generar reporte
+                </button>
+                <span id="statusMessage_tag" class="sv-badge sv-badge-primary d-none" role="status">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    Reporte en proceso
+                </span>
+                <a href="#" id="downloadButton" onclick="downloadLimpiar()" class="sv-btn sv-btn-primary d-none">
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                    Descargar reporte
+                </a>
+            </form>
+
+            <nav class="d-flex flex-wrap gap-2" aria-label="Vistas de compras">
+                <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}">Requisiciones</a>
+                <a class="sv-btn sv-btn-outline" href="{% url 'matriz-compras' %}">Matriz</a>
+                <a class="sv-btn sv-btn-primary" aria-current="page" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+            </nav>
+        </div>
+    </section>
+
+    <section class="sv-card mt-4">
+        <div class="sv-card-header">
+            <div>
+                <p class="sv-page-eyebrow">Resultados</p>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-table-list" aria-hidden="true"></i>
+                    Detalle de productos comprados
+                </h2>
+            </div>
+            <span class="sv-badge sv-badge-neutral">
+                Página {{ articulos_list.number }} de {{ articulos_list.paginator.num_pages }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th scope="col">OC</th>
+                        <th scope="col" class="d-none d-lg-table-cell">RQ</th>
+                        <th scope="col" class="d-none d-xl-table-cell">Solicitud</th>
+                        <th scope="col" class="d-none d-xl-table-cell">Solicitado por</th>
+                        <th scope="col">Proveedor</th>
+                        <th scope="col">Proyecto</th>
+                        <th scope="col" class="d-none d-xl-table-cell">Subproyecto</th>
+                        <th scope="col" class="d-none d-xl-table-cell">Operación</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col" class="text-end">P. U.</th>
+                        <th scope="col" class="text-end">Cantidad</th>
+                        <th scope="col" class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in articulos_list %}
+                    <tr>
+                        <td data-label="OC"><span class="sv-folio">{{ item.oc.folio }}</span></td>
+                        <td data-label="RQ" class="d-none d-lg-table-cell">{{ item.oc.req.folio }}</td>
+                        <td data-label="Solicitud" class="d-none d-xl-table-cell">{{ item.oc.req.orden.folio }}</td>
+                        <td data-label="Solicitado por" class="d-none d-xl-table-cell">
+                            {{ item.oc.req.orden.staff.staff.staff.first_name }} {{ item.oc.req.orden.staff.staff.staff.last_name }}
+                        </td>
+                        <td data-label="Proveedor"><strong>{{ item.oc.proveedor.nombre.razon_social }}</strong></td>
+                        <td data-label="Proyecto">{{ item.oc.req.orden.proyecto.nombre }}</td>
+                        <td data-label="Subproyecto" class="d-none d-xl-table-cell">{{ item.oc.req.orden.subproyecto.nombre }}</td>
+                        <td data-label="Operación" class="d-none d-xl-table-cell">{{ item.oc.req.orden.operacion }}</td>
+                        <td data-label="Código"><span class="sv-cell-title">{{ item.producto.producto.articulos.producto.producto.codigo }}</span></td>
+                        <td data-label="Producto">{{ item.producto.producto.articulos.producto.producto.nombre }}</td>
+                        <td data-label="P. U." class="text-end text-nowrap">${{ item.precio_unitario|floatformat:2 }}</td>
+                        <td data-label="Cantidad" class="text-end">{{ item.cantidad }}</td>
+                        <td data-label="Total" class="text-end text-nowrap"><strong>${{ item.total|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="13">
+                            <div class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                                <span class="sv-empty-title">No se encontraron productos</span>
+                                <span class="sv-empty-text">Prueba modificando los criterios de búsqueda.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {% if articulos_list.paginator.num_pages > 1 %}
+    <nav class="mt-4" aria-label="Paginación de productos">
+        <ul class="pagination justify-content-center">
+            {% if articulos_list.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url articulos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for page_number in articulos_list.paginator.page_range %}
+                {% if articulos_list.number == page_number %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+                {% elif page_number > articulos_list.number|add:'-2' and page_number < articulos_list.number|add:'2' %}
+                    <li class="page-item"><a class="page-link" href="{% my_url page_number 'page' request.GET.urlencode %}">{{ page_number }}</a></li>
                 {% endif %}
             {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class = "col bg-white" id="response-div">
-    <div class="card">
-        <div class="card-header">
-            <h5>Filtro de Productos OC</h5>
-        </div>
-        <div class="card-body">
-            {% csrf_token %}
-            <form method="GET">
-                <div class="row">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.producto_codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
-                                <label style="color: #121212;" for="id_producto">Código</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                                <label style="color: #121212;" for="id_producto">Producto</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.oc|add_class:"form-control"|append_attr:"placeholder= Folio OC"}}
-                                <label style="color: #121212;" for="id_producto">Folio OC</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                                <label style="color: #121212;" for="id_producto">Proveedor</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-sm-12 mt-2">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-sm-12 mt-2">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                            </div>
-                        </div>
-                    </div>
-                <div class="col-sm-12 col-lg-2">
-                    <button  id="btnBuscar" class="btn btn-outline-success btn-block mt-3 btn-lg" onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                </div>
-            </div>
-            <hr>
-            </form>
-            <form method=POST onsubmit="mostrarIndicadorCarga();">
-                {% csrf_token %}
-                <ul class="nav nav-pills">
-                    <li class="nav-item m-1">
-                        <button type="submit" id="reporte_compras" class="btn btn-outline-success d-none" value='Reporte Excel' >
-                            <i class="fa-solid fa-file-excel fa-2xl"></i>
-                        </button>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <button type="submit" id="btnExcel" name="btnExcel" class="btn btn-outline-success d-none" value='Reporte Excel'>
-                            <i class="fa-solid fa-file-excel fa-2xl"></i>
-                        </button>
-                    </li>
-                    <!-- Mensaje de estado (opcional) -->
-                    <div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
-                    <!-- Botón de descarga (inicialmente oculto) -->
-                    <a type="button" href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="btn btn-outline-success d-none m-1">
-                        <i class="fa-solid fa-cloud-arrow-down"></i>
+
+            {% if articulos_list.paginator.num_pages > articulos_list.number|add:'2' %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                <li class="page-item"><a class="page-link" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ articulos_list.paginator.num_pages }}</a></li>
+            {% endif %}
+
+            {% if articulos_list.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url articulos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
+                        <i class="fa-solid fa-chevron-right"></i>
                     </a>
-                    <li class="nav-item m-1 d-lg-none">
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
-                            <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
-                            <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                            
-                          </div>
-                    </li>
-                    <li class="nav-item m-2 d-none d-lg-block">
-                        <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                            <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
-                            <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                            
-                          </div>
-                    </li>
-                </ul>
-            </form>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página">
+                        <i class="fa-solid fa-angles-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</main>
+
+<div id="loadingIndicator"
+     class="d-none d-flex position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center bg-dark bg-opacity-50"
+     style="z-index: 1080" role="status" aria-live="polite">
+    <div class="sv-card d-flex flex-row align-items-center p-4">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="" width="72" height="72" class="rounded-circle me-3">
+        <div>
+            <strong>Generando reporte</strong>
+            <p class="mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
         </div>
     </div>
 </div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
-    
 
-<div class = "card mt-2">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">OC</th>
-                    <th class="d-none d-lg-table-cell">RQ</th>
-                    <th class="d-none d-lg-table-cell">Solicitud</th>
-                    <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    <th class="col">Proveedor</th>
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th class="d-none d-lg-table-cell">Operación</th>
-                    <th scope="col">Código</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">P.U.</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in articulos_list %}
-                <tr>
-                    <th scope="row">{{item.oc.folio}}</th>
-                    <th class="d-none d-lg-table-cell">{{item.oc.req.folio}}</th>
-                    <th class="d-none d-lg-table-cell">{{item.oc.req.orden.folio}}</th>
-                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.staff.staff.staff.first_name}} {{item.oc.req.orden.staff.staff.staff.last_name}}</td>
-                    <td>{{item.oc.proveedor.nombre.razon_social}}</td>
-                    <td>{{item.oc.req.orden.proyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.subproyecto.nombre}}</td>
-                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.operacion}}</td>
-                    <td>{{item.producto.producto.articulos.producto.producto.codigo}}</td>
-                    <td>{{item.producto.producto.articulos.producto.producto.nombre}} </td>
-                    <td>${{item.precio_unitario|floatformat:2}}</td>
-                    <td>{{item.cantidad}}</td>
-                    <td>${{item.total|floatformat:2}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if articulos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
-
-                {% for item in articulos_list.paginator.page_range %}
-                    {% if articulos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > articulos_list.number|add:'-2' and item < articulos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if articulos_list.paginator.num_pages > articulos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{articulos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{articulos_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
-                {% if articulos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
-   
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-    </div>
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
+(function () {
+    'use strict';
 
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const btnExcel = document.getElementById('btnExcel');
+    const downloadButton = document.getElementById('downloadButton');
+    const reportButton = document.getElementById('reporte_compras');
+    const statusMessage = document.getElementById('statusMessage_tag');
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
+    function getCookie(name) {
+        const prefix = name + '=';
+        const cookies = document.cookie ? document.cookie.split(';') : [];
+        for (const item of cookies) {
+            const cookie = item.trim();
+            if (cookie.startsWith(prefix)) return decodeURIComponent(cookie.substring(prefix.length));
+        }
+        return null;
+    }
 
-var myModal = document.getElementById('dialog')
+    window.mostrarIndicadorCarga = function () {
+        if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+        if (btnExcel) btnExcel.classList.add('d-none');
+        verificarDescargaIniciada();
+    };
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
-
-// Función para obtener el valor de una cookie por su nombre
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    function verificarDescargaIniciada() {
+        const checkDescarga = window.setInterval(function () {
+            if (getCookie('descarga_iniciada') === 'true') {
+                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                document.cookie = 'descarga_iniciada=; Max-Age=0; path=/';
+                window.clearInterval(checkDescarga);
             }
-        }
-    }
-    return cookieValue;
-}
-
-function mostrarIndicadorCarga() {
-    var btn = document.getElementById('btnExcel')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
-    verificarDescargaIniciada();
-    btn.classList.add('d-none')
-}
-
-function verificarDescargaIniciada(){
-    const checkDescarga = setInterval(() => {
-        const descargaIniciada = getCookie('descarga_iniciada');
-        if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
-            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
-            clearInterval(checkDescarga);
-
-        }
-    }, 1000); // Revisar cada segundo
-}
-
-function guardar_variable(){
-    localStorage.setItem('mostrarBotonExcel', 'true');
-}
-
-function aparecer_excel(){
-    var btn = document.getElementById("btnExcel")
-    btn.classList.remove('d-none')
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var mostrarBotonExcel = localStorage.getItem('mostrarBotonExcel');
-    if (mostrarBotonExcel === 'true') {
-        var btn = document.getElementById("btnExcel");
-        btn.classList.remove('d-none');
-
-        // Opcional: resetear el valor en el almacenamiento local si solo quieres mostrar el botón una vez
-       localStorage.removeItem('mostrarBotonExcel');
+        }, 1000);
     }
 
-    var task_id = '{{task_id_producto}}'
-    var cantidad = '{{cantidad| unlocalize}}'
-    if (task_id){
-        localStorage.setItem('task_id_producto', task_id)
+    window.guardar_variable = function () {
+        localStorage.setItem('mostrarBotonExcel', 'true');
+    };
+
+    window.downloadLimpiar = function () {
+        limpiarBack();
+        localStorage.removeItem('fileDownloadUrl_productos');
+        if (downloadButton) downloadButton.classList.add('d-none');
+    };
+
+    function limpiarBack() {
+        localStorage.removeItem('task_id_producto');
+        fetch('/compras/clear_task_id_producto/', {
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'same-origin'
+        }).catch(function (error) {
+            console.error('Error al borrar task_id:', error);
+        });
     }
-    
-    var task= localStorage.getItem('task_id_producto')
-    console.log(task_id)
-    console.log(task)
-    var fileDownloadUrlproductos = localStorage.getItem('fileDownloadUrl_productos');
-    var downloadButton = document.getElementById('downloadButton');
-    var btn_reporte = document.getElementById('reporte_compras');
-    var reporte = localStorage.getItem('reporte_compras') 
-    if (task){
-        intentos(cantidad)
-        localStorage.removeItem('reporte_compras')
-        var reporte = false 
-        btn_reporte.classList.add('d-none');
-    }
-    
-    if (reporte){
-        btn_reporte.classList.remove('d-none');
-    }
-    if (fileDownloadUrlproductos) {
-        downloadButton.href = fileDownloadUrlproductos;
-        downloadButton.classList.remove('d-none');
-    }
-    
-});
 
-function regenerar(){
-    var buscar = document.getElementById('btnBuscar');
-    var reporte_compras = document.getElementById('reporte_compras');
-    reporte_compras.classList.remove('d-none');
-    localStorage.removeItem('fileDownloadUrl_productos')
-    localStorage.setItem('reporte_compras', true)
-    limpiarBack()  
-}
+    function intentos(cantidad) {
+        let maxIntentos;
+        let intervalo;
 
-function downloadLimpiar(){
-    limpiarBack()
-    localStorage.removeItem('fileDownloadUrl_productos')
-    var downloadButton = document.getElementById('downloadButton');
-    downloadButton.classList.add('d-none');
-   
-}
-
-function limpiarBack(){
-    localStorage.removeItem('task_id_producto')
-    const url = '/compras/clear_task_id_producto/';
-    fetch( url, {  // Reemplaza con la URL correcta
-        method: 'GET', // o 'POST', dependiendo de cómo esté configurada tu vista
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin' // Necesario para incluir cookies de sesión
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Task ID cleared:', data);
-        // Aquí puedes agregar más lógica si es necesario después de borrar el task_id
-    })
-    .catch(error => {
-        console.error('Error al borrar task_id:', error);
-    });
-}
-
-
-
-
-function intentos(cantidad){
-var intentos = 0;
-    var maxIntentos
-    var intervalo
-    console.log(cantidad)
-    if (cantidad >= 20000){
-        maxintentos = 150;
-        intervalo = 10000;
-    } else if (cantidad >= 15000){
-        maxintentos = 120;
-        intervalo = 8000;
-    } else if (cantidad >= 10000){
-        maxIntentos = 100;
-        intervalo = 8000;
-    } else if (cantidad >= 5000){
+        if (cantidad >= 20000) {
+            maxIntentos = 150;
+            intervalo = 10000;
+        } else if (cantidad >= 15000) {
+            maxIntentos = 120;
+            intervalo = 8000;
+        } else if (cantidad >= 10000) {
+            maxIntentos = 100;
+            intervalo = 8000;
+        } else if (cantidad >= 5000) {
             maxIntentos = 80;
             intervalo = 5000;
-    } else{
-            maxIntentos = 50
+        } else {
+            maxIntentos = 50;
             intervalo = 2500;
-    }
-const statusEndpoint = '/compras/verificar_estado_producto/'; 
-esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint)
-}
-
-function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
-    setTimeout(async () => {
-        try {
-            const response = await fetch(statusEndpoint);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            console.log(data)
-            if (data.status === 'SUCCESS') {
-                var url = data.result.file_url_productos
-                console.log(url)
-                var downloadButton = document.getElementById('downloadButton');
-                localStorage.setItem('fileDownloadUrl_productos', data.result.file_url_productos);
-                downloadButton.classList.remove('d-none');
-                document.getElementById('statusMessage_tag').classList.add('d-none');
-                downloadButton.href = url;
-                localStorage.removeItem('task_id_producto');
-
-            } else if (data.status === 'FAILURE') {
-                console.error('La tarea ha fallado.');
-            } else {
-                console.log('La tarea todavía está pendiente...');
-                document.getElementById('statusMessage_tag').classList.remove('d-none');
-                intentos++;
-                if (intentos < maxIntentos) {
-                    esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint); // Vuelve a intentar
-                } else {
-                    console.log('Número máximo de intentos alcanzado.');
-                }
-            }
-        } catch (error) {
-            console.error('Error al verificar el estado de la tarea:', error);
         }
-    }, intervalo);
-}
 
+        esperarYVerificar(intervalo, maxIntentos, 0, '/compras/verificar_estado_producto/');
+    }
+
+    function esperarYVerificar(intervalo, maxIntentos, intentoActual, statusEndpoint) {
+        window.setTimeout(async function () {
+            try {
+                const response = await fetch(statusEndpoint);
+                if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
+
+                const data = await response.json();
+                if (data.status === 'SUCCESS') {
+                    const url = data.result.file_url_productos;
+                    localStorage.setItem('fileDownloadUrl_productos', url);
+                    if (downloadButton) {
+                        downloadButton.href = url;
+                        downloadButton.classList.remove('d-none');
+                    }
+                    if (statusMessage) statusMessage.classList.add('d-none');
+                    localStorage.removeItem('task_id_producto');
+                } else if (data.status === 'FAILURE') {
+                    if (statusMessage) {
+                        statusMessage.classList.remove('d-none');
+                        statusMessage.textContent = 'No fue posible generar el reporte.';
+                    }
+                } else if (intentoActual + 1 < maxIntentos) {
+                    if (statusMessage) statusMessage.classList.remove('d-none');
+                    esperarYVerificar(intervalo, maxIntentos, intentoActual + 1, statusEndpoint);
+                }
+            } catch (error) {
+                console.error('Error al verificar el estado de la tarea:', error);
+            }
+        }, intervalo);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (localStorage.getItem('mostrarBotonExcel') === 'true' && btnExcel) {
+            btnExcel.classList.remove('d-none');
+            localStorage.removeItem('mostrarBotonExcel');
+        }
+
+        const taskId = '{{ task_id_producto|escapejs }}';
+        const cantidad = Number('{{ cantidad|unlocalize|default:"0" }}');
+        if (taskId) localStorage.setItem('task_id_producto', taskId);
+
+        const storedTask = localStorage.getItem('task_id_producto');
+        const storedReport = localStorage.getItem('reporte_compras');
+        const storedUrl = localStorage.getItem('fileDownloadUrl_productos');
+
+        if (storedTask) {
+            intentos(cantidad);
+            localStorage.removeItem('reporte_compras');
+            if (reportButton) reportButton.classList.add('d-none');
+        } else if (storedReport && reportButton) {
+            reportButton.classList.remove('d-none');
+        }
+
+        if (storedUrl && downloadButton) {
+            downloadButton.href = storedUrl;
+            downloadButton.classList.remove('d-none');
+        }
+
+        const dialog = document.getElementById('dialog');
+        if (dialog && window.bootstrap) {
+            const modal = bootstrap.Modal.getOrCreateInstance(dialog);
+            if (window.htmx) {
+                htmx.on('htmx:beforeSwap', function (event) {
+                    if (event.detail.target.id === 'document' && !event.detail.xhr.response) modal.hide();
+                });
+            }
+            dialog.addEventListener('hidden.bs.modal', function () {
+                window.location.reload();
+            });
+        }
+    });
+})();
 </script>
 {% endblock %}
-</body>
-</html>
