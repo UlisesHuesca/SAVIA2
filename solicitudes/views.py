@@ -277,8 +277,8 @@ def checkout(request):
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True).exclude(tipo__nombre="Admin")
 
     #print(usuario.distritos)
-    if usuario.distritos.nombre == "MATRIZ": 
-        #print("Quev")
+    if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "Yerod": 
+        print("Quev")
         superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
     elif usuario.distritos.nombre == "BRASIL":
         superintendentes = usuarios.filter(tipo__oc_gerencia = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos).exclude(tipo__nombre="Admin")
@@ -388,27 +388,36 @@ def checkout(request):
                     ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
                    
                     if not ordensurtir.procesado:
-                        if producto.producto.producto.servicio == True: #or producto.producto.producto.activo == True: Se comenta para evitar que se creen requisiciones de activos
+                        if producto.producto.producto.servicio == True or usuario.distritos.nombre == "Yerod": #or producto.producto.producto.activo == True: Se comenta para evitar que se creen requisiciones de activos
                             ordensurtir.requisitar = True
                             ordensurtir.cantidad_requisitar = producto.cantidad
                             ordensurtir.procesado = True
                             print(producto.producto.producto.servicio)
-                            #if producto.producto.producto.servicio == True: #or producto.producto.producto.activo == True:
+                            
                             requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                             requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
-                            #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
-                            #last_requi = requis.order_by('-folio').first()
+                            
                             max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+                            
                             requi.folio = (max_folio or 0) + 1
-                            numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
-                            if productos.count() == numero_servicios: 
-                                order.requisitar=False
+                            requi_fields = ['folio']
+
+                            total_productos = productos.count()
+                            numero_servicios = productos.filter(producto__producto__servicio=True).count()
+
+                            if total_productos == numero_servicios: 
+                                order.requisitar = False
                                 order.requisitado = True
+                                
                             ordensurtir.requisitar = False
-                            requi.save()
-                            requitem.save()
-                            ordensurtir.save()
-                            #order.fin = datetime.now()
+                            if usuario.distritos.nombre == "Yerod":
+                                requi.autorizar = True
+                                requi.autorizada_por = usuario
+                                requi.comentario_super = "Requisición generada automáticamente"
+                                requi_fields.extend(['autorizar','autorizada_por','comentario_super',])
+                            requi.save(update_fields=requi_fields)
+                            #requitem.save() <<< De acuerdo al análisis con la creación es suficiente no necesita guardarse
+                            ordensurtir.save(update_fields=['requisitar','cantidad_requisitar','procesado',])
                             order.save()
                         #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
                         elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":  #si la cantidad solicitada es menor que la cantidad en inventario
@@ -1865,6 +1874,12 @@ def status_sol(request, pk):
         solicitud.distrito.nombre.strip().upper() == 'MATRIZ'
     )
 
+    es_yerod = (
+        solicitud.distrito.nombre.strip().upper() == 'YEROD'
+    )
+
+
+
     nombre_supervisor = nombre_perfil(solicitud.supervisor)
     nombre_superintendente = nombre_perfil(
         solicitud.superintendente
@@ -1995,7 +2010,7 @@ def status_sol(request, pk):
                 descripcion = 'Requisición pendiente de autorización'
                 fecha = None
 
-            if es_matriz:
+            if es_matriz or es_yerod:
                 rol_autorizador = 'Supervisor'
                 autorizador = nombre_supervisor
             else:
@@ -2026,7 +2041,7 @@ def status_sol(request, pk):
 
             for compra in compras:
 
-                if es_matriz:
+                if es_matriz or es_yerod:
                     rol_autorizador_compra = 'Subdirector'
                     autorizador_compra = nombre_superintendente
                 else:
@@ -2044,7 +2059,7 @@ def status_sol(request, pk):
 
                 elif compra.autorizado1 is False:
                     estado = 'cancelado'
-                    if es_matriz:
+                    if es_matriz or es_yerod:
                         descripcion = (
                             'Orden de compra cancelada por Subdirector'
                         )
@@ -2069,7 +2084,7 @@ def status_sol(request, pk):
                 elif compra.autorizado1 is True:
                     estado = 'proceso'
 
-                    if es_matriz:
+                    if es_matriz or es_yerod:
                         descripcion = (
                             'Pendiente de autorización del Subdirector'
                         )
@@ -2264,12 +2279,12 @@ def status_sol(request, pk):
                     responsable_accion='Almacén',
                     responsable_autorizacion=(
                         'Supervisor'
-                        if es_matriz
+                        if (es_matriz or es_yerod)
                         else 'Superintendente'
                     ),
                     autorizador=(
                         nombre_supervisor
-                        if es_matriz
+                        if (es_matriz or es_yerod)
                         else nombre_superintendente
                     ),
                 )

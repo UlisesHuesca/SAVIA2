@@ -375,7 +375,7 @@ def articulos_entrada(request, pk):
                     articulos_correo.append({
                         "codigo": producto.codigo,
                         "nombre": producto.nombre,
-                        "cantidad":articulo.canitdad,
+                        "cantidad":articulo.cantidad,
                     })
 
                 if articulos_correo:
