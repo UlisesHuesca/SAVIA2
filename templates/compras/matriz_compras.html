@@ -201,6 +201,9 @@
                                 <label class="dropdown-item d-flex align-items-center gap-2">
                                     <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitado" checked> Solicitado por
                                 </label>
+                                <label class="dropdown-item d-flex align-items-center gap-2">
+                                    <input class="form-check-input mt-0" type="checkbox" data-column-toggle="creado" checked> Creado por
+                                </label>
                                 {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
                                 <label class="dropdown-item d-flex align-items-center gap-2">
                                     <input class="form-check-input mt-0" type="checkbox" data-column-toggle="distrito"> Distrito
@@ -271,6 +274,7 @@
                         <th class="sv-col-folios">Req.</th>
                         <th class="sv-col-folios">Sol.</th>
                         <th class="sv-col-solicitado">Solicitado por</th>
+                        <th class="sv-col-creado">Creado por</th>
                         {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
                         <th class="sv-col-distrito d-none">Distrito</th>
                         {% endif %}
@@ -307,6 +311,15 @@
                         <td class="sv-col-folios"><span class="sv-badge sv-badge-neutral">{{ compra.req.orden.folio }}</span></td>
                         <td class="sv-col-solicitado">
                             <span class="sv-cell-title">{{ compra.req.orden.staff.staff.staff.first_name }} {{ compra.req.orden.staff.staff.staff.last_name }}</span>
+                        </td>
+                        <td class="sv-col-creado">
+                            {% if compra.creada_por %}
+                            <span class="sv-cell-title">
+                                {{ compra.creada_por.staff.staff.first_name }} {{ compra.creada_por.staff.staff.last_name }}
+                            </span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">Sin registro</span>
+                            {% endif %}
                         </td>
                         {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
                         <td class="sv-col-distrito d-none"><span class="sv-badge sv-badge-neutral">{{ compra.req.orden.distrito.nombre }}</span></td>
@@ -484,7 +497,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="{% if usuario.tipo.nombre == 'PROVEEDORES' or usuario.tipo.nombre == 'VIS_ADQ' or usuario.tipo.nombre == 'Control' %}28{% else %}27{% endif %}" class="sv-empty">
+                        <td colspan="{% if usuario.tipo.nombre == 'PROVEEDORES' or usuario.tipo.nombre == 'VIS_ADQ' or usuario.tipo.nombre == 'Control' %}29{% else %}28{% endif %}" class="sv-empty">
                             <span class="sv-empty-icon"><i class="fa-solid fa-cart-shopping"></i></span>
                             <strong class="sv-empty-title">No se encontraron compras</strong>
                             <span class="sv-empty-text">Modifica los filtros para consultar otros resultados.</span>
@@ -664,6 +677,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const columnDefaults = {
         folios: true,
         solicitado: true,
+        creado: true,
         distrito: false,
         subproyecto: false,
         operacion: false,

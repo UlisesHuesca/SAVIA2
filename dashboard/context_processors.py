@@ -168,7 +168,7 @@ def contadores_processor(request):
             conteo_pagos = oc_pendientes.count()
 
         if usuario.tipo.tesoreria == True:
-            oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos, cerrar_sin_pago_completo = False,)
+            oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, autorizado2=True, req__orden__distrito = usuario.distritos, cerrar_sin_pago_completo = False,)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False, distrito = usuario.distritos)
             gastos_por_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, distrito = usuario.distritos  )
             if usuario.distritos.nombre == 'MATRIZ':
@@ -192,7 +192,8 @@ def contadores_processor(request):
             conteo_viaticos_pagar = viaticos_por_pagar.count()
             conteo_gastos_pagar = gastos_por_pagar.count()
             conteo_gastos_a_pagar = gastos_a_pagar.count()
-            conteo_pagos = oc_pendientes.count()
+            conteo_pagos = oc_pendientes.filter(para_pago = True).count()
+            conteo_pagos2 = oc_pendientes.filter(para_pago = False).count()
             conteo_asignar_montos = viaticos_por_asignar.count()
         if usuario.tipo.supervisor == True:
             solicitudes_pendientes = Order.objects.filter(autorizar = None, complete = True, supervisor=usuario)
