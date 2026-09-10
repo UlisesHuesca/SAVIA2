@@ -151,7 +151,7 @@
     <form id="mass_payment_form" method="POST" action="{% url 'compras-autorizadas' %}">
         {% csrf_token %}
 
-        <section class="sv-card">
+        <section class="sv-card" style="overflow: visible;">
             <div class="sv-card-header">
                 <h2 class="sv-card-title">
                     <i class="fa-solid fa-list-check"></i>

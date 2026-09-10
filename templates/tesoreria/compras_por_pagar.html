@@ -170,7 +170,7 @@
         </section>
         {% endif %}
 
-        <section class="sv-card">
+        <section class="sv-card" style="overflow: visible;">
             <div class="sv-card-header">
                 <h2 class="sv-card-title"><i class="fa-solid fa-cart-shopping"></i>Órdenes autorizadas</h2>
                 <div class="dropdown">
@@ -181,7 +181,7 @@
                         Columnas
                     </button>
                     <div class="dropdown-menu dropdown-menu-end p-3 shadow"
-                         aria-labelledby="payableColumnsButton" style="min-width: 260px;">
+                         aria-labelledby="payableColumnsButton" style="min-width: 260px; max-height: calc(100vh - 140px); overflow-y: auto; z-index: 1080;">
                         <p class="sv-cell-title mb-2">Mostrar columnas</p>
 
                         <div class="form-check mb-2">
