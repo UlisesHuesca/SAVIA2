@@ -412,9 +412,9 @@ def checkout(request):
                             ordensurtir.requisitar = False
                             if usuario.distritos.nombre == "Yerod":
                                 requi.autorizar = True
-                                requi.autorizada_por = usuario
+                                requi.requi_autorizada_por = usuario
                                 requi.comentario_super = "Requisición generada automáticamente"
-                                requi_fields.extend(['autorizar','autorizada_por','comentario_super',])
+                                requi_fields.extend(['autorizar','requi_autorizada_por','comentario_super',])
                             requi.save(update_fields=requi_fields)
                             #requitem.save() <<< De acuerdo al análisis con la creación es suficiente no necesita guardarse
                             ordensurtir.save(update_fields=['requisitar','cantidad_requisitar','procesado',])
