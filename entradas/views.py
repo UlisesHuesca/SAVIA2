@@ -385,7 +385,7 @@ def articulos_entrada(request, pk):
 
                     contexto_correo.update({"entrada": entrada,"articulos": articulos_correo,})
 
-                    html_message = render_to_string("emails/almacen/entrada_calidad.html",contexto_correo,)
+                    html_message = render_to_string("emails/entradas/entrada_calidad.html",contexto_correo,)
                     try:
                         email = EmailMessage(
                             f'Entrada recibida: {entrada.folio}',

@@ -1,90 +1,210 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-<html>
-<head>
+
 {% block title %}Productos OC{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
+<div class="modal-content sv-modal">
+    <div class="modal-header">
+        <div>
+            <p class="sv-page-eyebrow">Detalle de compra</p>
+            <h5 class="modal-title sv-card-title" id="compra"
+                value="{{ compra.id }}" data-compra-id="{{ compra.id }}">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                Compra {{ compra.folio }}
+            </h5>
+            <p class="sv-page-subtitle mb-0">
+                Productos, importes y comentarios relacionados con la orden de compra.
+            </p>
+        </div>
+
+        <button class="btn-close" type="button" data-bs-dismiss="modal"
+                aria-label="Cerrar"></button>
+    </div>
+
+    <div class="modal-body p-0">
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Artículo</th>
+                        <th scope="col" class="text-end">Cantidad</th>
+                        <th scope="col" class="text-end">P. U.</th>
+                        <th scope="col" class="text-end">Subtotal</th>
+                        <th scope="col" class="text-end">IVA</th>
+                        <th scope="col" class="text-end">Total</th>
+                        <th scope="col">Comentario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td data-label="Producto">
+                            <img class="row-image rounded border"
+                                 src="{{ producto.producto.producto.articulos.producto.producto.imageURL }}"
+                                 alt="{{ producto.producto.producto.articulos.producto.producto.nombre }}"
+                                 loading="lazy">
+                        </td>
+                        <td data-label="Código">
+                            <span class="sv-cell-title">
+                                {{ producto.producto.producto.articulos.producto.producto.codigo }}
+                            </span>
+                        </td>
+                        <td data-label="Artículo">
+                            <span class="sv-cell-title">
+                                {{ producto.producto.producto.articulos.producto.producto.nombre }}
+                            </span>
+                        </td>
+                        <td data-label="Cantidad" class="text-end">
+                            {{ producto.cantidad }}
+                        </td>
+                        <td data-label="P. U." class="text-end text-nowrap">
+                            ${{ producto.precio_unitario|floatformat:2 }}
+                        </td>
+                        <td data-label="Subtotal" class="text-end text-nowrap">
+                            ${{ producto.subtotal_parcial|floatformat:2 }}
+                        </td>
+                        <td data-label="IVA" class="text-end text-nowrap">
+                            ${{ producto.iva_parcial|floatformat:2 }}
+                        </td>
+                        <td data-label="Total" class="text-end text-nowrap">
+                            <strong>${{ producto.total|floatformat:2 }}</strong>
+                        </td>
+                        <td data-label="Comentario">
+                            {% if producto.producto.producto.articulos.comentario %}
+                                {{ producto.producto.producto.articulos.comentario }}
+                            {% else %}
+                                <span class="sv-cell-subtitle">Sin comentario</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="sv-empty">
+                            <span class="sv-empty-icon">
+                                <i class="fa-solid fa-box-open"></i>
+                            </span>
+                            <span class="sv-empty-title">No hay productos registrados</span>
+                            <span class="sv-empty-text">
+                                Esta orden de compra no contiene partidas para mostrar.
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <section class="p-3 p-lg-4 border-top">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <h6 class="sv-card-title mb-0">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    Información adicional
+                </h6>
+
+                {% if compra.req.orden.activo %}
+                <span class="sv-badge sv-badge-primary">
+                    <i class="fa-solid fa-truck-pickup"></i>
+                    {{ compra.req.orden.activo }}
+                </span>
                 {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
+                <span class="sv-badge sv-badge-neutral">
+                    <i class="fa-solid fa-circle-minus"></i>
+                    Sin activo definido
+                </span>
                 {% endif %}
-            {% endfor %}
-        {% endif %}
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Comentario de gerencia</span>
+                        <span class="sv-cell-title">
+                            {% if compra.comentario_gerencia %}
+                                {{ compra.comentario_gerencia }}
+                            {% else %}
+                                Sin comentario
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Comentario de compra</span>
+                        <span class="sv-cell-title">
+                            {% if compra.comentarios %}
+                                {{ compra.comentarios }}
+                            {% else %}
+                                Sin comentario
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Comentario del superintendente</span>
+                        <span class="sv-cell-title">
+                            {% if compra.req.comentario_super %}
+                                {{ compra.req.comentario_super }}
+                            {% else %}
+                                Sin comentario
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Comentario de almacén</span>
+                        <span class="sv-cell-title">
+                            {% if compra.req.comentario_compras %}
+                                {{ compra.req.comentario_compras }}
+                            {% else %}
+                                Sin comentario
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="border rounded-3 bg-light p-3">
+                        <span class="sv-cell-subtitle">Comentario del usuario</span>
+                        <span class="sv-cell-title">
+                            {% if compra.req.orden.comentario %}
+                                {{ compra.req.orden.comentario }}
+                            {% else %}
+                                Sin comentario
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark"></i>
+            Cerrar
+        </button>
     </div>
 </div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="compra" value={{compra.id}}>Compra: {{compra.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
-        </div>
 
-        <div class="modal-body">
-                <table class='table table-dark table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-2">Código</th>
-                            <th scope="col-3">Artículos</th>
-                            <th scope="col-3">Cantidad</th>
-                            <th scope="col-3">P.U.</th>
-                            <th scope="col-3">Subtotal</th>
-                            <th scope="col-3">IVA</th>
-                            <th scope="col-3">Total</th>
-                            <th>Comentario</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for producto in productos %}
-                        <tr>
-                            <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
-                            <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
-                            <td>{{producto.producto.producto.articulos.producto.producto.nombre}}</td>
-                            <td>{{producto.cantidad}}</td>
-                            <td>${{producto.precio_unitario|floatformat:2}}</td>
-                            <td>${{producto.subtotal_parcial|floatformat:2}}</td>
-                            <td>${{producto.iva_parcial|floatformat:2}}</td>
-                            <td>${{producto.total|floatformat:2}}</td>
-                            <td>{{producto.producto.producto.articulos.comentario}}</td>
-                        </tr>
-                   {% endfor %}
-                   </tbody>
-                </table>
-                <h6>Activo: {% if compra.req.orden.activo %} {{compra.req.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
-                <h6>Comentario Gerente: {% if compra.comentario_gerencia %} {{compra.comentario_gerencia}} {% else %} No hay comentario {% endif %}</h6>
-                <h6>Comentario Compra: {% if compra.comentarios %} {{compra.comentarios}} {%else%} No hay comentario {% endif %}</h6>
-                <h6>Comentario Superintendente:   {%if compra.req.comentario_super%} {{compra.req.comentario_super}} {% else %} No hay comentario {% endif %}</h6>
-                <h6>Comentario Almacén: {%if compra.req.comentario_compras %} {{compra.req.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
-                <h6>Comentario Usuario: {%if compra.req.orden.comentario %} {{compra.req.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
-                
-        </div>
-
-        <div class="modal-footer">
-        </div>
-    </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 {% endblock %}
-
-</body>
-</html>

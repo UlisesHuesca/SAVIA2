@@ -3,25 +3,39 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load l10n %}
-<html>
-<head>
-{% block title %} OC {% endblock %}
-</head>
-<body>
+
+{% block title %}Crear orden de compra{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<hr>
-<div class="row">
-    <div class="col-lg-6">
-        <div class="card" id="form-wrapper">
-            <div class="card-header mb-4">
-            <!-- Aqui es el encabezado de los filtros -->
-                <h5 id="oc" target={{oc.id|unlocalize}}>{% if usuario.distritos.nombre == "BRASIL" %} ORDEM DE COMPRA: {% else %} ORDEN DE COMPRA {% endif %} {{folio}}</h5>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <p class="sv-page-eyebrow">Compras</p>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-cart-plus"></i></span>
+                {% if usuario.distritos.nombre == "BRASIL" %}Ordem de compra{% else %}Orden de compra{% endif %}
+            </h1>
+            <p class="sv-page-subtitle mb-0">
+                Completa el encabezado y agrega las partidas antes de crear la orden.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-hashtag"></i>
+            {{ folio }}
+        </span>
+    </header>
+
+<div class="row g-4 align-items-start">
+    <div class="col-12 col-xl-6">
+        <div class="sv-card" id="form-wrapper">
+            <div class="sv-card-header">
+                <h2 class="sv-card-title" id="oc" target="{{ oc.id|unlocalize }}">
+                    <i class="fa-solid fa-file-signature"></i>
+                    {% if usuario.distritos.nombre == "BRASIL" %}Dados da ordem{% else %}Datos de la orden{% endif %}
+                </h2>
             </div>
-            <div class="card-body">
             <form id="id_formulario" method="POST">
+            <div class="sv-card-body">
                 {% csrf_token %}
                 {% if error_messages %}
                 <div class="alert alert-danger" role="alert">
@@ -30,341 +44,369 @@
                 {% endif %}
                 <div class="row my-3">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.proveedor}}    
+                            {{ form.proveedor|add_class:"form-select" }}
                             </div>
                         </div>  
                     </div>
                 </div>
-                <div class="row my-2">
+                <div class="row g-3 mb-3">
                     <div id="etiqueta_domicilio" class="col-12">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6> {% if usuario.distritos.nombre == "BRASIL" %} Endereço {% else %} Domicilio:{% endif %}</h6><h6 style="color: #121212;" id="lbl_domicilio"></h6>  
+                        <div class="border rounded-3 bg-light p-3 h-100">
+                            <span class="sv-cell-subtitle">{% if usuario.distritos.nombre == "BRASIL" %}Endereço{% else %}Domicilio{% endif %}</span>
+                            <span class="sv-cell-title" id="lbl_domicilio">Sin seleccionar</span>
                         </div>
-                         
                     </div>
                 </div>
-                <div class="row my-2">
-                    <div id="etiqueta_status" class="col-lg-4 col-md-4 col-sm-12">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Status:</h6><h6 style="color: #121212;" id="lbl_status"></h6>   
+                <div class="row g-3 mb-3">
+                    <div id="etiqueta_status" class="col-12 col-md-4">
+                        <div class="border rounded-3 bg-light p-3 h-100">
+                            <span class="sv-cell-subtitle">Status</span>
+                            <span class="sv-cell-title" id="lbl_status">Sin seleccionar</span>
                         </div>
                     </div>
                     
-                    <div id="etiqueta_distrito" class="col-lg-4 col-md-4 col-sm-12">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Distrito:</h6><h6 style="color: #121212;" id="lbl_distrito"></h6>   
+                    <div id="etiqueta_distrito" class="col-12 col-md-4">
+                        <div class="border rounded-3 bg-light p-3 h-100">
+                            <span class="sv-cell-subtitle">Distrito</span>
+                            <span class="sv-cell-title" id="lbl_distrito">Sin seleccionar</span>
                         </div>
                     </div>
 
-                    <div id="etiqueta_banco" class="col-lg-4 col-md-4 col-sm-12">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Banco:</h6><h6 style="color: #121212;" id="lbl_banco"></h6>   
+                    <div id="etiqueta_banco" class="col-12 col-md-4">
+                        <div class="border rounded-3 bg-light p-3 h-100">
+                            <span class="sv-cell-subtitle">Banco</span>
+                            <span class="sv-cell-title" id="lbl_banco">Sin seleccionar</span>
                         </div>
                     </div>
                 </div>
                 <div id="comparativo" class="row my-2 d-none">
                     <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.comparativo_model}}
+                                {{ form.comparativo_model|add_class:"form-select" }}
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row my-2">
                     <div class="col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.cond_de_pago|add_class:"form-select"|append_attr:"placeholder= Condiciones de pago"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Condiciones de pago*</label>
+                                <label for="id_cond_de_pago">Condiciones de pago*</label>
                             </div>
                         </div>
                     </div>
                     <div id="credito_dias" class="col-lg-6 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-calendar-day"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.dias_de_credito|add_class:"form-control"|append_attr:"placeholder= Días de crédito"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Días de crédito</label>
+                                <label for="id_dias_de_credito">Días de crédito</label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row my-2">
                     <div class="col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.moneda|add_class:"form-select"|append_attr:"placeholder= Moneda"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Moneda*</label>
+                                <label for="id_moneda">Moneda*</label>
                             </div>
                         </div>
                     </div>
                     <div id="tipo_de_cambio" class="col-lg-6 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.tipo_de_cambio|add_class:"form-control"|append_attr:"placeholder= Tipo de Cambio"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Tipo de Cambio*</label>
+                                <label for="id_tipo_de_cambio">Tipo de cambio*</label>
                             </div>
                         </div>
                     </div>
                     <div class="form-check form-switch col-auto mx-4 d-none" id="Dof" valor = "{{tag}}">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchDof">
-                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">DOF</label>
+                        <label class="form-check-label" for="SwitchDof" id="LabelDof">DOF</label>
                     </div>
                 </div>
                     
                 
                 <div class="row my-2">
                     <div class="col-lg-8 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text d-sm-none d-lg-block" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text d-sm-none d-lg-block"><i class="fa-solid fa-list"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.uso_del_cfdi|add_class:"form-control"|append_attr:"placeholder= Uso CFDI"}}
-                                <label style="color: #121212;" for="id_uso_del_cfdi">Uso CFDI*</label>
+                                {{form.uso_del_cfdi|add_class:"form-select"|append_attr:"placeholder= Uso CFDI"}}
+                                <label for="id_uso_del_cfdi">Uso CFDI*</label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row my-2">
                     <div class="col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-calendar-day"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder= Días de Entrega"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Días de Entrega</label>
+                                <label for="id_dias_de_entrega">Días de entrega</label>
                             </div>
                         </div>
                     </div>
                 <!--</div>
                 <div class="row my-2">-->
                     <div class="col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-calendar-day"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.tipo_contratacion|add_class:"form-control"|append_attr:"placeholder= Tipo de Contratación"}}
-                                <label style="color: #121212;" for="id_tipo_contratacion">Tipo de Contratación</label>
+                                {{form.tipo_contratacion|add_class:"form-select"|append_attr:"placeholder= Tipo de Contratación"}}
+                                <label for="id_tipo_contratacion">Tipo de Contratación</label>
                             </div>
                         </div>
                     </div>
                 </div>
                     
-                <div class="row ms-3 my-2">
+                <div class="border-top pt-3 mt-3 mb-2">
+                    <p class="sv-page-eyebrow mb-1">Ajustes de la orden</p>
+                    <p class="sv-cell-subtitle mb-0">Activa únicamente los conceptos que correspondan.</p>
+                </div>
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-auto" id="referencia">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchReferencia">
-                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelReferencia"><strong>Referencia de Pagos</strong></label>
+                        <label class="form-check-label" for="SwitchReferencia" id="LabelReferencia"><strong>Referencia de pagos</strong></label>
                     </div>
                     <div id="referencialbl"  class="col-lg-4 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.referencia|add_class:"form-control"|append_attr:"placeholder= Referencia de Pagos"}}
-                                <label style="color: #121212;" for="id_referencia">Referencia de Pagos</label>
+                                <label for="id_referencia">Referencia de Pagos</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-auto" id="Impuesto" valor = "{{tag}}">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchImpuesto">
                         <label class="form-check-label" for="SwitchImpuesto" id="LabelImpuesto"><strong>Impuestos</strong></label>
                     </div>
                     <div id="impuestos" class="col-lg-4 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.impuestos|add_class:"form-control"|append_attr:"placeholder=Impuestos"}}
-                                <label style="color: #121212;" for="id_impuestos">Impuestos</label>
+                                <label for="id_impuestos">Impuestos</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-auto" id="retencion">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchRetencion">
                         <label class="form-check-label" for="SwitchRetencion" id="LblRetencion"><strong>Retención</strong></label>
                     </div>
                     <div id="div_retencion" class="col-lg-4 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.retencion|add_class:"form-control"|append_attr:"placeholder=Retención"}}
-                                <label style="color: #121212;" for="id_retencion">Retención</label>
+                                <label for="id_retencion">Retención</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-auto" id="divflete" valor = "{{tag}}">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchFlete">
                         <label class="form-check-label" for="SwitchFlete" id="LabelFlete"><strong>Flete</strong></label>
                     </div>
                     <div id="fletes" class="col-lg-4 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.costo_fletes|add_class:"form-control"|append_attr:"placeholder= Costo de flete"}}
-                                <label style="color: #121212;" for="id_costo_fletes">Costo de flete</label>
+                                <label for="id_costo_fletes">Costo de flete</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-auto" id="divanticipo" valor = "{{tag}}">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchAnticipo">
                         <label class="form-check-label" for="SwitchAnticipo" id="LabelAnticipo"><strong>Anticipo</strong></label>
                     </div>
                     <div id="anticipo" class="col-lg-4 d-none">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.monto_anticipo|add_class:"form-control"|append_attr:"placeholder= Monto de anticipo"}}
-                                <label style="color: #121212;" for="id_monto_anticipo">Monto de anticipo</label>
+                                <label for="id_monto_anticipo">Monto de anticipo</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-sm">
-                    <label for="form.logistica" class="form-check-label"><strong>Logística</strong></label>
+                    <label for="id_logistica" class="form-check-label"><strong>Logística</strong></label>
                         {{form.logistica|add_class:"form-check-input"}}
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-sm">
-                    <label for="form.local" class="form-check-label"><strong>Proveedor Local</strong></label>
+                    <label for="id_local" class="form-check-label"><strong>Proveedor local</strong></label>
                         {{form.local|add_class:"form-check-input"}}
                     </div>
                 </div>
-                <div class="row ms-3 my-2">
+                <div class="row ms-1 my-2">
                     <div class="form-check form-switch col-sm">
-                    <label for="form.tesoreria_local" class="form-check-label"><strong>Incluir comentario solicitud</strong></label>
+                    <label for="id_comentario_solicitud" class="form-check-label"><strong>Incluir comentario de solicitud</strong></label>
                         {{form.comentario_solicitud|add_class:"form-check-input"}}
                     </div>
                 </div>
                 <div class="row my-2">
-                    <div id="etiqueta_domicilio" class="col-12">
+                    <div id="etiqueta_comentario_solicitud" class="col-12">
                         <div class="alert alert-secondary" role="alert">
-                        <h6>Comentario Solicitud:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{oc.req.orden.comentario}}</h6>   
+                        <h6>Comentario de solicitud:</h6><h6 id="lbl_comentario_solicitud">{{oc.req.orden.comentario}}</h6>
                         </div>
                     </div>
                 </div>
                 <div class="row my-2">
                     <div class="col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
-                            <span class="input-group-text d-lg-block d-none" id="basic-addon1">Opciones y Condiciones</span>
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-regular fa-message"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.opciones_condiciones|add_class:"form-control"|append_attr:"type=text"}}
+                                {{ form.opciones_condiciones|add_class:"form-control"|append_attr:"placeholder=Opciones y condiciones" }}
+                                <label for="id_opciones_condiciones">Opciones y condiciones</label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="container-fluid text-end">
+            <div class="sv-card-footer d-flex flex-column flex-sm-row justify-content-end gap-2">
                 <input type="hidden" name="crear" value="crear">
                 <!--El sentido de este if y porque repito el label es simplemente por el Javascript, 
                 si el botón no existe hay un error dentro de JS, el cual podría manejar pero eso será una implementación
                 más elegante para otro día -->
                 {% if productos_comp %}
-                <button type="submit" id="crear" name="crear" class="btn btn-success col-sm-2 my-2">
+                <button type="submit" id="crear" name="crear" class="sv-btn sv-btn-success">
                 {% else %}
-                <button type="submit" id="crear" name="crear" class="btn btn-success col-sm-2 my-2 d-none">
+                <button type="submit" id="crear" name="crear" class="sv-btn sv-btn-success d-none">
                 {% endif %}   
-                Crear</button>
-                <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
+                    <i class="fa-solid fa-circle-check"></i>
+                    Crear
+                </button>
+                <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Salir
+                </a>
             </div>
             </form>
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="box-element">
-            <div class="row">
-                <div class="col-lg-8 col-sm-12">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+    <div class="col-12 col-xl-6">
+        <section class="sv-card">
+            <div class="sv-card-header">
+                <div>
+                    <p class="sv-page-eyebrow">Partidas</p>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        Productos de la orden
+                    </h2>
+                </div>
+                <span class="sv-badge sv-badge-neutral">
+                    {{ productos_comp|length }} productos
+                </span>
+            </div>
+            <div class="sv-card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="sv-input-group input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1"> 
-                                {{form_product.producto}}
+                                {{ form_product.producto|add_class:"form-select" }}
                             </div>
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div id="etiqueta_solicitado" class="col-lg-4 col-sm-12">
-                    <div class="alert alert-secondary" role="alert">
-                        <h6>Solicitado:</h6>
-                        <h6 style="color: #121212;" id="solicitado"></h6>   
+            <div class="row g-3 mb-3">
+                <div id="etiqueta_solicitado" class="col-12 col-lg-4">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Cantidad pendiente</span>
+                        <span class="sv-cell-title" id="solicitado">—</span>
                     </div>
                 </div>
-                <div id="etiqueta_comentario" class="col-lg-8 col-sm-12">
-                    <div class="alert alert-secondary" role="alert">
-                        <h6>Producto comentario:</h6>
-                        <h6 style="color: #121212;" id="comentario"></h6>   
+                <div id="etiqueta_comentario" class="col-12 col-lg-8">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Comentario del producto</span>
+                        <span class="sv-cell-title" id="comentario">—</span>
                     </div>
                 </div>
             </div>
-            <div class="row">  
-                <div id="etiqueta_precio_ref" class="col-lg-3 col-sm-12 d-none">
-                    <div class="alert alert-primary" role="alert">
-                    <h6>Precio Referencia:</h6><h6 style="color: #121212;" id="precio_ref"></h6>   
+            <div class="row g-3">
+                <div id="etiqueta_precio_ref" class="col-12 col-md-6 col-lg-3 d-none">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Precio de referencia</span>
+                        <span class="sv-cell-title" id="precio_ref"></span>
                     </div>
                 </div> 
-                <div id="etiqueta_porcentaje" class="col-lg-3 col-sm-12 d-none">
-                    <div class="alert alert-primary" role="alert">
-                    <h6>Porcentaje:</h6><h6 style="color: #121212;" id="porcentaje"></h6>   
+                <div id="etiqueta_porcentaje" class="col-12 col-md-6 col-lg-3 d-none">
+                    <div class="border rounded-3 bg-light p-3 h-100">
+                        <span class="sv-cell-subtitle">Variación</span>
+                        <span class="sv-cell-title" id="porcentaje"></span>
                     </div>
                 </div> 
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {% if usuario.distritos.nombre == "BRASIL" %}
                             {{form_product.cantidad|add_class:"form-control"|append_attr:"placeholder= Quantidade"}}
-                            <label style="color: #121212;" for="id_cantidad">Quantidade</label>
+                            <label for="id_cantidad">Quantidade</label>
                             {% else %}
                             {{form_product.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
-                            <label style="color: #121212;" for="id_cantidad">Cantidad</label>
+                            <label for="id_cantidad">Cantidad</label>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-12 col-md-6 col-lg-4">
 
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                    <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.precio_unitario|add_class:"form-control"|append_attr:"placeholder= P.U."}}
-                            <label style="color: #121212;" for="id_precio_unitario">P.U.</label>
+                            <label for="id_precio_unitario">P.U.</label>
                         </div>
                     </div>
                 </div>
                 {% if usuario.distritos.nombre == "BRASIL" %}
                 <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                    <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-gear"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
-                            <label style="color: #121212;" for="id_marca">Marca</label>
+                            <label for="id_marca">Marca</label>
                         </div>
                     </div>
                 </div>
                  {% endif %}
-                <div class="col-sm-1 mt-3">
-                    <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                <div class="col-12 col-lg-auto d-flex align-items-center">
+                    <button type="button" class="sv-btn sv-btn-success update-purchase w-100" id="update-purchase" name="purchase">
                         <i class="fa-solid fa-circle-plus"></i>
-                    </a>
+                        Agregar
+                    </button>
                 </div>
                
             </div>
-            <hr>
-            <div class ="table-responsive-sm">
-                <table class="table table-light table-striped table-hover mx-2">
+            </div>
+            <div class="sv-table-wrap border-top">
+                <table class="sv-table">
                 <thead>
                     <tr>
                         <th class="d-none d-lg-table-cell">#</th>
@@ -388,23 +430,46 @@
                 <tbody id="mytbl">
                     {% for product in productos_comp%}
                     <tr id="row_{{product.id|unlocalize}}">
-                        <td class="d-none d-lg-table-cell">{{product.producto.producto.articulos.producto.producto.codigo}}</td>
-                        <td>{{product.producto.producto.articulos.producto.producto.nombre}}</td>
-                        <td>{{product.cantidad}}</td>
+                        <td class="d-none d-lg-table-cell" data-label="Código">{{product.producto.producto.articulos.producto.producto.codigo}}</td>
+                        <td data-label="Producto">{{product.producto.producto.articulos.producto.producto.nombre}}</td>
+                        <td data-label="Cantidad">{{product.cantidad}}</td>
                         {% if usuario.distritos.nombre == "BRASIL" %}
-                        <td>{% if product.marca %}{{product.marca}}{% else %}NR {% endif %}</td>
+                        <td data-label="Marca">{% if product.marca %}{{product.marca}}{% else %}NR{% endif %}</td>
                         {% endif %}
-                        <td>${{product.precio_unitario|floatformat:2}}</td>
-                        {% if product.precio_unitario != None  and product.cantidad != None %}
-                        <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
-                        {% endif %}
-                        <td><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow({{product.producto.id|unlocalize}})" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <td data-label="P. U.">${{product.precio_unitario|floatformat:2}}</td>
+                        <td data-label="Subtotal">
+                            {% if product.precio_unitario != None and product.cantidad != None %}
+                                ${% widthratio product.precio_unitario 1 product.cantidad %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td data-label="Acción">
+                            <button type="button" class="sv-btn sv-btn-danger sv-btn-icon" value="Delete"
+                                    onclick="deleteRow({{ product.producto.id|unlocalize }}, this)"
+                                    iva="{{ product.producto.producto.articulos.producto.producto.iva }}"
+                                    producto="{{ product.producto.id|unlocalize }}"
+                                    cantidad="{{ product.cantidad|unlocalize }}"
+                                    precio="{{ product.precio_unitario.amount }}"
+                                    title="Eliminar producto" aria-label="Eliminar producto">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if usuario.distritos.nombre == 'BRASIL' %}7{% else %}6{% endif %}" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-cart-plus"></i></span>
+                            <span class="sv-empty-title">Aún no hay productos agregados</span>
+                            <span class="sv-empty-text">Selecciona un producto, captura la cantidad y el precio unitario.</span>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 </table>
             </div>
-            <table class="table table-light table-striped mx-1">
+            <div class="sv-card-footer">
+            <table class="table table-sm mb-0">
             <thead>
                 <tr>
                     <th scope="col">Subtotal</th>
@@ -442,12 +507,18 @@
                 </tr>
             </tbody>
             </table>
-        </div>
+            </div>
+        </section>
     </div>
 </div>
+</main>
 <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        {% if usuario.distritos.nombre == "Yerod" %}
+        <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        {% else %}
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        {% endif %}
         <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
     </div>
 </div>
@@ -469,6 +540,7 @@ var precio_mod = document.getElementById("id_precio_unitario");
 
 
 function verificar() {
+    var formulario = document.getElementById('id_formulario');
     var proveedor = document.getElementById('id_proveedor');
     var cond_pago = document.getElementById('id_cond_de_pago');
     var uso_cfdi = document.getElementById('id_uso_del_cfdi');
@@ -594,30 +666,29 @@ function verificar() {
             })
             return false
     } else if (rows > 0) {
-        Swal.fire({
-            "title": "Success",
-            "text": "Validando formulario... Espera un momento",
-            "icon": "success",
-        }).then(() => {
-            loadingIndicator.style.display = 'block'; // Mostrar indicador de carga
-            form.querySelectorAll("button, input, select").forEach(element => element.disabled = true); // Deshabilitar elementos del formulario
-            form.submit(); // Enviar el formulario
-        });
         return true;
     }
 }
 
 document.getElementById("crear").addEventListener("click", function(event){
     event.preventDefault();
-    formulario = document.getElementById("id_formulario")// Evita el comportamiento de submit predeterminado
-    boton = document.getElementById("crear")
+    var formulario = document.getElementById("id_formulario"); // Evita el comportamiento de submit predeterminado
 
     let formValid = verificar();
     console.log(formValid)
 
     // Si el resultado es true (todas las condiciones se cumplen), procede con el submit
     if (formValid) {
-        formulario.submit();
+        var botonCrear = document.getElementById("crear");
+        var indicadorCarga = document.getElementById("loadingIndicator");
+
+        botonCrear.disabled = true;
+        if (indicadorCarga) {
+            indicadorCarga.style.display = "block";
+        }
+
+        // Dispara el evento submit del formulario sin deshabilitar el token CSRF.
+        formulario.requestSubmit();
     }
 });
 
@@ -724,8 +795,7 @@ function ActualizarArticulos(oc,id,val_cantidad,val_precio,action, marca){
 }
 
 //This is the function that remove any product from render product table and remove the specific element from the array
-function deleteRow(elemento) {
-    var btn_delete = document.getElementById('delete');
+function deleteRow(elemento, btn_delete) {
     let oc_tag = document.getElementById('oc');
     let oc = oc_tag.getAttribute('target');
     var id = elemento;
@@ -1196,10 +1266,11 @@ $(document).ready(function(){
         datosCompra.dias_de_credito = dias;
         precio_ref()
         console.log("Distrito", distrito)
-        if (distrito == "NEGRO"){
-            comparativo.classList.add('d-none');
+        var comparativoElement = document.getElementById('comparativo');
+        if (distrito == "Yerod"){
+            comparativoElement.classList.add('d-none');
         } else {
-            comparativo.classList.remove('d-none');
+            comparativoElement.classList.remove('d-none');
         }
         
         localStorage.setItem("id_formulario_"+ oc, JSON.stringify(datosCompra));
@@ -1383,5 +1454,3 @@ function precio_ref() {
 
 </script>
 {% endblock %}
-</body>
-</html>

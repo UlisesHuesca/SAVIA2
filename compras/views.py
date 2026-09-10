@@ -1665,13 +1665,23 @@ def autorizar_oc1(request, pk):
             compra.autorizado1 = True
             compra.oc_autorizada_por = usuario
             compra.autorizado_at = datetime.now()
+            campos_actualizados = [
+                'autorizado1',
+                'oc_autorizada_por',
+                'autorizado_at',
+            ]
+
             #compra.autorizado_hora1 = datetime.now().time()
-            if usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
-                compra = form.save(commit = False)
+            if (usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL")):
                 compra.autorizado2 = True
                 compra.oc_autorizada_por2 = usuario
                 compra.autorizado_at_2 = datetime.now()
-            compra.save()
+                campos_actualizados.extend([
+                    'autorizado2',
+                    'oc_autorizada_por2',
+                    'autorizado_at_2',
+                ])
+            compra.save(update_fields=campos_actualizados)
             archivo_oc = attach_oc_pdf(request, compra.id)
             pdf_antisoborno = attach_antisoborno_pdf(request)
             pdf_privacidad = attach_aviso_privacidad_pdf(request)
@@ -3501,7 +3511,7 @@ def generar_pdf_nueva(compra):
         else ''
     )
 
-    es_savia_negro = nombre_distrito == 'Yerod'
+    es_savia_negro = nombre_distrito == 'YEROD'
 
     # Define estilos para las tablas (antes de usarlos)
     styles = getSampleStyleSheet()
