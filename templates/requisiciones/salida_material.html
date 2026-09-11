@@ -3,544 +3,411 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Productos{% endblock %}
-</head>
-<body>
+
+{% block title %}Vale de salida{% endblock %}
 
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-<hr>
-<hr>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-6">
-        <div class="card" id="form-wrapper">
-            <div class="card-header">
-            <!-- Aqui es el encabezado de los filtros -->
-                <h3 target="">Vale de Salida {{nuevo_folio}} | Solicitud {{vale_salida.solicitud.folio}}</h3>
-            </div>
-            <div class="card-body" id="Solicitud-info">
-                <form id="myForm" method="POST" data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" onsubmit="mostrarIndicadorCarga();">
-                        {% csrf_token %}
-                        <div class="row my-5">
-                           
-                           
-                           
-                            
-                            <label for="form.moneda" class="col-auto col-form-label my-1"><strong><h4>Material entregado a:</h4></strong></label>
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <div class="col-12">
-                                        {{formVale.material_recibido_por}}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-lg-12 col-sm-12">
-                                    <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{formVale.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                                            <label style="color: #121212;" for="id_impuestos_adicionales">Comentario</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                                
-                                <div class="col-3">
-                                <input id="submit-button" class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
-                                </div>
-                                
-                        </div>
-                </form>
-            </div>
-            <hr>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-truck-ramp-box"></i></span>
+                Vale de salida {{ nuevo_folio }}
+            </h1>
+            <p class="sv-page-subtitle">
+                Registra los productos entregados de la solicitud {{ vale_salida.solicitud.folio }}.
+            </p>
         </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-            <h3 id="vale" vale="{{vale_salida.id|unlocalize}}">Resumen de Salida</h3>
-            </div>
-           
-            <div class='card-body'>
-                <form id="myForm2" method="POST" onsubmit="mostrarIndicadorCarga();">
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-lg-8 col-sm-12">
-                        <div id="input_subproyecto" class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                                <label  style="font-size:10px; color:gray;" for="producto">Productos*</label>
-                                <select style="font-size:16px" class="form-select form-select-sm grupo-entrada" id="producto">
-                                    <option style="color:gray;" value="" selected disabled>Productos</option>
-                                    {% for producto in productos %}
-                                   
-                                    <option id="js" target="{{producto.id|unlocalize}}" activo="{{producto.articulos.producto.producto.activo}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
-                                        {{producto.articulos.producto}}
-                                    </option>
-                                    
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="etiqueta_solicitado" class="col-lg-4 col-sm-6">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Disponible:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
-                        </div>
-                    </div>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-file-lines"></i>Solicitud {{ vale_salida.solicitud.folio }}
+            </span>
+            <span class="sv-badge sv-badge-dark">
+                <i class="fa-solid fa-boxes-stacked"></i>{{ cantidad_items }} artículos
+            </span>
+        </div>
+    </header>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-5">
+            <section class="sv-card h-100" id="form-wrapper">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-user-check"></i>Datos de entrega
+                    </h2>
                 </div>
-                <div class="row">    
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
-                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                <form id="myForm" method="POST"
+                      data-subproyecto-url="{% url 'ajax_load_subproyectos' %}"
+                      onsubmit="return mostrarIndicadorCarga(this);">
+                    {% csrf_token %}
+                    <div class="sv-card-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="id_material_recibido_por">
+                                <strong>Material entregado a</strong>
+                            </label>
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    {{ formVale.material_recibido_por }}
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-message"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ formVale.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
+                                <label for="{{ formVale.comentario.id_for_label }}">Comentario</label>
                             </div>
                         </div>
                     </div>
-                    
-                       
-                    <div class="col-sm-1 mt-3">
-                        <button type ="button" class="btn btn-success update-salida d-none" id="update-salida" name="salida">
-                            <i class="fa-solid fa-circle-plus"></i>
+                    <div class="sv-card-footer d-flex justify-content-end">
+                        <button id="submit-button" class="sv-btn sv-btn-primary"
+                                name="agregar" type="submit">
+                            <i class="fa-solid fa-floppy-disk"></i>Guardar vale
                         </button>
                     </div>
                 </form>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title" id="vale" data-vale-id="{{ vale_salida.id|unlocalize }}">
+                        <i class="fa-solid fa-box-open"></i>Agregar producto
+                    </h2>
+                    <span class="sv-badge sv-badge-dark">
+                        Disponible: <strong id="solicitado">—</strong>
+                    </span>
                 </div>
-                <hr>
-                <div class ="table-responsive-sm">
-                    <table class="table table-ligth table-striped mx-1">
-                    
-                    <thead>
-                        <tr>
-                        <th  salidas="{{salidas}}">Código</th>
-                        <th scope="col">Producto</th>
-                        <th scope="col">Cantidad</th>
-                        <th scope="col">Precio</th>
-                        <th scope="col">Entrada</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mytbl">
-                        {% for item in salidas %}
-                        <tr>
-                            <th scope="col">{{item.producto.articulos.producto.producto.codigo}}</th>
-                            <th scope="col">{{item.producto.articulos.producto.producto.nombre}}</th>
-                            <th scope="col">{{item.cantidad}}</th>
-                            <th scope="col">{{item.precio}}</th>
-                            <th scope="col">{{item.entrada}}</th>
-                            <th scope="col">
-                            <td>
-                                <!--<a class="btn btn-outline-info m-1" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>-->
-                                <button type="button" class="btn btn-danger m-1" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id|unlocalize}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
-                                    <i class="fa-solid fa-trash-can"></i>
+
+                <form id="myForm2" method="POST">
+                    {% csrf_token %}
+                    <div class="sv-card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-12 col-lg-7">
+                                <div id="input_subproyecto" class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        <select class="form-select grupo-entrada" id="producto">
+                                            <option value="" selected disabled>Selecciona un producto</option>
+                                            {% for producto in productos %}
+                                            <option value="{{ producto.id|unlocalize }}"
+                                                    data-id="{{ producto.id|unlocalize }}"
+                                                    data-activo="{{ producto.articulos.producto.producto.activo }}"
+                                                    data-producto="{{ producto.articulos.producto }}"
+                                                    data-cantidad="{{ producto.cantidad|unlocalize }}"
+                                                    data-cantidad-solicitada="{{ producto.articulos.cantidad|unlocalize }}"
+                                                    data-stock="{{ producto.articulos.producto.cantidad|unlocalize }}">
+                                                {{ producto.articulos.producto }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="producto">Producto</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-sm-8 col-lg-3">
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-boxes-stacked"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad" }}
+                                        <label for="id_cantidad">Cantidad</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-sm-4 col-lg-2 d-grid">
+                                <button type="button" class="sv-btn sv-btn-success d-none"
+                                        id="update-salida" name="salida">
+                                    <i class="fa-solid fa-circle-plus"></i>Agregar
                                 </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            </div>
-            <hr>
-            <h5>Artículos: {{cantidad_items}}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </form>
 
+                <div class="sv-table-wrap border-top">
+                    <table class="sv-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Entrada</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mytbl">
+                            {% for item in salidas %}
+                            <tr data-salida-row>
+                                <td>
+                                    <span class="sv-cell-title">
+                                        {{ item.producto.articulos.producto.producto.codigo }}
+                                    </span>
+                                </td>
+                                <td>{{ item.producto.articulos.producto.producto.nombre }}</td>
+                                <td>{{ item.cantidad }}</td>
+                                <td>$ {{ item.precio|floatformat:2 }}</td>
+                                <td>{{ item.entrada }}</td>
+                                <td>
+                                    <button type="button"
+                                            class="sv-btn sv-btn-danger sv-btn-icon js-delete-salida"
+                                            data-salida-id="{{ item.id|unlocalize }}"
+                                            data-cantidad="{{ item.cantidad|unlocalize }}"
+                                            data-producto-id="{{ item.producto.id|unlocalize }}"
+                                            onclick="deleteRow(this)"
+                                            title="Eliminar producto"
+                                            aria-label="Eliminar producto">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="sv-empty-state">
+                                        <i class="fa-solid fa-box-open"></i>
+                                        <h3>No hay productos agregados</h3>
+                                        <p>Selecciona un producto y captura la cantidad entregada.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </div>
-    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+</main>
 
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="document" hx-target="this"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
+     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body text-center py-5">
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod"
+                     style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+                {% else %}
+                <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA"
+                     style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+                {% endif %}
+                <h3 class="sv-card-title justify-content-center mt-3">Guardando vale de salida</h3>
+                <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
+            </div>
         </div>
     </div>
 </div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
+<script>
+const valeElement = document.getElementById("vale");
+const productSelect = document.getElementById("producto");
+const quantityInput = document.getElementById("id_cantidad");
+const availableLabel = document.getElementById("solicitado");
+const addButton = document.getElementById("update-salida");
+const saveButton = document.getElementById("submit-button");
 
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
+function parseDecimal(value) {
+    return Number(String(value || "0").replace(",", "."));
+}
+
+function getSelectedProduct() {
+    if (!productSelect || productSelect.selectedIndex < 1) return null;
+    return productSelect.options[productSelect.selectedIndex];
+}
+
+function getAvailableQuantity(option) {
+    if (!option) return 0;
+    const pending = parseDecimal(option.dataset.cantidad);
+    const requested = parseDecimal(option.dataset.cantidadSolicitada);
+    return pending === 0 && requested > 0 ? requested : pending;
+}
+
+function showLoading(form) {
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById("loadingIndicator")).show();
+}
 
 function mostrarIndicadorCarga(form) {
-    document.getElementById('loadingIndicator').style.display = 'flex';
-
-    const button = form.querySelector('button[type="submit"]');
-    if (button) {
-        button.disabled = true;
-    }
-    
-    return true; // se asegura de que el formulario se envíe
+    showLoading(form);
+    return true;
 }
 
-var rows = document.getElementById("mytbl").rows.length
-//submit_btn = document.getElementById('submit-button')
-console.log('rows',rows)
-
-{% if salidas %}
-document.getElementById("submit-button").addEventListener('click',function(){
-
-    if (rows < 1){
-        Swal.fire({
-                "title":"Error",
-                "text":"No tienes productos seleccionados",
-                "icon":"error",
-            })
-            this.setAttribute('name','')
-        } else {
-            this.setAttribute('name','entrada')
-
-        }
-
-})
-{% endif %}
-
-document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('myForm');
-        const btnSubmit = document.getElementById('submit-button');
-        const btn = document.getElementById('update-salida');
-        const btn_delete = document.getElementById('delete')
-
-
-        form.addEventListener('submit', function() {
-            preventDoubleClick(btnSubmit);    
-        });
-        btn.addEventListener('click', function(){
-            preventDoubleClick(btn);
-        });
-        if (btn_delete){
-        btn_delete.addEventListener('click', function(){
-            preventDoubleClick(btn_delete);
-        });
-    }
+if (productSelect) {
+    productSelect.addEventListener("change", function () {
+        const option = getSelectedProduct();
+        availableLabel.textContent = getAvailableQuantity(option);
+        validateQuantity(false);
     });
-
-    function preventDoubleClick(button) {
-    setTimeout(function() {
-        button.disabled = true;
-    }, 50);
-    }      
-
-
-
-
-
-
-document.getElementById("producto").addEventListener("change", function(element){
-    var select = document.getElementById('producto');
-    var current_option = select.options[select.selectedIndex];
-    let cantidad = current_option.getAttribute('cantidad');
-    let cantidad_sol = current_option.getAttribute('cantidad_sol');
-    let stock = current_option.getAttribute('stock');
-
-    console.log('sol:',cantidad_sol)
-    console.log('cantidad:', cantidad)
-    if (cantidad == 0) {
-        if (cantidad_sol > 0) {
-            cantidad_pendiente = cantidad_sol
-        }
-    } else {
-            cantidad_pendiente = cantidad 
-    }
-    
-    console.log('cantidad_pendiente',cantidad_pendiente);
-    var solicitado = document.getElementById('solicitado');
-    solicitado.innerHTML = cantidad_pendiente;
-});
-
-/*document.getElementById("txt_usuario").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_usuario");
-    var browserChildren = document.getElementById('user').children;
-    var other_select = document.getElementById('id_material_recibido_por');
-    console.log(browserChildren)
-    //other_select.value = select.valor
-    cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        if (browserChildren[i].value === select.value){
-            console.log(browserChildren[i])
-            console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            console.log(id)
-            other_select.value = id;
-            cont = 1
-            }
-    }
-    //console.log(select.value)
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-    }
-});*/
-
-var updateBtn = document.getElementById('update-salida')
-let count=0;
-let suma = 0;
-let suma_iva = 0;
-
-updateBtn.addEventListener('click',function(){
-        let vale = document.getElementById('vale');
-        salida = vale.getAttribute('vale')
-        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
-        var select = document.getElementById('producto');
-        var current_option = select.options[select.selectedIndex];
-        let value = current_option.value
-        var id = current_option.getAttribute('target');
-        var producto = current_option.getAttribute('producto');
-        //Esta es la cantidad establecida en la requisición
-        var cantidad = current_option.getAttribute('cantidad');
-        var cantidad_sol = current_option.getAttribute('cantidad_sol');
-        console.log(cantidad_sol)
-        var quantity = document.getElementById('id_cantidad');
-        //Esta es la cantidad comprada de acuerdo a la requisición
-        var val_cantidad = quantity.value;
-        // Reemplazar comas por puntos para convertir a número decimal
-        var cantidad_decimal = parseFloat(val_cantidad.replace(',', '.'));
-        console.log(cantidad_decimal)
-        if (cantidad == 0) {
-            if (cantidad_sol > 0) {
-                cantidad_pendiente = cantidad_sol
-            }
-        } else {
-            var cantidad_pendiente = cantidad - cantidad_decimal
-        }
-
-
-        console.log(cantidad_pendiente)
-        id_salida = 0
-        
-
-
-        var action = "add";
-
-        if (!value) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de seleccionar algún valor de la lista",
-                    "icon":"error",
-                })
-        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
-        } else if (cantidad_pendiente < 0)  {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada es mayor que la cantidad disponible",
-                    "icon":"error",
-                })
-        //Si "la cantidad comprada" es menor que cero
-        } else if (quantity.value <= 0 ) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada debe ser mayor que 0",
-                    "icon":"error",
-                })
-        } else {
-            console.log('val:',cantidad_decimal)
-            console.log('salida:',salida)
-            console.log('id',id)
-            console.log('action',action)
-            console.log('id_salida:',id_salida)
-
-            ActualizarArticulos(salida,id,cantidad_decimal,action,id_salida);
-            //current_option.setAttribute("class","d-none");
-            //select.value = default_sel;
-
-            //document.getElementById("id_cantidad").value= null;
-            //document.getElementById("id_precio_unitario_0").value= null;
-        }
-
-})
-
-function deleteRow(element) {
-    let vale = document.getElementById('vale');
-    salida = vale.getAttribute('vale')
-    id_salida = element.getAttribute('id_salida')
-    id = element.getAttribute('producto_id');
-    val_cantidad = element.getAttribute('cantidad');
-    var cantidad_decimal = parseFloat(val_cantidad.replace(','));
-    console.log(cantidad_decimal)
-    var action = "remove"
-    ActualizarArticulos(salida, id, cantidad_decimal, action, id_salida);
 }
 
+function validateQuantity(showMessage) {
+    const option = getSelectedProduct();
+    const entered = parseDecimal(quantityInput.value);
+    const available = getAvailableQuantity(option);
+    const isAsset = option && option.dataset.activo === "True";
 
+    addButton.classList.add("d-none");
+    if (!option || !quantityInput.value) return false;
 
-function ActualizarArticulos(oc,id, cantidad_decimal,action){
-    console.log('User is logged in, sending data...' )
+    if (entered <= 0) {
+        if (showMessage) Swal.fire({
+            title: "Error",
+            text: "La cantidad capturada debe ser mayor que 0",
+            icon: "error"
+        });
+        return false;
+    }
 
-    var url = '/requisiciones/update_salida/'
+    if (entered > available) {
+        if (showMessage) Swal.fire({
+            title: "Error",
+            text: "La cantidad capturada no puede ser mayor que la cantidad disponible",
+            icon: "error"
+        });
+        return false;
+    }
 
-    fetch( url, {
-        method:'POST',
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRFToken': csrftoken,
+    if (isAsset && entered !== 1) {
+        quantityInput.value = 1;
+        if (showMessage) Swal.fire({
+            title: "Cantidad ajustada",
+            text: "Para una referencia de activo la cantidad debe ser igual a 1",
+            icon: "info"
+        });
+    }
+
+    addButton.classList.remove("d-none");
+    return true;
+}
+
+if (quantityInput) {
+    quantityInput.addEventListener("change", function () {
+        validateQuantity(true);
+    });
+}
+
+if (addButton) {
+    addButton.addEventListener("click", function () {
+        if (!validateQuantity(true)) return;
+
+        const option = getSelectedProduct();
+        const valeId = valeElement.dataset.valeId;
+        const productId = option.dataset.id;
+        const quantity = parseDecimal(quantityInput.value);
+
+        addButton.disabled = true;
+        ActualizarArticulos(valeId, productId, quantity, "add", 0);
+    });
+}
+
+function deleteRow(button) {
+    button.disabled = true;
+    ActualizarArticulos(
+        valeElement.dataset.valeId,
+        button.dataset.productoId,
+        parseDecimal(button.dataset.cantidad),
+        "remove",
+        button.dataset.salidaId
+    );
+}
+
+function ActualizarArticulos(salida, id, cantidad, action, idSalida) {
+    fetch("/requisiciones/update_salida/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
         },
-        body:JSON.stringify({'salida':salida, 'id':id, 'val_cantidad':cantidad_decimal, 'action':action,'id_salida':id_salida})
+        body: JSON.stringify({
+            salida: salida,
+            id: id,
+            val_cantidad: cantidad,
+            action: action,
+            id_salida: idSalida
+        })
     })
-    .then((response)=>{
-        return response.json()
+    .then(function (response) {
+        if (!response.ok) throw new Error("No fue posible actualizar la salida");
+        return response.json();
     })
-    .then((data)=>{
-        console.log('data:', data)
-        location.reload()
-    })
+    .then(function () { window.location.reload(); })
+    .catch(function (error) {
+        addButton.disabled = false;
+        document.querySelectorAll(".js-delete-salida").forEach(function (button) {
+            button.disabled = false;
+        });
+        Swal.fire({ title: "Error", text: error.message, icon: "error" });
+    });
 }
 
 {% if salidas %}
-document.addEventListener('DOMContentLoaded', function(){
-    var inputUsuario = document.getElementById('id_material_recibido_por');
-    var submitButton = document.getElementById('submit-button');
-
-    // Deshabilitar el botón al cargar la página
-    submitButton.disabled = true;
-
-    inputUsuario.addEventListener('input', function(){
-        // Obtener el valor seleccionado del datalist
-        var value = inputUsuario.value;
-        var options = document.querySelectorAll('#user option');
-        var optionSelected = Array.from(options).find(option => option.value === value);
-
-        // Habilitar o deshabilitar el botón según si se ha seleccionado una opción válida
-        if (optionSelected) {
-            submitButton.disabled = false;
-        } else {
-            submitButton.disabled = true;
-        }
-    });
-});
+if (saveButton) {
+    saveButton.name = "entrada";
+    saveButton.disabled = true;
+}
 {% endif %}
 
-document.getElementById('id_cantidad').addEventListener('change', function(){
-var cantidad = this;
-var select = document.getElementById('producto');
-var current_option = select.options[select.selectedIndex];
-let cantidad_sol = current_option.getAttribute('cantidad_sol');
-//let cantidad =  current_option.getAttribute('cantidad');
-let activo = current_option.getAttribute('activo')
-var boton =document.getElementById('update-salida');
+const datosRecibidopor = {{ material_recibido_por|safe }};
 
-if (cantidad.value <= 0){
-    boton.classList.add('d-none')
-    Swal.fire({
-                "title":"Error",
-                "text":"La cantidad capturada no puede ser menor o igual que 0",
-                "icon":"error",
-            })
-} else if (cantidad.value > cantidad_sol.value){
-    boton.classList.add('d-none')
-    Swal.fire({
-                "title":"Error",
-                "text":"La cantidad capturada no puede ser mayor que la cantidad disponible",
-                "icon":"error",
-            })
-} else {
-    boton.classList.remove('d-none')
-}
-
-if (activo == 'True'){
-    if (cantidad.value != 1){
-        Swal.fire({
-                "title":"Error",
-                "text":"Cuando tienes seleccionada la referencia la cantidad solo puede ser igual a 1, derivado de la solicitud de activos",
-                "icon":"error",
-            })
-        cantidad.value = 1
-    }
-}
-})
-
-var datosRecibidopor = {{material_recibido_por| safe}}
-console.log(datosRecibidopor)
-
-
-$(document).ready(function() {
-    // Inicializa el Select2 en tu elemento de selección.
-    $('#id_material_recibido_por').select2({
+$(document).ready(function () {
+    $("#id_material_recibido_por").select2({
         allowClear: true,
-        width: '100%',
-        placeholder: 'Selecciona un Usuario',
+        width: "100%",
+        placeholder: "Selecciona un usuario",
         data: datosRecibidopor,
-        templateResult: formatRepo, // Opcional: Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Opcional: Función para renderizar la selección
-    });
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    })
+    .on("select2:select", function () { $(saveButton).prop("disabled", false); })
+    .on("select2:unselect", function () { $(saveButton).prop("disabled", true); });
 
-    // Evento cuando se selecciona una opción.
-    $('#id_material_recibido_por').on('select2:select', function (e) {
-        // Habilita el botón cuando hay una selección.
-        $('#submit-button').prop('disabled', false);
-    });
-
-    // Evento cuando se elimina la selección actual.
-    $('#id_material_recibido_por').on('select2:unselect', function (e) {
-        // Deshabilita el botón cuando la selección se limpia.
-        $('#submit-button').prop('disabled', true);
-    });
+    if ($("#id_material_recibido_por").val()) {
+        $(saveButton).prop("disabled", false);
+    }
 });
 
-
-
-
-function formatRepo (repo) {
-    if (repo.loading) {
-        return repo.text;
-    }
-
-    var $container = $("<div class='select2-result-repository clearfix'>" +
-        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
-
-    $container.find(".select2-result-repository__title").text(repo.text);
-    
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
+function formatRepo(repo) {
+    if (repo.loading) return repo.text;
+    const container = $("<div class='select2-result-repository clearfix'><div class='form-control form-control-lg select2-result-repository__title'></div></div>");
+    container.find(".select2-result-repository__title").text(repo.text);
+    return container;
 }
-function formatRepoSelection (repo) {
+
+function formatRepoSelection(repo) {
     return repo.text || repo.id;
 }
-
-
-
 </script>
 {% endblock %}
-</body>
-</html>
-

@@ -1,83 +1,166 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-<html>
-<head>
-{% block title %}Artículos Comprados{% endblock %}
-</head>
-<body>
+
+{% block title %}Artículos comprados{% endblock %}
+
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-10 offset-md-1">
-        <div class ="card">
-        <div class="card-header">
-            <h5 class="modal-title">Compra: {{compra.folio}}</h5>
+<main class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+                Artículos comprados
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta los artículos pendientes de entrada y registra su revisión de calidad.
+            </p>
         </div>
 
-        <div class="card-body">
-            <div class ="table-responsive-sm">
-                    <table class="table table-ligth table-striped mx-1">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Artículo</th>
-                                {% if usuario.distritos.nombre == "BRASIL" %}
-                                <th>Marca</th>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-file-invoice"></i>
+            Compra {{ compra.folio }}
+        </span>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-list-check"></i>
+                Artículos pendientes
+            </h2>
+
+            <span class="sv-badge sv-badge-dark">
+                <i class="fa-solid fa-box"></i>
+                {{ articulos_comprados|length }} artículo{{ articulos_comprados|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                        <th>Marca</th>
+                        {% endif %}
+
+                        <th>Cantidad pendiente</th>
+                        <th>Calidad</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for articulo_comprado in articulos_comprados %}
+                    <tr>
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ articulo_comprado.producto.producto.articulos.producto.producto.codigo }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">
+                                    {{ articulo_comprado.producto.producto.articulos.producto.producto.nombre }}
+                                </span>
+
+                                {% if articulo_comprado.producto.producto.articulos.producto.producto.critico %}
+                                <span class="sv-badge sv-badge-danger">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    Producto crítico
+                                </span>
                                 {% endif %}
-                                <th>Cantidad Pendiente</th>
-                                <th>Calidad</th>
-                            </tr>
-                        </thead>
-                        {% for articulo_comprado in articulos_comprados %}
-                        <tbody>
-                            <tr>
-                                <td>{{articulo_comprado.producto.producto.articulos.producto.producto.codigo}}</td>
-                                <td>{{articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
-                                {% if usuario.distritos.nombre == "BRASIL" %}
-                                <td>{{articulo_comprado.marca}}</td>
+                            </div>
+                        </td>
+
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                        <td>
+                            {% if articulo_comprado.marca %}
+                                {{ articulo_comprado.marca }}
+                            {% else %}
+                                <span class="text-muted">Sin marca</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+
+                        <td>
+                            <span class="sv-badge sv-badge-primary quantity">
+                                {% if articulo_comprado.cantidad_pendiente == None %}
+                                    {{ articulo_comprado.cantidad }}
+                                {% else %}
+                                    {{ articulo_comprado.cantidad_pendiente }}
                                 {% endif %}
-                                <td><p class='quantity' id='prod_quantity'>
-                                    {% if articulo_comprado.cantidad_pendiente == None %}
-                                        {{articulo_comprado.cantidad}}
-                                    {% else %}
-                                        {{articulo_comprado.cantidad_pendiente}}
-                                    {% endif %}
-                                    </p>
-                                </td>
-                                  
-        
-                                <td>
-                                    {% if articulo_comprado.producto.producto.articulos.producto.producto.critico %}
-                                        <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' articulo_comprado.producto.producto.articulos.producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
-                                    {% endif %}
-                                </td>
-                                
+                            </span>
+                        </td>
 
-                            </tr>
-                        </tbody> 
-                        {% endfor %}
-                    </table>
-            </div>
+                        <td>
+                            {% if articulo_comprado.producto.producto.articulos.producto.producto.critico %}
+                            <button type="button"
+                                    class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#dialog"
+                                    hx-target="#document"
+                                    hx-get="{% url 'select-product-quality' articulo_comprado.producto.producto.articulos.producto.producto.id %}"
+                                    title="Registrar control de calidad"
+                                    aria-label="Registrar control de calidad">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                            </button>
+                            {% else %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-check"></i>
+                                No requerido
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if usuario.distritos.nombre == 'BRASIL' %}5{% else %}4{% endif %}">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-box-open"></i>
+                                <h3>No hay artículos pendientes</h3>
+                                <p>
+                                    Esta orden de compra no tiene artículos pendientes de entrada.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-                
 
-        <div class="card-footer">
-            <a type="button" class="btn btn-secondary" href = "{% url 'pendientes_entrada' %}">Cerrar</a>
+        <div class="sv-card-footer d-flex justify-content-end">
+            <a class="sv-btn sv-btn-outline"
+               href="{% url 'pendientes_entrada' %}">
+                <i class="fa-solid fa-arrow-left"></i>
+                Regresar
+            </a>
         </div>
+    </section>
+</main>
 
+<!-- Modal de control de calidad -->
+<div class="modal fade"
+     id="dialog"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="qualityModalTitle"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div id="document"
+             class="modal-content"
+             hx-target="this">
         </div>
-    </div>
-</div>
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
     </div>
 </div>
 {% endblock %}
-</body>
-</html>

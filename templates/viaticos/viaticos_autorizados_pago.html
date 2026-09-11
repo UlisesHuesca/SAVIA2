@@ -4,325 +4,399 @@
 {% load widget_tweaks %}
 {% load tt_extras %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}Matriz de Viáticos autorizadas{% endblock %}
-</head>
-<body>
+
+{% block title %}Matriz de viáticos autorizados{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class = "row mt-2 bg-white" id="response-div">
-        <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtro de Viáticos Autorizados</h5>
-            </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-3 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_codigo">Folio</label>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-person-walking-luggage"></i></span>
+                Viáticos autorizados
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta viáticos autorizados, comprobaciones, pagos y registros relacionados.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-file-circle-check"></i>{{ viaticos_list.paginator.count }} viáticos
+        </span>
+    </header>
+
+    <section class="sv-card mb-4" id="response-div">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>Filtro de viáticos autorizados</h2>
+        </div>
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                                <label style="color: #121212;" for="id_codigo">Proyecto</label>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                                <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
-                                <label style="color: #121212;" for="id_codigo">Subproyecto</label>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto" }}
+                                <label for="{{ myfilter.form.subproyecto.id_for_label }}">Subproyecto</label>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row g-12">
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>Limpiar
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit">
+                            <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                        </button>
                     </div>
                 </div>
-                <hr>
-                </form>
-                <form method=POST>
+            </form>
+        </div>
+        <div class="sv-card-body border-top">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                <form method="POST">
                     {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            <button type="submit" class="btn btn-outline-success" name="btnReporte" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
-                        <li class="nav-item mx-2">
-                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-autorizadas' %}">Compras</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
-                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'viaticos-autorizados-pago' %}">Viáticos</a>
-                              </div>
-                        </li>
-                    </ul>
+                    <button type="submit" class="sv-btn sv-btn-success" name="btnReporte" value="Reporte Excel">
+                        <i class="fa-solid fa-file-excel"></i>Reporte de viáticos
+                    </button>
                 </form>
+                <div class="btn-group" role="group" aria-label="Tipo de solicitud autorizada">
+                    <a class="sv-btn sv-btn-outline" href="{% url 'compras-autorizadas' %}">Compras</a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
+                    <a class="sv-btn sv-btn-primary" href="{% url 'viaticos-autorizados-pago' %}" aria-current="page">Viáticos</a>
+                </div>
             </div>
         </div>
+    </section>
+
+    <section class="sv-card" style="overflow:visible;">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-table-list"></i>Matriz de viáticos</h2>
+            <div class="dropdown">
+                <button class="sv-btn sv-btn-outline dropdown-toggle" type="button"
+                        id="authorizedTravelColumnsButton" data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside" aria-expanded="false">
+                    <i class="fa-solid fa-table-columns"></i>Columnas
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3 shadow"
+                     aria-labelledby="authorizedTravelColumnsButton"
+                     style="min-width:270px; max-height:calc(100vh - 140px); overflow-y:auto; z-index:1080;">
+                    <p class="sv-cell-title mb-2">Mostrar columnas</p>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-solicitante"
+                               data-column="solicitante" data-default="true" checked>
+                        <label class="form-check-label" for="travel-col-solicitante">Solicitado por</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-distrito"
+                               data-column="distrito" data-default="false">
+                        <label class="form-check-label" for="travel-col-distrito">Distrito</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-fecha"
+                               data-column="fecha" data-default="true" checked>
+                        <label class="form-check-label" for="travel-col-fecha">Fecha de autorización</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-colaborador"
+                               data-column="colaborador" data-default="true" checked>
+                        <label class="form-check-label" for="travel-col-colaborador">Colaborador</label>
+                    </div>
+                    {% if usuario.tipo.nombre != 'CONTADOR' %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-cancelar"
+                               data-column="cancelar" data-default="false">
+                        <label class="form-check-label" for="travel-col-cancelar">Cancelación</label>
+                    </div>
+                    {% endif %}
+                    <button type="button" class="sv-btn sv-btn-outline w-100" id="resetTravelColumns">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>Vista compacta
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
-    <!-- Aquí terminan el encabezado de los filtros -->
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Viático</th>
-                    <th scope="col">Solicitado por</th>
-                    <th>Distrito</th>
-                    <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Autorizado</th>
-                    <th scope="col">Colaborador</th>
-                    <th scope="col">Importe Viático</th>
-                    <th scope="col">Facturas validas xml</th>
-                    <th scope="col">Pagado</th>
-                    <th scope="col">Acción</th>
-                    <th scope="col">Comprobación</th>
-                    <th>Detalle</th>
-                    <th>Registro</th>
-                    {% if usuario.tipo.nombre == 'CONTADOR' %}
-                    <div></div>
-                    {% else %}
-                    <th>Cancelación</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for viatico in viaticos_list %}
-                <tr>
-                    <th scope="row">{{viatico.folio}}</th>
-                    <td>{{viatico.staff.staff.staff.first_name}} {{viatico.staff.staff.staff.last_name}}</td>
-                    <td>{{viatico.distrito.nombre}}</td>
-                    <td>{{viatico.proyecto.nombre}}</td>
-                    <td>{{viatico.subproyecto.nombre}}</td>
-                    <td>{{viatico.approved_at2}} </td>
-                    <td>{{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</td>
-                    <td>${{viatico.get_total|floatformat:2}}</td>
-                    <td>${{viatico.suma_total_facturas|floatformat:2}}</td>
-                    <td>${{viatico.monto_pagado}}</td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}">Detalle</a>
-                            </li>
-                            {% if usuario.tipo.pagos %}
-                            <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info"  href="{% url 'viaticos-pagos' viatico.id %}">Pago</a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </td>
-                    <td>
-                        {% if viatico.autorizar2 == True %}
-                            <ul class="nav nav-pills">
-                                <li class="nav-item mx-1">
-                                    {% if viatico.estado_facturas == "sin_facturas" %}
-                                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                            <i class="fa-solid fa-file-circle-xmark"></i>
-                                        </a>
-                                    {% elif viatico.estado_facturas == "todas_autorizadas" %}
-                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
-                                            <i class="fa-solid fa-file-circle-check"></i>
-                                        </a>
-                                    {% elif viatico.estado_facturas == "pendientes" %}
-                                        <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
-                                            <i class="fa-solid fa-file-circle-exclamation"></i>
-                                        </a>
-                                    {% endif %}
-                                </li>
-                            </ul>
-                        {% endif %}
-                    </td>
-                    <td><a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a>
-                    <td>
-                        <button type = "button" class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{viatico.id|unlocalize}}" data-pdf-url="{% url 'ver_viatico_pdf' viatico.id %}">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        <!-- Modal -->
-                        <div class="modal fade" id="pdfModal{{viatico.id|unlocalize}}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-xl modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Registro de Gasto</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-
-                                    <div class="modal-body" style="height:80vh;">
-                                        <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
-                                    </div>
-                                </div>
+        <div class="sv-table-wrap">
+            <table class="sv-table" id="authorizedTravelTable">
+                <thead>
+                    <tr>
+                        <th>Viático</th>
+                        <th class="sv-col-solicitante">Solicitado por</th>
+                        <th class="sv-col-distrito">Distrito</th>
+                        <th>Proyecto / Subproyecto</th>
+                        <th class="sv-col-fecha">Autorizado</th>
+                        <th class="sv-col-colaborador">Colaborador</th>
+                        <th>Importes</th>
+                        <th>Acciones</th>
+                        <th>Comprobación</th>
+                        <th>Registro</th>
+                        {% if usuario.tipo.nombre != 'CONTADOR' %}<th class="sv-col-cancelar">Cancelación</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for viatico in viaticos_list %}
+                    <tr>
+                        <td><span class="sv-cell-title">V{{ viatico.folio }}</span></td>
+                        <td class="sv-col-solicitante">
+                            {{ viatico.staff.staff.staff.first_name }} {{ viatico.staff.staff.staff.last_name }}
+                        </td>
+                        <td class="sv-col-distrito">{{ viatico.distrito.nombre }}</td>
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">{{ viatico.proyecto.nombre }}</span>
+                                <span class="sv-cell-subtitle">{{ viatico.subproyecto.nombre }}</span>
                             </div>
-                        </div>      
-                    </td>  
-                    {% if usuario.tipo.nombre == 'CONTADOR' %}
-                    <div></div>
-                    {% else %}
-                    <td>
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-viaticos2' viatico.id %}"><i class="fa-solid fa-xmark"></i></a>
-                    </td>
+                        </td>
+                        <td class="sv-col-fecha">{{ viatico.approved_at2|date:"d/m/Y" }}</td>
+                        <td class="sv-col-colaborador">
+                            {% if viatico.colaborador %}
+                            {{ viatico.colaborador.staff.staff.first_name }} {{ viatico.colaborador.staff.staff.last_name }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">Viático: $ {{ viatico.get_total|floatformat:2 }}</span>
+                                <span class="sv-cell-subtitle">Facturas: $ {{ viatico.suma_total_facturas|floatformat:2 }}</span>
+                                <span class="sv-cell-subtitle">Pagado: $ {{ viatico.monto_pagado|floatformat:2 }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sv-actions">
+                                <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                        data-bs-toggle="modal" data-bs-target="#dialog"
+                                        hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}"
+                                        title="Ver detalle" aria-label="Ver detalle">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                {% if usuario.tipo.pagos %}
+                                <a class="sv-btn sv-btn-primary sv-btn-icon" href="{% url 'viaticos-pagos' viatico.id %}"
+                                   title="Registrar pago" aria-label="Registrar pago">
+                                    <i class="fa-solid fa-money-check-dollar"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if viatico.autorizar2 == True %}
+                                {% if viatico.estado_facturas == "sin_facturas" %}
+                                <a class="sv-btn sv-btn-danger sv-btn-icon"
+                                   href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.get_full_path|urlencode }}"
+                                   title="No tiene facturas" aria-label="No tiene facturas">
+                                    <i class="fa-solid fa-file-circle-xmark"></i>
+                                </a>
+                                {% elif viatico.estado_facturas == "todas_autorizadas" %}
+                                <a class="sv-btn sv-btn-info sv-btn-icon"
+                                   href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.get_full_path|urlencode }}"
+                                   title="Todas las facturas validadas" aria-label="Todas las facturas validadas">
+                                    <i class="fa-solid fa-file-circle-check"></i>
+                                </a>
+                                {% elif viatico.estado_facturas == "pendientes" %}
+                                <a class="sv-btn sv-btn-warning sv-btn-icon"
+                                   href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.get_full_path|urlencode }}"
+                                   title="Facturas pendientes" aria-label="Facturas pendientes">
+                                    <i class="fa-solid fa-file-circle-exclamation"></i>
+                                </a>
+                                {% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                    data-bs-toggle="modal" data-bs-target="#pdfModal"
+                                    data-pdf-url="{% url 'ver_viatico_pdf' viatico.id %}"
+                                    title="Ver registro" aria-label="Ver registro">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </button>
+                        </td>
+                        {% if usuario.tipo.nombre != 'CONTADOR' %}
+                        <td class="sv-col-cancelar">
+                            <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-bs-toggle="modal" data-bs-target="#dialog"
+                                    hx-target="#document" hx-get="{% url 'cancelar-viaticos2' viatico.id %}"
+                                    title="Cancelar viático" aria-label="Cancelar viático">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if usuario.tipo.nombre != 'CONTADOR' %}11{% else %}10{% endif %}">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-person-walking-luggage"></i>
+                                <h3>No hay viáticos autorizados</h3>
+                                <p>Ajusta los filtros para consultar otros registros.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if viaticos_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación de viáticos">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if viaticos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url viaticos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Anterior"><i class="fa-solid fa-angle-left"></i></a></li>
                     {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if viaticos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
-
-                {% for item in viaticos_list.paginator.page_range %}
-                    {% if viaticos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > viaticos_list.number|add:'-2' and item < viaticos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% for item in viaticos_list.paginator.page_range %}
+                        {% if viaticos_list.number == item %}
+                        <li class="page-item active"><span class="page-link">{{ item }}</span></li>
+                        {% elif item > viaticos_list.number|add:'-2' and item < viaticos_list.number|add:'2' %}
+                        <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if viaticos_list.has_next %}
+                    <li class="page-item"><a class="page-link" href="{% my_url viaticos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Siguiente"><i class="fa-solid fa-angle-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última"><i class="fa-solid fa-angles-right"></i></a></li>
                     {% endif %}
-                {% endfor %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
 
-                {% if viaticos_list.paginator.num_pages > viaticos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{viaticos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{viaticos_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
-                {% if viaticos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="document" hx-target="this"></div>
     </div>
 </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
+<div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title"><i class="fa-solid fa-file-pdf me-2"></i>Registro de viático</h2>
+                    <span class="sv-modal-subtitle">Vista previa del documento</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0" style="height:80vh;">
+                <iframe id="pdfFrame" src="" title="Vista previa del viático"
+                        style="width:100%; height:100%; border:0;"></iframe>
+            </div>
+        </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+(function () {
+    const dialog = document.getElementById("dialog");
+    if (!dialog) return;
+    const modal = bootstrap.Modal.getOrCreateInstance(dialog);
+    document.body.addEventListener("htmx:beforeSwap", function (event) {
+        if (event.detail.target && event.detail.target.id === "document" && !event.detail.xhr.response) modal.hide();
+    });
+    dialog.addEventListener("hidden.bs.modal", function () { window.location.reload(); });
+})();
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
+(function () {
+    const modal = document.getElementById("pdfModal");
+    const frame = document.getElementById("pdfFrame");
+    if (!modal || !frame) return;
+    modal.addEventListener("show.bs.modal", function (event) {
+        frame.src = event.relatedTarget ? event.relatedTarget.dataset.pdfUrl : "";
+    });
+    modal.addEventListener("hidden.bs.modal", function () { frame.src = "about:blank"; });
+})();
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
-
-
-document.addEventListener("show.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const button = event.relatedTarget;
-  const url = button?.getAttribute("data-pdf-url");
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (url && frame) {
-    frame.src = url;
-  }
-});
-
-document.addEventListener("hidden.bs.modal", function (event) {
-  const modal = event.target;
-
-  if (!modal.id.startsWith("pdfModal")) return;
-
-  const frame = modal.querySelector(".pdfFrame");
-
-  if (frame) {
-    frame.src = "about:blank";
-  }
-});
+(function () {
+    const toggles = Array.from(document.querySelectorAll(".js-travel-column"));
+    const resetButton = document.getElementById("resetTravelColumns");
+    const storageKey = "saviaMatrizViaticosAutorizadosColumnas";
+    if (!toggles.length) return;
+    function defaults() {
+        return toggles.reduce(function (state, toggle) {
+            state[toggle.dataset.column] = toggle.dataset.default === "true";
+            return state;
+        }, {});
+    }
+    function savedState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(storageKey));
+            return saved && typeof saved === "object" ? Object.assign(defaults(), saved) : defaults();
+        } catch (error) {
+            localStorage.removeItem(storageKey);
+            return defaults();
+        }
+    }
+    function apply(state, save) {
+        toggles.forEach(function (toggle) {
+            const visible = state[toggle.dataset.column] !== false;
+            toggle.checked = visible;
+            document.querySelectorAll(".sv-col-" + toggle.dataset.column).forEach(function (cell) {
+                cell.hidden = !visible;
+            });
+        });
+        if (save) localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+    let state = savedState();
+    apply(state, false);
+    toggles.forEach(function (toggle) {
+        toggle.addEventListener("change", function () {
+            state[toggle.dataset.column] = toggle.checked;
+            apply(state, true);
+        });
+    });
+    if (resetButton) resetButton.addEventListener("click", function () {
+        state = defaults();
+        apply(state, true);
+    });
+})();
 </script>
 {% endblock %}
-</body>
-</html>

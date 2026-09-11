@@ -1074,54 +1074,52 @@ def no_conformidad(request, pk):
         if articulo.cantidad_pendiente == None:
             articulo.cantidad_pendiente = articulo.cantidad
 
-
-    # Crear o obtener la instancia de No_Conformidad
-    no_conformidad, created = No_Conformidad.objects.get_or_create(
-        oc=compra,
-        almacenista=perfil,
-        completo = False,
-    )
-
-    articulos_nc = NC_Articulo.objects.filter(nc = no_conformidad, )
-    form = NC_ArticuloForm()
-    form2 = NoConformidadForm()
-
     productos_para_select2 = [
         {'id': producto.id,
          'text': str(producto.producto.producto.articulos.producto), 
          'cantidad': str(producto.cantidad), 
          'cantidad_pendiente': str(producto.cantidad_pendiente),
-        } for producto in articulos]
+        } 
+        for producto in articulos
+    ]
 
+    # GET: no crear NC
+    no_conformidad = None
+    articulos_nc = NC_Articulo.objects.none()
+
+    form = NC_ArticuloForm()
+    form2 = NoConformidadForm()
     # Si el método de la petición es POST, procesar el formulario
     if request.method == "POST":
-        #and 'BtnCrear' in request.POST:
+        no_conformidad, created = No_Conformidad.objects.get_or_create(oc=compra,almacenista=perfil,completo=False,)
+        articulos_nc = NC_Articulo.objects.filter(nc=no_conformidad)
         form2 = NoConformidadForm(request.POST, instance = no_conformidad)
 
         if form2.is_valid():
             no_conf = form2.save(commit=False)
+
             articulos_comprados = ArticuloComprado.objects.filter(oc=compra)
+
             num_art_comprados =articulos_comprados.count()
+
             for articulo in articulos_nc:
                 articulo_comprado = articulos_comprados.get(producto=articulo.articulo_comprado.producto)
-                try:
-                    total_cantidad = EntradaArticulo.objects.filter(entrada__oc = compra, articulo_comprado = articulo.articulo_comprado).aggregate(total=Sum('cantidad'))['total']
-                except ObjectDoesNotExist:
-                    articulo_entradas = None
-                
+               
+                total_cantidad = EntradaArticulo.objects.filter(entrada__oc = compra, articulo_comprado = articulo.articulo_comprado).aggregate(total=Sum('cantidad'))['total']
+               
                 
                 cantidad_entradas = total_cantidad or 0
               
                 articulo_requisitado = ArticulosRequisitados.objects.get(req=compra.req, producto=articulo.articulo_comprado.producto.producto)
-                if articulo_comprado.cantidad_pendiente == None:
+                if articulo_comprado.cantidad_pendiente is None:
                     articulo_comprado.cantidad_pendiente = 0
                 #Todo esto debería de pasar solo si la NC ya no se va a recibir es decir si el tipo de la conformidad = Material no disponible
-                if articulo_comprado.cantidad == articulo.cantidad + cantidad_entradas: 
+                if articulo_comprado.cantidad == (articulo.cantidad + cantidad_entradas): 
                     articulo_comprado.entrada_completa = True
                 articulo_comprado.seleccionado = False
                 articulo_requisitado.sel_comp = False
-                articulo_comprado.save()
-                articulo_requisitado.save()
+                articulo_comprado.save(update_fields=['entrada_completa','seleccionado','cantidad_pendiente',])
+                articulo_requisitado.save(update_fields=['sel_comp',])
                 static_path = settings.STATIC_ROOT
                 #Generación de correo
                 img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
@@ -1159,19 +1157,17 @@ def no_conformidad(request, pk):
             no_conf.completo = True
             no_conf.nc_date = date.today()
             no_conf.nc_hora = datetime.now().time()
-            no_conf.save()
+            no_conf.save(update_fields=['completo','nc_date','nc_hora'])
             messages.success(request,'Has completado la No Conformidad de manera exitosa')
             return redirect('pendientes_entrada')
         else:
             messages.error(request,'No está validando')
-    #else:
-        #messages.error(request,'Está siguiendo de largo')
+    
 
 
     context = {
         'productos_para_select2':productos_para_select2,
         'compra':compra,
-        #'articulos':articulos,
         'articulos_nc':articulos_nc,
         'form': form,
         'form2':form2,

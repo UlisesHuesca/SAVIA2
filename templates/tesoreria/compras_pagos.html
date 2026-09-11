@@ -126,57 +126,59 @@
                                 <th>{% if usuario.distritos.nombre == "BRASIL" %}Valor total{% else %}Importe de compra{% endif %}</th>
                                 <td id="importe"
                                     data-value="{{ compra.costo_plus_adicionales|unlocalize }}"
-                                    data-moneda="{{ compra.moneda.nombre }}">
+                                    data-moneda="{{ compra.moneda.nombre }}" 
+                                    style="text-align: right; white-space: nowrap;">
                                     <strong>$ {{ compra.costo_oc|floatformat:4 }}</strong>
                                 </td>
                             </tr>
                             <tr>
                                 <th>Impuestos</th>
-                                <td>$ {{ compra.costo_iva|floatformat:4 }}</td>
+                                <td style="text-align: right; white-space: nowrap;">$ {{ compra.costo_iva|floatformat:4 }}</td>
                             </tr>
                             {% if compra.impuestos %}
                             <tr>
                                 <th>Impuestos adicionales</th>
-                                <td>$ {{ compra.impuestos|floatformat:4 }}</td>
+                                <td style="text-align: right; white-space: nowrap;">$ {{ compra.impuestos|floatformat:4 }}</td>
                             </tr>
                             {% endif %}
                             {% if compra.retencion %}
                             <tr>
                                 <th>Retención</th>
-                                <td>− $ {{ compra.retencion|floatformat:4 }}</td>
+                                <td style="text-align: right; white-space: nowrap;">− $ {{ compra.retencion|floatformat:4 }}</td>
                             </tr>
                             {% endif %}
                             {% if compra.costo_fletes > 0 %}
                             <tr>
                                 <th>Flete</th>
-                                <td>$ {{ compra.costo_fletes|floatformat:4 }}</td>
+                                <td style="text-align: right; white-space: nowrap;">$ {{ compra.costo_fletes|floatformat:4 }}</td>
                             </tr>
                             {% endif %}
                             <tr>
                                 <th>Pagado</th>
                                 <td id="total"
                                     data-value="{{ suma_pagos|unlocalize }}"
-                                    data-monto="{{ monto|unlocalize }}">
+                                    data-monto="{{ monto|unlocalize }}"
+                                    style="text-align: right; white-space: nowrap;">
                                     <span class="sv-cell-title">$ {{ monto|floatformat:4 }}</span>
                                 </td>
                             </tr>
                             {% if suma_pago_usd > 0 %}
                             <tr>
                                 <th>Pagado USD</th>
-                                <td id="total_usd" data-value="{{ suma_pago_usd|unlocalize }}">
+                                <td id="total_usd" data-value="{{ suma_pago_usd|unlocalize }}" style="text-align: right; white-space: nowrap;">
                                     <span class="sv-cell-title">$ {{ suma_pago_usd|floatformat:4 }}</span>
                                 </td>
                             </tr>
                             {% endif %}
                             <tr>
                                 <th>Remanente</th>
-                                <td id="remanente" data-remanente="{{ remanente|unlocalize }}">
+                                <td id="remanente" data-remanente="{{ remanente|unlocalize }}" style="text-align: right; white-space: nowrap;">
                                     <strong>$ {{ remanente|floatformat:4 }}</strong>
                                 </td>
                             </tr>
                             <tr>
                                 <th>Parcialidad</th>
-                                <td id="parcialidad" data-parcialidad="{{ compra.parcial|unlocalize }}">
+                                <td id="parcialidad" data-parcialidad="{{ compra.parcial|unlocalize }}" style="text-align: right; white-space: nowrap;">
                                     <strong>$ {{ compra.parcial|floatformat:4 }}</strong>
                                 </td>
                             </tr>
@@ -422,7 +424,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content sv-modal">
             <div class="modal-body d-flex align-items-center gap-3">
-                {% if usuario.distritos.nombre == "NEGRO" %}
+                {% if usuario.distritos.nombre == "Yerod" %}
                 <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
                      alt="SAVIA Negro"
                      width="72" height="72"

@@ -3,268 +3,355 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Viáticos{% endblock %}
-</head>
-<body>
+
+{% block title %}Viáticos | Asignar montos{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class="row my-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-            <h5>Filtro de Viáticos | Asignar montos</h5>
-            </div>
-            <div class="card-body">
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-person-walking-luggage"></i></span>
+                Asignación de viáticos
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta solicitudes autorizadas y captura los montos correspondientes.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list-check"></i>{{ ordenes_list.paginator.count }} solicitudes
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>Filtro de viáticos</h2>
+        </div>
+        <div class="sv-card-body">
             <form method="GET">
-                {% csrf_token %}
-                <div class="row g-12">
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio"}}
-                                <label for="id_lugar_partida">Folio</label>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder=Usuario"}}
-                                <label for="id_lugar_partida">Usuario</label>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder=Usuario" }}
+                                <label for="{{ myfilter.form.staff.id_for_label }}">Usuario</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto"}}
-                                <label for="id_proyecto">Proyecto</label>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                                <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto"}}
-                                <label for="id_subproyecto">Subproyecto</label>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto" }}
+                                <label for="{{ myfilter.form.subproyecto.id_for_label }}">Subproyecto</label>
                             </div>
                         </div>
                     </div>
-                   
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                            <i class="fa-solid fa-eraser"></i>Limpiar
+                        </a>
+                        <button class="sv-btn sv-btn-primary" type="submit">
+                            <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                        </button>
                     </div>
                 </div>
             </form>
-            <hr>
-            <div class = "row mt-2 bg-white">
-                <form method=POST>
-                    {% csrf_token %}
-                <ul class="nav nav-pills">
-                    
-                    <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                    </li>
-                    <!--<li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                    </li>-->
-                </ul>
-                </form>
-            </div>
+        </div>
+        <div class="sv-card-body border-top">
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" class="sv-btn sv-btn-success" name="btnExcel">
+                    <i class="fa-solid fa-file-excel"></i>Reporte de viáticos
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card" style="overflow:visible;">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-table-list"></i>Viáticos autorizados</h2>
+            <div class="dropdown">
+                <button class="sv-btn sv-btn-outline dropdown-toggle" type="button"
+                        id="travelColumnsButton" data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside" aria-expanded="false">
+                    <i class="fa-solid fa-table-columns"></i>Columnas
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3 shadow"
+                     aria-labelledby="travelColumnsButton"
+                     style="min-width:270px; max-height:calc(100vh - 140px); overflow-y:auto; z-index:1080;">
+                    <p class="sv-cell-title mb-2">Mostrar columnas</p>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-solicitante"
+                               data-column="solicitante" data-default="true" checked>
+                        <label class="form-check-label" for="travel-col-solicitante">Solicitado por</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-colaborador"
+                               data-column="colaborador" data-default="true" checked>
+                        <label class="form-check-label" for="travel-col-colaborador">Solicitado para</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-autorizador"
+                               data-column="autorizador" data-default="false">
+                        <label class="form-check-label" for="travel-col-autorizador">Autorización N1</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input js-travel-column" type="checkbox" id="travel-col-fecha"
+                               data-column="fecha" data-default="true" checked>
+                        <label class="form-check-label" for="travel-col-fecha">Fecha de creación</label>
+                    </div>
+                    <button type="button" class="sv-btn sv-btn-outline w-100" id="resetTravelColumns">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>Vista compacta
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio</th>
-                    <th scope="col">Solicitado por:</th>
-                    <th scope="col">Solicitado para:</th>
-                    <th scope="col">Autorización N1</th>
-                    <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Creado</th>
-                    <th>Detalle</th>
-                    <th scope="col">Asignar Montos</th>
-                    <th>Cancelar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orden in ordenes_list %}
-                <tr>
-                    <th scope="row">{{orden.folio}}</th>
-                    <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
-                    <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}</td>
-                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
-                    <td>{{orden.proyecto.nombre}}</td>
-                    <td>{{orden.subproyecto.nombre}}</td>
-                    <td>{{orden.created_at}}</td>
-                    <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos3' orden.id %}">Ver</a>
-                    </td>
-                    <td>
-                        {% if orden.montos_asignados %}
-                            <!-- Monto ya asignado -->
-                            <a type="button" class="btn btn-success btn-lg btn-editar-montos" href="{% url 'asignar-montos' orden.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Monto ya asignado">
+        <div class="sv-table-wrap">
+            <table class="sv-table" id="travelAllowanceTable">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th class="sv-col-solicitante">Solicitado por</th>
+                        <th class="sv-col-colaborador">Solicitado para</th>
+                        <th class="sv-col-autorizador">Autorización N1</th>
+                        <th>Proyecto / Subproyecto</th>
+                        <th class="sv-col-fecha">Creado</th>
+                        <th>Detalle</th>
+                        <th>Asignar montos</th>
+                        <th>Cancelar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orden in ordenes_list %}
+                    <tr>
+                        <td><span class="sv-cell-title">V{{ orden.folio }}</span></td>
+                        <td class="sv-col-solicitante">
+                            {{ orden.staff.staff.staff.first_name }} {{ orden.staff.staff.staff.last_name }}
+                        </td>
+                        <td class="sv-col-colaborador">
+                            {% if orden.colaborador %}
+                            {{ orden.colaborador.staff.staff.first_name }} {{ orden.colaborador.staff.staff.last_name }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="sv-col-autorizador">
+                            {% if orden.superintendente %}
+                            {{ orden.superintendente.staff.staff.first_name }} {{ orden.superintendente.staff.staff.last_name }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">{{ orden.proyecto.nombre }}</span>
+                                <span class="sv-cell-subtitle">{{ orden.subproyecto.nombre }}</span>
+                            </div>
+                        </td>
+                        <td class="sv-col-fecha">{{ orden.created_at|date:"d/m/Y" }}</td>
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                    data-bs-toggle="modal" data-bs-target="#dialog"
+                                    hx-target="#document" hx-get="{% url 'detalles-viaticos3' orden.id %}"
+                                    title="Ver detalle" aria-label="Ver detalle">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </td>
+                        <td>
+                            {% if orden.montos_asignados %}
+                            <a class="sv-btn sv-btn-success sv-btn-icon btn-editar-montos"
+                               href="{% url 'asignar-montos' orden.id %}"
+                               title="Monto ya asignado" aria-label="Editar monto asignado">
                                 <i class="fa-solid fa-circle-check"></i>
                             </a>
-                        {% else %}
-                            <!-- Pendiente de asignar -->
-                            <a type="button" class="btn btn-outline-info btn-lg" href="{% url 'asignar-montos' orden.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Asignar monto">
+                            {% else %}
+                            <a class="sv-btn sv-btn-primary sv-btn-icon"
+                               href="{% url 'asignar-montos' orden.id %}"
+                               title="Asignar monto" aria-label="Asignar monto">
                                 <i class="fa-solid fa-person-walking-luggage"></i>
                             </a>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-viaticos' orden.id %}"><i class="fa-solid fa-xmark"></i></a>
-                    </td>
-                </tr>
-                {% endfor %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-bs-toggle="modal" data-bs-target="#dialog"
+                                    hx-target="#document" hx-get="{% url 'cancelar-viaticos' orden.id %}"
+                                    title="Cancelar viático" aria-label="Cancelar viático">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-person-walking-luggage"></i>
+                                <h3>No hay viáticos pendientes</h3>
+                                <p>Ajusta los filtros para consultar otros registros.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if ordenes_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
+            </table>
+        </div>
 
-                {% for item in ordenes_list.paginator.page_range %}
-                    {% if ordenes_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+        {% if ordenes_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación de viáticos">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if ordenes_list.has_previous %}
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Anterior"><i class="fa-solid fa-angle-left"></i></a></li>
                     {% endif %}
-                {% endfor %}
+                    {% for item in ordenes_list.paginator.page_range %}
+                        {% if ordenes_list.number == item %}
+                        <li class="page-item active"><span class="page-link">{{ item }}</span></li>
+                        {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                        <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if ordenes_list.has_next %}
+                    <li class="page-item"><a class="page-link" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Siguiente"><i class="fa-solid fa-angle-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última"><i class="fa-solid fa-angles-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
 
-                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
-                {% if ordenes_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="document" hx-target="this"></div>
     </div>
 </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
-<!--AJAX CALL-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+(function () {
+    const dialog = document.getElementById("dialog");
+    if (!dialog) return;
+    const modal = bootstrap.Modal.getOrCreateInstance(dialog);
+    document.body.addEventListener("htmx:beforeSwap", function (event) {
+        if (event.detail.target && event.detail.target.id === "document" && !event.detail.xhr.response) modal.hide();
+    });
+    dialog.addEventListener("hidden.bs.modal", function () { window.location.reload(); });
+})();
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
-
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
-
-document.addEventListener("DOMContentLoaded", function () {
-    document
-        .querySelectorAll(".btn-editar-montos")
-        .forEach(function (boton) {
-            boton.addEventListener("click", function (event) {
-                event.preventDefault();
-
-                const url = boton.href;
-
-                Swal.fire({
-                    title: "¿Editar monto asignado?",
-                    text: "Este viático ya tiene montos asignados. ¿Deseas continuar?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Sí, editar",
-                    cancelButtonText: "Cancelar",
-                    confirmButtonColor: "#198754",
-                    cancelButtonColor: "#6c757d"
-                }).then(function (resultado) {
-                    if (resultado.isConfirmed) {
-                        window.location.href = url;
-                    }
-                });
+(function () {
+    const toggles = Array.from(document.querySelectorAll(".js-travel-column"));
+    const resetButton = document.getElementById("resetTravelColumns");
+    const storageKey = "saviaViaticosAsignarMontosColumnas";
+    if (!toggles.length) return;
+    function defaults() {
+        return toggles.reduce(function (state, toggle) {
+            state[toggle.dataset.column] = toggle.dataset.default === "true";
+            return state;
+        }, {});
+    }
+    function savedState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(storageKey));
+            return saved && typeof saved === "object" ? Object.assign(defaults(), saved) : defaults();
+        } catch (error) {
+            localStorage.removeItem(storageKey);
+            return defaults();
+        }
+    }
+    function apply(state, save) {
+        toggles.forEach(function (toggle) {
+            const visible = state[toggle.dataset.column] !== false;
+            toggle.checked = visible;
+            document.querySelectorAll(".sv-col-" + toggle.dataset.column).forEach(function (cell) {
+                cell.hidden = !visible;
             });
         });
+        if (save) localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+    let state = savedState();
+    apply(state, false);
+    toggles.forEach(function (toggle) {
+        toggle.addEventListener("change", function () {
+            state[toggle.dataset.column] = toggle.checked;
+            apply(state, true);
+        });
+    });
+    if (resetButton) resetButton.addEventListener("click", function () {
+        state = defaults();
+        apply(state, true);
+    });
+})();
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".btn-editar-montos").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            Swal.fire({
+                title: "¿Editar monto asignado?",
+                text: "Este viático ya tiene montos asignados. ¿Deseas continuar?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, editar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#198754",
+                cancelButtonColor: "#6c757d"
+            }).then(function (result) {
+                if (result.isConfirmed) window.location.href = button.href;
+            });
+        });
+    });
 });
-
-
 </script>
 {% endblock %}
-</body>
-</html>

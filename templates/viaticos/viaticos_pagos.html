@@ -3,386 +3,433 @@
 {% load static %}
 {% load djmoney %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Pagar Viático{% endblock %}
-</head>
-<body>
-{% block content %}
-<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
 
-<div class="row">
-    <div class="col-lg-6 offset-md-3">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Pagar Viático: {{viatico.folio}}</h5>
+{% block title %}Pagar viático{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-money-check-dollar"></i></span>
+                Pagar viático {{ viatico.folio }}
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta el desglose del viaje y registra el pago correspondiente.
+            </p>
+        </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-person-walking-luggage"></i>Viático {{ viatico.folio }}
+        </span>
+    </header>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-4 order-1">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-route"></i>Información del viaje</h2>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table table-sm" style="width:100%; min-width:0; table-layout:auto;">
+                        <tbody>
+                            <tr>
+                                <th>Viático para</th>
+                                <td>
+                                    <div class="sv-cell-title">
+                                {% if viatico.colaborador %}
+                                {{ viatico.colaborador.staff.staff.first_name }} {{ viatico.colaborador.staff.staff.last_name }}
+                                {% else %}
+                                {{ viatico.staff.staff.staff.first_name }} {{ viatico.staff.staff.staff.last_name }}
+                                {% endif %}
+                                    </div>
+                                    <span class="sv-cell-subtitle">
+                                Nivel: {% if viatico.colaborador %}{{ viatico.colaborador.staff.nivel }}{% else %}{{ viatico.staff.staff.nivel }}{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Proyecto</th>
+                                <td><span class="sv-cell-title">{{ viatico.proyecto.nombre }}</span><span class="sv-cell-subtitle">{{ viatico.subproyecto.nombre }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Periodo</th>
+                                <td><i class="fa-regular fa-calendar-days me-1"></i>{{ viatico.fecha_partida|date:"d/m/Y" }} – {{ viatico.fecha_retorno|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Trayecto</th>
+                                <td><span class="sv-cell-title">{{ viatico.lugar_partida }}</span><span class="sv-cell-subtitle">Comisión: {{ viatico.lugar_comision }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Transporte</th>
+                                <td><i class="fa-solid fa-car-side me-1"></i>{{ viatico.transporte }}</td>
+                            </tr>
+                            <tr>
+                                <th>Hospedaje</th>
+                                <td>{% if viatico.hospedaje %}<span class="sv-badge sv-badge-success"><i class="fa-solid fa-hotel"></i>Sí</span>{% else %}<span class="sv-badge sv-badge-dark">No</span>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <th>Comentario</th>
+                                <td>{{ viatico.comentario_general|default:"Sin comentario" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
 
-        <div class="card-body">
-            <table class='table table-striped'>
+        <div class="col-12 col-xl-5 order-3">
+            <section class="sv-card">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-calculator"></i>Resumen financiero</h2>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table table-sm" style="width:100%; min-width:0; table-layout:auto;">
+                        <tbody>
+                            <tr>
+                                <th>Importe del viático</th>
+                                <td id="importe" data-value="{{ viatico.get_total }}" class="text-end">
+                                    <strong>$ {{ viatico.get_total|floatformat:2 }}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Pagado</th>
+                                <td id="total" data-value="{{ suma_pagos }}" data-monto="{{ monto }}" class="text-end">
+                                    <span class="sv-cell-title">$ {{ viatico.monto_pagado|floatformat:2 }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Remanente</th>
+                                <td class="text-end"><strong>$ {{ remanente|floatformat:2 }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <div class="col-12 order-5">
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-list"></i>Conceptos del viático</h2>
+            <span class="sv-badge sv-badge-dark">{{ conceptos|length }} conceptos</span>
+        </div>
+        <div class="sv-table-wrap">
+            <table class="sv-table">
                 <thead>
                     <tr>
-                    <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
-                    <th scope="col">
-                        {% if viatico.colaborador %}
-                        {{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}
-                        {% else %}
-                        {{viatico.staff.staff.staff.first_name}} {{viatico.staff.staff.staff.last_name}}
-                        {% endif %}
-                    </th>
+                        <th>Código</th>
+                        <th>Concepto</th>
+                        <th>Cantidad</th>
+                        <th>Precio unitario</th>
+                        <th>Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <th>Nivel:</th>
-                    <th>{% if viatico.colaborador %} {{viatico.colaborador.staff.nivel}} {% else %} {{viatico.staff.staff.nivel}} {% endif %} </th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
-                    <th scope="col">{{viatico.proyecto.nombre}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Subproyecto:</th>
-                    <th scope="col">{{viatico.subproyecto.nombre}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Partida:</th>
-                    <th scope="col">{{viatico.fecha_partida}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Retorno:</th>
-                    <th scope="col">{{viatico.fecha_retorno}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-location-dot"></i> Lugar de Partida:</th>
-                    <th scope="col">{{viatico.lugar_partida}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-route"></i> Lugar de Comisión:</th>
-                    <th scope="col">{{viatico.lugar_comision}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-car-side"></i> Transporte:</th>
-                    <th scope="col">{{viatico.transporte}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-hotel"></i> Hospedaje:</th>
-                    {% if viatico.hospedaje %}
-                    <th scope="col">Sí</th>
-                    {% else %}
-                    <th>No</th>
-                    {% endif %}
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
-                    <th scope="col">{{viatico.comentario_general}}</th>
-                </tr>
-                </tbody> 
-            </table>
-            <hr>
-            <table class="class='table table-dark table striped table-hover">
-                <thead>
+                    {% for producto in conceptos %}
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Concepto</th>
-                        <th scope="col">Cantidad</th>
-                        <th scope="col">P.U.</th>
-                        <th scope="col">Total</th>
+                        <td><span class="sv-cell-title">{{ producto.producto.codigo }}</span></td>
+                        <td>{{ producto.producto.nombre }}</td>
+                        <td>{{ producto.cantidad }}</td>
+                        <td>$ {{ producto.precio|floatformat:2 }}</td>
+                        <td><span class="sv-cell-title">$ {{ producto.get_total_parcial|floatformat:2 }}</span></td>
                     </tr>
-                </thead>
-                <tbody id="mytbl">
-                    {% for producto in conceptos%}
-                
+                    {% empty %}
                     <tr>
-                        <td scope="col">{{producto.producto.codigo}}</td>
-                        <td scope="col">{{producto.producto.nombre}}</td>
-                        <td scope="col">{{producto.cantidad}}</td>
-                        <td scope="col">${{producto.precio|floatformat:2}}</td>
-                        <td scope="col">${{producto.get_total_parcial|floatformat:2}}</td></td>
+                        <td colspan="5">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-list"></i>
+                                <h3>No hay conceptos registrados</h3>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </table>
-                <hr>
-                <table class='table table-dark table striped'>
-                    <thead>
-                        <tr>
-                        <th scope="col">Importe Viático</th>
-                        <th id="importe" value={{compra.costo_oc}} scope="col">${{viatico.get_total|floatformat:2}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{viatico.monto_pagado|floatformat:2}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Remanente:</th>
-                            <th>${{remanente|floatformat:2}}</th>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+    </section>
+        </div>
 
-                <table class='table table-dark table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-2">Pagado</th>
-                            <th scope="col-3">Cuenta</th>
-                            <th scope="col-3">Fecha</th>
-                            <th scope="col-2">Pago</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="col-12 col-xl-7 order-4">
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-clock-rotate-left"></i>Historial de pagos</h2>
+            <span class="sv-badge sv-badge-dark">{{ pagos|length }} pagos</span>
+        </div>
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Pago</th>
+                        <th>Monto</th>
+                        <th>Cuenta</th>
+                        <th>Fecha</th>
+                        <th>Comprobante</th>
+                    </tr>
+                </thead>
+                <tbody>
                     {% for p in pagos %}
-                        <tr>
-                            <th scope="row">{{p.id}}</th>
-                            <td>{{p.monto}}</td>
-                            <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
-                            <td>{{p.pagado_date}}</td>
-                            <td>
-                                {% if p.comprobante_pago %}
-                                <a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                   {% endfor %}
-                   </tbody>
-                </table>
-       
-        <form id="id_formulario" method="POST" enctype='multipart/form-data'>
+                    <tr>
+                        <td><span class="sv-cell-title">#{{ p.id }}</span></td>
+                        <td>$ {{ p.monto|floatformat:2 }}</td>
+                        <td>{{ p.cuenta.banco }} – {{ p.cuenta.cuenta }}</td>
+                        <td>{{ p.pagado_date|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if p.comprobante_pago %}
+                            <button type="button" class="sv-btn sv-btn-info sv-btn-icon"
+                                    data-bs-toggle="modal" data-bs-target="#paymentPdfModal"
+                                    data-pdf-url="{{ p.comprobante_pago.url }}"
+                                    title="Ver comprobante" aria-label="Ver comprobante">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-money-bill-transfer"></i>
+                                <h3>No hay pagos registrados</h3>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+        </div>
+
+        <div class="col-12 col-xl-8 order-2">
+    <section class="sv-card h-100">
+        <div class="sv-card-header">
             <div>
-                {% csrf_token %}
-                
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.cuenta}}
-                                    </div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-circle-plus"></i>Nuevo pago</h2>
+                <span class="sv-cell-subtitle">Viático {{ viatico.folio }}</span>
+            </div>
+            <div class="d-flex flex-wrap justify-content-end gap-2">
+                <span class="sv-badge sv-badge-primary">Remanente: $ {{ remanente|floatformat:2 }}</span>
+            </div>
+        </div>
+        <form id="id_formulario" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="sv-card-body p-3">
+                <div class="row g-3">
+                    <div class="col-12 col-xl-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building-columns"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.cuenta }}
+                                
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.monto|add_class:'form-control'}}
-                                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field form.pagado_real type="date" class="form-control" %}
+                                <label for="{{ form.pagado_real.id_for_label }}">Fecha de pago</label>
                             </div>
                         </div>
-                    </div>  
-                    <div class="row">
-                        <div class="col-lg-4 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {% render_field form.pagado_real type="date" class="form-control" %}
-                                    <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
-                                </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-clock"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field form.pagado_hora type="time" class="form-control" %}
+                                <label for="{{ form.pagado_hora.id_for_label }}">Hora de pago</label>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {% render_field form.pagado_hora type="time" class="form-control" %}
-                                    <label style="color: #121212;" for="id_pagado_hora">Hora Pago:</label>
-                                </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.monto|add_class:"form-control"|append_attr:"placeholder=Monto" }}
+                                <label for="id_monto">Monto</label>
                             </div>
                         </div>
-                    </div>  
-                   
-                    <div class="col-8">
-                    <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
-                        {{form.comprobante_pago|add_class:'form-control'}}
+                    </div>
+                    <div class="col-12 col-xl-9">
+                        <label class="form-label" for="id_comprobante_pago"><strong>Comprobante de pago</strong></label>
+                        {{ form.comprobante_pago|add_class:"form-control" }}
+                        <span class="sv-cell-subtitle">Al seleccionar el archivo se intentarán completar los datos del pago.</span>
                     </div>
                 </div>
             </div>
-
-            <div class="modal-footer">
-                <!--<h6>Registrar pago del viático: {{viático.id}}</h6>-->
+            <div class="sv-card-body border-top p-3">
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                <a class="sv-btn sv-btn-outline" href="{% url 'viaticos-autorizados-pago' %}">
+                    <i class="fa-solid fa-arrow-left"></i>Regresar
+                </a>
                 {% if usuario.tipo.superintendente %}
-                   
-                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
-                        Cerrar Viático
-                    </button>
-                    
+                <button id="btnCerrar" type="button" class="sv-btn sv-btn-warning">
+                    <i class="fa-solid fa-lock"></i>Cerrar viático
+                </button>
                 {% endif %}
-                <button id="myBtn" name="myBtn" type = "submit" class="btn btn-success">Registrar</button>
-                <a type="button" class="btn btn-secondary"  href="{% url 'viaticos-autorizados-pago' %}">Cerrar</a>
+                <button id="btnRegistrar" name="myBtn" type="submit" class="sv-btn sv-btn-success">
+                    <i class="fa-solid fa-floppy-disk"></i>Registrar pago
+                </button>
+                </div>
             </div>
         </form>
-         </div>
-
+    </section>
+        </div>
     </div>
+</main>
+
+<div class="modal fade" id="paymentPdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Comprobante de pago</h2>
+                    <span class="sv-modal-subtitle">Vista previa del documento</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="paymentPdfFrame" src="" title="Comprobante de pago"
+                        width="100%" height="700" class="border-0"></iframe>
+            </div>
+        </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-{% if usuario.tipo.superintendente %}
-document.getElementById("btnCerrar").addEventListener("click", function (e) {
-    Swal.fire({
-    title: '¿Cerrar viático sin pago completo?',
-    html: `
-        <p>Recuerda que esta acción marcará el viático como cerrado sin pago completo.</p>
-        <textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..." required></textarea>
-    `,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Sí, cerrar Viático',
-    cancelButtonText: 'Cancelar',
-    preConfirm: () => {
-        const comentario = document.getElementById('comentarioCierre').value.trim();
-        if (!comentario) {
-            Swal.showValidationMessage('Por favor escribe un comentario de cierre.');
-            return false;
-        }
-        return comentario;
-    }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const comentario = result.value;
 
-            const form = document.getElementById('id_formulario');
-
-            // Input oculto para marcar el cierre sin pago
-            const inputCerrar = document.createElement('input');
-            inputCerrar.type = 'hidden';
-            inputCerrar.name = 'cerrar_sin_pago';
-            inputCerrar.value = 'true';
-
-            // Input oculto para el comentario
-            const inputComentario = document.createElement('input');
-            inputComentario.type = 'hidden';
-            inputComentario.name = 'comentario_cierre';
-            inputComentario.value = comentario;
-
-            form.appendChild(inputCerrar);
-            form.appendChild(inputComentario);
-
-            form.submit();
-        }
-    });
-});
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
 {% endif %}
 
-function formatRepo (repo) {
-    if (repo.loading) {
-        return repo.text;
-    }
-
-    var $container = $("<div class='select2-result-repository clearfix'>" +
-        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
-
-    $container.find(".select2-result-repository__title").text(repo.text);
-    
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
+<script>
+const paymentPdfModal = document.getElementById("paymentPdfModal");
+const paymentPdfFrame = document.getElementById("paymentPdfFrame");
+if (paymentPdfModal && paymentPdfFrame) {
+    paymentPdfModal.addEventListener("show.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
+        paymentPdfFrame.src = trigger ? trigger.dataset.pdfUrl : "";
+    });
+    paymentPdfModal.addEventListener("hidden.bs.modal", function () {
+        paymentPdfFrame.src = "about:blank";
+    });
 }
-function formatRepoSelection (repo) {
+
+{% if usuario.tipo.superintendente %}
+const closeButton = document.getElementById("btnCerrar");
+if (closeButton) {
+    closeButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        Swal.fire({
+            title: "¿Cerrar viático sin pago completo?",
+            html: '<p>Esta acción marcará el viático como cerrado sin pago completo.</p>' +
+                  '<textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..."></textarea>',
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Sí, cerrar viático",
+            cancelButtonText: "Cancelar",
+            preConfirm: function () {
+                const comment = document.getElementById("comentarioCierre").value.trim();
+                if (!comment) {
+                    Swal.showValidationMessage("Escribe un comentario de cierre.");
+                    return false;
+                }
+                return comment;
+            }
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            const form = document.getElementById("id_formulario");
+            form.querySelectorAll(".js-close-travel").forEach(function (input) { input.remove(); });
+
+            const closeInput = document.createElement("input");
+            closeInput.type = "hidden";
+            closeInput.name = "cerrar_sin_pago";
+            closeInput.value = "true";
+            closeInput.className = "js-close-travel";
+
+            const commentInput = document.createElement("input");
+            commentInput.type = "hidden";
+            commentInput.name = "comentario_cierre";
+            commentInput.value = result.value;
+            commentInput.className = "js-close-travel";
+
+            form.appendChild(closeInput);
+            form.appendChild(commentInput);
+            form.submit();
+        });
+    });
+}
+{% endif %}
+
+function formatRepo(repo) {
+    if (repo.loading) return repo.text;
+    const container = $("<div class='select2-result-repository clearfix'><div class='form-control form-control-lg select2-result-repository__title'></div></div>");
+    container.find(".select2-result-repository__title").text(repo.text);
+    return container;
+}
+
+function formatRepoSelection(repo) {
     return repo.text || repo.id;
 }
 
-
-
-var datosCuenta = {{cuentas_para_select2|safe }};
-
-
-$(document).ready(function() {
-    $('#id_cuenta').select2({
+const datosCuenta = {{ cuentas_para_select2|safe }};
+$(document).ready(function () {
+    $("#id_cuenta").select2({
         allowClear: true,
-        width: '100%',
-        placeholder: 'Selecciona una cuenta',
+        width: "100%",
+        placeholder: "Selecciona una cuenta",
         data: datosCuenta,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
     });
 });
 
-document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
-  var file = event.target.files[0];
-  var formData = new FormData();
-  formData.append('comprobante_pago', file);
-  
-  // Añadir CSRF token a la solicitud AJAX
-  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+const receiptInput = document.getElementById("id_comprobante_pago");
+if (receiptInput) {
+    receiptInput.addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-  fetch('/gastos/prellenar_formulario_gastos/', { 
-    method: 'POST',
-    body: formData,
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
-    },
-  })
-  .then(response => response.json()) 
-  .then(data => {
-    console.log(data);
-    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
-    document.querySelector('[name="monto"]').value = data.monto;
-    //document.querySelector('[name="cuenta"]').value = data.cuenta;
-    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
-    
-    if (data.hora_operacion) {
-    // Solo deja HH:mm
-    console.log(data.hora_operacion)
-    const horaSinSegundos = data.hora_operacion.slice(0, 5);
-    document.querySelector('[name="pagado_hora"]').value=  horaSinSegundos;
-    }
-    
-    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
-    var $selectElement = $('[name="cuenta"]');
-    
-    //var divisa = data.divisa_cuenta
-    //console.log(divisa)
-    $selectElement.val(cuentaId).trigger('change');
-    //if (divisa == "MXP" && compra_moneda == "DOLARES" ){
-    //var tipo_cambio = document.getElementById('text_tc')
-    //tipo_cambio.classList.remove('d-none');
-    //}
-  })
-  .catch(error => console.error('Error:', error));
-});
+        const formData = new FormData();
+        formData.append("comprobante_pago", file);
+        formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+        fetch("/gastos/prellenar_formulario_gastos/", {
+            method: "POST",
+            body: formData,
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(function (response) {
+            if (!response.ok) throw new Error("No fue posible leer el comprobante");
+            return response.json();
+        })
+        .then(function (data) {
+            const amount = document.querySelector('[name="monto"]');
+            const date = document.querySelector('[name="pagado_real"]');
+            const time = document.querySelector('[name="pagado_hora"]');
+            const account = $('[name="cuenta"]');
+
+            if (amount && data.monto !== undefined) amount.value = data.monto;
+            if (date && data.pagado_real) date.value = data.pagado_real;
+            if (time && data.hora_operacion) time.value = data.hora_operacion.slice(0, 5);
+            if (data.cuenta) account.val(data.cuenta).trigger("change");
+        })
+        .catch(function (error) {
+            Swal.fire({ title:"No se pudo prellenar", text:error.message, icon:"warning" });
+        });
+    });
+}
 </script>
 {% endblock %}
-</body>
-</html>

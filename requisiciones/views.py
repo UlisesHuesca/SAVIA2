@@ -2046,14 +2046,69 @@ def render_salida_pdf(request, pk):
     styles = getSampleStyleSheet()
     styles['BodyText'].fontSize = 6
 
-    #Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
-    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    distrito_nombre = (vale.solicitud.distrito.nombre if vale.solicitud and vale.solicitud.distrito else '')
+    es_yerod = distrito_nombre.strip().upper() == 'YEROD'
+    caja_iso = 770
+    if es_yerod:
+        # Yerod: negro y verde
+        color_principal = Color(
+            26 / 255,
+            26 / 255,
+            26 / 255,
+        )
+        color_acento = Color(
+            40 / 255,
+            140 / 255,
+            69 / 255,
+        )
+        color_folio = color_acento
+        color_barra_inferior = color_acento
+
+        logo_path = finders.find(
+            'images/SAVIA_Negro_Verde.jpg'
+        )
+
+        logo_width = 1.75 * cm
+        logo_height = 1.75 * cm
+
+        # Centrado en el espacio reservado para el logo.
+        logo_x = 45 + ((3 * cm) - logo_width) / 2
+        logo_y = caja_iso - 43
+
+    else:
+        # VORDCAB: azul y rojo
+        color_principal = Color(
+            22 / 255,
+            50 / 255,
+            79 / 255,
+        )
+        color_acento = Color(
+            62 / 255,
+            146 / 255,
+            204 / 255,
+        )
+        color_folio = Color(
+            152 / 255,
+            15 / 255,
+            15 / 255,
+        )
+        color_barra_inferior = color_principal
+
+        logo_path = finders.find(
+            'images/logo_vordcab.jpg'
+        )
+
+        logo_width = 3 * cm
+        logo_height = 1.5 * cm
+        logo_x = 45
+        logo_y = caja_iso - 40
+
+
     #Encabezado
     c.setFillColor(black)
     c.setLineWidth(.2)
     c.setFont('Helvetica',8)
-    caja_iso = 770
+    
     #Elaborar caja
     #c.line(caja_iso,500,caja_iso,720)
 
@@ -2079,13 +2134,13 @@ def render_salida_pdf(request, pk):
     c.drawString(510,caja_iso-60,'Fecha:')
     c.drawString(540,caja_iso-60,vale.created_at.strftime("%d/%m/%Y"))
 
-    c.setFillColor(rojo)
+    c.setFillColor(color_folio)
     c.setFont('Helvetica-Bold',12)
     c.drawString(530,caja_iso-50, str(vale.folio))
     
 
     c.setFont('Helvetica',12)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(150,caja_iso-15,250,20, fill=True, stroke=False) #Barra azul superior Orden de Compra
 
@@ -2095,8 +2150,16 @@ def render_salida_pdf(request, pk):
     c.drawCentredString(280,caja_iso-10,'Vale de Salida Almacén')
     c.setLineWidth(.3) #Grosor
 
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,caja_iso-40, 3 * cm, 1.5 * cm) #Imagen vortec
-   
+    if logo_path:
+        c.drawImage(
+            logo_path,
+            logo_x,
+            logo_y,
+            width=logo_width,
+            height=logo_height,
+            preserveAspectRatio=True,
+            mask='auto',
+        )
 
     data =[]
     productos_data = []
@@ -2141,7 +2204,7 @@ def render_salida_pdf(request, pk):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TEXTCOLOR', (0, 0), (-1, 0), white),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('BACKGROUND', (0, 0), (-1, 0), color_principal),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('FONTSIZE', (0, 1), (-1, -1), 6)
     ]))
@@ -2186,7 +2249,7 @@ def render_salida_pdf(request, pk):
     qr_image_path = 'temp_qr.png'
     qr_image.save(qr_image_path)
     c.drawImage(qr_image_path, 440, proyecto_y-50, 100, 100)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_barra_inferior)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(20,proyecto_y - 5 ,350,20, fill=True, stroke=False) #3ra linea azul
     c.setFillColor(black)
@@ -2226,11 +2289,11 @@ def render_salida_pdf(request, pk):
     c.drawCentredString(280,proyecto_y - 190, vale.solicitud.staff.staff.staff.first_name + ' ' + vale.solicitud.staff.staff.staff.last_name)
 
     c.setFont('Helvetica',10)
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.setFont('Helvetica', 9)
     c.setFillColor(black)
 
-    c.setFillColor(prussian_blue)
+    c.setFillColor(color_principal)
     c.rect(20,proyecto_y - 215,565,20, fill=True, stroke=False)
     c.setFillColor(white)
     if remaining_data:
@@ -2255,7 +2318,7 @@ def render_salida_pdf(request, pk):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('TEXTCOLOR', (0, 0), (-1, 0), white),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+            ('BACKGROUND', (0, 0), (-1, 0),color_principal),
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('FONTSIZE', (0, 1), (-1, -1), 6)
         ]))
@@ -2266,7 +2329,6 @@ def render_salida_pdf(request, pk):
             c.showPage()
 
     c.save()
-    c.showPage()
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename='vale_salida_'+str(vale.folio) +'.pdf')
 

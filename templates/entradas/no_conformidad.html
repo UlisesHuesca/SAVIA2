@@ -3,408 +3,366 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
-<html>
-<head>
-{% block title %}NC|Rechazo de Artículos{% endblock %}
-</head>
-<body>
+
+{% block title %}NC | Rechazo de artículos{% endblock %}
+
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                No conformidad
+            </h1>
+            <p class="sv-page-subtitle">
+                Selecciona los artículos rechazados y documenta el motivo de la no conformidad.
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="sv-badge sv-badge-danger" id="no_conformidad" data-nc-id="{{ no_conformidad.id }}">
+                <i class="fa-solid fa-hashtag"></i>NC {{ no_conformidad.id }}
+            </span>
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-cart-shopping"></i>Compra {{ compra.folio }}
+            </span>
+        </div>
+    </header>
 
-
-<div class="row">
-    <div class="col-lg-8 offset-md-2">
-        <div class="card ">
-            <div class="card-header">   
-            <h5 class="modal-title" id="no_conformidad" value="{{no_conformidad.id}}">NC: {{no_conformidad.id}}&ensp;&ensp; Compra: {{compra.folio}}</h5>
-            </div>
-            <div class="card-body">
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col">Proveedor:</th>
-                            <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="col">RFC:</th>
-                            <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
-                        </tr>
-                    </tbody>
-                </table>
-                <form  id = "form_articulo" method="POST" onsubmit="mostrarIndicadorCarga();">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.articulo_comprado}}
-                                    </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    <div class="row">
-                        <div id="etiqueta_solicitado" class="col-lg-4 col-md-12">
-                            <div class="alert alert-secondary" role="alert">
-                            <h6>Comprado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
-                            </div>
-                        </div>  
-                        <div class="col-lg-5 col-sm-12 mt-2">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
-                                    <label style="color: #121212;" for="id_cantidad">Cantidad</label>
-                                </div>
-                            </div>
-                        </div>    
-                    </div>
-                   
-                    <div class="container-fluid text-end">
-                        <a class="btn btn-outline-success" id='update-no-conformidad' type="submit" name="update_articulo">
-                            Agregar
-                        </a>
-                    </div>
-                </form> 
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Producto</th>
-                            <th scope="col">Cantidad</th>
-                            <th scope="col">Unidad</th>
-                            <th scope="col" class="col-sm-2">Eliminar</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="mytbl">
-                    {% for producto in articulos_nc %}
-                    <tr>
-                        <td scope="col" ></td>
-                        <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
-                        <td scope="col">{{producto.cantidad}}</td>
-                        <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
-                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id|unlocalize}}" nc_id="{{producto.nc.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
-                
-                <form id="form_crear" method="POST" onsubmit="mostrarIndicadorCarga();">
-                    <div class="row">
-                        {% csrf_token %}
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form2.tipo_nc}}
-                                    </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
-                                    <span class="input-group-text d-lg-block d-none" id="basic-addon1">Comentario</span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form2.comentario|add_class:"form-control"|append_attr:"type=text"}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>  
-                    <div class="container-fluid text-end">
-                        {% if articulos_nc %}
-                        <button type="submit" name="BtnCrear" id="BtnCrear" class="btn btn-outline-success btn-lg">
-                        {% else %}
-                        <button type="submit"  name="BtnCrear" id="BtnCrear" class="btn btn-outline-success btn-lg d-none">
-                        {% endif %}
-                        Crear NC</button>
-                        <a id="cerrar" type="button" class="btn btn-outline-secondary btn-lg cerrar"  href="{% url 'pendientes_entrada' %}">Cerrar</a>
-                    </div>
-                </form>
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-building"></i>Proveedor</h2>
+        </div>
+        <div class="sv-card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-8">
+                    <span class="sv-cell-label">Razón social</span>
+                    <div class="sv-cell-title">{{ compra.proveedor.nombre.razon_social }}</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <span class="sv-cell-label">RFC</span>
+                    <div class="sv-cell-title">{{ compra.proveedor.nombre.rfc }}</div>
+                </div>
             </div>
         </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-5">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-box-open"></i>Agregar artículo</h2>
+                    <span class="sv-badge sv-badge-dark">
+                        Comprada:
+                        <strong id="solicitado">—</strong>
+                    </span>
+                </div>
+                <div class="sv-card-body">
+                    <form id="form_articulo" method="POST">
+                        {% csrf_token %}
+
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.articulo_comprado }}
+                               
+                            </div>
+                        </div>
+
+                        <div class="row g-3 align-items-center">
+                            <div class="col-12">
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-boxes-stacked"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad rechazada" }}
+                                        <label for="id_cantidad">Cantidad rechazada</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-3">
+                            <button class="sv-btn sv-btn-primary" id="update-no-conformidad" type="button">
+                                <i class="fa-solid fa-plus"></i>Agregar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i>Artículos rechazados</h2>
+                    <span class="sv-badge sv-badge-dark">{{ articulos_nc|length }} seleccionados</span>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Unidad</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mytbl">
+                            {% for producto in articulos_nc %}
+                            <tr>
+                                <td>
+                                    <span class="sv-cell-title">
+                                        {{ producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre }}
+                                    </span>
+                                </td>
+                                <td>{{ producto.cantidad }}</td>
+                                <td>{{ producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad }}</td>
+                                <td>
+                                    <button type="button"
+                                            class="sv-btn sv-btn-danger sv-btn-icon js-delete-product"
+                                            data-cantidad="{{ producto.cantidad|unlocalize }}"
+                                            data-producto="{{ producto.articulo_comprado.id|unlocalize }}"
+                                            data-nc-id="{{ producto.nc.id|unlocalize }}"
+                                            onclick="deleteRow(this)"
+                                            title="Eliminar artículo"
+                                            aria-label="Eliminar artículo">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="sv-empty-state">
+                                        <i class="fa-solid fa-box-open"></i>
+                                        <h3>No hay artículos seleccionados</h3>
+                                        <p>Selecciona un producto y captura la cantidad rechazada.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section class="sv-card mt-4">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-clipboard"></i>Datos de la no conformidad</h2>
+        </div>
+        <div class="sv-card-body">
+            <form id="form_crear" method="POST" onsubmit="return mostrarIndicadorCarga(this);">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-12 col-lg-5">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-tags"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form2.tipo_nc }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-7">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-message"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form2.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
+                                <label for="{{ form2.comentario.id_for_label }}">Comentario</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4">
+                    <a id="cerrar" class="sv-btn sv-btn-outline cerrar" href="{% url 'pendientes_entrada' %}">
+                        <i class="fa-solid fa-arrow-left"></i>Cancelar
+                    </a>
+                    <button type="submit" name="BtnCrear" id="BtnCrear"
+                            class="sv-btn sv-btn-success{% if not articulos_nc %} d-none{% endif %}">
+                        <i class="fa-solid fa-circle-check"></i>Crear NC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<div id="loadingIndicator"
+     style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,.55); z-index:2000;">
+    <div class="text-center text-white">
+        {% if usuario.distritos.nombre == "Yerod" %}
+        <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod"
+             style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+        {% else %}
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA"
+             style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+        {% endif %}
+        <p class="mt-3 mb-0">Creando no conformidad, por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
     </div>
 </div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
 function mostrarIndicadorCarga(form) {
-    document.getElementById('loadingIndicator').style.display = 'flex';
-
+    document.getElementById("loadingIndicator").style.display = "flex";
     const button = form.querySelector('button[type="submit"]');
-    if (button) {
-        button.disabled = true;
-    }
-    
-    return true; // se asegura de que el formulario se envíe
+    if (button) button.disabled = true;
+    return true;
 }
-var cerrarBtn = document.getElementsByClassName('cerrar')
 
-for(var i=0; i< cerrarBtn.length; i++){
-    cerrarBtn[i].addEventListener('click',function(){
-    var rows = document.getElementById("mytbl").rows.length;
-    if (rows == 1) {
+const closeButton = document.getElementById("cerrar");
+if (closeButton) {
+    closeButton.addEventListener("click", function (event) {
+        const rows = document.querySelectorAll("#mytbl .js-delete-product").length;
+        if (rows > 0) {
+            event.preventDefault();
             Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de eliminar el producto para poder salir",
-                    "icon":"error",
-                })
-        }if (rows > 1) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de eliminar los productos para poder salir",
-                    "icon":"error",
-                })
-    }
-})
-};
-
-var rows = document.getElementById("mytbl").rows.length
-var CrearBtn = document.getElementById('BtnCrear')
-console.log('rows',rows)
-
-CrearBtn.addEventListener('click',function(){
-
-    if (rows < 1){
-        Swal.fire({
-                "title":"Error",
-                "text":"No tienes productos seleccionados",
-                "icon":"error",
-            })
-        CrearBtn.setAttribute('name','')
-        } else {
-            CrearBtn.setAttribute('name','entrada')
-
+                title: "No puedes salir todavía",
+                text: rows === 1
+                    ? "Elimina el producto seleccionado antes de salir."
+                    : "Elimina los productos seleccionados antes de salir.",
+                icon: "warning"
+            });
         }
+    });
+}
 
-})
-
-
-
-document.getElementById("form_crear").addEventListener("submit", function(event){
-    event.preventDefault(); //Detiene el envío del formulario
-    var btnCrear = document.getElementById('BtnCrear')
-
-    this.addEventListener('submit', function() {
-           preventDoubleClick(btnCrear)
-        });
-    
-    
-    /*var oc = document.getElementById("oc").getAttribute("target");
-    localStorage.removeItem("id_formulario_" + oc);
-    console.log("Datos borrados para OC:", oc);*/ 
-
-
-    // Continuar con el envío del formulario
-    event.target.submit(); 
-});
-
+const createForm = document.getElementById("form_crear");
+if (createForm) {
+    createForm.addEventListener("submit", function (event) {
+        const rows = document.querySelectorAll("#mytbl .js-delete-product").length;
+        if (rows < 1) {
+            event.preventDefault();
+            Swal.fire({
+                title: "Error",
+                text: "No tienes productos seleccionados",
+                icon: "error"
+            });
+            return;
+        }
+        document.getElementById("BtnCrear").name = "entrada";
+    });
+}
 
 function preventDoubleClick(button) {
-    setTimeout(function() {
-        button.disabled = true;
-    }, 50);
+    setTimeout(function () { button.disabled = true; }, 50);
 }
 
+const updateButton = document.getElementById("update-no-conformidad");
+if (updateButton) {
+    updateButton.addEventListener("click", function () {
+        const ncId = document.getElementById("no_conformidad").dataset.ncId;
+        const selected = document.getElementById("solicitado");
+        const productId = selected.dataset.id;
+        const currentQuantity = Number(selected.dataset.pendiente);
+        const enteredQuantity = Number(document.getElementById("id_cantidad").value);
 
-document.getElementById('id_cantidad').addEventListener('change', function(){
-var cantidad = document.getElementById('id_cantidad');
-
-})
-
-var updateBtn = document.getElementById('update-no-conformidad')
-    let count=0;
-    let suma=0;
-    let array_id_prod=[];
-
-
-updateBtn.addEventListener('click',function(){
-        let no_conformidad = document.getElementById('no_conformidad')
-        nc_id = no_conformidad.getAttribute('value')
-        
-        var select = document.getElementById('solicitado');
-        var product_id = select.getAttribute('data-id');
-        var current_cantidad = select.getAttribute('data-pendiente');
-        //value = current_cantidad.value 
-        var cantidad_form = document.getElementById('id_cantidad');
-        cantidad_ingresada = cantidad_form.value;
-        action = "add"
-
-        preventDoubleClick(updateBtn) 
-
-        if (!product_id) {
+        if (!productId) {
+            Swal.fire({ title: "Error", text: "Selecciona un producto de la lista", icon: "error" });
+        } else if (!enteredQuantity || enteredQuantity <= 0) {
+            Swal.fire({ title: "Error", text: "La cantidad ingresada debe ser mayor que 0", icon: "error" });
+        } else if (enteredQuantity > currentQuantity) {
             Swal.fire({
-                "title":"Error",
-                "text":"Favor de seleccionar algún valor de la lista",
-                "icon":"error",
-            })
-        } else if (Number(cantidad_ingresada)>Number(current_cantidad)){
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada es mayor que la cantidad solicitada",
-                    "icon":"error",
-                })
-        } else if (Number(cantidad_ingresada<=0)) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada debe ser mayor que 0",
-                    "icon":"error",
-                })
+                title: "Error",
+                text: "La cantidad ingresada es mayor que la cantidad solicitada",
+                icon: "error"
+            });
         } else {
-            count += 1;
-            //current_option.setAttribute("class","d-none");
-            //select.value = default_sel;
-
-            console.log(JSON.stringify({ 'producto': product_id, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id':nc_id }));
-            ActualizarArticulos(product_id, cantidad_ingresada, action, nc_id);
-
-
-            }
+            preventDoubleClick(updateButton);
+            ActualizarArticulos(productId, enteredQuantity, "add", ncId);
+        }
     });
+}
 
-
-    function ActualizarArticulos(producto, cantidad_ingresada, action, nc_id){
-        console.log('User is logged in, sending data...' )
-
-    var url = '/entradas/no_conformidad/'
-
-    fetch( url, {
-        method:'POST',
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRFToken': csrftoken,
+function ActualizarArticulos(producto, cantidadIngresada, action, ncId) {
+    fetch("/entradas/no_conformidad/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
         },
-        body:JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id': nc_id})
+        body: JSON.stringify({
+            producto: producto,
+            cantidad_ingresada: cantidadIngresada,
+            action: action,
+            nc_id: ncId
+        })
     })
-    .then((response)=>{
-        return response.json()
+    .then(function (response) {
+        if (!response.ok) throw new Error("No fue posible actualizar los artículos");
+        return response.json();
     })
-    .then((data)=>{
-        console.log('data:', data)
-        location.reload()
-    })
-}
-
-$(document).ready(function() {
-    $('#id_tipo_nc').select2({
-        allowClear: true,
-        width: '100%',
-        placeholder: 'Tipo NC',
-        //data: datosComparativos,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
+    .then(function () { window.location.reload(); })
+    .catch(function (error) {
+        if (updateButton) updateButton.disabled = false;
+        Swal.fire({ title: "Error", text: error.message, icon: "error" });
     });
-});
-
-function deleteRow(element) {
-    let btn_delete = document.getElementById('delete');
-    producto = btn_delete.getAttribute('producto');
-    cantidad_ingresada = btn_delete.getAttribute('cantidad');
-    //cantidad_ingresada = cantidad.value
-    nc_id= btn_delete.getAttribute('nc_id');
-    referencia = ""
-    action = "remove" ;
-    console.log(producto, cantidad_ingresada, action, nc_id);
-    console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id':nc_id }))
-
-    ActualizarArticulos(producto, cantidad_ingresada, action, nc_id);
 }
 
+function deleteRow(button) {
+    ActualizarArticulos(
+        button.dataset.producto,
+        button.dataset.cantidad,
+        "remove",
+        button.dataset.ncId
+    );
+}
 
-var datosProductos = {{ productos_para_select2|safe }};
+const datosProductos = {{ productos_para_select2|safe }};
 
-$(document).ready(function() {
-    $('#id_articulo_comprado').select2({
+$(document).ready(function () {
+    $("#id_tipo_nc").select2({
         allowClear: true,
-        width: '100%',
-        placeholder: 'Selecciona un producto',
+        width: "100%",
+        placeholder: "Tipo NC",
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    $("#id_articulo_comprado").select2({
+        allowClear: true,
+        width: "100%",
+        placeholder: "Selecciona un producto",
         data: datosProductos,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    $('#id_articulo_comprado').on('select2:select', function(e) {
-
-        var data = e.params.data;
-        var cantidad = data.cantidad;
-        var cantidad_pendiente = data.cantidad_pendiente;
-        var id = data.id;
-
-        console.log(id)
-        //if (!cantidad) {
-        //    cantidad_comprada = 0
-        //}
-        //
-        var cantidad_pendiente = Number(cantidad_pendiente);
-
-
-        // Envío los variables como atributos y texto de los labels
-        $('#solicitado').text(cantidad_pendiente);
-        $('#solicitado').attr('data-id',id)
-        $('#solicitado').attr('data-pendiente',cantidad_pendiente)
-       
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    }).on("select2:select", function (event) {
+        const data = event.params.data;
+        const pendingQuantity = Number(data.cantidad_pendiente);
+        $("#solicitado")
+            .text(pendingQuantity)
+            .attr("data-id", data.id)
+            .attr("data-pendiente", pendingQuantity);
     });
 });
 
-function formatRepo (repo) {
-    if (repo.loading) {
-        return repo.text;
-    }
-
-    var $container = $("<div class='select2-result-repository clearfix'>" +
-        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
-
-    $container.find(".select2-result-repository__title").text(repo.text);
-    
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
+function formatRepo(repo) {
+    if (repo.loading) return repo.text;
+    const container = $("<div class='select2-result-repository clearfix'><div class='form-control form-control-lg select2-result-repository__title'></div></div>");
+    container.find(".select2-result-repository__title").text(repo.text);
+    return container;
 }
-function formatRepoSelection (repo) {
+
+function formatRepoSelection(repo) {
     return repo.text || repo.id;
 }
-
 </script>
 {% endblock %}
-</body>
-</html>
