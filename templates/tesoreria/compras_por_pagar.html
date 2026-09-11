@@ -26,7 +26,7 @@
 
     <section class="sv-card mb-4" id="response-div">
         <div class="sv-card-header">
-            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>Filtro de compras autorizadas</h2>
+            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>Filtro de compras por pagar</h2>
         </div>
 
         <div class="sv-card-body">
@@ -569,17 +569,36 @@
     </form>
 </main>
 
-<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
-     data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade"
+     id="loadingIndicator"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content sv-modal">
             <div class="modal-body d-flex align-items-center gap-3">
-                <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA"
-                     width="72" height="72" class="rounded-circle">
+
+                {% if usuario.distritos.nombre == "Yerod" %}
+                    <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}"
+                         alt="SAVIA Yerod"
+                         width="72"
+                         height="72"
+                         class="rounded-circle">
+                {% else %}
+                    <img src="{% static 'images/SAVIA_Logo.png' %}"
+                         alt="SAVIA Vordcab"
+                         width="72"
+                         height="72"
+                         class="rounded-circle">
+                {% endif %}
+
                 <div>
                     <strong>Generando reporte</strong>
                     <p class="sv-cell-subtitle mb-0">
-                        Por favor espera… <i class="fa-solid fa-mug-hot"></i>
+                        Por favor espera…
+                        <i class="fa-solid fa-mug-hot"></i>
                     </p>
                 </div>
             </div>

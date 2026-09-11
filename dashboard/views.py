@@ -31,6 +31,7 @@ from solicitudes.forms import PozoForm
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
+from user.utils import obtener_empresa_por_host
 from proveedores_externos.views import extraer_tipo_contribuyente
 from decimal import Decimal 
 import csv
@@ -148,16 +149,35 @@ def index(request):
     return render(request,'dashboard/index.html',context)
 
 
+
 @login_required(login_url='user-login')
 def select_profile(request):
     user = request.user.id
+    empresa_host = obtener_empresa_por_host(request)
 
     profiles = Profile.objects.filter( Q(staff__staff__id=user) & Q(sustituto__isnull = True) & Q(st_activo = True)| Q(sustituto__staff__id=user))
+
+      # -------------------------------------------------------
+    # FILTRAR PERFILES SEGÚN EL DOMINIO
+    # -------------------------------------------------------
+    if empresa_host == 'YEROD':
+        profiles = profiles.filter(
+            distritos__nombre__iexact='YEROD'
+        )
+
+    elif empresa_host == 'VORDCAB':
+        profiles = profiles.exclude(
+            distritos__nombre__iexact='YEROD'
+        )
+
+    if request.method == 'POST':
+        profile_id = request.POST.get('profile')
+
     
     if request.method == 'POST':
         profile_id = request.POST.get('profile')
         try:
-            profile = Profile.objects.get(id=profile_id)
+            profile = profiles.get(id=profile_id)
             request.session['selected_profile_id'] = profile.id
             # **Cambiar idioma según el perfil seleccionado**
             if profile.distritos.nombre == "BRASIL":
@@ -177,7 +197,7 @@ def select_profile(request):
         form.fields['profile'].queryset = profiles
 
     request.LANGUAGE_CODE = translation.get_language()  # 🔹 Forzar el idioma actual
-    print(f"Idioma activado: {request.LANGUAGE_CODE}")  # Verificar en la consola
+    #print(f"Idioma activado: {request.LANGUAGE_CODE}")  # Verificar en la consola
         
     context = {
         'form': form,

@@ -1,78 +1,322 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Perfil{% endblock %}
+{% block title %}Seleccionar perfil{% endblock %}
 
 {% block content %}
+
+<style>
+    .profile-page {
+        min-height: calc(100vh - 90px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
+
+    .profile-wrapper {
+        width: 100%;
+        max-width: 580px;
+    }
+
+    .profile-card {
+        background: #ffffff;
+        border: 1px solid #e5e7e9;
+        border-radius: 18px;
+        overflow: hidden;
+
+        box-shadow:
+            0 12px 35px rgba(30, 40, 45, 0.08);
+    }
+
+    /* Encabezado */
+    .profile-header {
+        padding: 32px 36px 25px;
+        text-align: center;
+        border-bottom: 1px solid #edf0f1;
+        background: #fafbfb;
+    }
+
+    .profile-icon {
+        width: 64px;
+        height: 64px;
+
+        margin: 0 auto 18px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: #eef1f2;
+        color: #49545a;
+
+        font-size: 24px;
+    }
+
+    .profile-title {
+        margin: 0 0 8px;
+
+        color: #30383d;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .profile-subtitle {
+        margin: 0;
+
+        color: #7c878d;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* Contenido */
+    .profile-body {
+        padding: 34px 36px 36px;
+    }
+
+    .profile-label {
+        display: block;
+
+        margin-bottom: 9px;
+
+        color: #4d585e;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .profile-select-wrapper {
+        position: relative;
+    }
+
+    .profile-select-icon {
+        position: absolute;
+
+        left: 16px;
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        color: #778289;
+        font-size: 15px;
+
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    .profile-select {
+        min-height: 52px;
+
+        padding-left: 45px !important;
+
+        border: 1px solid #d8dddf;
+        border-radius: 10px;
+
+        color: #374047;
+        background-color: #ffffff;
+
+        font-size: 14px;
+
+        box-shadow: none !important;
+
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .profile-select:focus {
+        border-color: #7a878e;
+
+        box-shadow:
+            0 0 0 0.2rem rgba(90, 105, 112, 0.10) !important;
+    }
+
+    /* Botón */
+    .profile-actions {
+        margin-top: 28px;
+    }
+
+    .profile-button {
+        width: 100%;
+        min-height: 48px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+
+        border: none;
+        border-radius: 9px;
+
+        background: #414b50;
+        color: #ffffff;
+
+        font-size: 14px;
+        font-weight: 600;
+
+        transition:
+            background .2s ease,
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .profile-button:hover {
+        background: #30383d;
+        color: #ffffff;
+
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 6px 16px rgba(40, 50, 55, 0.16);
+    }
+
+    .profile-button:active {
+        transform: translateY(0);
+    }
+
+    /* Pie */
+    .profile-footer {
+        margin-top: 24px;
+
+        padding-top: 20px;
+
+        border-top: 1px solid #edf0f1;
+
+        text-align: center;
+
+        color: #9aa2a6;
+        font-size: 11px;
+    }
+
+    .profile-error {
+        margin-top: 8px;
+
+        color: #b42318;
+        font-size: 12px;
+    }
+
+    @media (max-width: 575.98px) {
+
+        .profile-page {
+            padding: 25px 15px;
+        }
+
+        .profile-header {
+            padding: 28px 24px 22px;
+        }
+
+        .profile-body {
+            padding: 28px 24px 30px;
+        }
+
+        .profile-title {
+            font-size: 21px;
+        }
+    }
+</style>
+
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 {% if messages %}
     {% for message in messages %}
-    <script>
-        Swal.fire({
-            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
-            text: "{{ message|escapejs }}",
-            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
-        });
-    </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+                    text: "{{ message|escapejs }}",
+                    icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                    confirmButtonColor: "#414b50"
+                });
+            });
+        </script>
     {% endfor %}
 {% endif %}
 
-<main class="sv-page sv-page-with-navbar">
-    <header class="sv-page-header">
-        <div>
-            <h1 class="sv-page-title">
-                <span class="sv-page-title-icon">
-                    <i class="fa-solid fa-users-gear"></i>
-                </span>
-                Selección de perfil
-            </h1>
-            <p class="sv-page-subtitle">
-                Elige el perfil con el que deseas trabajar en SAVIA.
-            </p>
-        </div>
-    </header>
 
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-            <section class="sv-card">
-                <div class="sv-card-header">
-                    <h2 class="sv-card-title">
-                        <i class="fa-solid fa-user-shield"></i>
-                        Perfil de acceso
-                    </h2>
+<main class="profile-page">
+
+    <div class="profile-wrapper">
+
+        <section class="profile-card">
+
+            <!-- Encabezado -->
+            <header class="profile-header">
+
+                <div class="profile-icon">
+                    <i class="fa-solid fa-user-shield"></i>
                 </div>
 
-                <div class="sv-card-body">
-                    <form method="POST">
-                        {% csrf_token %}
+                <h1 class="profile-title">
+                    Selecciona tu perfil
+                </h1>
 
-                        <div class="sv-input-group">
-                            <span class="input-group-text">
-                                <i class="fa-solid fa-user-tie"></i>
-                            </span>
-                            <div class="form-floating">
-                                {{ form.profile|add_class:"form-select"|append_attr:"placeholder=Perfil" }}
-                                <label for="{{ form.profile.id_for_label }}">Perfil</label>
-                            </div>
-                        </div>
+                <p class="profile-subtitle">
+                    Elige el perfil con el que deseas trabajar
+                    durante esta sesión.
+                </p>
 
-                        {% if form.profile.errors %}
-                        <div class="text-danger small mt-2">
+            </header>
+
+
+            <!-- Formulario -->
+            <div class="profile-body">
+
+                <form method="POST">
+
+                    {% csrf_token %}
+
+                    <label
+                        class="profile-label"
+                        for="{{ form.profile.id_for_label }}"
+                    >
+                        Perfil de acceso
+                    </label>
+
+                    <div class="profile-select-wrapper">
+
+                        <span class="profile-select-icon">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </span>
+
+                        {{ form.profile|add_class:"form-select profile-select" }}
+
+                    </div>
+
+                    {% if form.profile.errors %}
+                        <div class="profile-error">
                             {{ form.profile.errors }}
                         </div>
-                        {% endif %}
+                    {% endif %}
 
-                        <div class="d-flex justify-content-end mt-4">
-                            <button class="sv-btn sv-btn-primary" type="submit">
-                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                                Continuar
-                            </button>
-                        </div>
-                    </form>
+
+                    <div class="profile-actions">
+
+                        <button
+                            class="profile-button"
+                            type="submit"
+                        >
+                            Continuar
+
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <div class="profile-footer">
+                    SAVIA · Selección de perfil de acceso
                 </div>
-            </section>
-        </div>
+
+            </div>
+
+        </section>
+
     </div>
+
 </main>
+
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from user.decorators import perfil_seleccionado_required
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.contrib.auth.views import PasswordResetView
 from django.conf import settings
@@ -9,6 +10,21 @@ from .forms import CustomUser_Form
 from requisiciones.views import get_image_base64
 from .forms import UserForm
 import os
+
+class SaviaLoginView(auth_views.LoginView):
+
+    def get_template_names(self):
+        host = self.request.get_host().split(':')[0].lower()
+
+        if host in {
+            'yerod.local',
+            'yerod.cloud',
+            'www.yerod.cloud',
+        }:
+            return ['user/login_yerod.html']
+
+        return ['user/login.html']
+
 
 # Create your views here.
 @perfil_seleccionado_required

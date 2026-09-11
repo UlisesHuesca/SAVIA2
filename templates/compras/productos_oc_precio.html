@@ -1,96 +1,139 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-<html>
-<head>
+
 {% block title %}Productos OC{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title" id="compra" value={{compra.id}}>Compra: {{compra.folio}}</h5>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title" id="compra" value="{{ compra.id }}">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                Compra {{ compra.folio }}
+            </h1>
+            <p class="sv-page-subtitle">Productos, importes y antecedentes de la orden de compra.</p>
         </div>
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-boxes-stacked"></i>{{ productos|length }} productos
+        </span>
+    </header>
 
-        <div class="card-body">
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-2">Código</th>
-                            <th scope="col-3">Artículos</th>
-                            <th scope="col-3">Cantidad</th>
-                            <th scope="col-3">P.U.</th>
-                            <th scope="col-3">Subtotal</th>
-                            <th scope="col-3">IVA</th>
-                            <th scope="col-3">Total</th>
-                            <th>Comentario</th>
-                            <th>Precios</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-list"></i>Detalle de productos</h2>
+                <span class="sv-cell-subtitle">Cantidades e importes registrados en la OC.</span>
+            </div>
+        </div>
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">P. U.</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end">IVA</th>
+                        <th class="text-end">Total</th>
+                        <th>Comentario</th>
+                        <th>Precios</th>
+                    </tr>
+                </thead>
+                <tbody>
                     {% for producto in productos %}
-                        <tr>
-                            <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
-                            <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
-                            <td>{{producto.producto.producto.articulos.producto.producto.nombre}}</td>
-                            <td>{{producto.cantidad}}</td>
-                            <td>${{producto.precio_unitario|floatformat:2}}</td>
-                            <td>${{producto.subtotal_parcial|floatformat:2}}</td>
-                            <td>${{producto.iva_parcial|floatformat:2}}</td>
-                            <td>${{producto.total|floatformat:2}}</td>
-                            <td>{{producto.producto.producto.articulos.comentario}}</td>
-                            <td>   
-                                <a type = "button" class="btn btn-outline-primary" href="{% url 'producto-precios-detalle' producto.producto.producto.articulos.producto.id %}">
-                                    Históricos
-                                </a>
-                            </td> 
-                        
-                        </tr>
-                   {% endfor %}
-                   </tbody>
-                </table>
-                <h6>Activo: {% if compra.req.orden.activo %} {{compra.req.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
-                <h6>Comentario Gerente: {% if compra.comentario_gerencia %} {{compra.comentario_gerencia}} {% else %} No hay comentario {% endif %}</h6>
-                <h6>Comentario Compra: {% if compra.comentarios %} {{compra.comentarios}} {%else%} No hay comentario {% endif %}</h6>
-                <h6>Comentario Superintendente:   {%if compra.req.comentario_super%} {{compra.req.comentario_super}} {% else %} No hay comentario {% endif %}</h6>
-                <h6>Comentario Almacén: {%if compra.req.comentario_compras %} {{compra.req.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
-                <h6>Comentario Usuario: {%if compra.req.orden.comentario %} {{compra.req.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
-                
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <img class="row-image rounded"
+                                     src="{{ producto.producto.producto.articulos.producto.producto.imageURL }}"
+                                     alt="{{ producto.producto.producto.articulos.producto.producto.nombre }}"
+                                     loading="lazy">
+                                <span class="sv-cell-title">{{ producto.producto.producto.articulos.producto.producto.nombre }}</span>
+                            </div>
+                        </td>
+                        <td><span class="sv-cell-title">{{ producto.producto.producto.articulos.producto.producto.codigo }}</span></td>
+                        <td class="text-end">{{ producto.cantidad }}</td>
+                        <td class="text-end">${{ producto.precio_unitario|floatformat:2 }}</td>
+                        <td class="text-end">${{ producto.subtotal_parcial|floatformat:2 }}</td>
+                        <td class="text-end">${{ producto.iva_parcial|floatformat:2 }}</td>
+                        <td class="text-end"><strong>${{ producto.total|floatformat:2 }}</strong></td>
+                        <td>{{ producto.producto.producto.articulos.comentario|default:"Sin comentario" }}</td>
+                        <td>
+                            <a class="sv-btn sv-btn-info"
+                               href="{% url 'producto-precios-detalle' producto.producto.producto.articulos.producto.id %}">
+                                <i class="fa-solid fa-clock-rotate-left"></i>Históricos
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-box-open"></i>
+                                <h3>No hay productos registrados</h3>
+                                <p>Esta orden de compra todavía no contiene partidas.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </section>
 
-        <div class="card-footer">
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-message"></i>Información y comentarios</h2>
         </div>
-    </div>
+        <div class="sv-card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-4">
+                    <span class="sv-cell-label">Activo</span>
+                    <div class="sv-cell-title">
+                        {% if compra.req.orden.activo %}
+                            <i class="fa-solid fa-screwdriver-wrench me-1"></i>{{ compra.req.orden.activo }}
+                        {% else %}
+                            No hay activo definido
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <span class="sv-cell-label">Comentario de Gerencia</span>
+                    <div class="sv-cell-title">{{ compra.comentario_gerencia|default:"No hay comentario" }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <span class="sv-cell-label">Comentario de Compras</span>
+                    <div class="sv-cell-title">{{ compra.comentarios|default:"No hay comentario" }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <span class="sv-cell-label">Comentario de Superintendencia</span>
+                    <div class="sv-cell-title">{{ compra.req.comentario_super|default:"No hay comentario" }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <span class="sv-cell-label">Comentario de Almacén</span>
+                    <div class="sv-cell-title">{{ compra.req.comentario_compras|default:"No hay comentario" }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <span class="sv-cell-label">Comentario del usuario</span>
+                    <div class="sv-cell-title">{{ compra.req.orden.comentario|default:"No hay comentario" }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 {% endblock %}
-
-</body>
-</html>

@@ -42,7 +42,7 @@ urlpatterns = [
     path('register/', user_view.register, name='user-register'),
     path('profile/', user_view.profile, name='user-profile'),
     #path('', auth_views.LoginView.as_view(template_name='user/login.html'), name='user-login'),
-    path('', auth_views.LoginView.as_view(template_name='user/login.html', authentication_form=EmailLoginForm), name='user-login'),
+    path('', user_view.SaviaLoginView.as_view(),name='user-login'),
     path('password-reset/', CustomPasswordResetView.as_view(
         template_name='user/password_reset.html',
         html_email_template_name='user/password_reset_email.html',

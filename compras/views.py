@@ -876,7 +876,7 @@ def matriz_oc(request):
     #task_id = request.session.get('task_id')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
+        return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date, usuario)
         
         
 
@@ -4819,7 +4819,7 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
 
 
 
-def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
+def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date, usuario):
     print('conteo compras:', compras.count())
     # Crea un objeto BytesIO para guardar el archivo Excel
     output = BytesIO()
@@ -4828,10 +4828,17 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
     worksheet = workbook.add_worksheet("Matriz_Compras")
 
+    es_yerod = (
+        usuario.distritos
+        and usuario.distritos.nombre.upper() == 'YEROD'
+    )
+
+    color_encabezado = '288C45' if es_yerod else '333366'
+
      
     #date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
     # Define los estilos
-    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': color_encabezado, 'font_name': 'Arial', 'font_size': 11})
     body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
     money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
     date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
@@ -4844,8 +4851,9 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
 
     columna_max = len(columns)+2
 
-    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
-    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA.', messages_style)
+    if not es_yerod:
+        worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
     # Escribir encabezados debajo de los mensajes

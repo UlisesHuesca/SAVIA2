@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['grupovordcab.cloud','www.grupovordcab.cloud','localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['grupovordcab.cloud','www.grupovordcab.cloud','localhost', '127.0.0.1','vordcab.local','yerod.local']
 
 
 # Application definition
@@ -96,6 +96,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'user.middleware.LogUserAccessMiddleware',
+    'user.middleware.EmpresaPerfilMiddleware',
     'user.middleware.Handle404Middleware',
 ]
 

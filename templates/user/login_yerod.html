@@ -2,12 +2,12 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-{% block title %}SAVIA | Vordcab{% endblock %}
+{% block title %}SAVIA | Yerod{% endblock %}
 
 {% block content %}
 
 <style>
-    .vordcab-login-page {
+    .yerod-login-page {
         min-height: calc(100vh - 100px);
         display: flex;
         align-items: center;
@@ -15,154 +15,146 @@
         padding: 40px 15px;
     }
 
-    .vordcab-login-container {
+    .yerod-login-container {
         width: 100%;
         max-width: 980px;
         background: #ffffff;
         border-radius: 22px;
         overflow: hidden;
-        box-shadow: 0 18px 50px rgba(15, 35, 55, 0.16);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
     }
 
     /* Panel de identidad */
-    .vordcab-brand-panel {
+    .yerod-brand-panel {
         min-height: 570px;
-
         background:
             radial-gradient(
                 circle at top right,
-                rgba(65, 122, 168, 0.35),
-                transparent 40%
+                rgba(40, 140, 69, 0.24),
+                transparent 38%
             ),
             linear-gradient(
                 145deg,
-                #0f2740 0%,
-                #173f5f 55%,
-                #1f557d 100%
+                #050505 0%,
+                #151515 55%,
+                #202020 100%
             );
 
         color: #ffffff;
-
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-
         padding: 55px 45px;
         text-align: center;
         position: relative;
     }
 
-    .vordcab-logo {
+    .yerod-logo {
         width: 175px;
         height: 175px;
-        object-fit: contain;
+        object-fit: cover;
         border-radius: 50%;
-
-        background: rgba(255, 255, 255, 0.96);
-
-        padding: 14px;
         margin-bottom: 30px;
 
-        border: 5px solid rgba(255, 255, 255, 0.15);
+        border: 5px solid rgba(255, 255, 255, 0.10);
 
         box-shadow:
-            0 15px 35px rgba(0, 0, 0, 0.25),
-            0 0 0 8px rgba(255, 255, 255, 0.07);
+            0 15px 35px rgba(0, 0, 0, 0.35),
+            0 0 0 8px rgba(40, 140, 69, 0.10);
     }
 
-    .vordcab-brand-title {
+    .yerod-brand-title {
         font-size: 34px;
         font-weight: 700;
         letter-spacing: 3px;
         margin-bottom: 8px;
     }
 
-    .vordcab-brand-line {
+    .yerod-brand-line {
         width: 50px;
         height: 4px;
-        background: #7fb3d5;
+        background: #288C45;
         border-radius: 20px;
         margin: 14px auto 20px;
     }
 
-    .vordcab-brand-text {
+    .yerod-brand-text {
         max-width: 320px;
-        color: #d8e5ee;
+        color: #bfc5c1;
         font-size: 14px;
         line-height: 1.7;
         margin: 0;
     }
 
-    /* Panel formulario */
-    .vordcab-form-panel {
+    /* Panel login */
+    .yerod-form-panel {
         min-height: 570px;
         display: flex;
         align-items: center;
-        padding: 55px;
+        padding: 55px 55px;
         background: #ffffff;
     }
 
-    .vordcab-form-wrapper {
+    .yerod-form-wrapper {
         width: 100%;
     }
 
-    .vordcab-form-title {
-        color: #17324d;
+    .yerod-form-title {
+        color: #1a1a1a;
         font-size: 28px;
         font-weight: 700;
         margin-bottom: 8px;
     }
 
-    .vordcab-form-subtitle {
-        color: #7a8997;
+    .yerod-form-subtitle {
+        color: #7a837d;
         font-size: 14px;
         margin-bottom: 35px;
     }
 
-    /* Crispy */
-    .vordcab-form-wrapper label {
-        color: #33485b;
+    /* Crispy / Bootstrap */
+    .yerod-form-wrapper label {
+        color: #343a36;
         font-size: 13px;
         font-weight: 600;
         margin-bottom: 7px;
     }
 
-    .vordcab-form-wrapper .form-control {
+    .yerod-form-wrapper .form-control {
         min-height: 46px;
-        border: 1px solid #d7e0e7;
+        border: 1px solid #dce1dd;
         border-radius: 9px;
         box-shadow: none;
     }
 
-    .vordcab-form-wrapper .form-control:focus {
-        border-color: #2e6f9e;
-        box-shadow: 0 0 0 0.2rem rgba(46, 111, 158, 0.12);
+    .yerod-form-wrapper .form-control:focus {
+        border-color: #288C45;
+        box-shadow: 0 0 0 0.2rem rgba(40, 140, 69, 0.12);
     }
 
-    .vordcab-password-link {
+    .yerod-password-link {
         display: block;
         text-align: right;
-        color: #2e6f9e;
+        color: #288C45;
         font-size: 13px;
         font-weight: 600;
         text-decoration: none;
         margin: 5px 0 25px;
     }
 
-    .vordcab-password-link:hover {
-        color: #1b5077;
+    .yerod-password-link:hover {
+        color: #1f7138;
         text-decoration: underline;
     }
 
-    .vordcab-login-button {
+    .yerod-login-button {
         width: 100%;
         min-height: 48px;
-
         border: none;
         border-radius: 9px;
 
-        background: #173f5f;
+        background: #288C45;
         color: #ffffff;
 
         font-size: 14px;
@@ -171,47 +163,43 @@
         transition: all .2s ease;
     }
 
-    .vordcab-login-button:hover {
-        background: #102f49;
+    .yerod-login-button:hover {
+        background: #21783a;
         transform: translateY(-1px);
-
-        box-shadow:
-            0 7px 18px rgba(23, 63, 95, 0.24);
+        box-shadow: 0 7px 18px rgba(40, 140, 69, 0.22);
     }
 
-    .vordcab-login-footer {
+    .yerod-login-footer {
         margin-top: 30px;
         padding-top: 22px;
-
-        border-top: 1px solid #e8eef2;
-
-        color: #98a5af;
+        border-top: 1px solid #edf0ed;
+        color: #9aa19c;
         text-align: center;
         font-size: 11px;
     }
 
     @media (max-width: 991.98px) {
 
-        .vordcab-login-page {
+        .yerod-login-page {
             padding: 25px 15px;
         }
 
-        .vordcab-brand-panel {
+        .yerod-brand-panel {
             min-height: auto;
             padding: 35px 25px;
         }
 
-        .vordcab-logo {
+        .yerod-logo {
             width: 120px;
             height: 120px;
             margin-bottom: 20px;
         }
 
-        .vordcab-brand-title {
+        .yerod-brand-title {
             font-size: 27px;
         }
 
-        .vordcab-form-panel {
+        .yerod-form-panel {
             min-height: auto;
             padding: 40px 30px;
         }
@@ -227,7 +215,7 @@
                     title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
                     text: "{{ message|escapejs }}",
                     icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
-                    confirmButtonColor: "#173f5f"
+                    confirmButtonColor: "#288C45"
                 });
             });
         </script>
@@ -237,17 +225,17 @@
 
 {% if user.is_authenticated %}
 
-<div class="vordcab-login-page">
+<div class="yerod-login-page">
 
-    <div class="vordcab-login-container p-5 text-center">
+    <div class="yerod-login-container p-5 text-center">
 
         <img
-            src="{% static 'images/Logo_Vordcab.png' %}"
-            class="vordcab-logo"
-            alt="Vordcab"
+            src="{% static 'images/SAVIA_Negro_Verde.jpg' %}"
+            class="yerod-logo"
+            alt="SAVIA Yerod"
         >
 
-        <h3 class="vordcab-form-title">
+        <h3 class="yerod-form-title">
             Sesión activa
         </h3>
 
@@ -264,31 +252,31 @@
 
 {% else %}
 
-<div class="vordcab-login-page">
+<div class="yerod-login-page">
 
-    <div class="vordcab-login-container">
+    <div class="yerod-login-container">
 
         <div class="row g-0">
 
-            <!-- Identidad Vordcab -->
+            <!-- Identidad Yerod -->
             <div class="col-lg-6">
 
-                <div class="vordcab-brand-panel">
+                <div class="yerod-brand-panel">
 
                     <img
-                        src="{% static 'images/logo_vordcab.jpg' %}"
-                        class="vordcab-logo"
-                        alt="Vordcab"
+                        src="{% static 'images/SAVIA_Negro_Verde.jpg' %}"
+                        class="yerod-logo"
+                        alt="SAVIA Yerod"
                     >
 
-                    <div class="vordcab-brand-title">
+                    <div class="yerod-brand-title">
                         SAVIA
                     </div>
 
-                    <div class="vordcab-brand-line"></div>
+                    <div class="yerod-brand-line"></div>
 
-                    <p class="vordcab-brand-text">
-                        Sistema Administrativo Vordcab de Integración 
+                    <p class="yerod-brand-text">
+                        Sistema de Administración, Visualización, Integración
                         y Análisis
                     </p>
 
@@ -300,17 +288,17 @@
             <!-- Login -->
             <div class="col-lg-6">
 
-                <div class="vordcab-form-panel">
+                <div class="yerod-form-panel">
 
-                    <div class="vordcab-form-wrapper">
+                    <div class="yerod-form-wrapper">
 
-                        <h1 class="vordcab-form-title">
+                        <h1 class="yerod-form-title">
                             Bienvenido
                         </h1>
 
-                        <p class="vordcab-form-subtitle">
+                        <p class="yerod-form-subtitle">
                             Ingresa tus credenciales para acceder
-                            al portal Vordcab.
+                            al portal Yerod.
                         </p>
 
                         <form method="POST">
@@ -320,7 +308,7 @@
                             {{ form|crispy }}
 
                             <a
-                                class="vordcab-password-link"
+                                class="yerod-password-link"
                                 href="{% url 'password-reset' %}"
                             >
                                 ¿Olvidaste tu contraseña?
@@ -328,15 +316,15 @@
 
                             <button
                                 type="submit"
-                                class="vordcab-login-button"
+                                class="yerod-login-button"
                             >
                                 Iniciar sesión
                             </button>
 
                         </form>
 
-                        <div class="vordcab-login-footer">
-                            SAVIA · Portal Vordcab
+                        <div class="yerod-login-footer">
+                            SAVIA · Portal Yerod
                         </div>
 
                     </div>
@@ -368,7 +356,7 @@
                 text: "Para una mejor experiencia, se recomienda usar Google Chrome.",
                 icon: "warning",
                 confirmButtonText: "Entendido",
-                confirmButtonColor: "#173f5f"
+                confirmButtonColor: "#288C45"
             });
         }
 

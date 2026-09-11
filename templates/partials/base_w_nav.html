@@ -57,7 +57,7 @@ const csrftoken = getToken('csrftoken');
 
 </head>
 
-<body class="{% if request.user.profile.distritos.nombre == 'NEGRO' %}sv-theme-negro{% else %}sv-theme-vordcab{% endif %}">
+<body class="{% if usuario.distritos.nombre == 'Yerod' %}sv-theme-negro{% else %}sv-theme-vordcab{% endif %}">
 
     {% block content %}
     {% endblock %}
