@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['grupovordcab.cloud','www.grupovordcab.cloud','localhost', '127.0.0.1','vordcab.local','yerod.local']
+ALLOWED_HOSTS = ['grupovordcab.cloud','www.grupovordcab.cloud','localhost', '127.0.0.1','yerod.cloud','www.yerod.cloud',]
 
 
 # Application definition
