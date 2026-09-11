@@ -13,7 +13,7 @@
     --sv-success-hover: #176c3a;
     --sv-success-soft: #e9f6ee;
     --sv-danger: #c83945;
-    --sv-warning: #d79a16;
+    --sv-warning: #f2b705;
     --sv-info: #357cac;
     --sv-page-bg: #eef1f3;
     --sv-card-bg: #ffffff;
@@ -390,7 +390,7 @@ body {
 
 .sv-badge-warning {
     background: #fff5df;
-    color: #a96f00;
+    color: #f2b705;
 }
 
 /* =========================================================
@@ -529,7 +529,7 @@ body {
 
 .sv-btn-warning {
     border-color: var(--sv-warning);
-    color: #a96f00;
+    color: #f2b705;
 }
 
 .sv-btn-warning:hover {
