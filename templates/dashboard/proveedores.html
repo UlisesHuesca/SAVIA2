@@ -3,182 +3,131 @@
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Proveedores{% endblock %}
-</head>
-<body>
+{% block title %}Matriz de proveedores{% endblock %}
 {% block content %}
-<hr>
-<hr>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-building"></i></span>
+                {% if usuario.distritos.nombre == "BRASIL" %}Fornecedores{% else %}Proveedores{% endif %}
+            </h1>
+            <p class="sv-page-subtitle">Consulta, administra y exporta el catálogo de proveedores.</p>
+        </div>
+        <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-database"></i>{{ total_prov }} registrados</span>
+    </header>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
-<div class = "row mt-4">
-    <div class="col-lg-6 col-sm-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>{% if usuario.distritos.nombre == "BRASIL" %}Filtro de Fornecedores{% else %}Filtro de Proveedores{% endif %}</h5>
-            </div>
-                {% csrf_token %}
-            <div class="card-body">
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i>{% if usuario.distritos.nombre == "BRASIL" %}Filtros de fornecedores{% else %}Filtros de proveedores{% endif %}</h2>
+        </div>
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-md-5 col-xl-4">
+                        <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {% if usuario.distritos.nombre == "BRASIL" %}
                             {{myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razão Social"}}
-                            <label style="color: #121212;" for="id_razon_social">Razão Social</label>
+                            <label for="id_razon_social">Razão Social</label>
                             {% else %}
                             {{myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razón Social"}}
-                            <label style="color: #121212;" for="id_razon_social">Razón Social</label>
+                            <label for="id_razon_social">Razón Social</label>
                             {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
+                    <div class="col-12 col-md-5 col-xl-4">
+                        <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-id-card"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {% if usuario.distritos.nombre == "BRASIL" %}
                             {{myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder=CNPJ/CPF"}}
-                            <label style="color: #121212;" for="id_rfc">CNPJ/CPF</label>
+                            <label for="id_rfc">CNPJ/CPF</label>
                             {% else %}
                             {{myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder= RFC"}}
-                            <label style="color: #121212;" for="id_rfc">RFC</label>
+                            <label for="id_rfc">RFC</label>
                             {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <div class="col-12 col-md-2">
+                        <button class="sv-btn sv-btn-success w-100" type="submit"><i class="fa-solid fa-magnifying-glass"></i>Buscar</button>
                     </div>
                 </div>
-                </form>
+            </form>
+        </div>
+        <div class="sv-card-body border-top p-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
                 {% if usuario.tipo.proveedores %}
-                <hr>
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
                             {% if usuario.tipo.nombre == "Admin" %}
-                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_proveedores' %}">
-                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
+                            <a class="sv-btn sv-btn-outline" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'upload_batch_proveedores' %}">
+                                <i class="fa-solid fa-file-arrow-up"></i>Carga masiva
                             </a>
-                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_proveedores_direcciones' %}">
-                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva Direcciones</i>
+                            <a class="sv-btn sv-btn-outline" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'upload_batch_proveedores_direcciones' %}">
+                                <i class="fa-solid fa-map-location-dot"></i>Carga masiva de direcciones
                             </a>
                             {% endif %}
                             {% if usuario.tipo.proveedores_edicion %}
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add_proveedores2' %}">
-                                <i class="fa-solid fa-plus"> {% if usuario.distritos.nombre == "BRASIL" %} Adicionar fornecedor {% else %} Agregar Proveedor {% endif %}</i>
+                            <a class="sv-btn sv-btn-primary" href="{% url 'add_proveedores2' %}">
+                                <i class="fa-solid fa-plus"></i>{% if usuario.distritos.nombre == "BRASIL" %}Adicionar fornecedor{% else %}Agregar proveedor{% endif %}
                             </a>
-                           
-                            <a type="button" class="btn btn-outline-info m-1"  href="{% url 'matriz-oc-productos' %}">
-                                {% if usuario.distritos.nombre == "BRASIL" %} Relatorio Produtos OC {% else %} Reporte Productos OC {% endif %}
+                            <a class="sv-btn sv-btn-info" href="{% url 'matriz-oc-productos' %}">
+                                <i class="fa-solid fa-boxes-stacked"></i>{% if usuario.distritos.nombre == "BRASIL" %}Relatório produtos OC{% else %}Reporte productos OC{% endif %}
                             </a>
                             {% endif %}
-                        </li>
-
-                    </ul>
                 {% endif %}
-            </div>
-        </div>  
-    </div>
-    
-    <div class="col-lg-3 col-sm-3 mt-2">
-        <div class="card">
-            <div class = "card-header">
-                <h5 class="card-title">{% if usuario.distritos.nombre == "BRASIL" %} Relatorios {% else %} Reportes {% endif %}</h5>
-            </div>
-            <div class="card-body">
-                <form method=POST>
+                <form method="POST" class="d-flex flex-wrap gap-2 ms-lg-auto">
                     {% csrf_token %}
-                    <ul class="nav nav-pills my-2" >
-                        <li class="nav-item mx-2 pl-5">
-                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel' title ="Provedores Direcciones">
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item mx-2 pl-5">
-                            <button type="submit" name="btnproveedoresAltas" class="btn btn-outline-success" value='Reporte Excel Altas' title ="Proveedores Altas">
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item mx-2 pl-5">
-                            <button type="button" class="btn btn-success" id="btnExcel" onclick="descargarExcelVencimientos()">
-                                Descargar Excel vencimientos
-                            </button>
-                        </li>
-                    </ul>
+                    <button type="submit" name="btnExcel" class="sv-btn sv-btn-success" value="Reporte Excel" title="Proveedores y direcciones"><i class="fa-solid fa-file-excel"></i>Proveedores</button>
+                    <button type="submit" name="btnproveedoresAltas" class="sv-btn sv-btn-success" value="Reporte Excel Altas" title="Altas de proveedores"><i class="fa-solid fa-file-circle-plus"></i>Altas</button>
+                    <button type="button" class="sv-btn sv-btn-success" id="btnExcelVencimientos" onclick="descargarExcelVencimientos()"><i class="fa-solid fa-calendar-xmark"></i>Vencimientos</button>
                 </form>
             </div>
         </div>
-    </div>
-    <div class="col-lg-2 col-sm-3 mt-2">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">{% if usuario.distritos.nombre == "BRASIL" %} Fornecedores: {% else %} Proveedores: {% endif %}</h5>
-            </div>
-            <div class="card-body">
-                    <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills my-2" >
-                        <li class="fs-1 nav-item mx-2 pl-5">
-                             <strong>{{total_prov}}</strong>
-                        </li>
-                    </ul>
-                    </form>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-address-book"></i>Directorio</h2>
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                <span class="sv-cell-subtitle">Página {{ proveedores_list.number }} de {{ proveedores_list.paginator.num_pages }}</span>
+                <div class="dropdown">
+                    <button class="sv-btn sv-btn-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <i class="fa-solid fa-table-columns"></i>Columnas
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width:280px; max-height:70vh; overflow-y:auto;">
+                        <h3 class="fs-6 fw-bold mb-3">Mostrar columnas</h3>
+                        <div class="d-grid gap-2">
+                            <label class="form-check"><input class="form-check-input js-provider-column" type="checkbox" value="contacto"><span class="form-check-label">{% if usuario.distritos.nombre == "BRASIL" %}Contato{% else %}Contacto{% endif %}</span></label>
+                            <label class="form-check"><input class="form-check-input js-provider-column" type="checkbox" value="telefono"><span class="form-check-label">{% if usuario.distritos.nombre == "BRASIL" %}Telefone{% else %}Teléfono{% endif %}</span></label>
+                            <label class="form-check"><input class="form-check-input js-provider-column" type="checkbox" value="distrito" checked><span class="form-check-label">Distrito</span></label>
+                            <label class="form-check"><input class="form-check-input js-provider-column" type="checkbox" value="domicilio"><span class="form-check-label">{% if usuario.distritos.nombre == "BRASIL" %}Endereço{% else %}Domicilio{% endif %}</span></label>
+                            <label class="form-check"><input class="form-check-input js-provider-column" type="checkbox" value="nombre_comercial"><span class="form-check-label">{% if usuario.distritos.nombre == "BRASIL" %}Nome fantasia{% else %}Nombre comercial{% endif %}</span></label>
+                            {% if usuario.distritos.nombre != "BRASIL" %}
+                            <label class="form-check"><input class="form-check-input js-provider-column" type="checkbox" value="politicas"><span class="form-check-label">Aceptó políticas</span></label>
+                            {% endif %}
+                        </div>
+                        <hr class="my-3">
+                        <button type="button" id="resetProviderColumns" class="sv-btn sv-btn-outline w-100"><i class="fa-solid fa-rotate-left"></i>Vista compacta</button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="col-lg-12 my-2">
-    <div class="card">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
+        <div class="sv-table-wrap">
+        <table class="sv-table">
+            <thead>
                 <tr>
                     <th scope="col">ID</th>
                     <!--<th>Folio</th>-->
                     {% if usuario.distritos.nombre == "BRASIL" %}
                         <th>Razão Social</th>
-                        <th>Contato</th>
-                        <th>Telefone</th>
-                        <th>Distrito</th>
-                        <th>Endereço</th>
-                        <th>Nome Fantasia</th>
+                        <th data-column="contacto">Contato</th>
+                        <th data-column="telefono">Telefone</th>
+                        <th data-column="distrito">Distrito</th>
+                        <th data-column="domicilio">Endereço</th>
+                        <th data-column="nombre_comercial">Nome Fantasia</th>
                         <th>CNPJ/CPF</th>
                         {% if usuario.tipo.proveedores_edicion %}
                             <th scope="col">Edição</th>
@@ -189,13 +138,13 @@
                         {% endif %}
                     {% else %}
                         <th>Razón Social</th>
-                        <th scope="col">Contacto</th>
-                        <th scope="col">Telefono</th>
-                        <th scope="col">Distrito</th>
-                        <th scope="col">Domicilio</th>
-                        <th scope="col">Nombre Comercial</th>
+                        <th scope="col" data-column="contacto">Contacto</th>
+                        <th scope="col" data-column="telefono">Teléfono</th>
+                        <th scope="col" data-column="distrito">Distrito</th>
+                        <th scope="col" data-column="domicilio">Domicilio</th>
+                        <th scope="col" data-column="nombre_comercial">Nombre comercial</th>
                         <th scope="col">RFC</th>
-                        <th>Aceptó Políticas</th>
+                        <th data-column="politicas">Aceptó políticas</th>
                         {% if usuario.tipo.proveedores_edicion %}
                             <th scope="col">Edición</th>
                         {% endif %}
@@ -212,34 +161,36 @@
                 <tr>
                     <td>{{proveedor.id}}</td>
                     <!--<td>{{proveedor.folio_consecutivo}}</td>-->
-                    <td>{{proveedor.razon_social}}</th>
-                    <td>{{proveedor.contacto}}</th>
-                    <td>{{proveedor.telefono}}</th>
-                    <td>{{proveedor.distrito}}</th>
-                    <td>{{proveedor.domicilio}}</th>
+                    <td><span class="sv-cell-title">{{ proveedor.razon_social }}</span></td>
+                    <td data-column="contacto">{{ proveedor.contacto|default:"—" }}</td>
+                    <td data-column="telefono">{{ proveedor.telefono|default:"—" }}</td>
+                    <td data-column="distrito">{{ proveedor.distrito }}</td>
+                    <td data-column="domicilio">{{ proveedor.domicilio|default:"—" }}</td>
                     {% if not proveedor.nombre_comercial %}
-                    <td></td>
+                    <td data-column="nombre_comercial"></td>
                     {% else %}
-                    <td>{{proveedor.nombre_comercial}}</td>
+                    <td data-column="nombre_comercial">{{ proveedor.nombre_comercial }}</td>
                     {% endif %}
-                    <td>{{proveedor.rfc}}</td>
-                    <td>{% if proveedor.fecha_aceptacion_politica %} {{proveedor.fecha_aceptacion_politica}} {% else %} NR {% endif %} </td>
+                    <td><span class="sv-cell-title">{{ proveedor.rfc }}</span></td>
+                    {% if usuario.distritos.nombre != "BRASIL" %}
+                    <td data-column="politicas">{% if proveedor.fecha_aceptacion_politica %}{{ proveedor.fecha_aceptacion_politica }}{% else %}NR{% endif %}</td>
+                    {% endif %}
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
-                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                        <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'dashboard-proveedores-update' proveedor.id %}?next={{ request.path|urlencode }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}" title="Editar proveedor">
                             <i class="fa-duotone fa-solid fa-pen-to-square"></i>
                         </a>
                     </td>
                     {% endif %}
                     <td>
-                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                        <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'proveedor-direcciones' proveedor.id %}?next={{ request.path|urlencode }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}" title="Ver direcciones">
                             <i class="fa-duotone fa-solid fa-location-dot"></i>
                         </a>
                     </td>
                   
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
-                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                        <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{ request.path|urlencode }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}" title="Ver documentación">
                             <i class="fa-duotone fa-solid fa-file-check"></i>
                         </a>
                     </td>
@@ -253,38 +204,48 @@
                     {% endif %}
                     </td> -->
                 </tr>
+                {% empty %}
+                <tr><td colspan="12"><div class="sv-empty-state"><i class="fa-solid fa-building-circle-exclamation"></i><h3>No se encontraron proveedores</h3><p>Prueba con otros criterios de búsqueda.</p></div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-</div>
-    <nav aria-label="Page navigation example">
+        </div>
+    </section>
+    <nav class="mt-3" aria-label="Paginación de proveedores">
         <ul class="pagination justify-content-center">
             {% if proveedores_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page=1&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ proveedores_list.previous_page_number }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}"><i class="fa-solid fa-angle-left"></i></a></li>
             {% endif %}
 
             {% for item in proveedores_list.paginator.page_range %}
                 {% if proveedores_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
                 {% elif item > proveedores_list.number|add:'-2' and item < proveedores_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ item }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}">{{ item }}</a></li>
                 {% endif %}
             {% endfor %}
 
             {% if proveedores_list.paginator.num_pages > proveedores_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ proveedores_list.paginator.num_pages}}">{{proveedores_list.paginator.num_pages}}</a></li>
+            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            <li class="page-item"><a class="page-link" href="?page={{ proveedores_list.paginator.num_pages }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}">{{ proveedores_list.paginator.num_pages }}</a></li>
             {% endif %}
 
             {% if proveedores_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ proveedores_list.next_page_number }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ proveedores_list.paginator.num_pages }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}"><i class="fa-solid fa-angles-right"></i></a></li>
             {% endif %}
         </ul>
     </nav>
+</main>
+
+<div id="loadingIndicator" class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center" style="display:none; background:rgba(15, 23, 42, .72); z-index:2000;">
+    <div class="sv-card text-center p-4">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" width="80" height="80" class="rounded-circle mb-3">
+        <h3 class="sv-card-title justify-content-center">Generando reporte</h3>
+        <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
+    </div>
+</div>
 <!--Este es el modal-->
         <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
@@ -294,12 +255,78 @@
 
 
 <!--AJAX CALL-->
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  {% if messages %}
+      {% for message in messages %}
+      <script>
+          Swal.fire({
+              title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+              text: "{{ message|escapejs }}",
+              icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+          });
+      </script>
+      {% endfor %}
+  {% endif %}
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+    (function () {
+        const storageKey = 'savia_proveedores_columnas_v1';
+        const compactColumns = ['distrito'];
+        const controls = Array.from(document.querySelectorAll('.js-provider-column'));
+        const availableColumns = controls.map(function (control) { return control.value; });
+
+        function normalizedColumns(columns) {
+            if (!Array.isArray(columns)) return compactColumns.slice();
+            return columns.filter(function (column) { return availableColumns.includes(column); });
+        }
+
+        function applyColumns(columns) {
+            const visibleColumns = normalizedColumns(columns);
+
+            controls.forEach(function (control) {
+                control.checked = visibleColumns.includes(control.value);
+            });
+
+            availableColumns.forEach(function (column) {
+                const isVisible = visibleColumns.includes(column);
+                document.querySelectorAll('[data-column="' + column + '"]').forEach(function (cell) {
+                    cell.classList.toggle('d-none', !isVisible);
+                });
+            });
+        }
+
+        let savedColumns = compactColumns;
+        try {
+            const storedValue = localStorage.getItem(storageKey);
+            if (storedValue) savedColumns = JSON.parse(storedValue);
+        } catch (error) {
+            savedColumns = compactColumns;
+        }
+
+        applyColumns(savedColumns);
+
+        controls.forEach(function (control) {
+            control.addEventListener('change', function () {
+                const selectedColumns = controls
+                    .filter(function (item) { return item.checked; })
+                    .map(function (item) { return item.value; });
+                localStorage.setItem(storageKey, JSON.stringify(selectedColumns));
+                applyColumns(selectedColumns);
+            });
+        });
+
+        const resetButton = document.getElementById('resetProviderColumns');
+        if (resetButton) {
+            resetButton.addEventListener('click', function () {
+                localStorage.setItem(storageKey, JSON.stringify(compactColumns));
+                applyColumns(compactColumns);
+            });
+        }
+    })();
+
     function mostrarIndicadorCarga() {
-        var btn = document.getElementById('btnExcel')
-        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('loadingIndicator').style.display = 'flex';
         
         verificarDescargaIniciada();
         //btn.classList.add('d-none')
@@ -377,8 +404,3 @@
     })
   </script>
 {% endblock %}
-</body>
-</html>
-<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
-<!--style="background-color: #515151; color:white;"-->
-<!--style="background-color: #711F1B; color:white;"-->
