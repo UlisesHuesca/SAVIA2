@@ -107,8 +107,9 @@ const csrftoken = getToken('csrftoken');
 </head>
 
 <body class="{% if usuario.distritos.nombre == 'Yerod' %}sv-theme-negro{% else %}sv-theme-vordcab{% endif %}">
-    {% include 'partials/nav.html' %}
-    <!--{% include 'api/chatbot.html' %}-->
+    {% block navbar %}
+        {% include 'partials/nav.html' %}
+    {% endblock %}
    
     
     {% block content %}

@@ -1,21 +1,44 @@
 {% extends 'partials/base.html' %}
-{% block title %} Logout Page {% endblock %}
-{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Sesión cerrada{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class='row mt-5'>
-        <div class='col-md-6 offset-md-3'>
-            <div class= "card">
-                <div class="card-header">
-                    <h4>Logged Out</h4>
+<main class="sv-page">
+    <div class="row justify-content-center align-items-center min-vh-75">
+        <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+
+            <section class="sv-card text-center">
+                <div class="sv-card-body py-5 px-4">
+
+                    <div class="sv-page-title-icon mx-auto mb-4">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </div>
+
+                    <h1 class="sv-page-title justify-content-center mb-2">
+                        Sesión cerrada
+                    </h1>
+
+                    <p class="sv-page-subtitle mb-4">
+                        Tu sesión se cerró correctamente.
+                        Gracias por utilizar SAVIA.
+                    </p>
+
+                    <a class="sv-btn sv-btn-primary"
+                       href="{% url 'user-login' %}">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        Iniciar sesión nuevamente
+                    </a>
+
                 </div>
-                <div class="card-body">
-                    <h6>¡Gracias por pasar tiempo de calidad en el sistema!.</h6>
-                    <a href="{%url 'user-login'%}">Log in</a>
-                </div>
-            </div>
+            </section>
+
+            <p class="sv-cell-subtitle text-center mt-3">
+                Por seguridad, cierra esta ventana si utilizaste
+                un equipo compartido.
+            </p>
+
         </div>
     </div>
-</div>
+</main>
 {% endblock %}
