@@ -41,6 +41,11 @@ class EmpresaPerfilMiddleware:
 
     def __call__(self, request):
 
+        # Detectar el portal siempre, incluso antes del login
+        empresa_host = obtener_empresa_por_host(request)
+        print(empresa_host)
+        request.empresa_portal = empresa_host
+
         # Usuario no autenticado: dejar pasar
         if not request.user.is_authenticated:
             return self.get_response(request)
@@ -68,7 +73,7 @@ class EmpresaPerfilMiddleware:
         if not profile_id:
             return self.get_response(request)
 
-        empresa_host = obtener_empresa_por_host(request)
+        #empresa_host = obtener_empresa_por_host(request)
 
         # Host no reconocido: no bloquear
         if empresa_host is None:
