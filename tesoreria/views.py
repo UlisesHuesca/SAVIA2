@@ -528,7 +528,7 @@ def cargo_abono(request, pk):
     form = Cargo_Abono_No_Documento_Form(instance=transaccion)
     cargo_abono_solo = True
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
-    distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
+    distritos = Distrito.objects.exclude(id__in = [7,8,16,17]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
     form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id__in=[1, 2])
     form.fields['distrito'].queryset = distritos
    

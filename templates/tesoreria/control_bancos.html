@@ -11,96 +11,102 @@
 <body>
 
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
+
+
+<div class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Tesorería</span>
+            <h1 class="sv-page-title"><span class="sv-page-title-icon"><i class="fa-solid fa-building-columns"></i></span> Control bancario</h1>
+            <p class="sv-page-subtitle">Cuenta: <strong>{{ cuenta }}</strong></p>
+        </div>
+    </header>
+
 <div class = "col" id="response-div">
-        <div class="card">
-            <div class="card-header">
-            <h5>Control de Bancos | Cuenta: {{cuenta}}</h5>
+        <div class="card sv-card">
+            <div class="card-header sv-card-header">
+            <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtros y operaciones</h2>
             </div>
-            <div class="card-body">
+            <div class="card-body sv-card-body">
                 
                
                
                
                 {% csrf_token %}
                 <form method="GET">
-                <div class="row">
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                <div class="sv-filter-grid sv-filter-grid-4">
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
+                                <label for="id_id">Folio</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                                <label style="color: #121212;" for="id_id">Proyecto</label>
+                                <label for="id_id">Proyecto</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-tags"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
-                                <label style="color: #121212;" for="id_id">Tipo</label>
+                                <label for="id_id">Tipo</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-file-circle-check"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder= Facturas Completas"}}
-                                <label style="color: #121212;" for="id_id">Facturas Completas</label>
+                                <label for="id_id">Facturas Completas</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-building-columns"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.cuenta|add_class:"form-control"|append_attr:"placeholder= Cuenta"}}
-                                <label style="color: #121212;" for="id_cuenta">Cuenta</label>
+                                <label for="id_cuenta">Cuenta</label>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            <label for="id_subproyecto">Desde:</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div>
+                        <div class="input-group sv-input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            <label for="id_subproyecto">Hasta:</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-5 col-sm-12">
-                        <div class="d-flex justify-content-lg-end justify-content-start align-items-center flex-wrap gap-2 mb-3">
-                                <button type="submit" class="btn btn-outline-success"  name="btnBuscar" value="1">
+                    <div class="sv-actions">
+                        <div class="sv-actions">
+                                <button type="submit" class="btn btn-outline-success sv-btn sv-btn-primary" name="btnBuscar" value="1">
                                     <i class="fa-solid fa-magnifying-glass"></i>Buscar
                                 </button>
                             
                            
-                                <button type="submit" name="btnDescargarManuales" class="btn btn-outline-primary" name="btnDescargarManuales" value="1">
+                                <button type="submit" name="btnDescargarManuales" class="btn btn-outline-primary sv-btn sv-btn-outline" value="1">
                                     <i class="fa-solid fa-file-zipper"></i>Movimientos manuales
                                 </button>
                         </div>
@@ -110,49 +116,56 @@
                 </form>
                 <form method=POST onsubmit="mostrarIndicadorCarga();">
                     {% csrf_token %}
-                    <ul class="nav nav-pills">
+                    <ul class="nav nav-pills sv-actions list-unstyled mb-0">
                         <li class="nav-item mx-2">
-                            <button id="btnReporte" name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                            <button id="btnReporte" name="btnReporte" type="submit" class="btn btn-outline-success sv-btn sv-btn-success" value="Reporte Excel" title="Descargar reporte Excel">
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Transferencia">
+                            <a type="button" class="btn btn-lg btn-outline-info sv-btn sv-btn-outline" href="{% url 'transferencia-cuentas' cuenta.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Transferencia">
                               <i class="fa-solid fa-money-bill-transfer"></i>
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'saldo-inicial' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Saldo Inicial">
+                            <a type="button" class="btn btn-lg btn-outline-info sv-btn sv-btn-outline" href="{% url 'saldo-inicial' cuenta.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Saldo inicial">
                                 <i class="fa-solid fa-sack-dollar"></i>
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono">
+                            <a type="button" class="btn btn-lg btn-outline-info sv-btn sv-btn-outline" href="{% url 'cargo-abono' cuenta.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Cargo/Abono">
                                 <i class="fa-solid fa-money-bill-trend-up"></i>
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono-documento' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono Documento">
+                            <a type="button" class="btn btn-lg btn-outline-info sv-btn sv-btn-outline" href="{% url 'cargo-abono-documento' cuenta.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Cargo/Abono con documento">
                                <i class="fa-duotone fa-solid fa-file-arrow-up"></i>
                             </a>
                         </li>
                       
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'estados-cuenta' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Matriz Estados de Cuenta">
+                            <a type="button" class="btn btn-lg btn-outline-info sv-btn sv-btn-outline" href="{% url 'estados-cuenta' cuenta.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Estados de cuenta">
                                <i class="fa-duotone fa-solid fa-file-spreadsheet"></i>
                             </a>
+                        </li>
                         <li class="nav-item mx-2">
-                            <button type="submit" name="btnRecalcular" class="btn btn-primary">
-                                Calcular
+                            <button type="submit" name="btnRecalcular" class="btn btn-primary sv-btn sv-btn-primary">
+                                <i class="fa-solid fa-calculator"></i> Calcular
                             </button>
                         </li>
                         
-                        <li class="nav-item mx-2">
+                        <li class="nav-item ms-lg-auto">
                         {% if saldo_final is not None %}
-                            <table class="table table-sm">
-                            <tr><th>Saldo trasladado</th><td class="text-end">{{ saldo_inicial|floatformat:2 }}</td></tr>
-                            <tr><th>Saldo final</th><td class="text-end"><strong>{{ saldo_final|floatformat:2 }}</strong></td></tr>
-                            </table>
+                            <div class="sv-summary-grid">
+                                <div class="sv-summary-card">
+                                    <span class="sv-summary-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+                                    <div><span class="sv-summary-label">Saldo trasladado</span><strong class="sv-summary-value">$ {{ saldo_inicial|floatformat:2 }}</strong></div>
+                                </div>
+                                <div class="sv-summary-card">
+                                    <span class="sv-summary-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                                    <div><span class="sv-summary-label">Saldo final</span><strong class="sv-summary-value">$ {{ saldo_final|floatformat:2 }}</strong></div>
+                                </div>
+                            </div>
                         {% endif %}
                         </li>
                     </ul>
@@ -172,7 +185,7 @@
                 <script>
                 Swal.fire({
                     "title":"Error",
-                    "text":"{{message}}",
+                    "text":"{{ message|escapejs }}",
                     "icon":"error",
                 })
                 </script>
@@ -180,7 +193,7 @@
                 <script>
                 Swal.fire({
                     "title":"Excelente",
-                    "text":"{{message}}",
+                    "text":"{{ message|escapejs }}",
                     "icon":"success",
                 })
                 </script>
@@ -189,17 +202,27 @@
         {% endif %}
     </div>
 </div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...<i class="fa-solid fa-mug-hot"></i><i class="fa-solid fa-mug-hot"></i></p>
+<div id="loadingIndicator" style="display:none; position: fixed; inset: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div class="sv-card d-flex align-items-center gap-3 p-4 shadow-lg" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 340px;">
+        {% if usuario.distritos.nombre == "Yerod" %}
+            <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle flex-shrink-0">
+        {% else %}
+            <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA Vordcab" width="72" height="72" class="rounded-circle flex-shrink-0">
+        {% endif %}
+        <div><strong class="sv-cell-title">Generando reporte</strong><span class="sv-cell-subtitle">Por favor espera… <i class="fa-solid fa-mug-hot"></i></span></div>
     </div>
 </div>
 
-<div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
+<div class="card sv-card mt-3">
+    <div class="card-header sv-card-header">
+        <div>
+            <h2 class="sv-card-title"><i class="fa-solid fa-money-bill-transfer"></i> Movimientos de la cuenta</h2>
+            <p class="sv-cell-subtitle mb-0">Cargos, abonos y referencias asociadas.</p>
+        </div>
+    </div>
+    <div class="table-responsive sv-table-wrap">
+        <table class="table table-hover sv-table sv-table-xwide bg-white">
+            <thead>
                 <tr>
                     <th class="d-none d-lg-table-cell">Fecha</th>
                     <!--<th>Hora</th>
@@ -238,7 +261,7 @@
                         <button type="button" id="save_hora_{{pago.id|unlocalize}}" onclick="aceptar_edicion_hora('{{pago.id|unlocalize}}')" class="btn btn-outline-primary d-none">
                             <i class="fa-regular fa-circle-check"></i>
                         </button>
-                        <button id="cancel_edit_hora_{{pago.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion_hora('{{pago.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                        <button id="cancel_edit_hora_{{pago.id|unlocalize}}" type="button" class="btn add-btn sv-btn sv-btn-icon sv-btn-danger d-none" onclick="cancelar_edicion_hora('{{pago.id|unlocalize}}')">
                             <i class="fa-solid fa-circle-xmark"></i>
                         </button>
                         <a id="modificar_hora_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_hora('{{pago.id|unlocalize}}')">
@@ -260,7 +283,7 @@
                         {% else %} {{pago.tipo}}
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="text-wrap">
                         {% if pago.spei_devuelto %}
                         <span class="badge bg-danger">
                             SPEI Devuelto
@@ -300,8 +323,8 @@
                         {% elif pago.distrito %} {{pago.distrito}}
                         {% endif %}</td>
                     
-                    <td>{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA" %}${{pago.monto|floatformat:2}}{% endif %}</td>
-                    <td>{% if pago.tipo.nombre == "ABONO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
+                    <td class="text-end text-nowrap fw-semibold">{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA" %}${{pago.monto|floatformat:2}}{% endif %}</td>
+                    <td class="text-end text-nowrap fw-semibold">{% if pago.tipo.nombre == "ABONO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
                     <td>
                         {% if not pago.oc and not pago.gasto and not pago.viatico %}
                         <form method="post" action="{% url 'eliminar_pago' pago.id|unlocalize %}">
@@ -321,13 +344,13 @@
                     </td>
                     <td>{% if pago.oc.req.orden.activo %}{{pago.oc.req.orden.activo.eco_unidad}}{% endif %}</td>
                        <td>
-                        <button type="button" id="save_comment_{{pago.id|unlocalize}}" onclick="aceptar_edicion('{{pago.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
+                        <button type="button" id="save_comment_{{pago.id|unlocalize}}" onclick="aceptar_edicion('{{pago.id|unlocalize}}')" class="btn btn-outline-primary sv-btn sv-btn-icon sv-btn-success d-none">
                             <i class="fa-regular fa-circle-check"></i>
                         </button>
-                        <button id="cancel_edit_{{pago.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{pago.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                        <button id="cancel_edit_{{pago.id|unlocalize}}" type="button" class="btn add-btn sv-btn sv-btn-icon sv-btn-danger d-none" onclick="cancelar_edicion('{{pago.id|unlocalize}}')">
                             <i class="fa-solid fa-circle-xmark"></i>
                         </button>
-                        <a id="modificar_comentario_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{pago.id|unlocalize}}')">
+                        <a id="modificar_comentario_{{pago.id|unlocalize}}" class="btn btn-outline-info sv-btn sv-btn-icon sv-btn-outline" onclick="modificar_comentario('{{pago.id|unlocalize}}')">
                             <i class="fa-regular fa-comment"></i>
                         </a>
                     </td>
@@ -335,30 +358,30 @@
                 {% endfor %}
             </tbody>
         </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+        <nav class="sv-pagination-wrap" aria-label="Paginación de movimientos">
+            <ul class="pagination sv-pagination justify-content-center">
                 {% if pagos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
                 {% endif %}
 
                 {% for item in pagos_list.paginator.page_range %}
                     {% if pagos_list.number == item %}
                         <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
                     {% elif item > pagos_list.number|add:'-2' and item < pagos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                        <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{item}}</a></li>
                     {% endif %}
                 {% endfor %}
 
                 {% if pagos_list.paginator.num_pages > pagos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{pagos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{pagos_list.paginator.num_pages}}</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{pagos_list.number|add:'2'}}">&hellip;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ item }}">{{item}}</a></li>
+                <li class="page-item"><a class="page-link" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{pagos_list.paginator.num_pages}}</a></li>
                 {% endif %}
 
                 {% if pagos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -372,6 +395,7 @@
 </div>
 
 
+</div>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
