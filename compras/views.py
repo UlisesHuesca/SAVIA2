@@ -1681,6 +1681,10 @@ def autorizar_oc1(request, pk):
                     'oc_autorizada_por2',
                     'autorizado_at_2',
                 ])
+
+            if usuario.distritos.nombre == "Yerod":
+                compra.para_pago = True
+                campos_actualizados.extend(['para_pago'])
             compra.save(update_fields=campos_actualizados)
             archivo_oc = attach_oc_pdf(request, compra.id)
             pdf_antisoborno = attach_antisoborno_pdf(request)

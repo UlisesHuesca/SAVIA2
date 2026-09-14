@@ -157,14 +157,14 @@ def carga_masiva_xml(request):
 
             # Regla previamente definida:
             # solo se admiten CFDI del mes y año actuales.
-            if (
-                fecha_timbrado_local.month != fecha_actual.month or
-                fecha_timbrado_local.year != fecha_actual.year
-            ):
-                raise CFDIError(
-                    'La fecha de timbrado no corresponde al mes '
-                    'y año actuales.'
-                )
+            #if (
+            #    fecha_timbrado_local.month != fecha_actual.month or
+            #    fecha_timbrado_local.year != fecha_actual.year
+            #):
+            #    raise CFDIError(
+            #        'La fecha de timbrado no corresponde al mes '
+            #        'y año actuales.'
+            #    )
 
             archivo.seek(0)
 
