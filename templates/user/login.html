@@ -239,31 +239,7 @@
 
     {% include 'partials/nav.html' %}
 
-    {% if request.empresa_portal == "YEROD" %}
-
-        <div class="yerod-login-page">
-            <div class="yerod-login-container p-5 text-center">
-
-                <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}"
-                     class="yerod-logo rounded-circle"
-                     alt="Yerod">
-
-                <h3 class="yerod-form-title">
-                    Sesión activa
-                </h3>
-
-                <p class="yerod-form-subtitle">
-                    Actualmente estás registrado como
-                    <strong>
-                        {{ user.first_name }}
-                        {{ user.last_name }}
-                    </strong>
-                </p>
-
-            </div>
-        </div>
-
-    {% else %}
+   
 
         <div class="vordcab-login-page">
             <div class="vordcab-login-container p-5 text-center">
@@ -287,7 +263,7 @@
             </div>
         </div>
 
-    {% endif %}
+  
 
 {% else %}
 

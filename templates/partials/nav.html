@@ -5,7 +5,7 @@
     {% if user.is_authenticated %}
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'dashboard-index' %}">
-                {% if usuario.distritos.nombre == "Yerod" %}
+                {% if request.empresa_portal == "YEROD" %}
                 <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
                 {% else %}
                 <img src="{% static 'images/SAVIA_Logo.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
