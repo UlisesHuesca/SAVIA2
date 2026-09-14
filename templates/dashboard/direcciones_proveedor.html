@@ -1,198 +1,444 @@
 {% extends 'partials/base.html' %}
+
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Proveedores{% endblock %}
-</head>
-<body>
+
+{% block title %}Direcciones del proveedor{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class = "row mt-2 bg-white">
-    <div class="col-12">
-        <div class = "card">
-                <div class="card-header">
-                    <h5>Direcciones del Proveedor: {{proveedor.razon_social}}</h5>
-                </div>
-        
-                <div class="card-body">
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{{next}}">
-                                <i class="fa-solid fa-backward"></i>
-                            </a>
-                            {% if usuario.tipo.proveedores_edicion %}
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-proveedor-direccion' proveedor.id %}">
-                                <i class="fa-solid fa-plus"> Agregar Direccion</i>
-                            </a>
-                            {% endif %}
-                        </li>
-                    </ul>
-                </div>
+{% firstof request.GET.next request.path as return_url %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                confirmButtonText: "Entendido"
+            });
+        </script>
+    {% endfor %}
+{% endif %}
+
+<div class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-eyebrow">
+                <i class="fa-solid fa-building"></i>
+                Proveedores
+            </span>
+
+            <h1 class="sv-page-title">Direcciones del proveedor</h1>
+
+            <p class="sv-page-subtitle">
+                {{ proveedor.razon_social }}
+            </p>
         </div>
-    </div>
-</div>
 
-    <div class="col-md-12 my-2">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th>Distrito</th>
-                    
-                    <th scope="col">Direccion</th>
-                    <th>Teléfono</th>
-                    <th scope="col">Contacto</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Banco</th>
-                    <th scope="col">Clabe</th>
-                    <th scope="col">Cuenta</th>
-                    <th scope="col">Financiamiento</th>
-                    
-                    <th scope="col">Dias de Crédito</th>
-                    <th scope="col">Status</th>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <th scope="col">Edición</th>
-                    {% endif %}
-                    <th>Registro</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for direccion in direcciones %}
-                <tr>
-                    <th>{{direccion.distrito.nombre}}</th>
-                    
-                    <td>{{direccion.domicilio}}</td>
-                    <td>{{direccion.telefono}}</td>
-                    <td>{{direccion.contacto}}</td>
-                    <td>{{direccion.email}}</td>
-                    <td>{{direccion.banco}}</td>
-                    <td>{{direccion.clabe}}</td>
-                    <td>{{direccion.cuenta}}</td>
-                    {% if direccion.financiamiento %}
-                    <td>Crédito</td>
-                    {% else %}
-                    <td>Contado</td>
-                    {% endif %}
-                    <td>{{direccion.dias_credito}}</td>
-                    <td>{{direccion.estatus}}</td>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <td>
-                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'edit_proveedor_direccion' direccion.id %}?next={{ request.GET.next|default:request.path }}"><i class="fa-solid fa-pen-to-square"></i></a>
-                    </td>
-                    {% endif %}
-                    <td>
-                      
-                        <a type="button" class="btn btn-outline-info" href="{% url 'generar-pdf-proveedor' direccion.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Registro"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
-                      
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center">
-            {% if proveedores_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+        <div class="sv-page-actions">
+            <a class="sv-btn sv-btn-secondary" href="{{ next|default:return_url }}">
+                <i class="fa-solid fa-arrow-left"></i>
+                Regresar
+            </a>
+
+            {% if usuario.tipo.proveedores_edicion %}
+                <a class="sv-btn sv-btn-primary" href="{% url 'add-proveedor-direccion' proveedor.id %}">
+                    <i class="fa-solid fa-plus"></i>
+                    Agregar dirección
+                </a>
             {% endif %}
+        </div>
+    </header>
 
-            {% for item in proveedores_list.paginator.page_range %}
-                {% if proveedores_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > proveedores_list.number|add:'-2' and item < proveedores_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
-                {% endif %}
-            {% endfor %}
+    <section class="sv-card">
 
-            {% if proveedores_list.paginator.num_pages > proveedores_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ proveedores_list.paginator.num_pages}}">{{proveedores_list.paginator.num_pages}}</a></li>
-            {% endif %}
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-location-dot"></i>
+                    Direcciones registradas
+                </h2>
 
-            {% if proveedores_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
-        </ul>
-    </nav>
-<!--Este es el modal-->
-        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+                <p class="sv-card-subtitle">
+                    Información comercial, bancaria y de contacto.
+                </p>
+            </div>
 
+            <div class="d-flex align-items-center gap-2">
+
+                <span class="sv-badge sv-badge-neutral">
+                    {{ direcciones|length }} registro{{ direcciones|length|pluralize }}
+                </span>
+
+                <div class="dropdown">
+                    <button class="sv-btn sv-btn-secondary dropdown-toggle" type="button" id="columnasDirecciones" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <i class="fa-solid fa-table-columns"></i>
+                        Columnas
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="columnasDirecciones" style="min-width: 280px;">
+                        <h6 class="mb-3">Mostrar columnas</h6>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="telefono" id="colTelefono">
+                            <label class="form-check-label" for="colTelefono">Teléfono</label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="contacto" id="colContacto">
+                            <label class="form-check-label" for="colContacto">Contacto</label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="email" id="colEmail">
+                            <label class="form-check-label" for="colEmail">Correo electrónico</label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="banco" id="colBanco">
+                            <label class="form-check-label" for="colBanco">Banco</label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="clabe" id="colClabe">
+                            <label class="form-check-label" for="colClabe">CLABE</label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="cuenta" id="colCuenta">
+                            <label class="form-check-label" for="colCuenta">Cuenta</label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="financiamiento" id="colFinanciamiento">
+                            <label class="form-check-label" for="colFinanciamiento">Financiamiento</label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input js-column-toggle" type="checkbox" value="dias_credito" id="colDiasCredito">
+                            <label class="form-check-label" for="colDiasCredito">Días de crédito</label>
+                        </div>
+
+                        <button class="sv-btn sv-btn-secondary w-100" type="button" id="restablecerColumnas">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Vista compacta
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
-    $("#id_familia").change(function () {
-      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
-      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
 
-      $.ajax({                       // initialize an AJAX request
-        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
-        data: {
-          'familia_id': familiaId       // add the familia id to the GET parameters
-        },
-        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
-          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+        <div class="sv-table-wrap">
+            <table class="sv-table" id="tablaDirecciones">
+                <thead>
+                    <tr>
+                        <th>Distrito</th>
+                        <th>Dirección</th>
+                        <th data-column="telefono">Teléfono</th>
+                        <th data-column="contacto">Contacto</th>
+                        <th data-column="email">Correo</th>
+                        <th data-column="banco">Banco</th>
+                        <th data-column="clabe">CLABE</th>
+                        <th data-column="cuenta">Cuenta</th>
+                        <th data-column="financiamiento">Financiamiento</th>
+                        <th data-column="dias_credito">Días de crédito</th>
+                        <th>Estado</th>
+
+                        {% if usuario.tipo.proveedores_edicion %}
+                            <th class="text-center">Editar</th>
+                        {% endif %}
+
+                        <th class="text-center">Registro</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for direccion in direcciones %}
+                        <tr>
+                            <td>
+                                <span class="sv-cell-title">
+                                    {{ direccion.distrito.nombre|default:"—" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="sv-cell-title">
+                                    {{ direccion.domicilio|default:"Sin dirección" }}
+                                </span>
+                            </td>
+
+                            <td data-column="telefono">
+                                {% if direccion.telefono %}
+                                    <i class="fa-solid fa-phone me-1 text-muted"></i>
+                                    {{ direccion.telefono }}
+                                {% else %}
+                                    <span class="sv-cell-subtitle">Sin teléfono</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-column="contacto">
+                                {{ direccion.contacto|default:"—" }}
+                            </td>
+
+                            <td data-column="email">
+                                {% if direccion.email %}
+                                    <a href="mailto:{{ direccion.email }}">
+                                        {{ direccion.email }}
+                                    </a>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">Sin correo</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-column="banco">
+                                {{ direccion.banco|default:"—" }}
+                            </td>
+
+                            <td data-column="clabe">
+                                {{ direccion.clabe|default:"—" }}
+                            </td>
+
+                            <td data-column="cuenta">
+                                {{ direccion.cuenta|default:"—" }}
+                            </td>
+
+                            <td data-column="financiamiento">
+                                {% if direccion.financiamiento %}
+                                    <span class="sv-badge sv-badge-success">
+                                        <i class="fa-solid fa-calendar-check"></i>
+                                        Crédito
+                                    </span>
+                                {% else %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        Contado
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td data-column="dias_credito">
+                                {% if direccion.financiamiento %}
+                                    {{ direccion.dias_credito|default:"0" }} días
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if direccion.estatus %}
+                                    <span class="sv-badge sv-badge-success">
+                                        {{ direccion.estatus }}
+                                    </span>
+                                {% else %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        Sin estado
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            {% if usuario.tipo.proveedores_edicion %}
+                                <td class="text-center">
+                                    <a class="sv-btn sv-btn-icon sv-btn-secondary" href="{% url 'edit_proveedor_direccion' direccion.id %}?next={{ return_url|urlencode }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar dirección" aria-label="Editar dirección">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                </td>
+                            {% endif %}
+
+                            <td class="text-center">
+                                <a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'generar-pdf-proveedor' direccion.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Generar registro PDF" aria-label="Generar registro PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="13">
+                                <div class="sv-empty-state">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                    <h3>No hay direcciones registradas</h3>
+                                    <p>Agrega una dirección comercial o bancaria para este proveedor.</p>
+
+                                    {% if usuario.tipo.proveedores_edicion %}
+                                        <a class="sv-btn sv-btn-primary" href="{% url 'add-proveedor-direccion' proveedor.id %}">
+                                            <i class="fa-solid fa-plus"></i>
+                                            Agregar dirección
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+
+    {% if proveedores_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination" aria-label="Paginación de direcciones">
+            <ul class="pagination justify-content-center mb-0">
+
+                {% if proveedores_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ proveedores_list.previous_page_number }}" aria-label="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for item in proveedores_list.paginator.page_range %}
+                    {% if proveedores_list.number == item %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ item }}</span>
+                        </li>
+                    {% elif item > proveedores_list.number|add:'-2' and item < proveedores_list.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ item }}">{{ item }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if proveedores_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ proveedores_list.next_page_number }}" aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ proveedores_list.paginator.num_pages }}" aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </nav>
+    {% endif %}
+
+</div>
+
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" hx-target="this"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const storageKey = "savia_direcciones_proveedor_columnas_v1";
+
+        const availableColumns = [
+            "telefono",
+            "contacto",
+            "email",
+            "banco",
+            "clabe",
+            "cuenta",
+            "financiamiento",
+            "dias_credito"
+        ];
+
+        const compactColumns = [
+            "telefono",
+            "contacto",
+            "email",
+            "financiamiento"
+        ];
+
+        const toggles = document.querySelectorAll(".js-column-toggle");
+        const resetButton = document.getElementById("restablecerColumnas");
+
+        function readColumns() {
+            try {
+                const savedColumns = JSON.parse(localStorage.getItem(storageKey));
+
+                if (Array.isArray(savedColumns)) {
+                    return savedColumns.filter(function (column) {
+                        return availableColumns.includes(column);
+                    });
+                }
+            } catch (error) {
+                console.warn("No fue posible leer la configuración de columnas.", error);
+            }
+
+            return compactColumns;
         }
-      });
+
+        function applyColumns(columns) {
+            availableColumns.forEach(function (column) {
+                const visible = columns.includes(column);
+
+                document.querySelectorAll('[data-column="' + column + '"]').forEach(function (cell) {
+                    cell.hidden = !visible;
+                });
+
+                const toggle = document.querySelector('.js-column-toggle[value="' + column + '"]');
+
+                if (toggle) {
+                    toggle.checked = visible;
+                }
+            });
+        }
+
+        function saveColumns() {
+            const selectedColumns = Array.from(toggles)
+                .filter(function (toggle) {
+                    return toggle.checked;
+                })
+                .map(function (toggle) {
+                    return toggle.value;
+                });
+
+            localStorage.setItem(storageKey, JSON.stringify(selectedColumns));
+            applyColumns(selectedColumns);
+        }
+
+        toggles.forEach(function (toggle) {
+            toggle.addEventListener("change", saveColumns);
+        });
+
+        if (resetButton) {
+            resetButton.addEventListener("click", function () {
+                localStorage.setItem(storageKey, JSON.stringify(compactColumns));
+                applyColumns(compactColumns);
+            });
+        }
+
+        applyColumns(readColumns());
+
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+            bootstrap.Tooltip.getOrCreateInstance(element);
+        });
+
+        const modalElement = document.getElementById("dialog");
+
+        if (modalElement && window.htmx) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+            htmx.on("htmx:beforeSwap", function (event) {
+                if (
+                    event.detail.target.id === "document" &&
+                    !event.detail.xhr.response
+                ) {
+                    modal.hide();
+                }
+            });
+
+            modalElement.addEventListener("hidden.bs.modal", function () {
+                window.location.reload();
+            });
+        }
     });
+</script>
 
-    ;(function(){
-        const modal = new bootstrap.Modal(document.getElementById('dialog'))
-
-        htmx.on('htmx:beforeSwap',(e)=>{
-            if (e.detail.target.id === "document" && !e.detail.xhr.response)
-                modal.hide()
-        })
-    })()
-
-    var myModal = document.getElementById('dialog')
-
-    myModal.addEventListener('hidden.bs.modal', function (event) {
-       setTimeout(function(){
-            location.reload();
-        },3000);
-    })
-  </script>
 {% endblock %}
-
-<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
-<!--style="background-color: #515151; color:white;"-->
-<!--style="background-color: #711F1B; color:white;"-->
