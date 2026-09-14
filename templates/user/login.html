@@ -237,32 +237,60 @@
 
 {% if user.is_authenticated %}
 
-<div class="vordcab-login-page">
+    {% include 'partials/nav.html' %}
 
-    <div class="vordcab-login-container p-5 text-center">
+    {% if request.empresa_portal == "YEROD" %}
 
-        <img
-            src="{% static 'images/Logo_Vordcab.png' %}"
-            class="vordcab-logo"
-            alt="Vordcab"
-        >
+        <div class="yerod-login-page">
+            <div class="yerod-login-container p-5 text-center">
 
-        <h3 class="vordcab-form-title">
-            Sesión activa
-        </h3>
+                <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}"
+                     class="yerod-logo rounded-circle"
+                     alt="Yerod">
 
-        <p class="text-muted">
-            Actualmente estás registrado como
-            <strong>
-                {{ user.first_name }} {{ user.last_name }}
-            </strong>
-        </p>
+                <h3 class="yerod-form-title">
+                    Sesión activa
+                </h3>
 
-    </div>
+                <p class="yerod-form-subtitle">
+                    Actualmente estás registrado como
+                    <strong>
+                        {{ user.first_name }}
+                        {{ user.last_name }}
+                    </strong>
+                </p>
 
-</div>
+            </div>
+        </div>
+
+    {% else %}
+
+        <div class="vordcab-login-page">
+            <div class="vordcab-login-container p-5 text-center">
+
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     class="vordcab-logo"
+                     alt="Vordcab">
+
+                <h3 class="vordcab-form-title">
+                    Sesión activa
+                </h3>
+
+                <p class="vordcab-form-subtitle">
+                    Actualmente estás registrado como
+                    <strong>
+                        {{ user.first_name }}
+                        {{ user.last_name }}
+                    </strong>
+                </p>
+
+            </div>
+        </div>
+
+    {% endif %}
 
 {% else %}
+
 
 <div class="vordcab-login-page">
 
