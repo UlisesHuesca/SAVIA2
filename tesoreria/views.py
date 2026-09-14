@@ -2375,6 +2375,11 @@ def control_documentos(request):
                 cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visores=usuario))
     elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
         cuentas = Cuenta.objects.filter(visores = usuario)
+    else:
+        if usuario.tipo.tesoreria:
+            cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visores=usuario))
+        elif usuario.tipo.finanzas:
+            cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visores=usuario))
    
     empresas = Empresa.objects.all()
     #Set up pagination
