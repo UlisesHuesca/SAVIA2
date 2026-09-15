@@ -315,9 +315,9 @@ def edit_activo(request, pk):
     if activo.responsable:
         responsables = empleados.get(id=activo.responsable.id )
     if perfil.tipo.nombre == "ADMIN_ACTIVOS":
-        responsables = empleados.filter(st_activo = True)
+        responsables = empleados.filter(st_activo = True).exclude(distritos__nombre__in=['BRASIL','ALTAMIRA ALTERNATIVO','Yerod','VH SECTOR 6']).exclude(tipo__nombre ="PROVEEDOR_EXTERNO")
     else:
-        responsables = empleados.filter(distritos = perfil.distritos, st_activo = True)
+        responsables = empleados.filter(distritos = perfil.distritos, st_activo = True).exclude(tipo__nombre ="PROVEEDOR_EXTERNO")
     marcas = Marca.objects.all() 
     if activo.marca:
         marca_p = marcas.get(id = activo.marca.id)
@@ -352,7 +352,8 @@ def edit_activo(request, pk):
     responsables_para_select2 = [
         {
             'id': responsable.id, 
-            'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
+            'text': f'{responsable.staff.staff.first_name} 'f'{responsable.staff.staff.last_name}',
+            'distrito':  responsable.distritos.nombre if responsable.distritos else 'Sin distrito asignado'
         } for responsable in responsables
     ]
 
@@ -802,20 +803,24 @@ def render_pdf_responsiva_activos(request, pk):
     #c.drawString(280,caja_proveedor-40,'Distrito:')
     #c.drawString(280,caja_proveedor-60,'Firma:')
     if activo.responsable:
+        print(activo.responsable.distritos)
         c.drawCentredString(200,180, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
         activo_resp = Profile.objects.filter(
-            Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), 
             distritos = activo.responsable.distritos, 
             tipo__activos = True, 
             st_activo = True
             ).first()
+        print(activo_resp)
         if activo_resp:
+            fecha_actual = datetime.now().strftime('%d/%m/%Y')
             c.drawCentredString(400,180, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
+            texto_central = f"{activo_resp.distritos.nombre} - {fecha_actual}"
         # Obtener la fecha actual
         else:
             c.drawCentredString(400,180, " " )
-        fecha_actual = datetime.now().strftime('%d/%m/%Y')
-        texto_central = f"{activo_resp.distritos.nombre} - {fecha_actual}"
+            texto_central = ""
+        
+        
         c.drawCentredString(300,150, texto_central)
     else:
         c.drawCentredString(200,180, " " )

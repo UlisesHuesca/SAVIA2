@@ -127,17 +127,17 @@
         {% endfor %}
     {% endif %}
 
-    <section class="sv-card">
+    <section class="sv-card" style="overflow: visible; position: relative; z-index: 10;">
         <div class="sv-card-header">
             <div>
                 <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i> Inventario de activos</h2>
                 <p class="sv-card-subtitle">Resultados de acuerdo con los filtros seleccionados.</p>
             </div>
-            <div class="dropdown">
+            <div class="dropup">
                 <button class="sv-btn sv-btn-outline dropdown-toggle" type="button" id="columnasActivos" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                     <i class="fa-solid fa-table-columns"></i> Columnas
                 </button>
-                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="columnasActivos">
+                <div class="dropdown-menu dropdown-menu-end p-3" style="z-index: 1080;" aria-labelledby="columnasActivos">
                     <h3 class="h6 mb-3">Mostrar columnas</h3>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="responsable" id="colResponsable"><label class="form-check-label" for="colResponsable">Responsable</label></div>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="tipo" id="colTipo"><label class="form-check-label" for="colTipo">Tipo de activo</label></div>
@@ -178,7 +178,7 @@
                         <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
                         <td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>
                         <td data-column="serie">{{ item.serie|default:"—" }}</td>
-                        <td data-column="marca">{{ item.marca|default:"NR" }}</td>
+                        <td data-column="marca">{{ item.marca.nombre|default:"NR" }}</td>
                         <td data-column="modelo">{{ item.modelo|default:"—" }}</td>
                         <td data-column="descripcion">{{ item.descripcion|default:"—" }}</td>
                         <td>
