@@ -10,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import render_to_string
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from utils.email_theme import obtener_tema_correo
 from compras.models import Compra, ArticuloComprado, Evidencia
@@ -674,17 +675,23 @@ def update_entrada(request):
 
     if action == "add":
         #if not entrada_item.cantidad:
+      
         entrada_item.cantidad = cantidad
         entrada_item.cantidad_por_surtir = cantidad
         entrada_item.referencia = referencia
-        entrada_item.save(update_fields=['cantidad','cantidad_por_surtir','referencia'])
+        
         total_entradas_pendientes = pendientes_surtir + entrada_item.cantidad
         total_entradas = suma_cantidad + entrada_item.cantidad
         print('total entradas:',total_entradas)
-        if total_entradas > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
-            messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {suma_cantidad} > {cantidad}')
+       
+        total_entradas_redondeado = Decimal(str(total_entradas)).quantize(Decimal('0.01'),rounding=ROUND_HALF_UP)
+        cantidad_comprada_redondeada =  Decimal(str(producto_comprado.cantidad)).quantize(Decimal('0.01'),rounding=ROUND_HALF_UP,)
+
+        if total_entradas_redondeado > cantidad_comprada_redondeada: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
+            messages.error(request,f'La cantidad de entradas {total_entradas} es mayor que la cantidad comprada {producto_comprado.cantidad}')
         else:
             print('cantidad pendiente:',producto_comprado.cantidad_pendiente)
+            entrada_item.save(update_fields=['cantidad','cantidad_por_surtir','referencia'])
             #print(total_entradas)
             producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas
             print('cantidad pendiente2:',producto_comprado.cantidad_pendiente)

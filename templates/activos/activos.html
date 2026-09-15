@@ -3,298 +3,400 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
+
 {% block title %}Activos{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class = "row mt-2 bg-white" id="response-div">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                <h5>Filtro de Activos</h5>
+<main class="sv-page sv-page-with-navbar" id="response-div">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Control patrimonial</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-laptop-file"></i></span>
+                Activos
+            </h1>
+            <p class="sv-page-subtitle">Consulta, administra y genera la documentación de los activos registrados.</p>
+        </div>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtros de búsqueda</h2>
+                <p class="sv-card-subtitle">Utiliza uno o varios criterios para localizar activos.</p>
+            </div>
+        </div>
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="sv-filter-grid sv-filter-grid-4">
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.eco_unidad|add_class:"form-control"|append_attr:"placeholder=ECO" }}
+                            <label for="{{ myfilter.form.eco_unidad.id_for_label }}">ECO</label>
+                        </div>
+                    </div>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.responsable|add_class:"form-control"|append_attr:"placeholder=Responsable" }}
+                            <label for="{{ myfilter.form.responsable.id_for_label }}">Responsable</label>
+                        </div>
+                    </div>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.activo|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                            <label for="{{ myfilter.form.activo.id_for_label }}">Producto</label>
+                        </div>
+                    </div>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder=Familia" }}
+                            <label for="{{ myfilter.form.familia.id_for_label }}">Familia</label>
+                        </div>
+                    </div>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-sitemap"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder=Subfamilia" }}
+                            <label for="{{ myfilter.form.subfamilia.id_for_label }}">Subfamilia</label>
+                        </div>
+                    </div>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-toggle-on"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.estatus|add_class:"form-control"|append_attr:"placeholder=Estatus" }}
+                            <label for="{{ myfilter.form.estatus.id_for_label }}">Estatus</label>
+                        </div>
+                    </div>
+                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito" }}
+                            <label for="{{ myfilter.form.distrito.id_for_label }}">Distrito</label>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class = "card-body">
-                    {% csrf_token %}
-                    <form method="GET">
-                        <div class="row g-12">
-                            <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{myfilter.form.eco_unidad|add_class:"form-control"|append_attr:"placeholder= ECO"}}
-                                        <label style="color: #121212;" for="id_id">ECO</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{myfilter.form.responsable|add_class:"form-control"|append_attr:"placeholder= Responsable"}}
-                                        <label style="color: #121212;" for="id_id">Responsable</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{myfilter.form.activo|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                                        <label style="color: #121212;" for="id_id">Producto</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
-                                <label style="color: #121212;" for="id_familia">Familia</label>
-                                </div>
-                            </div>
-                            </div>
-                                <div class="col-lg-4 col-sm-12">
-                                    <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                                    <label style="color: #121212;" for="id_familia">Subfamilia</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{myfilter.form.estatus|add_class:"form-control"|append_attr:"placeholder= Status"}}
-                                        <label style="color: #121212;" for="id_id">Estatus</label>
-                                    </div>
-                                </div>
-                            </div>
-                            {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}
-                            <div class="col-lg-4 col-sm-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
-                                        <label style="color: #121212;" for="id_id">Distrito</label>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                    
-                           
-                            <div class="col-2 mt-2">
-                                <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                            </div>
-                        </div>
-                    </form>
-                    <hr>
-                    <form method=POST>
-                        {% csrf_token %}
-                        <ul class="nav nav-pills">
-                            <li class="nav-item mx-2">
-                                <a class="btn btn-outline-info btn-block mx-auto" type="button" href="{% url 'add-activo' %}">
-                                    <i class="fa-solid fa-circle-plus">
-                                    Agregar
-                                    </i>
-                                </a>
-                            </li>
-                            <li class="nav-item mx-2">
-                                <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success">
-                                    <i class="fa-solid fa-file-excel fa-2xl"></i>
-                                </button>
-                            </li>
-                            <li class="nav-item mx-2">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'render_pdf_responsiva_activos_gerente' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva Gerente"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
-                            </li>
-                            
-                            <!--<li class="nav-item mx-2">
-                                <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="#"></a>
-                                    <a type="button" class="btn btn-outline-info" href="#">Gastos</a>
-                                    <a type="button" class="btn btn-outline-info" href="#">Viaticos</a>
-                                </div>
-                            </li>-->
-                        </ul>
-                        {% if usuario.tipo.activos == True %}
-                        <div class="text-end mt-3"> <!-- Alinea los botones a la derecha -->
-                            <a class="btn btn-outline-primary" href="{% url 'gestionar_tipo_activo' %}">
-                                <i class="fa-solid fa-plus"></i> Agregar Tipo de Activo
-                            </a>
-                            <a class="btn btn-outline-primary ms-2" href="{% url 'gestionar_marca' %}">
-                                <i class="fa-solid fa-plus"></i> Agregar Marca
-                            </a>
-                        </div>
-                        {% endif %}
-                    </form>
+                <div class="sv-actions mt-3">
+                    <button id="btnBuscar" class="sv-btn sv-btn-primary" type="submit" value="Buscar">
+                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="sv-card-footer">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="sv-page-actions">
+                    <a class="sv-btn sv-btn-primary" href="{% url 'add-activo' %}">
+                        <i class="fa-solid fa-circle-plus"></i> Agregar activo
+                    </a>
+                    <button type="submit" id="btnExcel" name="btnExcel" value="Reporte Excel" class="sv-btn sv-btn-success" title="Exportar a Excel">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                    <a class="sv-btn sv-btn-danger" href="{% url 'render_pdf_responsiva_activos_gerente' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva Gerente">
+                        <i class="fa-solid fa-file-pdf"></i> Responsiva gerente
+                    </a>
+                    {% if usuario.tipo.activos == True %}
+                    <a class="sv-btn sv-btn-outline" href="{% url 'gestionar_tipo_activo' %}">
+                        <i class="fa-solid fa-plus"></i> Tipo de activo
+                    </a>
+                    <a class="sv-btn sv-btn-outline" href="{% url 'gestionar_marca' %}">
+                        <i class="fa-solid fa-plus"></i> Marca
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% if messages %}
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i> Inventario de activos</h2>
+                <p class="sv-card-subtitle">Resultados de acuerdo con los filtros seleccionados.</p>
+            </div>
+            <div class="dropdown">
+                <button class="sv-btn sv-btn-outline dropdown-toggle" type="button" id="columnasActivos" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    <i class="fa-solid fa-table-columns"></i> Columnas
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="columnasActivos">
+                    <h3 class="h6 mb-3">Mostrar columnas</h3>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="responsable" id="colResponsable"><label class="form-check-label" for="colResponsable">Responsable</label></div>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="tipo" id="colTipo"><label class="form-check-label" for="colTipo">Tipo de activo</label></div>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="serie" id="colSerie"><label class="form-check-label" for="colSerie">Serie</label></div>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="marca" id="colMarca"><label class="form-check-label" for="colMarca">Marca</label></div>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="modelo" id="colModelo"><label class="form-check-label" for="colModelo">Modelo</label></div>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="descripcion" id="colDescripcion"><label class="form-check-label" for="colDescripcion">Descripción</label></div>
+                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}<div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="distrito" id="colDistrito"><label class="form-check-label" for="colDistrito">Distrito</label></div>{% endif %}
+                    <button class="sv-btn sv-btn-outline w-100 mt-3" type="button" id="restablecerColumnas"><i class="fa-solid fa-rotate-left"></i> Vista compacta</button>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Aquí terminan el encabezado de los filtros -->
+        <div class="sv-table-wrap">
+            <table class="sv-table" style="min-width: 0; table-layout: auto;">
+                <thead>
+                    <tr>
+                        <th scope="col">ECO</th>
+                        <th scope="col" style="width: 28%; max-width: 320px; white-space: normal;">Producto</th>
+                        <th scope="col" data-column="responsable">Responsable</th>
+                        <th scope="col" data-column="tipo">Tipo de activo</th>
+                        <th scope="col" data-column="serie">Serie</th>
+                        <th scope="col" data-column="marca">Marca</th>
+                        <th scope="col" data-column="modelo">Modelo</th>
+                        <th scope="col" data-column="descripcion">Descripción</th>
+                        <th scope="col">Estatus</th>
+                        {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}<th scope="col" data-column="distrito">Distrito</th>{% endif %}
+                        <th scope="col">QR</th>
+                        <th scope="col">Editar</th>
+                        {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}<th scope="col">Cambiar distrito</th>{% endif %}
+                        <th scope="col">Responsiva</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in activos %}
+                    <tr>
+                        <td><span class="sv-folio">{{ item.eco_unidad }}</span></td>
+                        <td style="width: 28%; max-width: 320px; white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{% if item.activo %}{{ item.activo.producto.nombre }}{% else %}—{% endif %}</span></td>
+                        <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
+                        <td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>
+                        <td data-column="serie">{{ item.serie|default:"—" }}</td>
+                        <td data-column="marca">{{ item.marca|default:"NR" }}</td>
+                        <td data-column="modelo">{{ item.modelo|default:"—" }}</td>
+                        <td data-column="descripcion">{{ item.descripcion|default:"—" }}</td>
+                        <td>
+                            {% if item.estatus.nombre == "ALTA" %}
+                                <span class="sv-badge sv-badge-success">{{ item.estatus.nombre }}</span>
+                            {% elif item.estatus.nombre == "BAJA" %}
+                                <span class="sv-badge sv-badge-danger">{{ item.estatus.nombre }}</span>
+                            {% else %}
+                                <span class="sv-badge sv-badge-warning">{{ item.estatus.nombre }}</span>
+                            {% endif %}
+                        </td>
+                        {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}<td data-column="distrito">{{ item.responsable.distritos.nombre|default:"—" }}</td>{% endif %}
+                        <td>
+                            <a class="sv-btn sv-btn-outline sv-btn-icon" href="{% url 'generate-qr' item.id %}" title="Generar QR" aria-label="Generar QR">
+                                <i class="fa-solid fa-qrcode"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'edit-activo' item.id %}" title="Editar activo" aria-label="Editar activo">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        </td>
+                        {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}
+                        <td>
+                            <a class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'cambio_distrito_activo' item.id %}" title="Cambiar distrito" aria-label="Cambiar distrito">
+                                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+                        <td>
+                            <button class="sv-btn sv-btn-danger sv-btn-icon js-preview-responsiva" type="button" data-pdf-url="{% url 'render-pdf-responsiva-activos' item.id %}" data-folio="{{ item.eco_unidad }}" title="Ver responsiva" aria-label="Ver responsiva">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="14">
+                            <div class="sv-empty">
+                                <div class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></div>
+                                <h3 class="sv-empty-title">No se encontraron activos</h3>
+                                <p class="sv-empty-text">Prueba con otros filtros o registra un nuevo activo.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
+        {% if activos.paginator.num_pages > 1 %}
+        <div class="sv-pagination-wrap">
+            <nav aria-label="Paginación de activos">
+                <ul class="sv-pagination pagination">
+                    {% if activos.has_previous %}
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url activos.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a></li>
+                    {% endif %}
+                    {% for page_number in activos.paginator.page_range %}
+                        {% if activos.number == page_number %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+                        {% elif page_number > activos.number|add:'-2' and page_number < activos.number|add:'2' %}
+                        <li class="page-item"><a class="page-link" href="{% my_url page_number 'page' request.GET.urlencode %}">{{ page_number }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if activos.has_next %}
+                    <li class="page-item"><a class="page-link" href="{% my_url activos.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url activos.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
         {% endif %}
-    </div>
+    </section>
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this"></div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Eco</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Responsable</th>
-                    <th scope="col">Tipo Activo</th>
-                    <th scope="col">Serie</th>
-                    <th scope="col">Marca</th>
-                    <th scope="col">Modelo</th>
-                    <th scope="col">Descripción</th>
-                    <th>Status</th>
-                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}
-                    <th>Distrito</th>
-                    {% endif %}
-                    <th scope="col">QR</th>
-                    <th scope="col">Editar</th>
-                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}
-                    <th scope="col">Cambio Distrito</th>
-                    {% endif %}
-                    <th>Responsiva</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in activos %}
-                <tr>
-                    <th scope="row">{{item.eco_unidad}}</th>
-                    
-                    <th scope="row">{% if item.activo %}{{item.activo.producto.nombre}} {% endif %}</th>
-
-                    <td>{{item.responsable.staff.staff.first_name}} {{item.responsable.staff.staff.last_name}}</td>
-                    <td>{{item.tipo_activo}}</td>
-                    <td>{% if item.serie %} {{item.serie}} {% endif %}</td>
-                    <td>{% if not item.marca %} NR {% else %} {{item.marca}} {% endif %}</td>
-                    <td>{% if item.modelo %} {{item.modelo}} {% endif %}</td>
-                    <td>{{item.descripcion}}</td>
-                    <td>{% if item.estatus.nombre == "ALTA" %}<span class="badge bg-primary"> {{item.estatus.nombre}}</span> {% elif item.estatus.nombre == "BAJA" %}<span class="badge bg-danger">{{item.estatus.nombre}}</span>{% else %} <span class="badge bg-warning">{{item.estatus.nombre}}</span> {% endif %}</td>
-                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}
-                    <td>{{item.responsable.distritos.nombre}}</td>
-                    {% endif %}
-                    <td>
-                        <a type="button" class="btn btn-secondary" href="{% url 'generate-qr' item.id %}">
-                            <i class="fa-solid fa-qrcode"></i>
-                        </a>
-                    </td>
-                    <td>
-                        <a type="button" class="btn btn-outline-info" href="{% url 'edit-activo' item.id %}">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </a>
-                    </td>
-                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}
-                    <td>
-                        <a type="button" class="btn btn-outline-info" title="Cambiar distrito" href="{% url 'cambio_distrito_activo' item.id %}">
-                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                        </a>
-                    </td>
-                    {% endif %}
-                    <td>
-                        <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-responsiva-activos' item.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if activos.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url activos.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
-
-                {% for item in activos.paginator.page_range %}
-                    {% if activos.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > activos.number|add:'-2' and item < activos.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if activos.paginator.num_pages > activos.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{activos.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url activos.paginator.num_pages 'page' request.GET.urlencode %}">{{activos.paginator.num_pages}}</a></li>
-                {% endif %}
-
-                {% if activos.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url activos.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url activos.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
+<div class="modal fade" id="responsivaModal" tabindex="-1" aria-labelledby="responsivaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content sv-card">
+            <div class="modal-header sv-card-header">
+                <div>
+                    <h2 class="modal-title sv-card-title" id="responsivaModalLabel"><i class="fa-solid fa-file-pdf"></i> Responsiva del activo</h2>
+                    <p class="sv-card-subtitle mb-0" id="responsivaModalSubtitle">Vista previa del documento</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="responsivaLoading" class="sv-empty">
+                    <div class="sv-empty-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                    <h3 class="sv-empty-title">Cargando responsiva</h3>
+                    <p class="sv-empty-text">Preparando la vista previa del PDF.</p>
+                </div>
+                <div id="responsivaViewer" class="ratio ratio-4x3 d-none">
+                    <iframe id="responsivaFrame" title="Vista previa de responsiva"></iframe>
+                </div>
+            </div>
+            <div class="modal-footer sv-card-footer">
+                <a class="sv-btn sv-btn-outline" id="descargarResponsiva" href="#" download><i class="fa-solid fa-download"></i> Descargar</a>
+                <button type="button" class="sv-btn sv-btn-primary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'));
+    dataSpyList.forEach(function (dataSpyEl) {
+        var scrollSpy = bootstrap.ScrollSpy.getInstance(dataSpyEl);
+        if (scrollSpy) {
+            scrollSpy.refresh();
+        }
+    });
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
+    (function () {
+        const modal = new bootstrap.Modal(document.getElementById('dialog'));
+        htmx.on('htmx:beforeSwap', (e) => {
+            if (e.detail.target.id === 'document' && !e.detail.xhr.response) {
+                modal.hide();
+            }
+        });
+    })();
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
+    var myModal = document.getElementById('dialog');
+    myModal.addEventListener('hidden.bs.modal', function () {
+        location.reload();
+    });
 
+    const columnStorageKey = 'savia_activos_columnas_v1';
+    const compactColumns = ['responsable', 'tipo'];
+    const columnToggles = Array.from(document.querySelectorAll('.js-column-toggle'));
+
+    function applyColumns(columns) {
+        const visibleColumns = new Set(columns);
+        columnToggles.forEach(function (toggle) {
+            toggle.checked = visibleColumns.has(toggle.value);
+        });
+        document.querySelectorAll('[data-column]').forEach(function (cell) {
+            cell.hidden = !visibleColumns.has(cell.dataset.column);
+        });
+    }
+
+    function getSavedColumns() {
+        try {
+            const savedColumns = JSON.parse(localStorage.getItem(columnStorageKey));
+            return Array.isArray(savedColumns) ? savedColumns : compactColumns;
+        } catch (error) {
+            return compactColumns;
+        }
+    }
+
+    applyColumns(getSavedColumns());
+
+    columnToggles.forEach(function (toggle) {
+        toggle.addEventListener('change', function () {
+            const selectedColumns = columnToggles.filter(function (item) {
+                return item.checked;
+            }).map(function (item) {
+                return item.value;
+            });
+            localStorage.setItem(columnStorageKey, JSON.stringify(selectedColumns));
+            applyColumns(selectedColumns);
+        });
+    });
+
+    document.getElementById('restablecerColumnas').addEventListener('click', function () {
+        localStorage.setItem(columnStorageKey, JSON.stringify(compactColumns));
+        applyColumns(compactColumns);
+    });
+
+    const responsivaModalElement = document.getElementById('responsivaModal');
+    const responsivaModal = new bootstrap.Modal(responsivaModalElement);
+    const responsivaFrame = document.getElementById('responsivaFrame');
+    const responsivaViewer = document.getElementById('responsivaViewer');
+    const responsivaLoading = document.getElementById('responsivaLoading');
+    const descargarResponsiva = document.getElementById('descargarResponsiva');
+    let responsivaObjectUrl = null;
+
+    document.querySelectorAll('.js-preview-responsiva').forEach(function (button) {
+        button.addEventListener('click', async function () {
+            responsivaLoading.classList.remove('d-none');
+            responsivaViewer.classList.add('d-none');
+            document.getElementById('responsivaModalSubtitle').textContent = 'Activo ECO ' + button.dataset.folio;
+            responsivaModal.show();
+
+            try {
+                const response = await fetch(button.dataset.pdfUrl, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    throw new Error('No fue posible generar la responsiva.');
+                }
+                const pdfBlob = await response.blob();
+                if (responsivaObjectUrl) {
+                    URL.revokeObjectURL(responsivaObjectUrl);
+                }
+                responsivaObjectUrl = URL.createObjectURL(pdfBlob);
+                responsivaFrame.src = responsivaObjectUrl;
+                descargarResponsiva.href = responsivaObjectUrl;
+                descargarResponsiva.download = 'responsiva_' + button.dataset.folio + '.pdf';
+                responsivaLoading.classList.add('d-none');
+                responsivaViewer.classList.remove('d-none');
+            } catch (error) {
+                responsivaModal.hide();
+                Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+            }
+        });
+    });
+
+    responsivaModalElement.addEventListener('hidden.bs.modal', function () {
+        responsivaFrame.src = '';
+        if (responsivaObjectUrl) {
+            URL.revokeObjectURL(responsivaObjectUrl);
+            responsivaObjectUrl = null;
+        }
+    });
 </script>
 {% endblock %}
-</body>
-</html>
