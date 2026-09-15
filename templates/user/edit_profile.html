@@ -2,109 +2,129 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Agregar Dirección Proveedor{% endblock %}
-</head>
-<body>
+
+{% block title %}Editar perfil{% endblock %}
+
 {% block content %}
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-
-    <div class="col-lg-7 offset-md-3">
-        <div class="card">
-            <div class="card card-header">
-                <h3>Editar Perfil: {{custom_user.staff.first_name}} </h3>
-            </div>
-            <div class="card card-body">
-                {% if error_messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{error_messages}}
-                </div>
-                {% endif %}
-                <form method="POST" id='ProductForm' enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.address|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
-                            <label for="id_lugar_partida">Domicilio</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.phone|add_class:"form-control required"|append_attr:"placeholder=Teléfono"}}
-                                <label for="id_lugar_partida">Teléfono*</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.banco|add_class:"form-control"|append_attr:"placeholder=Banco"}}
-                                <label for="id_lugar_partida">Banco*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cuenta_bancaria|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
-                                <label for="id_lugar_partida">Cuenta*</label>
-                                </div>
-                            </div>
-                        </div>
-                    
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
-                                <label for="id_lugar_partida">Clabe*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.empresa|add_class:"form-control"|append_attr:"placeholder=Empresa"}}
-                                <label for="id_lugar_partida">Empresa*</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="mb-3"> 
-                                {{form.image|add_class:"form-control"|append_attr:"placeholder=image"}}
-                            </div>
-                        </div>
-                    </div>
-
-                    <a class="btn btn-outline-secondary" href="{% url 'user-profile' %}">Cancelar</a>
-                    <input class="btn btn-outline-info" type='submit' value="Guardar">
-                </form>
-            </div>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Cuenta de usuario</span>
+            <h1 class="sv-page-title"><span class="sv-page-title-icon"><i class="fa-solid fa-user-pen"></i></span>Editar perfil</h1>
+            <p class="sv-page-subtitle">Actualiza tus datos de contacto, información bancaria y fotografía.</p>
         </div>
+        <div class="sv-page-actions">
+            <a class="sv-btn sv-btn-outline" href="{% url 'user-profile' %}"><i class="fa-solid fa-arrow-left"></i> Regresar al perfil</a>
+        </div>
+    </header>
 
-    </div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
+    <form method="POST" id="ProductForm" enctype="multipart/form-data">
+        {% csrf_token %}
 
-  </script>
+        {% if error_messages %}
+        <div class="alert alert-danger" role="alert">{{ error_messages }}</div>
+        {% endif %}
+
+        <section class="sv-card">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title"><i class="fa-solid fa-address-card"></i> Información de {{ custom_user.staff.first_name }}</h2>
+                    <p class="sv-card-subtitle">Los campos marcados con * son obligatorios.</p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-4">
+                    <div class="col-12 col-xl-8">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.address.id_for_label }}">Domicilio</label>
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    {{ form.address|add_class:"form-control required"|append_attr:"placeholder=Domicilio" }}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="{{ form.phone.id_for_label }}">Teléfono *</label>
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
+                                    {{ form.phone|add_class:"form-control required"|append_attr:"placeholder=Teléfono" }}
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="{{ form.empresa.id_for_label }}">Empresa *</label>
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                                    {{ form.empresa|add_class:"form-control"|append_attr:"placeholder=Empresa" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <section class="sv-card mt-4">
+                            <div class="sv-card-header">
+                                <div>
+                                    <h3 class="sv-card-title"><i class="fa-solid fa-building-columns"></i> Información bancaria</h3>
+                                    <p class="sv-card-subtitle">Datos utilizados para depósitos y comprobaciones.</p>
+                                </div>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label" for="{{ form.banco.id_for_label }}">Banco *</label>
+                                        <div class="sv-input-group input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-building-columns"></i></span>
+                                            {{ form.banco|add_class:"form-control"|append_attr:"placeholder=Banco" }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="{{ form.cuenta_bancaria.id_for_label }}">Cuenta *</label>
+                                        <div class="sv-input-group input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                                            {{ form.cuenta_bancaria|add_class:"form-control"|append_attr:"placeholder=Cuenta" }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="{{ form.clabe.id_for_label }}">CLABE *</label>
+                                        <div class="sv-input-group input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-credit-card"></i></span>
+                                            {{ form.clabe|add_class:"form-control"|append_attr:"placeholder=CLABE" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <section class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <div>
+                                    <h3 class="sv-card-title"><i class="fa-solid fa-camera"></i> Fotografía</h3>
+                                    <p class="sv-card-subtitle">Imagen visible en tu perfil y navegación.</p>
+                                </div>
+                            </div>
+                            <div class="sv-card-body text-center">
+                                <img class="img-thumbnail rounded-circle mb-4" src="{{ custom_user.staff.imageURL }}" alt="Fotografía actual de {{ custom_user.staff.first_name }}" width="180" height="180">
+                                <label class="form-label d-block text-start" for="{{ form.image.id_for_label }}">Cambiar fotografía</label>
+                                {{ form.image|add_class:"form-control" }}
+                                <span class="sv-cell-subtitle d-block text-start mt-2">Selecciona una imagen únicamente si deseas sustituir la actual.</span>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sv-card-footer">
+                <div class="sv-actions justify-content-end">
+                    <a class="sv-btn sv-btn-outline" href="{% url 'user-profile' %}"><i class="fa-solid fa-xmark"></i> Cancelar</a>
+                    <button class="sv-btn sv-btn-success" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+                </div>
+            </div>
+        </section>
+    </form>
+</main>
 {% endblock %}

@@ -1,67 +1,104 @@
 {% extends 'partials/base.html' %}
-{% block title %} Profile Page {% endblock %}
 {% load crispy_forms_tags %}
 
+{% block title %}Mi perfil{% endblock %}
+
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-    <div class="container">
-        <div class="col-md-6 offset-md-3">
-                <div class="card">
-                    <div class="card-header">
-                        <strong>
-                            <a class="btn btn-sm btn-outline-info float-left" href="{% url 'dashboard-index' %}">
-                                <i class="fa-solid fa-backward-step"></i>
-                            </a> Información de Perfil
-                        </strong>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                
-                                <span>
-                                <strong>{{user.first_name}} {{user.last_name}}</strong>
-                                </span>
-                                &nbsp;<a class="btn btn-sm btn-outline-info float-right" href="{% url 'edit-profile' %}">Edit</a>
-                                <hr>
-                                <table class="table bg-white table-borderless">
-                                    <tbody>
-                                        <tr>
-                                            <th scope="row">Email:</th>
-                                            <td>{{user.email}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Teléfono:</th>
-                                            <td>{{perfil.staff.phone}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Dirección:</th>
-                                            <td>{{perfil.staff.address}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Banco:</th>
-                                            <td>{{perfil.staff.banco}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Cuenta:</th>
-                                            <td>{{perfil.staff.cuenta_bancaria}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Clabe:</th>
-                                            <td>{{perfil.staff.clabe}}</td>
-                                        </tr>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Cuenta de usuario</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-user"></i></span>
+                Información de perfil
+            </h1>
+            <p class="sv-page-subtitle">Consulta tus datos personales, de contacto y bancarios registrados en SAVIA.</p>
+        </div>
+        <div class="sv-page-actions">
+            <a class="sv-btn sv-btn-outline" href="{% url 'dashboard-index' %}"><i class="fa-solid fa-arrow-left"></i> Regresar</a>
+            <a class="sv-btn sv-btn-primary" href="{% url 'edit-profile' %}"><i class="fa-solid fa-pen-to-square"></i> Editar perfil</a>
+        </div>
+    </header>
 
-                                    </tbody>
-                                </table>
-
-                            </div>
-                            <div class="col-md-4">
-                                <img class="img-thumbnail" src="{{perfil.staff.imageURL}}" alt="Imagen de Usuario">
-                            </div>
-                        </div>
+    <section class="sv-card">
+        <div class="sv-card-body">
+            <div class="row g-4 align-items-center">
+                <div class="col-12 col-md-auto text-center">
+                    <img class="img-thumbnail rounded-circle" src="{{ perfil.staff.imageURL }}" alt="Fotografía de {{ user.first_name }} {{ user.last_name }}" width="180" height="180">
+                </div>
+                <div class="col-12 col-md">
+                    <span class="sv-page-eyebrow">Usuario</span>
+                    <h2 class="sv-page-title">{{ user.first_name }} {{ user.last_name }}</h2>
+                    <p class="sv-page-subtitle mb-3">{{ user.email|default:"Correo no registrado" }}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if perfil.distritos %}<span class="sv-badge sv-badge-primary"><i class="fa-solid fa-location-dot"></i> {{ perfil.distritos.nombre }}</span>{% endif %}
+                        {% if perfil.tipo %}<span class="sv-badge sv-badge-neutral"><i class="fa-solid fa-id-badge"></i> {{ perfil.tipo.nombre }}</span>{% endif %}
+                        {% if perfil.staff.nivel %}<span class="sv-badge sv-badge-neutral"><i class="fa-solid fa-id-badge"></i> Nivel: {{ perfil.staff.nivel }}</span>{% endif %}
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-7">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-address-card"></i> Datos de contacto</h2>
+                        <p class="sv-card-subtitle">Información utilizada para comunicación y localización.</p>
+                    </div>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table table-sm" style="min-width: 0;">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><i class="fa-solid fa-envelope"></i> Correo electrónico</th>
+                                <td><span class="sv-cell-title">{{ user.email|default:"No registrado" }}</span></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fa-solid fa-phone"></i> Teléfono</th>
+                                <td>{{ perfil.staff.phone|default:"No registrado" }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fa-solid fa-location-dot"></i> Dirección</th>
+                                <td>{{ perfil.staff.address|default:"No registrada" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-building-columns"></i> Datos bancarios</h2>
+                        <p class="sv-card-subtitle">Información bancaria asociada al perfil.</p>
+                    </div>
+                </div>
+                <div class="sv-table-wrap">
+                    <table class="sv-table table-sm" style="min-width: 0;">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Banco</th>
+                                <td><span class="sv-cell-title">{{ perfil.staff.banco|default:"No registrado" }}</span></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Cuenta</th>
+                                <td>{{ perfil.staff.cuenta_bancaria|default:"No registrada" }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">CLABE</th>
+                                <td>{{ perfil.staff.clabe|default:"No registrada" }}</td>
+                            </tr>
+                 
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </div>
+</main>
 {% endblock %}
