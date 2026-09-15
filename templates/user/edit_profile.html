@@ -28,7 +28,7 @@
         <section class="sv-card">
             <div class="sv-card-header">
                 <div>
-                    <h2 class="sv-card-title"><i class="fa-solid fa-address-card"></i> Información de {{ custom_user.staff.first_name }}</h2>
+                    <h2 class="sv-card-title"><i class="fa-solid fa-address-card"></i> Información de {{ custom_user.staff.first_name }} {{custom_user.staff.last_name}}</h2>
                     <p class="sv-card-subtitle">Los campos marcados con * son obligatorios.</p>
                 </div>
             </div>
@@ -108,7 +108,9 @@
                                 </div>
                             </div>
                             <div class="sv-card-body text-center">
-                                <img class="img-thumbnail rounded-circle mb-4" src="{{ custom_user.staff.imageURL }}" alt="Fotografía actual de {{ custom_user.staff.first_name }}" width="180" height="180">
+
+                                
+                                <img class="img-thumbnail rounded-circle mb-4" src="{{ custom_user.imageURL }}" alt="Fotografía actual de {{ custom_user.first_name }}" width="180" height="180">
                                 <label class="form-label d-block text-start" for="{{ form.image.id_for_label }}">Cambiar fotografía</label>
                                 {{ form.image|add_class:"form-control" }}
                                 <span class="sv-cell-subtitle d-block text-start mt-2">Selecciona una imagen únicamente si deseas sustituir la actual.</span>
