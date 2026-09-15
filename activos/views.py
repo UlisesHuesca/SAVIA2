@@ -809,8 +809,11 @@ def render_pdf_responsiva_activos(request, pk):
             tipo__activos = True, 
             st_activo = True
             ).first()
-        c.drawCentredString(400,180, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
+        if activo_resp:
+            c.drawCentredString(400,180, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
         # Obtener la fecha actual
+        else:
+            c.drawCentredString(400,180, " " )
         fecha_actual = datetime.now().strftime('%d/%m/%Y')
         texto_central = f"{activo_resp.distritos.nombre} - {fecha_actual}"
         c.drawCentredString(300,150, texto_central)
