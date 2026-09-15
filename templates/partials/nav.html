@@ -1,80 +1,380 @@
 {% load static %}
 {% load i18n %}
 
-<nav class="navbar fixed-top navbar-dark sv-navbar">
+<style>
+
+/* =========================================================
+   NAVEGACIÓN PRINCIPAL
+========================================================= */
+
+.sv-navbar {
+    min-height: var(--sv-navbar-height);
+    padding: 8px 14px;
+    background: var(--sv-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 24px rgba(9, 25, 38, 0.18);
+}
+
+.sv-navbar-shell {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+}
+
+.sv-navbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+}
+
+.sv-navbar-logo {
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sv-navbar-brand-text {
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.sv-navbar-brand-text strong {
+    font-size: 17px;
+    letter-spacing: 0.08em;
+}
+
+.sv-navbar-brand-text small {
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.sv-navbar-context {
+    min-width: 0;
+    gap: 6px;
+}
+
+.sv-navbar-link,
+.sv-navbar-profile,
+.sv-navbar-icon-link {
+    color: rgba(255, 255, 255, 0.86);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.sv-navbar-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px !important;
+    border-radius: 9px;
+    font-weight: 600;
+}
+
+.sv-navbar-profile {
+    display: flex;
+    min-width: 0;
+    max-width: 520px;
+    flex-direction: column;
+    padding: 7px 12px !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    line-height: 1.2;
+}
+
+.sv-navbar-profile-name,
+.sv-navbar-profile-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sv-navbar-profile-name {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.sv-navbar-profile-meta {
+    margin-top: 3px;
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 11px;
+}
+
+.sv-navbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.sv-navbar-actions form {
+    margin: 0;
+}
+
+.sv-navbar-icon-link {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+button.sv-navbar-icon-link {
+    appearance: none;
+}
+
+.sv-navbar-link:hover,
+.sv-navbar-profile:hover,
+.sv-navbar-icon-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.13);
+}
+
+.sv-navbar-icon-link:hover {
+    transform: translateY(-1px);
+}
+
+.sv-navbar-toggler {
+    width: 46px;
+    height: 42px;
+    padding: 7px 9px;
+    border-color: rgba(255, 255, 255, 0.28);
+    border-radius: 10px;
+}
+
+.sv-nav-drawer {
+    z-index: 2500;
+    width: min(410px, 94vw);
+    background: #f6f8f9;
+    color: var(--sv-text);
+    border-left: 0;
+    box-shadow: -16px 0 40px rgba(15, 35, 55, 0.2);
+}
+
+.sv-nav-drawer-header {
+    padding: 18px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--sv-border);
+}
+
+.sv-nav-user {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+    color: var(--sv-text);
+    text-decoration: none;
+}
+
+.sv-nav-user #menu_image {
+    width: 48px;
+    max-width: none;
+    height: 48px;
+    margin: 0;
+    object-fit: cover;
+    border: 2px solid var(--sv-accent-soft);
+    border-radius: 50%;
+}
+
+.sv-nav-user span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.sv-nav-user strong,
+.sv-nav-user small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sv-nav-user strong {
+    font-size: 14px;
+}
+
+.sv-nav-user small {
+    margin-top: 3px;
+    color: var(--sv-text-muted);
+    font-size: 11px;
+}
+
+.sv-nav-search {
+    position: relative;
+    padding: 14px 18px 8px;
+}
+
+.sv-nav-search i {
+    position: absolute;
+    top: 50%;
+    left: 32px;
+    color: var(--sv-text-muted);
+    transform: translateY(-25%);
+    pointer-events: none;
+}
+
+.sv-nav-search input {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border: 1px solid var(--sv-border);
+    border-radius: 10px;
+    outline: 0;
+    background: #ffffff;
+    color: var(--sv-text);
+}
+
+.sv-nav-search input:focus {
+    border-color: var(--sv-accent);
+    box-shadow: 0 0 0 3px var(--sv-accent-soft);
+}
+
+.sv-nav-drawer-body {
+    padding: 10px 14px 24px;
+}
+
+.sv-nav-drawer-body .dropdown-header {
+    margin: 14px 6px 6px;
+    padding: 0;
+    color: var(--sv-accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.sv-nav-drawer-body .dropdown-divider {
+    margin: 6px 0;
+    border-color: var(--sv-border);
+}
+
+.sv-nav-drawer-body .dropdown-item {
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 2px 0;
+    padding: 9px 11px;
+    border-radius: 9px;
+    color: var(--sv-text);
+    font-size: 13px;
+    white-space: normal;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.sv-nav-drawer-body .dropdown-item:hover,
+.sv-nav-drawer-body .dropdown-item:focus {
+    color: var(--sv-accent-hover);
+    background: var(--sv-accent-soft);
+    transform: translateX(2px);
+}
+
+.sv-nav-drawer-body .dropdown-item.active {
+    color: #ffffff;
+    background: var(--sv-accent);
+}
+
+.sv-nav-drawer-body .badge {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 991.98px) {
+    .sv-navbar-shell {
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+    }
+
+    .sv-navbar-context {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sv-navbar {
+        padding-inline: 8px;
+    }
+
+    .sv-navbar-logo {
+        width: 42px;
+        height: 42px;
+    }
+
+    .sv-navbar-actions {
+        gap: 5px;
+    }
+
+    .sv-navbar-actions .sv-navbar-icon-link {
+        width: 38px;
+        height: 38px;
+    }
+}
+</style>
+
+<nav class="navbar fixed-top navbar-dark sv-navbar" aria-label="Navegación principal">
     {% if user.is_authenticated %}
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard-index' %}">
+        <div class="container-fluid sv-navbar-shell">
+            <a class="navbar-brand sv-navbar-brand" href="{% url 'dashboard-index' %}" aria-label="Ir al dashboard">
                 {% if request.empresa_portal == "YEROD" %}
-                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="48" height="48" class="sv-navbar-logo rounded-circle">
                 {% else %}
-                <img src="{% static 'images/SAVIA_Logo.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
+                <img src="{% static 'images/SAVIA_Logo.jpg' %}" alt="SAVIA Vordcab" width="48" height="48" class="sv-navbar-logo rounded-circle">
                 {% endif %}
+                <span class="sv-navbar-brand-text d-none d-lg-flex"><strong>SAVIA</strong><small>{% if request.empresa_portal == "YEROD" %}Yerod{% else %}Vordcab{% endif %}</small></span>
             </a>
-            <ul class="nav nav-pills" >
-                <li class="nav-item d-none d-md-table-cell">
-                    <a class="nav-link text-white" aria-current="page" href="{% url 'dashboard-index' %}">Dashboard</a>
+            <ul class="navbar-nav flex-row align-items-center sv-navbar-context">
+                <li class="nav-item d-none d-md-block">
+                    <a class="nav-link sv-navbar-link" href="{% url 'dashboard-index' %}"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
                 </li>
                 {% if usuario.staff.profile_set.count > 1 %}
-                <li class ="nav-item">
-                    <a class="nav-link text-white d-none d-md-table-cell" aria-current="page" href="{% url 'select-profile' %}" title = "Cambiar de perfil">
-                        <i class="fa-duotone fa-solid fa-rotate"></i>
+                <li class="nav-item d-none d-md-block">
+                    <a class="nav-link sv-navbar-icon-link" href="{% url 'select-profile' %}" title="Cambiar de perfil" aria-label="Cambiar de perfil">
+                        <i class="fa-solid fa-rotate"></i>
                     </a>
                 </li>
                 {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link text-white d-none d-md-table-cell" aria-current="page" href="{% url 'user-profile' %}">
-                        {% if usuario.sustituto %}{{usuario.sustituto.staff.first_name}} {{usuario.sustituto.staff.last_name}} |RPA: {{usuario.staff.staff.first_name}} {{usuario.staff.staff.last_name }} {% else %} {{user.first_name}} {{user.last_name}} {% endif %}| Perfil: {{usuario.distritos.nombre}} - {{usuario.tipo.nombre}}
+                <li class="nav-item d-none d-md-block">
+                    <a class="nav-link sv-navbar-profile" href="{% url 'user-profile' %}">
+                        <span class="sv-navbar-profile-name">{% if usuario.sustituto %}{{ usuario.sustituto.staff.first_name }} {{ usuario.sustituto.staff.last_name }}{% else %}{{ user.first_name }} {{ user.last_name }}{% endif %}</span>
+                        <span class="sv-navbar-profile-meta">{{ usuario.distritos.nombre }} · {{ usuario.tipo.nombre }}{% if usuario.sustituto %} · RPA: {{ usuario.staff.staff.first_name }} {{ usuario.staff.staff.last_name }}{% endif %}</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white d-md-none d-sm-table-cell" aria-current="page" href="{% url 'user-profile' %}">{{user.first_name}}</a>
+                <li class="nav-item d-md-none">
+                    <a class="nav-link sv-navbar-icon-link" href="{% url 'user-profile' %}" aria-label="Ver perfil"><i class="fa-solid fa-user"></i></a>
                 </li>
             </ul>
-            <ul class="nav justify-content-end">
-                <li class="nav-item mx-3">
-                    <form id="logout-form" method="post" action="{% url 'user-logout' %}">
-                        {% csrf_token %}
-                        <button class="btn btn-secondary" type="submit">Logout</button>
-                    </form>
-                </li>
-                <div>
-                    <div class="form-inline position-relative d-none" id="cart">
-                        <a href="{% url 'solicitud-checkout' %}">
-                        <i class="fa-duotone fa-solid fa-cart-shopping fa-2xl"></i>
-                        </a>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{productosordenados}}
-                        </span>
-                    </div>
-                    <div class="form-inline my-2 my-lg-0 position-relative d-none" id="cart2">
-                        <a href="{% url 'solicitud-checkout-resurtimiento' %}">
-                        <i class="fa-duotone fa-solid fa-cart-shopping"></i>
-                        </a>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">     
-                                {{productosordenadosres}}
-                        </span>
-                    </div>
-                </div>
-                </li>
-        </ul>
+            <div class="sv-navbar-actions">
+                <div class="position-relative d-none" id="cart"><a class="sv-navbar-icon-link" href="{% url 'solicitud-checkout' %}" aria-label="Ver solicitud"><i class="fa-solid fa-cart-shopping"></i></a><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ productosordenados }}</span></div>
+                <div class="position-relative d-none" id="cart2"><a class="sv-navbar-icon-link" href="{% url 'solicitud-checkout-resurtimiento' %}" aria-label="Ver resurtimiento"><i class="fa-solid fa-cart-shopping"></i></a><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ productosordenadosres }}</span></div>
+                <form id="logout-form" method="post" action="{% url 'user-logout' %}">{% csrf_token %}<button class="sv-navbar-icon-link" type="submit" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button></form>
             {% if request.session.selected_profile_id %} 
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
-                    <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler sv-navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
             </button>
             {% endif %}
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel" style="z-index: 2500;">
-                <div class="offcanvas-header">
-                    <div class="row">
-                    <h4 class="offcanvas-title" id="offcanvasNavbarLabel">Menú</h4>
-                        <a href="{% url 'user-profile' %}">
-                            <img class="img-thumbnail" src="{{usuario.staff.imageURL}}" alt="Imagen de Usuario" id="menu_image">   
-                        </a>
-                    </div>
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas offcanvas-end sv-nav-drawer" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header sv-nav-drawer-header">
+                    <a class="sv-nav-user" href="{% url 'user-profile' %}">
+                        <img src="{{ usuario.staff.imageURL }}" alt="Imagen de {{ user.first_name }}" id="menu_image">
+                        <span><strong>{{ user.first_name }} {{ user.last_name }}</strong><small>{{ usuario.distritos.nombre }} · {{ usuario.tipo.nombre }}</small></span>
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
                 </div>
-
-                <div class="offcanvas-body">
+                <div class="sv-nav-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="svMenuSearch" placeholder="Buscar en el menú" aria-label="Buscar en el menú">
+                </div>
+                <div class="offcanvas-body sv-nav-drawer-body" id="svMenuItems">
                     {% if usuario.tipo.configuracion == False %}
                         <div class="d-none">
                     {% else %}
@@ -685,3 +985,35 @@
     {% endif %}
         </div>
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuSearch = document.getElementById('svMenuSearch');
+        const menuItems = document.getElementById('svMenuItems');
+
+        if (menuSearch && menuItems) {
+            const menuLinks = Array.from(menuItems.querySelectorAll('a.dropdown-item'));
+
+            menuSearch.addEventListener('input', function () {
+                const query = this.value.trim().toLocaleLowerCase();
+
+                menuLinks.forEach(function (link) {
+                    const matches = !query || link.textContent.toLocaleLowerCase().includes(query);
+                    link.classList.toggle('d-none', !matches);
+                });
+            });
+
+            menuLinks.forEach(function (link) {
+                try {
+                    const linkUrl = new URL(link.href, window.location.origin);
+                    if (linkUrl.pathname === window.location.pathname) {
+                        link.classList.add('active');
+                        link.setAttribute('aria-current', 'page');
+                    }
+                } catch (error) {
+                    // Los enlaces sin URL válida conservan su comportamiento actual.
+                }
+            });
+        }
+    });
+</script>

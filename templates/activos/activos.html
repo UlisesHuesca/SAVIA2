@@ -95,7 +95,7 @@
                     <a class="sv-btn sv-btn-primary" href="{% url 'add-activo' %}">
                         <i class="fa-solid fa-circle-plus"></i> Agregar activo
                     </a>
-                    <button type="submit" id="btnExcel" name="btnExcel" value="Reporte Excel" class="sv-btn sv-btn-success" title="Exportar a Excel">
+                    <button type="submit" id="btnExcel" name="btnExcel" value="Reporte Excel" class="sv-btn sv-btn-success" title="Exportar a Excel" onclick="mostrarIndicadorCarga()">
                         <i class="fa-solid fa-file-excel"></i> Excel
                     </button>
                     <a class="sv-btn sv-btn-danger" href="{% url 'render_pdf_responsiva_activos_gerente' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva Gerente">
@@ -178,7 +178,7 @@
                         <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
                         <td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>
                         <td data-column="serie">{{ item.serie|default:"—" }}</td>
-                        <td data-column="marca">{{ item.marca.nombre|default:"NR" }}</td>
+                        <td data-column="marca">{{ item.marca|default:"NR" }}</td>
                         <td data-column="modelo">{{ item.modelo|default:"—" }}</td>
                         <td data-column="descripcion">{{ item.descripcion|default:"—" }}</td>
                         <td>
@@ -257,6 +257,24 @@
 
 <div class="modal fade" id="dialog" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this"></div>
+</div>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loadingIndicatorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
+                {% endif %}
+                <div>
+                    <strong id="loadingIndicatorLabel">Generando reporte</strong>
+                    <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="responsivaModal" tabindex="-1" aria-labelledby="responsivaModalLabel" aria-hidden="true">
@@ -398,5 +416,63 @@
             responsivaObjectUrl = null;
         }
     });
+
+    let verificacionDescargaExcel = null;
+
+    function mostrarIndicadorCarga() {
+        const btn = document.getElementById('btnExcel');
+        const loadingElement = document.getElementById('loadingIndicator');
+
+        document.cookie = 'iniciada=; Max-Age=0; path=/;';
+        document.cookie = 'descarga_iniciada=; Max-Age=0; path=/;';
+
+        bootstrap.Modal.getOrCreateInstance(loadingElement).show();
+        btn.classList.add('d-none');
+        verificarDescargaIniciada();
+    }
+
+    function verificarDescargaIniciada() {
+        if (verificacionDescargaExcel) {
+            clearInterval(verificacionDescargaExcel);
+        }
+
+        verificacionDescargaExcel = setInterval(function () {
+            const iniciada = getCookie('iniciada') === 'true';
+            const descargaIniciada = getCookie('descarga_iniciada') === 'true';
+
+            if (iniciada || descargaIniciada) {
+                finalizarIndicadorExcel();
+            }
+        }, 1000);
+    }
+
+    function finalizarIndicadorExcel() {
+        const btn = document.getElementById('btnExcel');
+        const loadingElement = document.getElementById('loadingIndicator');
+
+        bootstrap.Modal.getOrCreateInstance(loadingElement).hide();
+        btn.classList.remove('d-none');
+        document.cookie = 'iniciada=; Max-Age=0; path=/;';
+        document.cookie = 'descarga_iniciada=; Max-Age=0; path=/;';
+
+        if (verificacionDescargaExcel) {
+            clearInterval(verificacionDescargaExcel);
+            verificacionDescargaExcel = null;
+        }
+    }
+
+    function getCookie(nombre) {
+        const prefijo = nombre + '=';
+        const cookies = document.cookie.split(';');
+
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(prefijo)) {
+                return decodeURIComponent(cookie.substring(prefijo.length));
+            }
+        }
+
+        return null;
+    }
 </script>
 {% endblock %}

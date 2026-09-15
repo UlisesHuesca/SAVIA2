@@ -312,10 +312,11 @@ def edit_activo(request, pk):
         else:
             subfamilia = ''
     tipo_activo = Tipo_Activo.objects.all()
+    distritos_excluidos = ['BRASIL','ALTAMIRA ALTERNATIVO','Yerod','VH SECTOR 6','MATRIZ ALTERNATIVO']
     if activo.responsable:
         responsables = empleados.get(id=activo.responsable.id )
     if perfil.tipo.nombre == "ADMIN_ACTIVOS":
-        responsables = empleados.filter(st_activo = True).exclude(distritos__nombre__in=['BRASIL','ALTAMIRA ALTERNATIVO','Yerod','VH SECTOR 6']).exclude(tipo__nombre ="PROVEEDOR_EXTERNO")
+        responsables = empleados.filter(st_activo = True).exclude(distritos__nombre__in=distritos_excluidos).exclude(tipo__nombre ="PROVEEDOR_EXTERNO")
     else:
         responsables = empleados.filter(distritos = perfil.distritos, st_activo = True).exclude(tipo__nombre ="PROVEEDOR_EXTERNO")
     marcas = Marca.objects.all() 
@@ -458,13 +459,14 @@ def filtrar_productos_activo_distrito(request):
 def cambio_distrito_activo(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
+    distritos_excluidos = ['BRASIL','ALTAMIRA ALTERNATIVO','Yerod','VH SECTOR 6','MATRIZ ALTERNATIVO']
     if perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == 'ADMIN_ACTIVOS':
         activo = Activo.objects.get(id=pk)
         productos = Inventario.objects.filter(producto__activo=True)
         if activo.activo:
-            distritos = Distrito.objects.all().exclude(id=activo.activo.distrito.id)
+            distritos = Distrito.objects.exclude(id=activo.activo.distrito.id).exclude(nombre__in= distritos_excluidos)
         else:
-            distritos = Distrito.objects.all()
+            distritos = Distrito.objects.exclude(nombre__in=distritos_excluidos)
         distritos_para_select2 = [
             {
                 'id': distrito.id, 
@@ -649,7 +651,8 @@ def convert_activos_to_xls(activos):
 
     columna_max = len(columns)+2
 
-    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.0. UH', messages_style)
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.1.', messages_style)
+
     worksheet.write(1, columna_max - 1, 'Software desarrollado por Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
