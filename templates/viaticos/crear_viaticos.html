@@ -99,6 +99,25 @@
                                 </div>  
                             </div>
                         </div> 
+                        <div class="row d-none" id="campo-pozo">
+                            <div class="col-12">
+                                <div class="sv-input-group input-group mb-3">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-oil-well"></i>
+                                    </span>
+
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.pozo|add_class:"form-select" }}
+                                    </div>
+                                </div>
+
+                                {% if form.pozo.errors %}
+                                <div class="text-danger small mb-3">
+                                    {{ form.pozo.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         <div class="row g-3 align-items-center mb-3">
                             <div class="col-lg-3 col-12" id="Otro_Colaborador">
                                 <div class="form-check form-switch ps-5 py-2">
@@ -626,6 +645,7 @@ var datosColaboradores = {{colaboradores_para_select2|safe}}
 $(document).ready(function() {
     var viatico = document.getElementById('viatico');
     var viatico_id = viatico.getAttribute('viatico_id');
+
     
     $('#id_proyecto').select2({
         allowClear: true,
@@ -635,35 +655,48 @@ $(document).ready(function() {
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección
     });
+
     $('#id_proyecto').on('select2:select', function(e){
-        var data = e.params.data;
-        proyecto_id = data.id;
+        const data = e.params.data;
+        const proyecto_id = data.id;
         //console.log(proyecto_id)
         if (proyecto_id != ""){
             mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
-        }   
+            cargarPozos(proyecto_id)
+        } else {
+            actualizarSubproyectos([])
+            ocultarCampoPozo();
+        }
         cambio_en_formulario(data,'proyecto') 
     }); //Aquí termina el select2:select
-    var proyectoSelect = $('#id_proyecto');
-    //var subproyectoSelect = $('#id_subproyecto');
-    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
-    
-    if (datos) {
-        if (datos.proyecto){
-            var option = new Option(datos.proyecto_text, datos.proyecto, true, true);
-            proyectoSelect.append(option).trigger('change');
-            $('#id_proyecto').on('select2:unselect', function(e){
-            datos.proyecto = '';
-            datos.proyecto_text ='';
-            var $subproyectoSelect = $('#id_subproyecto');
-            datos.subproyecto = '';
-            datos.subproyecto_text ='';
-            $subproyectoSelect.empty(); // Limpiar las opciones actuales
-            localStorage.setItem("id_solicitud_" + viatico_id, JSON.stringify(datos));
-            })
+    $('#id_proyecto').on(
+        'select2:clear select2:unselect',
+        function () {
+            actualizarSubproyectos([]);
+            ocultarCampoPozo();
         }
-    }
-   
+    );
+
+    var proyectoSelect = $('#id_proyecto');
+
+    var datos = JSON.parse(localStorage.getItem('id_solicitud_' + viatico_id));
+    
+    if (datos && datos.proyecto) {
+       
+        var option = new Option(datos.proyecto_text, datos.proyecto, true, true);
+        proyectoSelect.append(option).trigger('change');
+        //mini_ajax(datos.proyecto);
+        cargarPozos(datos.proyecto, datos.pozo || '');
+        //    $('#id_proyecto').on('select2:unselect', function(e){
+        //    datos.proyecto = '';
+        //   datos.proyecto_text ='';
+        //    var $subproyectoSelect = $('#id_subproyecto');
+        //    datos.subproyecto = '';
+        //    datos.subproyecto_text ='';
+        //    $subproyectoSelect.empty(); // Limpiar las opciones actuales
+        //    localStorage.setItem("id_solicitud_" + viatico_id, JSON.stringify(datos));
+        //    })
+        } 
 });
 
 function actualizarSubproyectos(data) {
@@ -875,6 +908,103 @@ function actualizarEtiqueta() {
         etiqueta.textContent = 'Seleccione primero el tipo de transporte*'; // Opción por defecto
         icono.className = 'fa-solid fa-car'; // Icono por defecto <i class="fa-solid fa-democrat"></i>
     }
+}
+
+function ocultarCampoPozo() {
+    const campoPozo = $('#campo-pozo');
+    const selectPozo = $('#id_pozo');
+
+    campoPozo.addClass('d-none');
+
+    selectPozo
+        .empty()
+        .append(
+            new Option(
+                'Seleccione un pozo',
+                '',
+                true,
+                false
+            )
+        )
+        .val(null)
+        .trigger('change');
+}
+
+function cargarPozos(proyectoId, pozoSeleccionado = '') {
+    const campoPozo = $('#campo-pozo');
+    const selectPozo = $('#id_pozo');
+
+    ocultarCampoPozo();
+
+    if (!proyectoId) {
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'ajax-load-pozos' %}",
+        data: {
+            proyecto_id: proyectoId
+        },
+        dataType: 'json',
+
+        success: function (respuesta) {
+            if (
+                !respuesta.tiene_pozos ||
+                !respuesta.pozos ||
+                respuesta.pozos.length === 0
+            ) {
+                return;
+            }
+
+            selectPozo.empty().append(
+                new Option(
+                    'Seleccione un pozo',
+                    '',
+                    false,
+                    false
+                )
+            );
+
+            $.each(
+                respuesta.pozos,
+                function (indice, pozo) {
+                    const seleccionado =
+                        String(pozo.id) ===
+                        String(pozoSeleccionado);
+
+                    selectPozo.append(
+                        new Option(
+                            pozo.nombre,
+                            pozo.id,
+                            seleccionado,
+                            seleccionado
+                        )
+                    );
+                }
+            );
+
+            campoPozo.removeClass('d-none');
+
+            if (pozoSeleccionado) {
+                selectPozo
+                    .val(String(pozoSeleccionado))
+                    .trigger('change');
+            } else {
+                selectPozo
+                    .val(null)
+                    .trigger('change');
+            }
+        },
+
+        error: function (xhr) {
+            ocultarCampoPozo();
+
+            console.error(
+                'Error al consultar pozos:',
+                xhr.responseText
+            );
+        }
+    });
 }
 </script>
 {% endblock %}
