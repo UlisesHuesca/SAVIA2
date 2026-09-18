@@ -407,8 +407,11 @@ def edit_activo(request, pk):
     activo = Activo.objects.get(id=pk)
     if activo.activo:
         id_actual = activo.activo.id
+        distrito_ubicacion = activo.activo.distrito
     else:
         id_actual = None
+        distrito_ubicacion = None
+
     if activo.activo is None:
         familia = 'Sin producto asociado'
         subfamilia = ''
@@ -637,6 +640,7 @@ def edit_activo(request, pk):
     context = {
         'error_messages': error_messages,
         'id_actual':id_actual,
+        'distrito_ubicacion': distrito_ubicacion,
         'responsable_predeterminado':responsable_predeterminado,
         'responsables_para_select2':responsables_para_select2,
         'productos_para_select2':productos_para_select2,

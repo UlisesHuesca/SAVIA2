@@ -91,13 +91,33 @@
 
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="sv-card h-100">
-                            <div class="sv-card-body">
-                                <span class="sv-cell-subtitle">Distrito del activo</span>
-                                <strong class="sv-cell-title">{% if activo.activo %}{{ activo.activo.distrito.nombre }}{% else %}—{% endif %}</strong>
+                            <div class="sv-card-body d-flex justify-content-between align-items-center gap-3">
+                                <div>
+                                    <span class="sv-cell-subtitle">Distrito del activo</span>
+
+                                    <strong class="sv-cell-title">
+                                        {% if activo.activo %}
+                                            {{ activo.activo.distrito.nombre }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </strong>
+                                </div>
+
+                                {% if distrito_ubicacion.mapa_embed_url %}
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-outline sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#ubicacionActivoModal"
+                                    title="Ver ubicación"
+                                    aria-label="Ver ubicación">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="sv-card h-100">
                             <div class="sv-card-body">
@@ -336,6 +356,72 @@
         </div>
     </section>
 </main>
+
+{% if distrito_ubicacion.mapa_embed_url %}
+<div
+    class="modal fade"
+    id="ubicacionActivoModal"
+    tabindex="-1"
+    aria-labelledby="ubicacionActivoModalLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2
+                        class="modal-title sv-card-title"
+                        id="ubicacionActivoModalLabel">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        Ubicación del activo
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+                        Distrito {{ distrito_ubicacion.nombre }}
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="ratio ratio-16x9">
+                    <iframe
+                        src="{{ distrito_ubicacion.mapa_embed_url }}"
+                        title="Ubicación de {{ distrito_ubicacion.nombre }}"
+                        loading="lazy"
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    class="sv-btn sv-btn-outline"
+                    href="https://www.google.com/maps?q={{ distrito_ubicacion.latitud|unlocalize }},{{ distrito_ubicacion.longitud|unlocalize }}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    Abrir en Maps
+                </a>
+
+                <button
+                    type="button"
+                    class="sv-btn sv-btn-primary"
+                    data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>

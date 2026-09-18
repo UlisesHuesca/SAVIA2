@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 from simple_history.models import HistoricalRecords
 
 
@@ -100,6 +101,21 @@ class Distrito(models.Model):
     abreviado = models.CharField(max_length=3, null=True)
     responsable = models.CharField(max_length=20, null=True)
     status = models.BooleanField(default = True)
+    latitud = models.DecimalField(max_digits=10, decimal_places=7, null=True,blank=True,validators=[MinValueValidator(-90),MaxValueValidator(90),],)
+    longitud = models.DecimalField(max_digits=10,decimal_places=7,null=True,blank=True,validators=[MinValueValidator(-180),MaxValueValidator(180),],)
+
+    @property
+    def mapa_embed_url(self):
+        if self.latitud is None or self.longitud is None:
+            return None
+
+        latitud = format(self.latitud, 'f')
+        longitud = format(self.longitud, 'f')
+
+        return (
+            f'https://www.google.com/maps?'
+            f'q={latitud},{longitud}&z=15&output=embed'
+        )
 
     def __str__(self):
         return f'{self.nombre}'
