@@ -408,7 +408,8 @@ def edit_activo(request, pk):
             activo.completo = True
             activo.modified_at = date.today()
             activo.modified_by = perfil
-            activo.save()
+            
+            activo.save(update_fields = ['completo','modified_at','modified_by',])
             messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
             return redirect('activos')
         else:
