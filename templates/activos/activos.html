@@ -6,7 +6,145 @@
 
 {% block title %}Activos{% endblock %}
 
+
+
 {% block content %}
+<style>
+    /* =========================================================
+       FILTROS RÁPIDOS POR CATEGORÍA
+       ========================================================= */
+
+
+    .sv-asset-summary {
+        --summary-color: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+        padding: 1rem 1.25rem;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-left: 5px solid var(--summary-color);
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    }
+
+    .sv-asset-summary-main {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .sv-asset-summary-icon {
+        display: inline-flex;
+        flex: 0 0 52px;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        color: #ffffff;
+        font-size: 1.3rem;
+        background: var(--summary-color);
+        border-radius: 14px;
+    }
+
+    .sv-asset-summary-info {
+        min-width: 0;
+    }
+
+    .sv-asset-summary-title {
+        margin: 0 0 0.2rem;
+        color: #1e293b;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .sv-asset-summary-subtitle {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.82rem;
+    }
+
+    .sv-asset-summary-count {
+        flex: 0 0 auto;
+        text-align: right;
+    }
+
+    .sv-asset-summary-number {
+        display: block;
+        color: #0f172a;
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .sv-asset-summary-label {
+        display: block;
+        margin-top: 0.25rem;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .sv-summary-todos {
+        --summary-color: #2563eb;
+    }
+
+    .sv-summary-ubm {
+        --summary-color: #f97316;
+    }
+
+    .sv-summary-vehiculo {
+        --summary-color: #0891b2;
+    }
+
+    .sv-summary-computo {
+        --summary-color: #2563eb;
+    }
+
+    .sv-summary-celular {
+        --summary-color: #7c3aed;
+    }
+
+    .sv-summary-epp {
+        --summary-color: #16a34a;
+    }
+
+    .sv-summary-maquinaria {
+        --summary-color: #d97706;
+    }
+
+    .sv-summary-otro {
+        --summary-color: #64748b;
+    }
+
+    @media (max-width: 575.98px) {
+        .sv-asset-summary {
+            align-items: flex-start;
+        }
+
+        .sv-asset-summary-icon {
+            flex-basis: 44px;
+            width: 44px;
+            height: 44px;
+        }
+
+        .sv-asset-summary-number {
+            font-size: 1.55rem;
+        }
+
+        .sv-asset-summary-subtitle {
+            display: none;
+        }
+    }
+
+</style>
 <main class="sv-page sv-page-with-navbar" id="response-div">
     <header class="sv-page-header">
         <div>
@@ -18,6 +156,34 @@
             <p class="sv-page-subtitle">Consulta, administra y genera la documentación de los activos registrados.</p>
         </div>
     </header>
+    <section class="sv-asset-summary sv-summary-{{ resumen_activos.clase }}">
+    <div class="sv-asset-summary-main">
+        <span class="sv-asset-summary-icon">
+            <i class="fa-solid {{ resumen_activos.icono }}"></i>
+        </span>
+
+        <div class="sv-asset-summary-info">
+            <h2 class="sv-asset-summary-title">
+                {{ resumen_activos.titulo }}
+            </h2>
+
+            <p class="sv-asset-summary-subtitle">
+                {{ resumen_activos.subtitulo }}
+            </p>
+        </div>
+    </div>
+
+    <div class="sv-asset-summary-count">
+        <span class="sv-asset-summary-number">
+            {{ resumen_activos.cantidad }}
+        </span>
+
+        <span class="sv-asset-summary-label">
+            Resultados
+        </span>
+    </div>
+</section>
+
 
     <section class="sv-card">
         <div class="sv-card-header">
@@ -29,6 +195,19 @@
         <div class="sv-card-body">
             <form method="GET">
                 <div class="sv-filter-grid sv-filter-grid-4">
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </span>
+
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.categoria|add_class:"form-select" }}
+
+                            <label for="{{ myfilter.form.categoria.id_for_label }}">
+                                Categoría
+                            </label>
+                        </div>
+                    </div>
                     <div class="sv-input-group input-group">
                         <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">
@@ -50,24 +229,12 @@
                             <label for="{{ myfilter.form.activo.id_for_label }}">Producto</label>
                         </div>
                     </div>
-                    <div class="sv-input-group input-group">
-                        <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">
-                            {{ myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder=Familia" }}
-                            <label for="{{ myfilter.form.familia.id_for_label }}">Familia</label>
-                        </div>
-                    </div>
-                    <div class="sv-input-group input-group">
-                        <span class="input-group-text"><i class="fa-solid fa-sitemap"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">
-                            {{ myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder=Subfamilia" }}
-                            <label for="{{ myfilter.form.subfamilia.id_for_label }}">Subfamilia</label>
-                        </div>
-                    </div>
+                    
+                    
                     <div class="sv-input-group input-group">
                         <span class="input-group-text"><i class="fa-solid fa-toggle-on"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">
-                            {{ myfilter.form.estatus|add_class:"form-control"|append_attr:"placeholder=Estatus" }}
+                            {{ myfilter.form.estatus|add_class:"form-select"|append_attr:"placeholder=Estatus" }}
                             <label for="{{ myfilter.form.estatus.id_for_label }}">Estatus</label>
                         </div>
                     </div>

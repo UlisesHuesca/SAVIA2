@@ -3,445 +3,484 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load l10n %}
+
 {% block title %}Editar activo{% endblock %}
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
+
 {% block content %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
+<style>
+    .sv-document-info {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .sv-document-name {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sv-document-action {
+        position: relative;
+        z-index: 1;
+        flex: 0 0 auto;
+    }
+</style>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                <script>
-                Swal.fire({
-                    title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
-                    text: "{{ message|escapejs }}",
-                    icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
-                });
-                </script>
-            {% endfor %}
-        {% endif %}
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
 <main class="sv-page sv-page-with-navbar">
-<header class="sv-page-header">
-    <div>
-        <span class="sv-page-eyebrow">Control patrimonial</span>
-        <h1 class="sv-page-title"><span class="sv-page-title-icon"><i class="fa-solid fa-pen-to-square"></i></span>Editar activo</h1>
-        <p class="sv-page-subtitle">Actualiza la asignación, identificación, estado y documentación del activo.</p>
-    </div>
-    <div class="sv-page-actions">
-        <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-hashtag"></i> ECO {{ activo.eco_unidad }}</span>
-    </div>
-</header>
-
-<section class="sv-card" id="activo-form-card">
-    <form method="POST" class="post-form" enctype="multipart/form-data">
-        <div class="sv-card-header">
-            <div>
-                <h2 class="sv-card-title"><i class="fa-solid fa-circle-info"></i> Información del activo</h2>
-                <p class="sv-card-subtitle">Los campos marcados con * son obligatorios.</p>
-            </div>
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Control patrimonial</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-pen-to-square"></i></span>
+                Editar activo
+            </h1>
+            <p class="sv-page-subtitle">Actualiza la asignación, identificación, estado y documentación del activo.</p>
         </div>
-        <div class="sv-card-body">
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-hashtag"></i> ECO {{ activo.eco_unidad }}</span>
+        </div>
+    </header>
+
+    <section class="sv-card" id="activo-form-card">
+        <form method="POST" class="post-form" enctype="multipart/form-data">
             {% csrf_token %}
+
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title"><i class="fa-solid fa-circle-info"></i> Información del activo</h2>
+                    <p class="sv-card-subtitle">Los campos marcados con * son obligatorios.</p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
                 {% if error_messages %}
                 <div class="alert alert-danger" role="alert">
-                    {{error_messages}}
+                    {{ error_messages }}
                 </div>
                 {% endif %}
-            <div class="col-12">
+
                 <div class="row g-3" role="status">
-                    <div class="col-12 col-md-6 col-xl-3"><div class="sv-card h-100"><div class="sv-card-body">
-                        <span class="sv-cell-subtitle">Producto en inventario</span>
-                    {% if activo.activo %}
-                        <strong class="sv-cell-title">{{ activo.activo.producto.nombre }}</strong>
-                    {% else %}
-                        <strong class="sv-cell-title">No asignado</strong>
-                    {% endif %}
-                    </div></div></div>
-                    <div class="col-12 col-md-6 col-xl-3"><div class="sv-card h-100"><div class="sv-card-body"><span class="sv-cell-subtitle">Distrito del activo</span><strong class="sv-cell-title">{% if activo.activo %}{{ activo.activo.distrito.nombre }}{% else %}—{% endif %}</strong></div></div></div>
-                    <div class="col-12 col-md-6 col-xl-3"><div class="sv-card h-100"><div class="sv-card-body"><span class="sv-cell-subtitle">Distrito del responsable</span><strong class="sv-cell-title">{{ activo.responsable.distritos.nombre|default:"—" }}</strong></div></div></div>
-                    <div class="col-12 col-md-6 col-xl-3"><div class="sv-card h-100"><div class="sv-card-body"><span class="sv-cell-subtitle">Clasificación</span><strong class="sv-cell-title">{{ familia|default:"—" }} · {{ subfamilia|default:"—" }}</strong></div></div></div>
-                </div>
-            </div>
-            {% if activo.factura_xml %}
-            <div class="col-12">
-                <div class="sv-card mt-3" role="status">
-                    <div class="sv-card-body"><span class="sv-cell-subtitle">Proveedor</span><strong class="sv-cell-title">{{ activo.emisor.nombre }}</strong></div>
-                </div>
-            </div>
-            <div class="col-12">
-                <div class="alert alert-secondary mt-2" role="status">
-                    {{ activo.emisor.resultados }}
-                </div>
-            </div>
-            {% endif %}
-            <div class="col-12">
-                <div class="row">
-                    <div class="col-lg-8 col-sm-12">
-                        <div class="sv-input-group input-group mb-3">
-                            <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                                {{form.activo}}
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-body">
+                                <span class="sv-cell-subtitle">Producto en inventario</span>
+                                {% if activo.activo %}
+                                <strong class="sv-cell-title">{{ activo.activo.producto.nombre }}</strong>
+                                {% else %}
+                                <strong class="sv-cell-title">No asignado</strong>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div id="etiqueta_cantidad" class="col-lg-3 col-sm-12">
-                        <div class="alert alert-secondary" role="alert">
-                            <h6>Disponible:</h6><h6 id="cantidad"></h6>   
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-body">
+                                <span class="sv-cell-subtitle">Distrito del activo</span>
+                                <strong class="sv-cell-title">{% if activo.activo %}{{ activo.activo.distrito.nombre }}{% else %}—{% endif %}</strong>
+                            </div>
                         </div>
                     </div>
-                     <div id="etiqueta_distrito" class="col-lg-2 col-sm-12">
-                        <div class="alert alert-secondary" role="alert">
-                            <h6>Distrito:</h6><h6 id="lblDistrito"></h6>   
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-body">
+                                <span class="sv-cell-subtitle">Distrito del responsable</span>
+                                <strong class="sv-cell-title">{{ activo.responsable.distritos.nombre|default:"—" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-body">
+                                <span class="sv-cell-subtitle">Clasificación</span>
+                                <strong class="sv-cell-title">{{ familia|default:"—" }} · {{ subfamilia|default:"—" }}</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12">
+
+                {% if activo.factura_xml %}
+                <div class="sv-card mt-3" role="status">
+                    <div class="sv-card-body">
+                        <span class="sv-cell-subtitle">Proveedor</span>
+                        <strong class="sv-cell-title">{{ activo.emisor.nombre|default:"—" }}</strong>
+                    </div>
+                </div>
+
+                {% if activo.emisor.resultados %}
+                <div class="alert alert-secondary mt-2" role="status">
+                    {{ activo.emisor.resultados }}
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <div class="row g-2 align-items-stretch mt-4 mb-3">
+                    <div class="col-12 col-lg-9">
+                        <div class="sv-input-group input-group h-100">
+                            <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.activo }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="etiqueta_cantidad" class="col-6 col-lg-1">
+                        <div class="alert alert-secondary h-100 mb-0 px-2 py-2" role="status">
+                            <span class="sv-cell-subtitle d-block">Disponible</span>
+                            <strong id="cantidad" class="sv-cell-title">0.00</strong>
+                        </div>
+                    </div>
+
+                    <div id="etiqueta_distrito" class="col-6 col-lg-2">
+                        <div class="alert alert-secondary h-100 mb-0 px-2 py-2" role="status">
+                            <span class="sv-cell-subtitle d-block">Distrito</span>
+                            <strong id="lblDistrito" class="sv-cell-title">—</strong>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="sv-input-group input-group mb-3">
                     <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                    {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
-                    <label for="id_lugar_partida">Descripción*</label>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ form.descripcion|add_class:"form-control"|append_attr:"placeholder=Descripción" }}
+                        <label for="{{ form.descripcion.id_for_label }}">Descripción*</label>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12 col-lg-6">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.tipo_activo}}
-                        </div>
-                    </div>
-                </div> 
-                <div class="col-6">
-                    <div class="sv-input-group input-group mb-3">
-                    <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.eco_unidad|add_class:"form-control"|append_attr:"placeholder= Eco"}}
-                            <label for="id_lugar_partida">Eco*</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.responsable}}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12 col-lg-6">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-copyright"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.marca}}
-                        </div>
-                    </div>
-                </div> 
-                <div class="col-sm-12 col-lg-6" id="serie">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.serie|add_class:"form-control"|append_attr:"placeholder= Serie"}}
-                            <label for="id_lugar_partida">Serie</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-6 col-sm-12">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-sliders"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.modelo|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
-                            <label for="id_lugar_partida">Modelo</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-sm-12">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-sliders"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.estatus}}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row"> 
-                <div class="col-lg-6 col-sm-12">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-sliders"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{form.factura_interna|add_class:"form-control"|append_attr:"placeholder= Factura Interna"}}
-                        <label for="id_lugar_partida">Factura Interna</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-sm-12">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-sliders"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{form.cuenta_contable|add_class:"form-control"|append_attr:"placeholder= Cuenta Contable"}}
-                        <label for="id_lugar_partida">Cuenta Contable</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12">
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-solid fa-message"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.comentario|add_class:"form-control"}}
-                            <label for="id_lugar_partida">Observaciones*</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-         
-            <div class="row">
-                <div class="col-lg-4 col-sm-12" >
-                    <div class="sv-input-group input-group mb-3">
-                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.fecha_asignacion|add_class:"form-control"|attr:"type:text" }}
-                            <label for="id_subproyecto">Fecha Asignación:</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <section class="sv-card mt-3">
-                <div class="sv-card-header"><div><h3 class="sv-card-title"><i class="fa-solid fa-folder-open"></i> Documentación</h3><p class="sv-card-subtitle">Consulta los archivos existentes o carga los documentos pendientes.</p></div></div>
-                <div class="sv-card-body">
-                    <div class="row g-3">
-                        <div class="col-12 col-lg-6">
-                            {% if activo.factura_pdf %}
-                            <a href="{{ activo.factura_pdf.url }}" download class="sv-btn sv-btn-danger"><i class="fa-solid fa-file-pdf"></i> Factura PDF</a>
-                            {% else %}
-                            <div id="subir_pdf" class="sv-input-group input-group">{{ form.factura_pdf|add_class:"form-control" }}<label class="input-group-text" for="{{ form.factura_pdf.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> PDF</label></div>
-                            {% endif %}
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            {% if activo.factura_xml %}
-                            <a href="{{ activo.factura_xml.url }}" download class="sv-btn sv-btn-info"><i class="fa-solid fa-file-code"></i> Factura XML</a>
-                            {% else %}
-                            <div id="subir_xml" class="sv-input-group input-group">{{ form.factura_xml|add_class:"form-control" }}<label class="input-group-text" for="{{ form.factura_xml.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> XML</label></div>
-                            {% endif %}
-                        </div>
-                        <div id="subir_baja" class="col-12 d-none">
-                            <div class="sv-input-group input-group">{{ form.documento_baja|add_class:"form-control" }}<label class="input-group-text" for="{{ form.documento_baja.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> Baja PDF</label></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-        </div>
-        <div class="sv-card-footer">
-            <div class="sv-actions justify-content-end">
-                <a class="sv-btn sv-btn-outline" id="cerrar" href="{% url 'activos' %}"><i class="fa-solid fa-xmark"></i> Cerrar</a>
-                <button class="sv-btn sv-btn-success" id="crear" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
-            </div>
-        </div>
-    </form>
-</section>
-</main>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
 
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.tipo_activo }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.eco_unidad|add_class:"form-control"|append_attr:"placeholder=ECO" }}
+                                <label for="{{ form.eco_unidad.id_for_label }}">ECO*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ form.responsable }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-copyright"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.marca }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6" id="serie">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.serie|add_class:"form-control"|append_attr:"placeholder=Serie" }}
+                                <label for="{{ form.serie.id_for_label }}">Serie</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-sliders"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.modelo|add_class:"form-control"|append_attr:"placeholder=Modelo" }}
+                                <label for="{{ form.modelo.id_for_label }}">Modelo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-sliders"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.estatus }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-file-invoice"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.factura_interna|add_class:"form-control"|append_attr:"placeholder=Factura interna" }}
+                                <label for="{{ form.factura_interna.id_for_label }}">Factura interna</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-calculator"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.cuenta_contable|add_class:"form-control"|append_attr:"placeholder=Cuenta contable" }}
+                                <label for="{{ form.cuenta_contable.id_for_label }}">Cuenta contable</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-message"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ form.comentario|add_class:"form-control"|append_attr:"placeholder=Observaciones" }}
+                        <label for="{{ form.comentario.id_for_label }}">Observaciones*</label>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.fecha_asignacion|add_class:"form-control"|attr:"type:text" }}
+                                <label for="{{ form.fecha_asignacion.id_for_label }}">Fecha de asignación</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sv-actions justify-content-end">
+                    <a class="sv-btn sv-btn-outline" id="cerrar" href="{% url 'activos' %}"><i class="fa-solid fa-xmark"></i> Cerrar</a>
+                    <button class="sv-btn sv-btn-success" id="crear" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="sv-card mt-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-file-invoice"></i> Documentos</h2>
+                <p class="sv-card-subtitle">Consulta o actualiza la factura PDF y XML del activo.</p>
+            </div>
+
+            <button type="button" class="sv-btn sv-btn-primary" data-bs-toggle="modal" data-bs-target="#documentosActivoModal">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Cargar documentos
+            </button>
+        </div>
+
+        <div class="sv-card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div class="sv-document-info">
+                            <span class="sv-cell-subtitle d-block">Factura PDF</span>
+                            <strong class="sv-cell-title sv-document-name" title="{% if activo.factura_pdf %}{{ activo.factura_pdf.name|cut:'pdf_activos/' }}{% else %}Sin documento{% endif %}">
+                                {% if activo.factura_pdf %}{{ activo.factura_pdf.name|cut:"pdf_activos/" }}{% else %}Sin documento{% endif %}
+                            </strong>
+                        </div>
+
+                        {% if activo.factura_pdf %}
+                        <button type="button" id="verFacturaPdf" class="sv-btn sv-btn-danger sv-document-action" data-pdf-url="{{ activo.factura_pdf.url }}">
+                            <i class="fa-solid fa-eye"></i> Ver PDF
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div class="sv-document-info">
+                            <span class="sv-cell-subtitle d-block">Factura XML</span>
+                            <strong class="sv-cell-title sv-document-name" title="{% if activo.factura_xml %}{{ activo.factura_xml.name|cut:'xml_activos/' }}{% else %}Sin documento{% endif %}">
+                                {% if activo.factura_xml %}{{ activo.factura_xml.name|cut:"xml_activos/" }}{% else %}Sin documento{% endif %}
+                            </strong>
+                        </div>
+
+                        {% if activo.factura_xml %}
+                        <a class="sv-btn sv-btn-info sv-document-action" href="{{ activo.factura_xml.url }}" download>
+                            <i class="fa-solid fa-file-code"></i> XML
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
+</div>
+
+<div class="modal fade" id="facturaPdfModal" tabindex="-1" aria-labelledby="facturaPdfModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title sv-card-title" id="facturaPdfModalLabel">
+                        <i class="fa-solid fa-file-pdf text-danger"></i> Factura PDF
+                    </h2>
+                    <p class="sv-card-subtitle mb-0">Vista previa de la factura del activo.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="ratio ratio-4x3">
+                    <iframe id="facturaPdfFrame" title="Vista previa de la factura PDF"></iframe>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="sv-btn sv-btn-primary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<div class="modal fade" id="documentosActivoModal" tabindex="-1" aria-labelledby="documentosActivoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="documentosActivoModalLabel">
+                        <i class="fa-solid fa-file-invoice me-2"></i> Factura del activo
+                    </h2>
+                    <span class="sv-modal-subtitle">Sube, reemplaza o elimina el PDF y XML.</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
 
-<!--AJAX CALL-->
+            <form id="documentosActivoForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    {% if factura_form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for field in factura_form %}
+                            {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                        {% endfor %}
+                        {% for error in factura_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="sv-card">
+                                <div class="sv-card-body">
+                                    <label for="id_documento_factura_pdf" class="form-label fw-semibold">Factura PDF</label>
+                                    <input type="file" id="id_documento_factura_pdf" name="factura_pdf" class="form-control" accept=".pdf,application/pdf">
+                                    <span id="nombrePdfSeleccionado" class="sv-cell-subtitle sv-document-name mt-2" title="{% if activo.factura_pdf %}{{ activo.factura_pdf.name|cut:'pdf_activos/' }}{% endif %}">
+                                        {% if activo.factura_pdf %}Actual: {{ activo.factura_pdf.name|cut:"pdf_activos/" }}{% else %}Sin documento actual{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="sv-card">
+                                <div class="sv-card-body">
+                                    <label for="id_documento_factura_xml" class="form-label fw-semibold">Factura XML</label>
+                                    <input type="file" id="id_documento_factura_xml" name="factura_xml" class="form-control" accept=".xml,application/xml,text/xml">
+                                    <span id="nombreXmlSeleccionado" class="sv-cell-subtitle sv-document-name mt-2" title="{% if activo.factura_xml %}{{ activo.factura_xml.name|cut:'xml_activos/' }}{% endif %}">
+                                        {% if activo.factura_xml %}Actual: {{ activo.factura_xml.name|cut:"xml_activos/" }}{% else %}Sin documento actual{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <div class="sv-actions">
+                        {% if activo.factura_pdf %}
+                        <button type="submit" name="btn_eliminar_pdf" value="1" class="sv-btn sv-btn-danger js-confirm-delete-document" data-documento="PDF" formnovalidate>
+                            <i class="fa-solid fa-trash-can"></i> Eliminar PDF
+                        </button>
+                        {% endif %}
+
+                        {% if activo.factura_xml %}
+                        <button type="submit" name="btn_eliminar_xml" value="1" class="sv-btn sv-btn-danger js-confirm-delete-document" data-documento="XML" formnovalidate>
+                            <i class="fa-solid fa-trash-can"></i> Eliminar XML
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="sv-actions">
+                        <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" name="btn_factura" value="1" class="sv-btn sv-btn-success">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar factura
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loadingIndicatorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-body d-flex align-items-center gap-3 p-4">
+                {% if perfil.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
+                {% endif %}
+
+                <div>
+                    <strong id="loadingIndicatorLabel" class="sv-cell-title">Guardando información</strong>
+                    <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-spinner fa-spin"></i></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js"></script>
+
 <script>
-
-$(document).ready(function(){
-        // Inicializar el Datepicker en el campo de fecha
-        $('#id_fecha_asignacion').datepicker({
-            dateFormat: 'dd/mm/yy', 
-            changeMonth: true,
-            changeYear: true, // Formato compatible con Django
-            prevText: '',  // Ícono de flecha izquierda
-            nextText: '',  // Ícono de flecha derecha
-            dayNamesMin: [ "Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa" ],
-            monthNamesShort: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
-        });
-    });
-
-document.getElementById('id_tipo_activo').addEventListener('change', (event) => {
-aparecer_serie()  
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    let serie = document.getElementById('serie');
-    if (serie){
-    aparecer_serie()  
-    }
-});
-
-function aparecer_serie() {
-    var tipo_activo = document.getElementById('id_tipo_activo');
-    var serie = document.getElementById('serie');
-
-
-    if (tipo_activo.value == 1){
-        serie.classList.add('d-none')
-    }else {
-    serie.classList.remove('d-none')
-    }
-};
-
-$(document).ready(function() {
-    var datosTipoActivo = {{ tipo_activo_para_select2|safe }};
-    // Inicialización del select para tipo de activo
-    $('#id_tipo_activo').select2({
-        allowClear: true,
-        width: '100%',
-        data: datosTipoActivo,
-        placeholder: 'Tipo de Activo',
-        templateResult: formatRepo,
-        templateSelection: formatRepoSelection
-    });
-
-    // Si hay un tipo de activo predeterminado, selecciónalo
-    var tipoActivoSeleccionado = {{ tipo_activo_predeterminado|safe }};
-    if (tipoActivoSeleccionado) {
-        $('#id_tipo_activo').val(tipoActivoSeleccionado.id).trigger('change');
-    }
-});
-
-var datosProductos = {{ productos_para_select2|safe }};
-var productoPredeterminado = {{ producto_predeterminado|default:"null" |safe }};
-console.log(datosProductos)
-$(document).ready(function () {
-    var ProductoSelect = $('#id_activo');
-    var cantidadEtiqueta = $('#cantidad');
-    var form = $('.post-form'); // Selecciona el formulario
-    var productoActivoId = {{ id_actual|default:"null"|unlocalize }};
-    
-    
-    // Inicializar select2
-    ProductoSelect.select2({
-        allowClear: true,
-        width: '100%',
-        data: datosProductos,
-        placeholder: 'Producto',
-        templateResult: formatRepo,
-        templateSelection: formatRepoSelection
-    });
-    // Seleccionar producto predeterminado
-
-
-    // Evento para actualizar la cantidad
-    ProductoSelect.on('change', function () {
-        var selectedId = $(this).val(); // ID del producto seleccionado
-        var productoSeleccionado = datosProductos.find(producto => producto.id == selectedId);
-        console.log(productoSeleccionado)
-        if (productoSeleccionado) {
-            cantidadEtiqueta.text(productoSeleccionado.cantidad || 0);
-            $('#lblDistrito').text(productoSeleccionado.distrito || '-');
-        } else {
-            console.log("No se encontró el producto seleccionado en los datos.");
-            cantidadEtiqueta.text(0);
-            $('#lblDistrito').text('-');
-        }
-    });
-
-
-
-    // Inicializar la cantidad al cargar la página
-    ProductoSelect.trigger('change');
-});
-
-
-var datosResponsable= {{ responsables_para_select2|safe }};
-var responsablePredeterminado = {{ responsable_predeterminado|default:"null" |safe }};
-
-$(document).ready(function() {
-    var ResponsableSelect = $('#id_responsable');
-    // Inicializar select2 con datos predefinidos
-    ResponsableSelect.select2({
-        allowClear: true,
-        width: '100%',
-        data: datosResponsable,
-        placeholder: 'Responsable',
-        templateResult: formatResponsable,
-        templateSelection: formatResponsableSelection
-    });
-    if (responsablePredeterminado != null){
-        ResponsableSelect.val(responsablePredeterminado.id).trigger('change');
-    }
-});
-
-var datosMarca= {{ marcas_para_select2|safe }};
-var MarcaPredeterminada = {{ marca_predeterminada|safe }};
-
-$(document).ready(function() {
-    var marcaSelect = $('#id_marca');
-    $('#id_marca').select2({
-        allowClear: true,
-        width: '100%',
-        data: datosMarca,
-        placeholder: 'Marca',
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    if (MarcaPredeterminada !== null) {
-       marcaSelect.val(MarcaPredeterminada.id).trigger('change');
-    }
-});
-
-$(document).ready(function() {
-    //var marcaSelect = $('#id_responsable');
-    $('#id_estatus').select2({
-        allowClear: true,
-        width: '100%',
-        placeholder: 'Status',
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    })// Vincular al evento 'select2:select' que se dispara cuando un elemento es seleccionado
-    $('#id_estatus').on('select2:select', function (e) {
-        var data = e.params.data;
-        console.log(data)
-        if (data.text === 'BAJA') {
-            $('#subir_baja').removeClass('row d-none');
-        } else {
-            $('#subir_baja').addClass('row d-none');
-        }
-    });
-
-    // Vincular al evento 'select2:unselect' que se dispara cuando un elemento es deseleccionado
-    $('#id_estatus').on('select2:unselect', function (e) {
-        $('#subir_baja').addClass('d-none');
-    });
-
-    // Si necesitas gatillar el cambio inmediatamente en caso de que haya un valor preseleccionado:
-    $('#id_estatus').trigger('change');
-});
-
-function formatRepo (repo) {
+function formatRepo(repo) {
     if (repo.loading) {
         return repo.text;
     }
 
-    var $container = $("<div class='select2-result-repository clearfix'>" +
-        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
-
-    $container.find(".select2-result-repository__title").text(repo.text);
-    
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
+    const container = $("<div class='select2-result-repository clearfix'><div class='form-control form-control-lg select2-result-repository__title'></div></div>");
+    container.find('.select2-result-repository__title').text(repo.text);
+    return container;
 }
+
 function formatRepoSelection(repo) {
     return repo.text || repo.id;
 }
@@ -451,23 +490,262 @@ function formatResponsable(repo) {
         return repo.text;
     }
 
-    var $container = $('<div></div>');
-    $('<span class="sv-cell-title"></span>')
-        .text(repo.text || '')
-        .appendTo($container);
-
-    $('<span class="sv-cell-subtitle"></span>')
-        .text(repo.distrito || 'Sin distrito asignado')
-        .appendTo($container);
-
-    return $container;
+    const container = $('<div></div>');
+    $('<span class="sv-cell-title"></span>').text(repo.text || '').appendTo(container);
+    $('<span class="sv-cell-subtitle"></span>').text(repo.distrito || 'Sin distrito asignado').appendTo(container);
+    return container;
 }
 
 function formatResponsableSelection(repo) {
-    var nombre = repo.text || repo.id || '';
+    const nombre = repo.text || repo.id || '';
     return repo.distrito ? nombre + ' · ' + repo.distrito : nombre;
 }
 
+function aparecerSerie() {
+    const tipoActivo = document.getElementById('id_tipo_activo');
+    const serie = document.getElementById('serie');
 
+    if (!tipoActivo || !serie) {
+        return;
+    }
+
+    serie.classList.toggle('d-none', tipoActivo.value === '1');
+}
+
+$(document).ready(function () {
+    $('#id_fecha_asignacion').datepicker({
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        changeYear: true,
+        prevText: '',
+        nextText: '',
+        dayNamesMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+        monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    });
+
+    const datosTipoActivo = {{ tipo_activo_para_select2|safe }};
+    const tipoActivoSeleccionado = {{ tipo_activo_predeterminado|default:"null"|safe }};
+
+    $('#id_tipo_activo').select2({
+        allowClear: true,
+        width: '100%',
+        data: datosTipoActivo,
+        placeholder: 'Tipo de activo',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    if (tipoActivoSeleccionado) {
+        $('#id_tipo_activo').val(tipoActivoSeleccionado.id).trigger('change');
+    }
+
+    $('#id_tipo_activo').on('change', aparecerSerie);
+    aparecerSerie();
+
+    const datosProductos = {{ productos_para_select2|safe }};
+    const productoSelect = $('#id_activo');
+    const cantidadEtiqueta = $('#cantidad');
+
+    productoSelect.select2({
+        allowClear: true,
+        width: '100%',
+        data: datosProductos,
+        placeholder: 'Producto',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    productoSelect.on('change', function () {
+        const selectedId = $(this).val();
+        const productoSeleccionado = datosProductos.find(producto => producto.id == selectedId);
+
+        if (productoSeleccionado) {
+            cantidadEtiqueta.text(productoSeleccionado.cantidad || 0);
+            $('#lblDistrito').text(productoSeleccionado.distrito || '—');
+        } else {
+            cantidadEtiqueta.text(0);
+            $('#lblDistrito').text('—');
+        }
+    });
+
+    productoSelect.trigger('change');
+
+    const datosResponsable = {{ responsables_para_select2|safe }};
+    const responsablePredeterminado = {{ responsable_predeterminado|default:"null"|safe }};
+    const responsableSelect = $('#id_responsable');
+
+    responsableSelect.select2({
+        allowClear: true,
+        width: '100%',
+        data: datosResponsable,
+        placeholder: 'Responsable',
+        templateResult: formatResponsable,
+        templateSelection: formatResponsableSelection
+    });
+
+    if (responsablePredeterminado) {
+        responsableSelect.val(responsablePredeterminado.id).trigger('change');
+    }
+
+    const datosMarca = {{ marcas_para_select2|safe }};
+    const marcaPredeterminada = {{ marca_predeterminada|default:"null"|safe }};
+    const marcaSelect = $('#id_marca');
+
+    marcaSelect.select2({
+        allowClear: true,
+        width: '100%',
+        data: datosMarca,
+        placeholder: 'Marca',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    if (marcaPredeterminada) {
+        marcaSelect.val(marcaPredeterminada.id).trigger('change');
+    }
+
+    $('#id_estatus').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Estatus',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const loadingElement = document.getElementById('loadingIndicator');
+    const loadingTitle = document.getElementById('loadingIndicatorLabel');
+    const formularioActivo = document.querySelector('.post-form');
+    const formularioDocumentos = document.getElementById('documentosActivoForm');
+
+    function mostrarIndicadorCarga(titulo) {
+        if (!loadingElement) {
+            return;
+        }
+
+        if (loadingTitle) {
+            loadingTitle.textContent = titulo || 'Guardando información';
+        }
+
+        bootstrap.Modal.getOrCreateInstance(loadingElement).show();
+    }
+
+    if (formularioActivo) {
+        formularioActivo.addEventListener('submit', function () {
+            mostrarIndicadorCarga('Guardando activo');
+        });
+    }
+
+    if (formularioDocumentos) {
+        formularioDocumentos.addEventListener('submit', function (event) {
+            const boton = event.submitter;
+
+            if (boton && boton.classList.contains('js-confirm-delete-document')) {
+                return;
+            }
+
+            const documentosModalElement = document.getElementById('documentosActivoModal');
+            const documentosModal = documentosModalElement
+                ? bootstrap.Modal.getInstance(documentosModalElement)
+                : null;
+
+            if (documentosModal) {
+                documentosModal.hide();
+            }
+
+            mostrarIndicadorCarga('Guardando factura');
+        });
+    }
+
+    const inputPdf = document.getElementById('id_documento_factura_pdf');
+    const inputXml = document.getElementById('id_documento_factura_xml');
+    const nombrePdf = document.getElementById('nombrePdfSeleccionado');
+    const nombreXml = document.getElementById('nombreXmlSeleccionado');
+
+    if (inputPdf && nombrePdf) {
+        inputPdf.addEventListener('change', function () {
+            if (this.files.length) {
+                nombrePdf.textContent = 'Nuevo archivo: ' + this.files[0].name;
+                nombrePdf.title = this.files[0].name;
+            }
+        });
+    }
+
+    if (inputXml && nombreXml) {
+        inputXml.addEventListener('change', function () {
+            if (this.files.length) {
+                nombreXml.textContent = 'Nuevo archivo: ' + this.files[0].name;
+                nombreXml.title = this.files[0].name;
+            }
+        });
+    }
+
+    const verFacturaPdf = document.getElementById('verFacturaPdf');
+    const facturaPdfFrame = document.getElementById('facturaPdfFrame');
+    const facturaPdfModalElement = document.getElementById('facturaPdfModal');
+
+    if (verFacturaPdf && facturaPdfFrame && facturaPdfModalElement) {
+        const facturaPdfModal = bootstrap.Modal.getOrCreateInstance(facturaPdfModalElement);
+
+        verFacturaPdf.addEventListener('click', function () {
+            facturaPdfFrame.src = this.dataset.pdfUrl;
+            facturaPdfModal.show();
+        });
+
+        facturaPdfModalElement.addEventListener('hidden.bs.modal', function () {
+            facturaPdfFrame.src = '';
+        });
+    }
+
+    document.querySelectorAll('.js-confirm-delete-document').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            const formulario = button.form;
+            const nombreBoton = button.name;
+            const documento = button.dataset.documento;
+
+            Swal.fire({
+                title: 'Eliminar factura ' + documento,
+                text: 'El archivo se eliminará definitivamente.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            }).then(function (resultado) {
+                if (!resultado.isConfirmed) {
+                    return;
+                }
+
+                const accion = document.createElement('input');
+                accion.type = 'hidden';
+                accion.name = nombreBoton;
+                accion.value = '1';
+                formulario.appendChild(accion);
+
+                const documentosModalElement = document.getElementById('documentosActivoModal');
+                const documentosModal = documentosModalElement
+                    ? bootstrap.Modal.getInstance(documentosModalElement)
+                    : null;
+
+                if (documentosModal) {
+                    documentosModal.hide();
+                }
+
+                mostrarIndicadorCarga('Eliminando factura ' + documento);
+                formulario.submit();
+            });
+        });
+    });
+
+    {% if factura_form.errors %}
+    const documentosModalElement = document.getElementById('documentosActivoModal');
+    if (documentosModalElement) {
+        bootstrap.Modal.getOrCreateInstance(documentosModalElement).show();
+    }
+    {% endif %}
+});
 </script>
 {% endblock %}

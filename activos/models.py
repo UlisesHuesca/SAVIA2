@@ -3,11 +3,16 @@ from dashboard.models import Inventario, Marca
 from user.models import Profile
 
 # Create your models here.
-class Tipo_Activo(models.Model):
-    nombre = models.CharField(max_length= 100, null=True)
+class Categoria_Activo(models.Model):
+    nombre = models.CharField(max_length= 50, unique=True)
+
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Categoria de activo'
+        verbose_name_plural = 'Categorias de activos'
 
     def __str__(self):
-        return f'{self.nombre}'
+        return self.nombre
 
 
 

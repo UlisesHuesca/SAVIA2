@@ -2,350 +2,255 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Autorización OC{% endblock %}
-</head>
-<body>
+
+{% block title %}Autorización de OC{% endblock %}
+
 {% block content %}
-<div class="modal-content sv-modal">
+<div class="modal-content" style="max-height: calc(100vh - 2rem); overflow: hidden;">
     <input type="hidden" id="compra" value="{{ compra.id }}">
 
-    <div class="modal-header">
+    <div class="modal-header flex-shrink-0">
         <div>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                
-                    <i class="fa-solid fa-file-circle-check me-2"></i>
-                    Orden de compra
-                
-               
-                <span class="sv-badge sv-badge-primary">
-                    {{ compra.folio }}
-                </span>
-                </h1>
-            </div>
-            <span class="sv-modal-subtitle">Solicitud: {{ compra.req.orden.folio }} · Requisición:{{ compra.req.folio }}</span>
+            <span class="sv-page-eyebrow">Revisión de compra</span>
+            <h2 class="modal-title sv-card-title"><i class="fa-solid fa-file-circle-check text-success"></i> Autorizar OC {{ compra.folio }}</h2>
+            <p class="sv-card-subtitle mb-0">Solicitud {{ compra.req.orden.folio }} · Requisición {{ compra.req.folio }}</p>
         </div>
         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
     </div>
 
-    <div class="modal-body">
-        <div class="sv-card-body p-0">
-            <div class="sv-table-wrap">
-                <table class="sv-table">
-                    <thead>
-                        <tr>
-                            <th>Concepto</th>
-                            <th>Información</th>
-                        </tr>
-                    </thead>
+    <form action="{% url 'autorizar-oc1' compra.id %}" method="POST" style="display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden;">
+        {% csrf_token %}
 
-                    <tbody>
-                        <tr>
-                            <td><span class="sv-cell-title">Proyecto</span></td>
-                            <td>{{ compra.req.orden.proyecto.nombre }}</td>
-                        </tr>
+        <div class="modal-body" style="min-height: 0; overflow-y: auto; overscroll-behavior: contain;">
+            <div class="row g-4">
+                <div class="col-12 col-lg-5">
+                    <section class="sv-card h-100">
+                        <div class="sv-card-header">
+                            <div>
+                                <h3 class="sv-card-title"><i class="fa-solid fa-chart-pie"></i> Resumen de la compra</h3>
+                                <p class="sv-card-subtitle">Información general, presupuesto e importes.</p>
+                            </div>
+                        </div>
 
-                        <tr>
-                            <td><span class="sv-cell-title">Subproyecto</span></td>
-                            <td>{{ compra.req.orden.subproyecto.nombre }}</td>
-                        </tr>
+                        <div class="sv-table-wrap">
+                            <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 44%;">
+                                    <col style="width: 56%;">
+                                </colgroup>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Proyecto</th>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{{ compra.req.orden.proyecto.nombre }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Subproyecto</th>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{{ compra.req.orden.subproyecto.nombre }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Presupuesto</th>
+                                        <td><strong id="subproyecto" value="{{ compra.req.orden.subproyecto }}">$ {{ compra.req.orden.subproyecto.presupuesto|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Solicitud</th>
+                                        <td><span class="badge rounded-pill bg-dark">{{ compra.req.orden.folio }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Solicitante</th>
+                                        <td style="white-space: normal;">{{ compra.req.orden.staff.staff.staff.first_name }} {{ compra.req.orden.staff.staff.staff.last_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Activo</th>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;">
+                                            {% if compra.req.orden.activo and compra.req.orden.activo.eco_unidad %}
+                                            {{ compra.req.orden.activo.eco_unidad }} · {{ compra.req.orden.activo.descripcion }}
+                                            {% else %}
+                                            <span class="sv-cell-subtitle fst-italic">No registrado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Proveedor</th>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;"><i class="fa-solid fa-building me-1"></i>{{ compra.proveedor }}</td>
+                                    </tr>
+                                    {% if compra.deposito_comprador %}
+                                    <tr>
+                                        <th scope="row">Forma de depósito</th>
+                                        <td style="white-space: normal;">
+                                            <span class="badge rounded-pill bg-warning text-dark"><i class="fa-solid fa-triangle-exclamation"></i> Colaborador</span>
+                                            <span class="d-block mt-2">{{ compra.deposito_colaborador.staff.first_name }} {{ compra.deposito_colaborador.staff.last_name }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if compra.opciones_condiciones %}
+                                    <tr>
+                                        <th scope="row">Opciones y condiciones</th>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;">{{ compra.opciones_condiciones }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
 
-                        <tr>
-                            <td>
-                                <span class="sv-cell-title">
-                                    Presupuesto del subproyecto
-                                </span>
-                            </td>
-                            <td>
-                                <strong
-                                    id="subproyecto"
-                                    value="{{ compra.req.orden.subproyecto }}"
-                                >
-                                    $ {{ compra.req.orden.subproyecto.presupuesto|floatformat:2 }}
-                                </strong>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><span class="sv-cell-title">Solicitud</span></td>
-                            <td>
-                                <span class="sv-badge sv-badge-dark">
-                                    {{ compra.req.orden.folio }}
-                                </span>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><span class="sv-cell-title">Solicitante</span></td>
-                            <td>
-                                {{ compra.req.orden.staff.staff.staff.first_name }}
-                                {{ compra.req.orden.staff.staff.staff.last_name }}
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><span class="sv-cell-title">Activo</span></td>
-                            <td>
-                                {% if compra.req.orden.activo and compra.req.orden.activo.eco_unidad %}
-                                    {{ compra.req.orden.activo.eco_unidad }}
-                                    ·
-                                    {{ compra.req.orden.activo.descripcion }}
-                                {% else %}
-                                    <span class="sv-cell-subtitle fst-italic">
-                                        No registrado
-                                    </span>
+                        {% if compra.req.orden.comentario and compra.comentario_solicitud or compra.comentarios %}
+                        <div class="sv-card-body border-top">
+                            <div class="d-grid gap-3">
+                                {% if compra.req.orden.comentario and compra.comentario_solicitud %}
+                                <div>
+                                    <span class="sv-cell-subtitle">Comentario de la solicitud</span>
+                                    <p class="mb-0 mt-1">{{ compra.req.orden.comentario }}</p>
+                                </div>
                                 {% endif %}
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><span class="sv-cell-title">Proveedor</span></td>
-                            <td>
-                                <i class="fa-solid fa-building me-1"></i>
-                                {{ compra.proveedor }}
-                            </td>
-                        </tr>
-
-                        {% if compra.deposito_comprador %}
-                        <tr>
-                            <td>
-                                <span class="sv-cell-title">
-                                    Forma de depósito
-                                </span>
-                            </td>
-                            <td>
-                                <span class="sv-badge sv-badge-warning">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                    Depósito a colaborador
-                                </span>
-
-                                <span class="d-block mt-2">
-                                    {{ compra.deposito_colaborador.staff.first_name }}
-                                    {{ compra.deposito_colaborador.staff.last_name }}
-                                </span>
-                            </td>
-                        </tr>
+                                {% if compra.comentarios %}
+                                <div>
+                                    <span class="sv-cell-subtitle">Comentarios de compra</span>
+                                    <p class="mb-0 mt-1">{{ compra.comentarios }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endif %}
 
-                        {% if compra.opciones_condiciones %}
-                        <tr>
-                            <td>
-                                <span class="sv-cell-title">
-                                    Opciones y condiciones
-                                </span>
-                            </td>
-                            <td>{{ compra.opciones_condiciones }}</td>
-                        </tr>
+                        <div class="sv-card-header border-top">
+                            <div>
+                                <h3 class="sv-card-title"><i class="fa-solid fa-calculator"></i> Importes</h3>
+                            </div>
+                        </div>
+                        <div class="sv-table-wrap">
+                            <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 58%;">
+                                    <col style="width: 42%;">
+                                </colgroup>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Subtotal de la OC</th>
+                                        <td class="text-end"><strong>$ {{ costo_oc|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    {% if compra.costo_fletes > 0 %}
+                                    <tr>
+                                        <th scope="row">Costo de fletes</th>
+                                        <td class="text-end"><strong>$ {{ compra.costo_fletes|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if compra.impuestos_adicionales %}
+                                    <tr>
+                                        <th scope="row">Impuestos adicionales</th>
+                                        <td class="text-end"><strong>$ {{ compra.impuestos_adicionales|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <th scope="row">Gasto del subproyecto</th>
+                                        <td class="text-end"><span class="badge rounded-pill bg-light text-dark border">{{ porcentaje }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Presupuesto remanente *</th>
+                                        <td class="text-end"><strong id="resta">$ {{ resta|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Total de la OC</th>
+                                        <td class="text-end"><span class="sv-folio">$ {{ compra.costo_plus_adicionales|floatformat:2 }}</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if tipo_cambio %}
+                        <div class="sv-card-body border-top">
+                            <div class="alert alert-info mb-0" role="note">
+                                <i class="fa-solid fa-dollar-sign me-2"></i>
+                                Esta OC fue realizada en dólares. El valor mostrado se estima con un tipo de cambio de <strong>{{ tipo_cambio }}</strong>.
+                            </div>
+                        </div>
                         {% endif %}
+                    </section>
+                </div>
 
-                        {% if compra.req.orden.comentario and compra.comentario_solicitud %}
-                        <tr>
-                            <td>
-                                <span class="sv-cell-title">
-                                    Comentario de la solicitud
-                                </span>
-                            </td>
-                            <td>{{ compra.req.orden.comentario }}</td>
-                        </tr>
-                        {% endif %}
+                <div class="col-12 col-lg-7">
+                    <section class="sv-card h-100">
+                        <div class="sv-card-header">
+                            <div>
+                                <h3 class="sv-card-title"><i class="fa-solid fa-boxes-stacked"></i> Productos de la orden</h3>
+                                <p class="sv-card-subtitle">Partidas incluidas en la orden de compra.</p>
+                            </div>
+                            <span class="badge rounded-pill bg-dark">{{ productos|length }} producto{{ productos|length|pluralize }}</span>
+                        </div>
 
-                        {% if compra.comentarios %}
-                        <tr>
-                            <td>
-                                <span class="sv-cell-title">
-                                    Comentarios de compra
-                                </span>
-                            </td>
-                            <td>{{ compra.comentarios }}</td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="sv-card-body p-0">
-       
-        <div class="sv-table-wrap">
-            <table class="sv-table">
-                <thead>
-                    <tr>
-                        <th>Concepto</th>
-                        <th class="text-end">Importe</th>
-                    </tr>
-                </thead>
+                        <div class="sv-table-wrap">
+                            <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 13%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 36%;">
+                                    <col style="width: 14%;">
+                                    <col style="width: 19%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Imagen</th>
+                                        <th scope="col">Código</th>
+                                        <th scope="col">Artículo</th>
+                                        <th scope="col" class="text-end">Cantidad</th>
+                                        <th scope="col" class="text-end">P. unitario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for producto in productos %}
+                                    <tr>
+                                        <td><img class="row-image rounded" src="{{ producto.producto.producto.articulos.producto.producto.imageURL }}" alt="" aria-hidden="true" width="56" height="56" loading="lazy" onerror="this.style.display='none'"></td>
+                                        <td style="overflow-wrap: anywhere;"><span class="sv-cell-title">{{ producto.producto.producto.articulos.producto.producto.codigo }}</span></td>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{{ producto.producto.producto.articulos.producto.producto.nombre }}</span></td>
+                                        <td class="text-end"><span class="badge rounded-pill bg-light text-dark border">{{ producto.cantidad }}</span></td>
+                                        <td class="text-end"><strong>$ {{ producto.precio_unitario|floatformat:2 }}</strong></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5">
+                                            <div class="p-5 text-center">
+                                                <i class="fa-solid fa-box-open fa-2x mb-3"></i>
+                                                <h4>No hay productos</h4>
+                                                <p class="sv-cell-subtitle mb-0">La orden de compra no contiene partidas.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
 
-                <tbody>
-                    <tr>
-                        <td><span class="sv-cell-title">Subtotal de la OC</span></td>
-                        <td class="text-end">
-                            <strong>$ {{ costo_oc|floatformat:2 }}</strong>
-                        </td>
-                    </tr>
+                <div class="col-12">
+                    <section class="sv-card border-success">
+                        <div class="sv-card-header">
+                            <div>
+                                <h3 class="sv-card-title text-success"><i class="fa-regular fa-comment"></i> Comentario de autorización</h3>
+                                <p class="sv-card-subtitle">Puedes agregar una observación antes de autorizar la orden.</p>
+                            </div>
+                        </div>
+                        <div class="sv-card-body">
+                            <label class="form-label" for="{{ form.comentarios.id_for_label }}">Comentario</label>
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-comment"></i></span>
+                                {{ form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentario de autorización" }}
+                            </div>
 
-                    {% if compra.costo_fletes > 0 %}
-                    <tr>
-                        <td><span class="sv-cell-title">Costo de fletes</span></td>
-                        <td class="text-end">
-                            <strong>
-                                $ {{ compra.costo_fletes|floatformat:2 }}
-                            </strong>
-                        </td>
-                    </tr>
-                    {% endif %}
-
-                    {% if compra.impuestos_adicionales %}
-                    <tr>
-                        <td>
-                            <span class="sv-cell-title">
-                                Impuestos adicionales
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <strong>
-                                $ {{ compra.impuestos_adicionales|floatformat:2 }}
-                            </strong>
-                        </td>
-                    </tr>
-                    {% endif %}
-
-                    <tr>
-                        <td>
-                            <span class="sv-cell-title">
-                                Gasto respecto al subproyecto
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <strong>{{ porcentaje }}</strong>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>
-                            <span class="sv-cell-title">
-                                Presupuesto remanente*
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <strong id="resta">
-                                $ {{ resta|floatformat:2 }}
-                            </strong>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>
-                            <span class="sv-cell-title">
-                                Total de la OC
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <span class="sv-folio">
-                                $ {{ compra.costo_plus_adicionales|floatformat:2 }}
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-            {% if tipo_cambio %}
-            <div class="p-3">
-                <div class="sv-notice m-0">
-                    <i class="fa-solid fa-dollar-sign"></i>
-
-                    <span>
-                        Esta OC fue realizada en dólares. Su valor estimado utiliza
-                        el tipo de cambio <strong>{{ tipo_cambio }}</strong>.
-                    </span>
+                            <div class="alert alert-success mt-4 mb-0" role="alert">
+                                <i class="fa-solid fa-circle-check me-2"></i>
+                                <strong>¿Confirmas la autorización de la OC {{ compra.folio }}?</strong>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
-            {% endif %}
         </div>
-   
 
-      
-
-        <section class="sv-card">
-            <div class="sv-card-header">
-                <h3 class="sv-card-title"><i class="fa-solid fa-boxes-stacked"></i>Productos de la orden</h3>
-                <span class="sv-badge sv-badge-primary">
-                    {{ productos|length }} producto{{ productos|length|pluralize }}
-                </span>
+        <div class="modal-footer flex-shrink-0">
+            <div class="sv-actions">
+                <button class="sv-btn sv-btn-outline" type="button" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+                <button class="sv-btn sv-btn-success" type="submit"><i class="fa-solid fa-check"></i> Autorizar OC</button>
             </div>
-
-            <div class="sv-table-wrap">
-                <table class="sv-table">
-                    <thead>
-                        <tr>
-                            <th>Imagen</th>
-                            <th>Código</th>
-                            <th>Artículo</th>
-                            <th>Cantidad</th>
-                            <th>Precio unitario</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for producto in productos %}
-                        <tr>
-                            <td>
-                                <img
-                                    class="sv-product-image"
-                                    src="{{ producto.producto.producto.articulos.producto.producto.imageURL }}"
-                                    alt="{{ producto.producto.producto.articulos.producto.producto.nombre }}"
-                                    width="64"
-                                    height="64"
-                                    loading="lazy"
-                                >
-                            </td>
-                            <td><span class="sv-folio">{{ producto.producto.producto.articulos.producto.producto.codigo }}</span></td>
-                            <td><span class="sv-cell-title">{{ producto.producto.producto.articulos.producto.producto.nombre }}</span></td>
-                            <td><span class="sv-badge sv-badge-success">{{ producto.cantidad }}</span></td>
-                            <td><strong>$ {{ producto.precio_unitario|floatformat:2 }}</strong></td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="sv-empty">
-                                <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
-                                <span class="sv-empty-title">No hay productos registrados</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <div class="modal-footer">
-        <form class="w-100" action="{% url 'autorizar-oc1' compra.id %}" method="POST">
-            {% csrf_token %}
-
-            <div class="sv-input-group mb-3">
-                <span class="input-group-text"><i class="fa-regular fa-comment"></i></span>
-                <div class="form-floating">
-                    {{ form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
-                    <label for="{{ form.comentarios.id_for_label }}">Comentario de autorización</label>
-                </div>
-            </div>
-
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
-                <strong>¿Autorizar la orden de compra OC-{{ compra.folio }}?</strong>
-
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
-                        <i class="fa-solid fa-xmark"></i>Cerrar
-                    </button>
-                    <button class="sv-btn sv-btn-success" type="submit">
-                        <i class="fa-solid fa-check"></i>Autorizar OC
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
-
 {% endblock %}
-
-</body>
-</html>

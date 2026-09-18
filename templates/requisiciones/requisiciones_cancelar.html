@@ -2,99 +2,157 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Cancelar{% endblock %}
-</head>
-<body>
+
+{% block title %}Cancelar requisición{% endblock %}
+
 {% block content %}
-<div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Cancelar Requisición: {{requis.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-            <table class='table table-dark table striped'>
-                <thead>
-                    <tr>
-                    <th scope="col">Concepto</th>
-                    <th scope="col">Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="col">Proyecto:</th>
-                        <th scope="col">{{requis.orden.proyecto.nombre}}</th>
-                    </tr>
-                    <tr>
-                        <th scope="col">Subproyecto:</th>
-                        <th scope="col">{{requis.orden.subproyecto.nombre}}</th>
-                    </tr>
-                    <tr>
-                        <th scope="col">Presupuesto Subproyecto:</th>
-                        <th scope="col" id="subproyecto" value={{requis.orden.subproyecto}}>${{requis.orden.subproyecto.presupuesto|floatformat:2}}</th>
-                    </tr>
-                    <tr>
-                        <th>Comentario Usuario:</th>
-                        <th>{{requis.orden.comentario}}</th>
-                    </tr>   
-                    <tr>
-                        <th scope="col">Comentario Almacén:</th>
-                        <th scope="col">{% if requis.comentario_compras %} {{requis.comentario_compras}} {%else%} No hay comentarios {% endif %}</th>
-                    </tr>
-                </tbody>
-            </table>
-            <div class='box-element-2 table-responsive-sm'>
-                <table class='table table-dark table striped'>
-                    <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Artículo</th>
-                        <th>Cantidad</th>
-                        <th>Comentario</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for producto in productos %}
-                    <tr>
-                        <td>{{producto.producto.articulos.producto.producto.codigo}}</td>
-                        <td>{{producto.producto.articulos.producto.producto.nombre}}</td>
-                        <td><p class='quantity'>{{producto.cantidad}}</p></td>
-                        <td>{% if producto.producto.articulos.comentario %}{{producto.producto.articulos.comentario}} {% endif %}</td>
-
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+    <div class="modal-content" style="max-height: calc(100vh - 2rem); overflow: hidden;">
+        <div class="modal-header flex-shrink-0">
+            <div>
+                <span class="sv-page-eyebrow">Acción administrativa</span>
+                <h2 class="modal-title sv-card-title"><i class="fa-solid fa-ban text-danger"></i> Cancelar requisición {{ requis.folio }}</h2>
+                <p class="sv-card-subtitle mb-0">Revisa la información y registra el motivo antes de confirmar.</p>
             </div>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
 
-        <div class="modal-footer">
-            <form action="{% url 'requisicion-cancelar' requis.id %}" method=POST>
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-lg-12 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.comentario_rechazo|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                                <label style="color: #121212;" for="id_impuestos_adicionales">Comentario</label>
+        <form action="{% url 'requisicion-cancelar' requis.id %}" method="POST" style="display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden;">
+            {% csrf_token %}
+
+            <div class="modal-body" style="min-height: 0; overflow-y: auto; overscroll-behavior: contain;">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-5">
+                        <section class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <div>
+                                    <h3 class="sv-card-title"><i class="fa-solid fa-diagram-project"></i> Información de la requisición</h3>
+                                    <p class="sv-card-subtitle">Proyecto y comentarios relacionados.</p>
+                                </div>
                             </div>
-                        </div>
+
+                            <div class="sv-table-wrap">
+                                <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                                    <colgroup>
+                                        <col style="width: 42%;">
+                                        <col style="width: 58%;">
+                                    </colgroup>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Proyecto</th>
+                                            <td style="white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{{ requis.orden.proyecto.nombre }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Subproyecto</th>
+                                            <td style="white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{{ requis.orden.subproyecto.nombre }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Presupuesto</th>
+                                            <td id="subproyecto" value="{{ requis.orden.subproyecto }}"><strong>$ {{ requis.orden.subproyecto.presupuesto|floatformat:2 }}</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="sv-card-body border-top">
+                                <div class="d-grid gap-3">
+                                    <div>
+                                        <span class="sv-cell-subtitle">Comentario del usuario</span>
+                                        <p class="mb-0 mt-1">{{ requis.orden.comentario|default:"No hay comentarios." }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="sv-cell-subtitle">Comentario de almacén</span>
+                                        <p class="mb-0 mt-1">{% if requis.comentario_compras %}{{ requis.comentario_compras }}{% else %}No hay comentarios.{% endif %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-12 col-lg-7">
+                        <section class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <div>
+                                    <h3 class="sv-card-title"><i class="fa-solid fa-boxes-stacked"></i> Productos incluidos</h3>
+                                    <p class="sv-card-subtitle">Artículos que dejarán de procesarse al cancelar.</p>
+                                </div>
+                                <span class="badge rounded-pill bg-dark">{{ productos|length }} producto{{ productos|length|pluralize }}</span>
+                            </div>
+
+                            <div class="sv-table-wrap">
+                                <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                                    <colgroup>
+                                        <col style="width: 18%;">
+                                        <col style="width: 37%;">
+                                        <col style="width: 15%;">
+                                        <col style="width: 30%;">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Código</th>
+                                            <th scope="col">Artículo</th>
+                                            <th scope="col" class="text-end">Cantidad</th>
+                                            <th scope="col">Comentario</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for producto in productos %}
+                                        <tr>
+                                            <td style="overflow-wrap: anywhere;"><span class="sv-cell-title">{{ producto.producto.articulos.producto.producto.codigo }}</span></td>
+                                            <td style="white-space: normal; overflow-wrap: anywhere;">{{ producto.producto.articulos.producto.producto.nombre }}</td>
+                                            <td class="text-end"><span class="badge rounded-pill bg-light text-dark border">{{ producto.cantidad }}</span></td>
+                                            <td style="white-space: normal; overflow-wrap: anywhere;">{% if producto.producto.articulos.comentario %}{{ producto.producto.articulos.comentario }}{% else %}<span class="sv-cell-subtitle">Sin comentario</span>{% endif %}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="p-5 text-center">
+                                                    <i class="fa-solid fa-box-open fa-2x mb-3"></i>
+                                                    <h4>No hay productos</h4>
+                                                    <p class="sv-cell-subtitle mb-0">La requisición no contiene artículos.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-12">
+                        <section class="sv-card border-danger">
+                            <div class="sv-card-header">
+                                <div>
+                                    <h3 class="sv-card-title text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Motivo de cancelación</h3>
+                                    <p class="sv-card-subtitle">Explica brevemente por qué se cancela esta requisición.</p>
+                                </div>
+                            </div>
+                            <div class="sv-card-body">
+                                <label class="form-label" for="{{ form.comentario_rechazo.id_for_label }}">Comentario</label>
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
+                                    {{ form.comentario_rechazo|add_class:"form-control"|append_attr:"placeholder=Escribe el motivo de la cancelación" }}
+                                </div>
+
+                                <div class="alert alert-danger mt-4 mb-0" role="alert">
+                                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                                    <strong>¿Confirmas la cancelación de la requisición {{ requis.folio }}?</strong>
+                                    Esta acción detendrá su procesamiento.
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
-                <div class="row">
-                    <h6>¿Estás seguro que quieres cancelar la requisición: {{requis.folio}}?</h6>
-                    <button id="cancel-btn" class="btn btn-danger" type="submit">Cancelar</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+            <div class="modal-footer flex-shrink-0">
+                <div class="sv-actions">
+                    <button class="sv-btn sv-btn-outline" type="button" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+                    <button class="sv-btn sv-btn-danger" id="cancel-btn" type="submit"><i class="fa-solid fa-ban"></i> Cancelar requisición</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
-
 {% endblock %}
-</body>
-</html>

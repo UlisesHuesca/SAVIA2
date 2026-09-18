@@ -56,15 +56,19 @@
                     </h2>
                 </div>
                 <div class="sv-table-wrap">
-                    <table class="sv-table table-sm">
+                    <table class="sv-table table-sm" style="width: 100%; min-width: 0; table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 35%;">
+                            <col style="width: 65%;">
+                        </colgroup>
                         <tbody>
                             <tr>
                                 <th>{% if usuario.distritos.nombre == "BRASIL" %}Razão social{% else %}Razón social{% endif %}</th>
-                                <td><span class="sv-cell-title">{{ compra.proveedor.nombre.razon_social }}</span></td>
+                                <td style="white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{{ compra.proveedor.nombre.razon_social }}</span></td>
                             </tr>
                             <tr>
                                 <th>{% if usuario.distritos.nombre == "BRASIL" %}CNPJ/CPF{% else %}RFC{% endif %}</th>
-                                <td>{{ compra.proveedor.nombre.rfc }}</td>
+                                <td style="white-space: normal; overflow-wrap: anywhere;">{{ compra.proveedor.nombre.rfc }}</td>
                             </tr>
                         </tbody>
                     </table>

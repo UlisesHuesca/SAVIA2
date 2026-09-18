@@ -251,18 +251,19 @@ class Estatus_Activo(models.Model):
         return f'{self.nombre}'
 
 class Activo(models.Model):
-    nombre = models.CharField(max_length= 20, null =True)
-    folio = models.CharField(max_length= 50, null=True)
-    activo = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
-    descripcion = models.CharField(max_length = 50, null = True)
-    tipo_activo = models.ForeignKey(Tipo_Activo, on_delete=models.CASCADE, null=True)
-    responsable = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True)
-    creado_por = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='Creado_por')
-    eco_unidad = models.CharField(max_length=50, null=True)
-    serie = models.CharField(max_length=30, null=True)
-    cuenta_contable = models.CharField(max_length=25, null=True)
-    factura_interna = models.CharField(max_length=15, null=True)
-    descripcion = models.CharField(max_length=100, null=True)
+    nombre = models.CharField(max_length= 20, null =True) #Dentro de diseño de activos
+    folio = models.CharField(max_length= 50, null=True)   #Dentro de diseño de activos
+    activo = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True) #Dentro de diseño de activos
+    categoria = models.ForeignKey('activos.Categoria_Activo',on_delete=models.PROTECT,null=True,blank=True,related_name='activos',)
+    #descripcion = models.CharField(max_length = 50, null = True)
+    tipo_activo = models.ForeignKey(Tipo_Activo, on_delete=models.CASCADE, null=True) #Dentro de diseño de activos
+    responsable = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True) #Dentro de diseño de activos
+    creado_por = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='Creado_por') #Dentro de diseño de activos
+    eco_unidad = models.CharField(max_length=50, null=True) #Dentro de diseño de activos
+    serie = models.CharField(max_length=30, null=True)      #Dentro de diseño de activos
+    cuenta_contable = models.CharField(max_length=25, null=True)  #Dentro de diseño de activos
+    factura_interna = models.CharField(max_length=15, null=True)  #Dentro de diseño de activos
+    descripcion = models.CharField(max_length=100, null=True)     #Dentro de diseño de activos
     marca = models.ForeignKey(Marca, on_delete = models.CASCADE, null=True, blank=True)
     modelo = models.CharField(max_length=30, null=True, blank=True)
     codigo = models.CharField(max_length=10, null=True)

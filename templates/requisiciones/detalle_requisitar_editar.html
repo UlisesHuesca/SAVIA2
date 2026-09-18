@@ -3,380 +3,334 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load l10n %}
-<html>
-<head>
-{% block title %} Requisición {% endblock %}
-</head>
-<body>
+
+{% block title %}Requisición {{ folio }}{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-<hr>
-<hr>
-<hr>
-<hr>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class="row">
-<div class="col-lg-6">
-    <div class="card">
-            <div class="card-header">
-            <!-- Aqui es el encabezado de los filtros -->
-                <h5 id="requi" orden={{orden.id|unlocalize}} target={{requi.id|unlocalize}}>Requisición: {{folio}}</h5>
-            </div>
-            <form method="POST" onsubmit="mostrarIndicadorCarga();">
-            <div class="card-body">
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Compras · Requisiciones</span>
+            <h1 class="sv-page-title" id="requi" orden="{{ orden.id|unlocalize }}" target="{{ requi.id|unlocalize }}"><span class="sv-page-title-icon"><i class="fa-solid fa-clipboard-list"></i></span>Requisición {{ folio }}</h1>
+            <p class="sv-page-subtitle">Selecciona los productos de la solicitud y prepara la requisición para su creación.</p>
+        </div>
+        <div class="sv-page-actions">
+            <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}"><i class="fa-solid fa-arrow-left"></i> Regresar</a>
+        </div>
+    </header>
+
+    {% if error_messages %}
+    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-circle-exclamation me-2"></i>{{ error_messages }}</div>
+    {% endif %}
+
+    <div class="row g-4 align-items-start">
+        <div class="col-12 col-xl-5">
+            <form method="POST" onsubmit="return mostrarIndicadorCarga(this);">
                 {% csrf_token %}
-                {% if error_messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{error_messages}}
-                </div>
-                {% endif %}
-                <div class="alert alert-primary" role="alert">
-                    {% if orden.comentario %} Comentario Solicitud: {{orden.comentario}} {%else%} No hay comentario de la solicitud {% endif %}
-                </div>
-                <div class="form-check form-switch col-auto mx-4" id="c_super" valor = "{{tag}}">
-                    <input class="form-check-input" type="checkbox" role="switch" id="Comment_Super">
-                    {% if orden.superintendente.tipo.nombre == "Subdirector" %}
-                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Subdirector</label>
-                    {% else %}
-                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Superintendente</label>
-                    {% endif %}
-                </div>
-                <div class="col-12 d-none" id="comentario_super">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.comentario_super|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                <section class="sv-card">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title"><i class="fa-solid fa-message"></i> Comentarios</h2>
+                            <p class="sv-card-subtitle">Agrega indicaciones para las siguientes etapas, cuando sea necesario.</p>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-check form-switch col-auto mx-4" id="Dof" valor = "{{tag}}">
-                    <input class="form-check-input" type="checkbox" role="switch" id="Comment_Compras">
-                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Comprador</label>
-                </div>
-                <div class="col-12 d-none" id="comentario_compras">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.comentario_compras|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                    <div class="sv-card-body">
+                        <div class="alert alert-primary mb-4" role="alert">
+                            <strong>Comentario de la solicitud</strong>
+                            <div class="mt-1">{% if orden.comentario %}{{ orden.comentario }}{% else %}No hay comentario de la solicitud.{% endif %}</div>
                         </div>
-                    </div>
-                </div>
 
-               
-            </div>
-            <div class="card-footer text-end">
-                {% if productos_requisitados %}
-                <button type="submit" id="crear" name="crear" class="btn btn-outline-success col-2">Crear</button>
-                {% else %}
-                <button type="submit" id="crear" name="crear" class="btn btn-outline-success col-2 d-none">Crear</button>
-                {% endif %}
-                <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
-            </div>
-            </form>
-        
-    </div>
-</div>
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    
-                        <div id="input_subproyecto" class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                                <label  style="font-size:10px; color:gray;" for="superintendente">Productos*</label>
-                                <select style="font-size:16px" class="form-select form-select-sm" placeholder="Productos" id="producto">
-                                    <option style="color:gray;" value="" selected disabled>Productos</option>
-                                    {% for producto in productos %}
-                                    <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar|unlocalize}}" comentario="{{producto.articulos.comentario}}">
-                                        {{producto.articulos.producto.producto.nombre}}
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                        <div class="d-grid gap-4">
+                            <div>
+                                <div class="form-check form-switch" id="c_super" valor="{{ tag }}">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="Comment_Super">
+                                    <label class="form-check-label" for="Comment_Super">
+                                        {% if orden.superintendente.tipo.nombre == "Subdirector" %}Comentario para Subdirector{% else %}Comentario para Superintendente{% endif %}
+                                    </label>
+                                </div>
+                                <div class="d-none mt-3" id="comentario_super">
+                                    <label class="form-label" for="{{ form.comentario_super.id_for_label }}">Comentario *</label>
+                                    <div class="sv-input-group input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
+                                        {{ form.comentario_super|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="form-check form-switch" id="Dof" valor="{{ tag }}">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="Comment_Compras">
+                                    <label class="form-check-label" for="Comment_Compras">Comentario para Comprador</label>
+                                </div>
+                                <div class="d-none mt-3" id="comentario_compras">
+                                    <label class="form-label" for="{{ form.comentario_compras.id_for_label }}">Comentario *</label>
+                                    <div class="sv-input-group input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-comment"></i></span>
+                                        {{ form.comentario_compras|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    
-                </div>
-                <div class="row">
-                    <div id="etiqueta_solicitado" class="col-4">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                    </div>
+
+                    <div class="sv-card-footer">
+                        <div class="sv-actions justify-content-end">
+                            <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}"><i class="fa-solid fa-xmark"></i> Salir</a>
+                            {% if productos_requisitados %}
+                            <button class="sv-btn sv-btn-success" type="submit" id="crear" name="crear"><i class="fa-solid fa-file-circle-plus"></i> Crear requisición</button>
+                            {% else %}
+                            <button class="sv-btn sv-btn-success d-none" type="submit" id="crear" name="crear"><i class="fa-solid fa-file-circle-plus"></i> Crear requisición</button>
+                            {% endif %}
                         </div>
                     </div>
-                
-                    <div id="etiqueta_solicitado" class="col-8">
-                        <div class="alert alert-secondary" role="alert">
-                        <h6>Comentario:</h6><h6 style="color: #121212;" id="comentario"></h6>   
+                </section>
+            </form>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <section class="sv-card">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-boxes-stacked"></i> Productos de la requisición</h2>
+                        <p class="sv-card-subtitle">Selecciona un producto para consultar la cantidad solicitada y agregarlo.</p>
+                    </div>
+                    <span class="badge rounded-pill bg-dark">{{ productos_requisitados|length }} agregado{{ productos_requisitados|length|pluralize }}</span>
+                </div>
+
+                <div class="sv-card-body">
+                    <label class="form-label" for="producto">Producto *</label>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                        <select class="form-select" id="producto" aria-label="Seleccionar producto">
+                            <option value="" selected disabled>Selecciona un producto</option>
+                            {% for producto in productos %}
+                            <option target="{{ producto.id|unlocalize }}" producto="{{ producto.producto.articulos.producto }}" cantidad="{{ producto.cantidad_requisitar|unlocalize }}" comentario="{{ producto.articulos.comentario }}">{{ producto.articulos.producto.producto.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mt-1 align-items-stretch">
+                        <div class="col-12 col-md-4">
+                            <div class="alert alert-secondary h-100 mb-0" role="status">
+                                <span class="sv-cell-subtitle">Cantidad solicitada</span>
+                                <strong class="d-block fs-5 mt-1" id="solicitado">—</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="alert alert-secondary h-100 mb-0" role="status">
+                                <span class="sv-cell-subtitle">Comentario del producto</span>
+                                <strong class="d-block mt-1" id="comentario">—</strong>
+                            </div>
                         </div>
                     </div>
-                        
-                    <div class="col-sm-1">
-                        <a class="btn btn-outline-success update-purchase" id="update-requi" name="requi">
-                        <i class="fa-solid fa-circle-plus"></i>
-                        </a>
+
+                    <div class="sv-actions justify-content-end mt-3">
+                        <button class="sv-btn sv-btn-success update-purchase" type="button" id="update-requi" name="requi"><i class="fa-solid fa-plus"></i> Agregar producto</button>
                     </div>
                 </div>
-                <hr>
-                <div class ="table-responsive-sm">
-                    <table class="table table-light table-striped table-hover mx-2">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Producto</th>
-                            <th scope="col">Cantidad</th>
-                            <th>Comentario</th>
-                            <th scope="col" class="col-sm-2">Eliminar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mytbl">
-                        {% for product in productos_requisitados%}
-                        <tr>
-                            <td scope="col">{{product.producto.articulos.producto.producto.codigo}}</td>
-                            <td scope="col">{{product.producto.articulos.producto.producto.nombre}}</td>
-                            <td scope="col">{{product.cantidad}}</td>
-                            <td>{{product.producto.articulos.comentario}}</td>
-                            <td scope="col"><button type="button" class="btn" style="background-color: #980F0F; color:ghostwhite" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+
+                <div class="sv-table-wrap">
+                    <table class="sv-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Código</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Comentario</th>
+                                <th scope="col" class="text-center">Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mytbl">
+                            {% for product in productos_requisitados %}
+                            <tr>
+                                <td><span class="sv-cell-title">{{ product.producto.articulos.producto.producto.codigo }}</span></td>
+                                <td>{{ product.producto.articulos.producto.producto.nombre }}</td>
+                                <td>{{ product.cantidad }}</td>
+                                <td>{{ product.producto.articulos.comentario|default:"—" }}</td>
+                                <td class="text-center">
+                                    <button class="sv-btn sv-btn-danger sv-btn-icon" type="button" onclick="deleteRow(this)" producto="{{ product.producto.id|unlocalize }}" cantidad="{{ product.cantidad|unlocalize }}" aria-label="Eliminar {{ product.producto.articulos.producto.producto.nombre }}" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr id="empty-products-row">
+                                <td colspan="5">
+                                    <div class="p-5 text-center">
+                                        <i class="fa-solid fa-box-open"></i>
+                                        <h3>No hay productos agregados</h3>
+                                        <p class="mb-0">Selecciona un producto de la lista para comenzar.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
                     </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document"></div>
+</div>
+
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
+                {% endif %}
+                <div>
+                    <strong>Procesando requisición</strong>
+                    <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
-
-    </div>
-</div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
-
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
 function mostrarIndicadorCarga(form) {
-    document.getElementById('loadingIndicator').style.display = 'flex';
+    const loadingElement = document.getElementById('loadingIndicator');
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
 
     const button = form.querySelector('button[type="submit"]');
     if (button) {
         button.disabled = true;
     }
-    
-    return true; // se asegura de que el formulario se envíe
-}
 
-var format = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
+    return true;
+}
 
 function mostrarLoading() {
-        document.getElementById("loadingIndicator").style.display = "block";
+    const loadingElement = document.getElementById('loadingIndicator');
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
+}
+
+const crear = document.getElementById('crear');
+const productoSelect = document.getElementById('producto');
+const updateBtn = document.getElementById('update-requi');
+
+crear.addEventListener('click', function () {
+    const rows = document.querySelectorAll('#mytbl tr:not(#empty-products-row)').length;
+
+    if (rows <= 0) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No tienes productos en tu listado',
+            icon: 'error'
+        });
+    } else {
+        Swal.fire({
+            title: 'Requisición en proceso',
+            text: 'La requisición será creada en un momento',
+            icon: 'success'
+        });
     }
-
-
-
-var crear = document.getElementById("crear")
-var precio_mod = document.getElementById("id_precio_unitario")
-
-
-document.getElementById("crear").addEventListener("click", function(element){
-    let array_id_oc=[];
-    let requi_tag = document.getElementById('requi');
-    let requi = requi_tag.getAttribute('target')
-
-    //Cuenta el número de filas dentro de la tabla
-    var rows = document.getElementById("mytbl").rows.length;
-    console.log('rows',rows)
-    if (rows<=0) {
-        Swal.fire({
-                "title":"Error",
-                "text":"No tienes productos en tu listado",
-                "icon":"error",
-            })
-    } else if (rows>0) {
-        Swal.fire({
-                "title":"Success",
-                "text":"La requisición será creada en un momento",
-                "icon":"success",
-            })
-
-            }
 });
 
-
-document.getElementById("producto").addEventListener("change", function(element){
-    var select = this;
-    var current_option = select.options[select.selectedIndex];
-    let cantidad = current_option.getAttribute('cantidad');
-    let comment = current_option.getAttribute('comentario');
-
-    console.log(comment);
-    var solicitado = document.getElementById('solicitado');
-    var comentario = document.getElementById('comentario');
-    solicitado.innerHTML = cantidad;
-    comentario.innerHTML = comment;
+productoSelect.addEventListener('change', function () {
+    const currentOption = this.options[this.selectedIndex];
+    const cantidad = currentOption.getAttribute('cantidad');
+    var comment = currentOption.getAttribute('comentario');
+    console.log(comment)
+    if (comment != "None"){
+        var comment = comment
+    } else {
+        console.log("si")
+        var comment = 'Sin comentario'
+    }
+    document.getElementById('solicitado').textContent = cantidad || '—';
+    document.getElementById('comentario').textContent = comment
 });
 
+updateBtn.addEventListener('click', function () {
+    const requiTag = document.getElementById('requi');
+    const orden = requiTag.getAttribute('orden');
+    const currentOption = productoSelect.options[productoSelect.selectedIndex];
+    const value = currentOption.value;
+    const id = currentOption.getAttribute('target');
+    const cantidad = currentOption.getAttribute('cantidad');
 
-var updateBtn = document.getElementById('update-requi')
-let count=0;
-let suma = 0;
-let suma_iva = 0;
+    if (!value) {
+        Swal.fire({
+            title: 'Error',
+            text: 'Favor de seleccionar algún valor de la lista',
+            icon: 'error'
+        });
+    } else if (Number(cantidad) <= 0) {
+        Swal.fire({
+            title: 'Error',
+            text: 'La cantidad ingresada debe ser mayor que 0',
+            icon: 'error'
+        });
+    } else {
+        mostrarLoading();
+        actualizarArticulos(orden, id, cantidad, 'add');
+    }
+});
 
-updateBtn.addEventListener('click',function(){
-        //console.log('algo')
-        let requi_tag = document.getElementById('requi');
-        let requi = requi_tag.getAttribute('target');
-        let orden = requi_tag.getAttribute('orden')
-        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
-        var select = document.getElementById('producto');
-        var current_option = select.options[select.selectedIndex];
-        let value = current_option.value
-        var id = current_option.getAttribute('target');
-        var producto = current_option.getAttribute('producto');
-        //Esta es la cantidad establecida en la requisición
-        var cantidad = current_option.getAttribute('cantidad');
-        //Esta es la cantidad comprada de acuerdo a la requisición
-        var default_op = document.getElementById('default_sel');
-        console.log('cantidad',cantidad)
-        console.log('orden',orden)
-        console.log('id',id)
-
-        var action = "add";
-
-        if (!value) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de seleccionar algún valor de la lista",
-                    "icon":"error",
-                })
-        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
-        } else if (cantidad <=0 ) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada debe ser mayor que 0",
-                    "icon":"error",
-                })
-        } else {
-            mostrarLoading();
-            ActualizarArticulos(orden,id,cantidad,action);
-            
-            
-        }
-})
-
-//ActualizarArticulos(array_id_prod)
-
-function ActualizarArticulos(orden,id,cantidad,action){
-    
-    console.log('User is logged in, sending data...' )
-
-    var url = '/requisiciones/update_requi/'
-
-    fetch( url, {
-        method:'POST',
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRFToken': csrftoken,
+function actualizarArticulos(orden, id, cantidad, action) {
+    fetch('/requisiciones/update_requi/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
         },
-        body:JSON.stringify({'orden':orden, 'id':id, 'cantidad':cantidad, 'action':action})
+        body: JSON.stringify({ orden: orden, id: id, cantidad: cantidad, action: action })
     })
-    .then((response)=>{
-        return response.json()
+    .then(function (response) {
+        if (!response.ok) {
+            throw new Error('No fue posible actualizar la requisición.');
+        }
+        return response.json();
     })
-    .then((data)=>{
-        console.log('data:', data)
-        location.reload()
+    .then(function () {
+        location.reload();
     })
+    .catch(function (error) {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('loadingIndicator')).hide();
+        Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+    });
 }
 
-//This is the function that remove any product from render product table and remove the specific element from the array
 function deleteRow(element) {
-    let btn_delete = document.getElementById('delete');
-    let requi_tag = document.getElementById('requi');
-    let orden = requi_tag.getAttribute('orden');
-    let id = btn_delete.getAttribute('producto');
-    let cantidad = btn_delete.getAttribute('cantidad');
+    const requiTag = document.getElementById('requi');
+    const orden = requiTag.getAttribute('orden');
+    const id = element.getAttribute('producto');
+    const cantidad = element.getAttribute('cantidad');
 
-    console.log(id)
-    var action = "remove";
-    ActualizarArticulos(orden, id, cantidad, action);
-
-    var select = document.getElementById('producto');
-
-    var rows = document.getElementById("mytbl").rows.length;
+    mostrarLoading();
+    actualizarArticulos(orden, id, cantidad, 'remove');
 }
 
-var checkdof = document.getElementById("SwitchDof");
+const commentSuper = document.getElementById('Comment_Super');
+const commentCompras = document.getElementById('Comment_Compras');
 
-
-document.getElementById("Comment_Super").addEventListener("change", function(element){
-	console.log('CommentSuper:'+Comment_Super.checked);
-
-
-	var comentario_super = document.getElementById('comentario_super')
-
-	if (Comment_Super.checked){
-	    comentario_super.classList.remove('d-none');
-	} else{
-	    comentario_super.classList.add('d-none');
-	}
+commentSuper.addEventListener('change', function () {
+    document.getElementById('comentario_super').classList.toggle('d-none', !this.checked);
 });
 
-document.getElementById("Comment_Compras").addEventListener("change", function(element){
-	console.log('CommentSuper:'+Comment_Compras.checked);
-
-
-	var comentario_compras = document.getElementById('comentario_compras')
-
-	if (Comment_Compras.checked){
-	    comentario_compras.classList.remove('d-none');
-	} else{
-	    comentario_compras.classList.add('d-none');
-	}
+commentCompras.addEventListener('change', function () {
+    document.getElementById('comentario_compras').classList.toggle('d-none', !this.checked);
 });
-
 </script>
 {% endblock %}
-</body>
-</html>

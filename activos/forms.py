@@ -2,6 +2,7 @@ from django import forms
 from dashboard.models import Activo, Marca, Tipo_Activo
 from requisiciones.models import Salidas
 from dashboard.models import Profile 
+from django.core.validators import FileExtensionValidator
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
 #from django.forms.fields import DateField
@@ -24,12 +25,41 @@ class Activo_Form(forms.ModelForm):
                 pass  # Manejo de errores en caso de entrada no válida
 
 
-class Edit_Activo_Form(forms.ModelForm):
-    
+
+class DocumentosActivoForm(forms.ModelForm):
+    factura_pdf = forms.FileField(
+        required=False,
+        validators=[FileExtensionValidator(['pdf'])],
+        widget=forms.FileInput(attrs={
+            'class': 'd-none',
+            'accept': '.pdf,application/pdf',
+        }),
+    )
+
+    factura_xml = forms.FileField(
+        required=False,
+        validators=[FileExtensionValidator(['xml'])],
+        widget=forms.FileInput(attrs={
+            'class': 'd-none',
+            'accept': '.xml,application/xml,text/xml',
+        }),
+    )
+
     class Meta:
         model = Activo
-        fields = ['activo','tipo_activo','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna','factura_pdf','factura_xml','documento_baja','fecha_asignacion']
+        fields = [
+            'factura_pdf',
+            'factura_xml',
+        ]
+
+class Edit_Activo_Form(forms.ModelForm):
+
+    class Meta:
+        model = Activo
+        fields = ['activo','tipo_activo','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna','documento_baja','fecha_asignacion']
        
+  
+    
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['responsable'].queryset = Profile.objects.none()

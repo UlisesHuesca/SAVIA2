@@ -1,21 +1,21 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from dashboard.models import Inventario, Profile, Marca 
-from django.core import serializers
-from django.db.models import Value, F, Q
-from django.db.models.functions import Concat
-from dashboard.models import Activo, Marca, Tipo_Activo, Distrito
-from requisiciones.models import Salidas 
-from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm
 from django.contrib import messages
-from activos.filters import ActivoFilter
-from django.http import JsonResponse, HttpResponse, FileResponse
-from django.http import Http404
-from dashboard.models import Product
 from django.core.paginator import Paginator
+from django.db.models import  Q, Count, Sum
+from django.http import JsonResponse, HttpResponse, FileResponse, Http404
+from django.db import transaction
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+
+
+from requisiciones.models import Salidas 
+from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
+from .models import Categoria_Activo
+from .filters import ActivoFilter
+from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito
 from solicitudes.filters import InventarioFilter
-from django.db.models import Count
-from django.db.models import Count, Sum
+
 
 
 #Todo para construir el código QR
@@ -45,31 +45,138 @@ from user.decorators import perfil_seleccionado_required
 # Create your views here.
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def activos(request):
-    pk_perfil = request.session.get('selected_profile_id') 
-    usuario = Profile.objects.get(id = pk_perfil)
-    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
-        activos = Activo.objects.filter(completo=True, responsable__distritos__id__in = almacenes_distritos)
-    else:    
-        activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
-    myfilter = ActivoFilter(request.GET, queryset=activos)
-    activos = myfilter.qs 
-    if request.method == "POST" and 'btnExcel' in request.POST:
-        return convert_activos_to_xls(activos)
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
 
-    #Set up pagination
-    p = Paginator(activos, 50)
-    page = request.GET.get('page')
-    activos = p.get_page(page)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id',flat=True,))
 
-    context = {
-        'activos':activos,
-        'myfilter': myfilter,
-        'usuario': usuario,
+    # ---------------------------------------------------------
+    # ACTIVOS PERMITIDOS PARA EL USUARIO
+    # ---------------------------------------------------------
+    if usuario.tipo.nombre in ["ADMIN_ACTIVOS", "Admin"]:
+        activos_base = Activo.objects.filter(
+            completo=True,
+            responsable__distritos__id__in=almacenes_distritos,
+        )
+    else:
+        activos_base = Activo.objects.filter(
+            Q(responsable__distritos=usuario.distritos)
+            | Q(activo__distrito=usuario.distritos),
+            completo=True,
+        )
+
+    activos_base = activos_base.distinct()
+
+    # ---------------------------------------------------------
+    # FILTROS
+    # ---------------------------------------------------------
+    myfilter = ActivoFilter(
+        request.GET or None,
+        queryset=activos_base,
+    )
+
+    activos_queryset = myfilter.qs.distinct()
+
+    # ---------------------------------------------------------
+    # TARJETA RESUMEN
+    # ---------------------------------------------------------
+    categoria_id = request.GET.get('categoria', '').strip()
+
+    categoria_seleccionada = None
+
+    if categoria_id.isdigit():
+        categoria_seleccionada = (
+            Categoria_Activo.objects
+            .filter(id=int(categoria_id))
+            .first()
+        )
+
+    presentacion_categorias = {
+        'UBM': {
+            'icono': 'fa-gears',
+            'clase': 'ubm',
+        },
+        'VEHICULO': {
+            'icono': 'fa-car-side',
+            'clase': 'vehiculo',
+        },
+        'COMPUTO': {
+            'icono': 'fa-laptop',
+            'clase': 'computo',
+        },
+        'CELULAR': {
+            'icono': 'fa-mobile-screen-button',
+            'clase': 'celular',
+        },
+        'EPP': {
+            'icono': 'fa-shield-halved',
+            'clase': 'epp',
+        },
+        'MAQUINARIA Y HERRAMIENTA': {
+            'icono': 'fa-screwdriver-wrench',
+            'clase': 'maquinaria',
+        },
+        'OTRO': {
+            'icono': 'fa-boxes-stacked',
+            'clase': 'otro',
+        },
     }
 
-    return render(request,'activos/activos.html',context)
+    if categoria_seleccionada:
+        nombre_categoria = (
+            categoria_seleccionada.nombre or ''
+        ).strip().upper()
+
+        presentacion = presentacion_categorias.get(
+            nombre_categoria,
+            {
+                'icono': 'fa-box',
+                'clase': 'otro',
+            },
+        )
+
+        resumen_activos = {
+            'titulo': categoria_seleccionada.nombre,
+            'subtitulo': 'Activos de la categoría seleccionada',
+            'cantidad': activos_queryset.count(),
+            'icono': presentacion['icono'],
+            'clase': presentacion['clase'],
+        }
+    else:
+        resumen_activos = {
+            'titulo': 'Todos los activos',
+            'subtitulo': 'Resultados disponibles para el usuario',
+            'cantidad': activos_queryset.count(),
+            'icono': 'fa-boxes-stacked',
+            'clase': 'todos',
+        }
+
+    # ---------------------------------------------------------
+    # EXPORTACIÓN
+    # ---------------------------------------------------------
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        return convert_activos_to_xls(activos_queryset)
+
+    # ---------------------------------------------------------
+    # PAGINACIÓN
+    # ---------------------------------------------------------
+    paginator = Paginator(activos_queryset, 50)
+    page = request.GET.get('page')
+    activos = paginator.get_page(page)
+
+    context = {
+        'activos': activos,
+        'myfilter': myfilter,
+        'usuario': usuario,
+        'resumen_activos': resumen_activos,
+        'categoria_seleccionada': categoria_seleccionada,
+    }
+
+    return render(request,'activos/activos.html',context,)
+   
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
@@ -328,6 +435,7 @@ def edit_activo(request, pk):
     #productos_activos = productos.filter(activo_disponible = True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
     form.fields['activo'].queryset = productos
+    factura_form = DocumentosActivoForm(instance= activo)
 
     productos_para_select2 = [
         {
@@ -398,22 +506,131 @@ def edit_activo(request, pk):
     error_messages = {}    
 
     if request.method =='POST':
-        form = Edit_Activo_Form(request.POST, request.FILES, instance = activo)
-        if form.is_valid():
-            inventario = Inventario.objects.get(id = activo.activo.id)
-            if inventario.cantidad >= 1:
-                inventario.cantidad -= 1
-                inventario.save()
-            activo = form.save(commit=False)
-            activo.completo = True
-            activo.modified_at = date.today()
-            activo.modified_by = perfil
-            activo.save()
-            messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
-            return redirect('activos')
+        # -----------------------------
+        # GUARDAR O REEMPLAZAR FACTURA
+        # -----------------------------
+        if 'btn_factura' in request.POST:
+            pdf_anterior = (activo.factura_pdf.name if activo.factura_pdf else None)
+            xml_anterior = (activo.factura_xml.name if activo.factura_xml else None)
+            factura_form = DocumentosActivoForm(request.POST,request.FILES,instance=activo,)
+
+            if factura_form.is_valid():
+                nuevo_pdf = request.FILES.get('factura_pdf')
+                nuevo_xml = request.FILES.get('factura_xml')
+
+                if not nuevo_pdf and not nuevo_xml:
+                    messages.error(
+                        request,
+                        'Debes seleccionar al menos un archivo PDF o XML.',
+                    )
+
+                    return redirect(request.path)
+
+                activo_actualizado = factura_form.save(commit=False)
+                activo_actualizado.modified_at = date.today()
+                activo_actualizado.modified_by = perfil
+                activo_actualizado.save()
+
+                # Eliminar físicamente los documentos reemplazados
+                if nuevo_pdf and pdf_anterior:
+                    storage_pdf = activo._meta.get_field(
+                        'factura_pdf'
+                    ).storage
+
+                    if pdf_anterior != activo_actualizado.factura_pdf.name:
+                        storage_pdf.delete(pdf_anterior)
+
+                if nuevo_xml and xml_anterior:
+                    storage_xml = activo._meta.get_field(
+                        'factura_xml'
+                    ).storage
+
+                    if xml_anterior != activo_actualizado.factura_xml.name:
+                        storage_xml.delete(xml_anterior)
+
+                messages.success(request,'La factura del activo se actualizó correctamente.',)
+
+                return redirect(request.path)
+
+            messages.error(request,'No se pudieron guardar los documentos.',)
+
+          # -------------------------------------------
+        # ELIMINAR PDF
+        # -------------------------------------------
+        elif 'btn_eliminar_pdf' in request.POST:
+            if activo.factura_pdf:
+                activo.factura_pdf.delete(save=False)
+                activo.factura_pdf = None
+                activo.modified_at = date.today()
+                activo.modified_by = perfil
+
+                activo.save(update_fields=[
+                    'factura_pdf',
+                    'modified_at',
+                    'modified_by',
+                ])
+
+                messages.success(
+                    request,
+                    'El PDF fue eliminado correctamente.',
+                )
+            else:
+                messages.warning(
+                    request,
+                    'El activo no tiene un PDF registrado.',
+                )
+
+            return redirect(request.path)
+
+        # -------------------------------------------
+        # ELIMINAR XML
+        # -------------------------------------------
+        elif 'btn_eliminar_xml' in request.POST:
+            if activo.factura_xml:
+                activo.factura_xml.delete(save=False)
+                activo.factura_xml = None
+                activo.modified_at = date.today()
+                activo.modified_by = perfil
+
+                activo.save(update_fields=[
+                    'factura_xml',
+                    'modified_at',
+                    'modified_by',
+                ])
+
+                messages.success(
+                    request,
+                    'El XML fue eliminado correctamente.',
+                )
+            else:
+                messages.warning(
+                    request,
+                    'El activo no tiene un XML registrado.',
+                )
+
+            return redirect(request.path)
+
+        # -------------------------------------------
+        # GUARDAR INFORMACIÓN GENERAL DEL ACTIVO
+        # -------------------------------------------
         else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
+            print('Entrada al post')
+            form = Edit_Activo_Form(request.POST, instance = activo)
+            if form.is_valid():
+                inventario = Inventario.objects.get(id = activo.activo.id)
+                if inventario.cantidad >= 1:
+                    inventario.cantidad -= 1
+                    inventario.save()
+                activo = form.save(commit=False)
+                activo.completo = True
+                activo.modified_at = date.today()
+                activo.modified_by = perfil
+                activo.save()
+                messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
+                return redirect('activos')
+            else:
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
 
 
     
@@ -432,11 +649,193 @@ def edit_activo(request, pk):
         #'personal':personal,
         'marcas':marcas,
         'form':form,
+        'factura_form': factura_form,
         'familia':familia,
         'subfamilia':subfamilia,
     }
 
     return render(request,'activos/edit_activos.html', context)
+
+def obtener_estado_documentos(activo):
+    return {
+        'pdf': {
+            'existe': bool(activo.factura_pdf),
+            'url': activo.factura_pdf.url if activo.factura_pdf else None,
+            'nombre': activo.factura_pdf.name.split('/')[-1]
+            if activo.factura_pdf else None,
+        },
+        'xml': {
+            'existe': bool(activo.factura_xml),
+            'url': activo.factura_xml.url if activo.factura_xml else None,
+            'nombre': activo.factura_xml.name.split('/')[-1]
+            if activo.factura_xml else None,
+        },
+    }
+
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+@require_POST
+def documentos_activo(request, pk):
+    activo = get_object_or_404(Activo, pk=pk)
+
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = get_object_or_404(Profile, pk=pk_perfil)
+
+    accion = request.POST.get('accion', 'guardar')
+
+    campos_por_accion = {
+        'eliminar_pdf': 'factura_pdf',
+        'eliminar_xml': 'factura_xml',
+    }
+
+    # Eliminar un documento
+    if accion in campos_por_accion:
+        nombre_campo = campos_por_accion[accion]
+        archivo_actual = getattr(activo, nombre_campo)
+
+        if not archivo_actual:
+            return JsonResponse({
+                'ok': False,
+                'mensaje': 'El activo no tiene ese documento.',
+            }, status=400)
+
+        nombre_archivo = archivo_actual.name
+        storage = activo._meta.get_field(nombre_campo).storage
+
+        with transaction.atomic():
+            setattr(activo, nombre_campo, None)
+            activo.modified_at = timezone.localdate()
+            activo.modified_by = perfil
+
+            activo.save(update_fields=[
+                nombre_campo,
+                'modified_at',
+                'modified_by',
+            ])
+
+            transaction.on_commit(
+                lambda: storage.delete(nombre_archivo)
+            )
+
+        activo.refresh_from_db()
+
+        respuesta = {
+            'ok': True,
+            'mensaje': 'El documento fue eliminado correctamente.',
+            'documentos': obtener_estado_documentos(activo),
+        }
+
+        es_ajax = (
+            request.headers.get('X-Requested-With')
+            == 'XMLHttpRequest'
+        )
+
+        if es_ajax:
+            return JsonResponse(respuesta)
+
+        messages.success(
+            request,
+            respuesta['mensaje'],
+        )
+
+        return redirect(
+            'edit-activo',
+            pk=activo.pk,
+        )
+
+    # Subir o reemplazar documentos
+    if accion == 'guardar':
+        if not request.FILES:
+            return JsonResponse({
+                'ok': False,
+                'mensaje': 'Selecciona al menos un archivo PDF o XML.',
+            }, status=400)
+
+        pdf_anterior = activo.factura_pdf.name if activo.factura_pdf else None
+        xml_anterior = activo.factura_xml.name if activo.factura_xml else None
+
+        storage_pdf = activo._meta.get_field('factura_pdf').storage
+        storage_xml = activo._meta.get_field('factura_xml').storage
+
+        form = DocumentosActivoForm(
+            request.POST,
+            request.FILES,
+            instance=activo,
+        )
+
+        if not form.is_valid():
+            errores = {
+                campo: [str(error) for error in errores]
+                for campo, errores in form.errors.items()
+            }
+
+            return JsonResponse({
+                'ok': False,
+                'mensaje': 'Revisa los archivos seleccionados.',
+                'errores': errores,
+            }, status=400)
+
+        with transaction.atomic():
+            activo_actualizado = form.save(commit=False)
+            activo_actualizado.modified_at = timezone.localdate()
+            activo_actualizado.modified_by = perfil
+            activo_actualizado.save()
+
+            pdf_nuevo = (
+                activo_actualizado.factura_pdf.name
+                if activo_actualizado.factura_pdf else None
+            )
+
+            xml_nuevo = (
+                activo_actualizado.factura_xml.name
+                if activo_actualizado.factura_xml else None
+            )
+
+            # Borrar archivos anteriores que fueron reemplazados
+            if (
+                request.FILES.get('factura_pdf')
+                and pdf_anterior
+                and pdf_anterior != pdf_nuevo
+            ):
+                transaction.on_commit(
+                    lambda: storage_pdf.delete(pdf_anterior)
+                )
+
+            if (
+                request.FILES.get('factura_xml')
+                and xml_anterior
+                and xml_anterior != xml_nuevo
+            ):
+                transaction.on_commit(
+                    lambda: storage_xml.delete(xml_anterior)
+                )
+
+        activo_actualizado.refresh_from_db()
+
+        respuesta = {
+            'ok': True,
+            'mensaje': 'Los documentos fueron actualizados correctamente.',
+            'documentos': obtener_estado_documentos(activo_actualizado),
+        }
+
+        es_ajax = (
+            request.headers.get('X-Requested-With')
+            == 'XMLHttpRequest'
+        )
+
+        if es_ajax:
+            return JsonResponse(respuesta)
+
+        messages.success(request,respuesta['mensaje'],)
+
+        return redirect('edit-activo',pk=activo_actualizado.pk,)
+
+
+    return JsonResponse({
+        'ok': False,
+        'mensaje': 'La acción solicitada no es válida.',
+    }, status=400)
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

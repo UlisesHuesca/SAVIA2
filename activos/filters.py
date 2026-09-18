@@ -1,5 +1,6 @@
 import django_filters
 from dashboard.models import Activo, Estatus_Activo, Familia
+from .models import Categoria_Activo
 from django_filters import CharFilter, DateTimeFilter, BooleanFilter, ModelChoiceFilter
 from django.db.models import Q
 
@@ -22,6 +23,7 @@ class ActivoFilter(django_filters.FilterSet):
     subfamilia = CharFilter(field_name='activo__producto__subfamilia__nombre', lookup_expr='icontains')
     estatus = ModelChoiceFilter(queryset=Estatus_Activo.objects.all())
     distrito = CharFilter(field_name='responsable__distritos__nombre', lookup_expr='icontains')
+    categoria = django_filters.ModelChoiceFilter(field_name='categoria', queryset=Categoria_Activo.objects.all().order_by('nombre'), empty_label='Todas las categorías',label='Categoría')
 
     class Meta:
         model = Activo
