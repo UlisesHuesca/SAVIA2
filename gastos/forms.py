@@ -1,6 +1,6 @@
 from django import forms
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa
-from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
+from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector, Pozo
 from user.models import Profile, Distrito
 from dashboard.models import Inventario, Order, Product
 from compras.models import Proveedor_direcciones
@@ -62,23 +62,37 @@ class Articulo_GastoForm(forms.ModelForm):
 
     class Meta:
         model = Articulo_Gasto
-        fields = ['producto','comentario','proyecto','subproyecto','cantidad','precio_unitario','otros_impuestos','impuestos_retenidos', 'iva']
+        fields = ['producto','comentario','proyecto','subproyecto','cantidad','precio_unitario','otros_impuestos','impuestos_retenidos', 'iva', 'pozo']
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['proyecto'].queryset = Proyecto.objects.none()
         self.fields['subproyecto'].queryset = Subproyecto.objects.none()
         self.fields['producto'].queryset = Product.objects.none()
+        self.fields['pozo'].queryset = Pozo.objects.none()
+        self.fields['pozo'].required = False
 
         if 'proyecto' in self.data:
             try:
                 seleccion_actual = int(self.data.get('proyecto'))
                 # Lógica para determinar el nuevo queryset basado en la selección actual
+                
+                self.fields['proyecto'].queryset = Proyecto.objects.filter(id=seleccion_actual)
                 self.fields['subproyecto'].queryset = Subproyecto.objects.filter(proyecto= seleccion_actual)  
-                self.fields['proyecto'].queryset = Proyecto.objects.filter(id= seleccion_actual)
+              
                         
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
+
+        if "pozo" in self.data:
+            try:
+                pozo_id = int(self.data.get("pozo"))
+        
+                self.fields["pozo"].queryset = Pozo.objects.filter(id=pozo_id, cerrar_pozo=False)
+        
+            except (ValueError, TypeError):
+                pass
+
         if 'producto' in self.data:
             try:
                 seleccion_actual = int(self.data.get('producto'))

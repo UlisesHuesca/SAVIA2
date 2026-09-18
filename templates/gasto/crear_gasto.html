@@ -562,6 +562,26 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row d-none" id="campo-pozo-gasto">
+                    <div class="col-12">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-oil-well"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_product.pozo|add_class:"form-select" }}
+                            </div>
+                        </div>
+
+                        {% if form_product.pozo.errors %}
+                        <div class="text-danger small mb-3">
+                            {{ form_product.pozo.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
                 
                 <div class="row">
                     <div class="col-12">
@@ -679,6 +699,7 @@
                     <th scope="col">{% trans "Descripción/Comentario" %}</th>
                     <th>{% trans "Proyecto" %}</th>
                     <th>{% trans "Subproyecto" %}</th>
+                    <th>{% trans "Pozo" %}</th>
                     <th scope="col">{% trans "Cantidad" %}</th>
                     <th scope="col">{% trans "P.U." %}</th>
                     <th scope="col">{% trans "Subtotal" %}</th>
@@ -696,6 +717,7 @@
                     <td scope="col">{{producto.comentario}}</td>
                     <td>{{producto.proyecto.nombre}}</td>
                     <td>{{producto.subproyecto.nombre}}</td>
+                    <td>{% if producto.pozo %} {{producto.pozo.nombre}} {% else %} -- {% endif %}</td>
                     <td scope="col">{{producto.cantidad|floatformat:2}}</td>
                     <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
                     <td scope="col">${{ producto.get_subtotal|floatformat:2 }}</td>
@@ -706,7 +728,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="sv-empty">{% trans "Aún no hay líneas de gasto" %}</td>
+                    <td colspan="12" class="sv-empty">{% trans "Aún no hay líneas de gasto" %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -1033,15 +1055,28 @@ $(document).ready(function() {
         templateSelection: formatRepoSelection // Función para renderizar la selección
     });
     $('#id_proyecto').on('select2:select', function(e){
-        var data = e.params.data;
-        proyecto_id = data.id;
+        const data = e.params.data;
+        const proyecto_id = data.id;
         //console.log(proyecto_id)
+
         if (proyecto_id != ""){
             mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+            cargarPozos(proyecto_id)
+        } else {
+            actualizarSubproyectos([])
+            ocultarCampoPozo();
         }
     }); //Aquí termina el select2:select
-    var proyectoSelect = $('#id_proyecto');
-    var subproyectoSelect = $('#id_subproyecto');
+    $('#id_proyecto').on(
+        'select2:clear select2:unselect',
+        function () {
+            actualizarSubproyectos([])
+            ocultarCampoPozo();
+        }
+    )
+
+    //var proyectoSelect = $('#id_proyecto');
+    //var subproyectoSelect = $('#id_subproyecto');
     var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
 });
 
@@ -1489,6 +1524,112 @@ function mini_ajax(proyecto_id){
         })    
 
 };
+
+
+let solicitudPozos = null;
+
+function ocultarCampoPozo() {
+    const campoPozo = $('#campo-pozo-gasto');
+    const selectPozo = $('#id_pozo');
+
+    campoPozo.addClass('d-none');
+
+    selectPozo
+        .prop('required', false)
+        .empty()
+        .append(
+            new Option('Seleccione un pozo', '', true, false)
+        )
+        .val(null)
+        .trigger('change');
+}
+
+function cargarPozos(proyectoId, pozoSeleccionado = '') {
+    const campoPozo = $('#campo-pozo-gasto');
+    const selectPozo = $('#id_pozo');
+
+    if (solicitudPozos) {
+        solicitudPozos.abort();
+        solicitudPozos = null;
+    }
+
+    ocultarCampoPozo();
+
+    if (!proyectoId) {
+        return;
+    }
+
+    solicitudPozos = $.ajax({
+        url: "{% url 'ajax-load-pozos' %}",
+        data: {
+            proyecto_id: proyectoId
+        },
+        dataType: 'json',
+
+        success: function (respuesta) {
+            if (
+                !respuesta.tiene_pozos ||
+                !respuesta.pozos ||
+                respuesta.pozos.length === 0
+            ) {
+                return;
+            }
+
+            selectPozo.empty().append(
+                new Option(
+                    'Seleccione un pozo',
+                    '',
+                    false,
+                    false
+                )
+            );
+
+            $.each(respuesta.pozos, function (indice, pozo) {
+                const seleccionado =
+                    String(pozo.id) === String(pozoSeleccionado);
+
+                selectPozo.append(
+                    new Option(
+                        pozo.nombre,
+                        pozo.id,
+                        seleccionado,
+                        seleccionado
+                    )
+                );
+            });
+
+            campoPozo.removeClass('d-none');
+            selectPozo.prop('required', false);
+
+            if (pozoSeleccionado) {
+                selectPozo
+                    .val(String(pozoSeleccionado))
+                    .trigger('change');
+            } else {
+                selectPozo
+                    .val(null)
+                    .trigger('change');
+            }
+        },
+
+        error: function (xhr, status) {
+            if (status !== 'abort') {
+                ocultarCampoPozo();
+
+                console.error(
+                    'Error al consultar pozos:',
+                    xhr.responseText
+                );
+            }
+        },
+
+        complete: function () {
+            solicitudPozos = null;
+        }
+    });
+}
+
+
 
 function formatRepo (repo) {
     if (repo.loading) {
