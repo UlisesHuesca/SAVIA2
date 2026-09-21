@@ -1,7 +1,7 @@
 from django import forms
-from dashboard.models import Activo, Marca, Tipo_Activo
+from dashboard.models import Activo, Marca, Tipo_Activo, Profile 
 from requisiciones.models import Salidas
-from dashboard.models import Profile 
+from compras.models import Proveedor_direcciones
 from django.core.validators import FileExtensionValidator
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
@@ -56,7 +56,8 @@ class Edit_Activo_Form(forms.ModelForm):
 
     class Meta:
         model = Activo
-        fields = ['activo','tipo_activo','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna','documento_baja','fecha_asignacion']
+        fields = ['activo','tipo_activo','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna',
+                  'documento_baja','fecha_asignacion','fecha_adquisicion','precio_adquisicion','proveedor_adquisicion','origen']
        
   
     
@@ -64,6 +65,26 @@ class Edit_Activo_Form(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['responsable'].queryset = Profile.objects.none()
         self.fields['marca'].queryset = Marca.objects.none()
+        self.fields['proveedor_adquisicion'].queryset = (Proveedor_direcciones.objects.none())
+
+        if 'proveedor_adquisicion' in self.data:
+            try:
+                seleccion_actual = int(
+                    self.data.get('proveedor_adquisicion')
+                )
+
+                self.fields[
+                    'proveedor_adquisicion'
+                ].queryset = Proveedor_direcciones.objects.filter(
+                    id=seleccion_actual
+                )
+
+            except (ValueError, TypeError):
+                pass
+
+        elif (self.instance and self.instance.pk and self.instance.proveedor_adquisicion_id):
+            self.fields['proveedor_adquisicion'].queryset = Proveedor_direcciones.objects.filter(id=self.instance.proveedor_adquisicion_id)
+
 
         
         if 'responsable' in self.data:

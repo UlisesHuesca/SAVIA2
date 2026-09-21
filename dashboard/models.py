@@ -283,7 +283,8 @@ class Activo(models.Model):
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     fecha_asignacion = models.DateField(null=True, blank= True)
     precio_adquisicion = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,)
-    proveedor_adquisicion = models.ForeignKey('compras.Proveedor',on_delete=models.PROTECT, null=True,blank=True,related_name='activos_adquiridos',)
+    fecha_adquisicion = models.DateField(null=True,blank=True,)
+    proveedor_adquisicion = models.ForeignKey('compras.Proveedor_direcciones',on_delete=models.PROTECT, null=True,blank=True,related_name='activos_adquiridos',)
     origen = models.CharField(max_length=10, choices=OrigenActivo.choices, null=True, blank=True,)
 
     @property   

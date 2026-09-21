@@ -12,6 +12,7 @@ from django.utils import timezone
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
 from .models import Categoria_Activo
+from compras.models import Proveedor_direcciones
 from .filters import ActivoFilter
 from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito
 from solicitudes.filters import InventarioFilter
@@ -1858,3 +1859,57 @@ def convert_excel_inventario_xlsxwriter(existencia):
     output.close()
     return response
 
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def carga_proveedor_activo(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+
+    term = request.GET.get('term', '').strip()
+    pagina = int(request.GET.get('page', 1))
+
+    limite = 20
+    inicio = (pagina - 1) * limite
+    fin = inicio + limite + 1
+
+    proveedores = Proveedor_direcciones.objects.filter(
+        Q(estatus__nombre='NUEVO')
+        | Q(estatus__nombre='APROBADO'),
+        distrito=usuario.distritos,
+    )
+
+    if term:
+        proveedores = proveedores.filter(
+            Q(nombre__razon_social__icontains=term)
+            | Q(nombre__rfc__icontains=term)
+        )
+
+    proveedores = list(
+        proveedores
+        .values(
+            'id',
+            'nombre__razon_social',
+            'nombre__rfc',
+            'distrito__nombre',
+            'domicilio',
+            'estatus__nombre',
+        )
+        .order_by('nombre__razon_social')[inicio:fin]
+    )
+
+    hay_mas = len(proveedores) > limite
+    proveedores = proveedores[:limite]
+
+    resultados = [
+        {
+            'id': proveedor['id'],
+            'text': proveedor['nombre__razon_social'],
+            'rfc': proveedor['nombre__rfc'] or '',
+            'distrito': proveedor['distrito__nombre'] or '',
+            'domicilio': proveedor['domicilio'] or '',
+            'estatus': proveedor['estatus__nombre'] or '',
+        }
+        for proveedor in proveedores
+    ]
+
+    return JsonResponse({ 'results': resultados,'pagination': {'more': hay_mas,},})

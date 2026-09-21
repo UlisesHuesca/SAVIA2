@@ -3723,23 +3723,23 @@ def generar_pdf_nueva(compra):
     proveedor_oc = (
         compra.proveedor.history
         .filter(history_date__lte=fin_dia_oc)
-        .order_by("-history_date")
-        .first()
+        .order_by("-history_date", "history_id")
+        .last()
     )
 
     if proveedor_oc is None:
         proveedor_oc = (
             compra.proveedor.history
             .filter(history_date__lte=fin_dia_oc)
-            .order_by("-history_date")
-            .first()
+            .order_by("-history_date", "history_id")
+            .last()
         )
 
     if proveedor_oc is None:
         proveedor_oc = (
             compra.proveedor.history
-            .order_by("history_date")
-            .first()
+            .order_by("history_date", "history_id")
+            .last()
         )
 
     if proveedor_oc is None:
