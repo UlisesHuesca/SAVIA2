@@ -1,5 +1,5 @@
 from django.db import models
-from solicitudes.models import Proyecto, Subproyecto, Operacion
+from solicitudes.models import Proyecto, Subproyecto, Operacion, Pozo
 from user.models import Profile, Distrito, Banco
 from dashboard.models import Inventario, Product
 from django.core.validators import FileExtensionValidator
@@ -56,6 +56,7 @@ class Solicitud_Viatico(models.Model):
     persona_cierre = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Cierre_Viatico')
     fecha_cierre = models.DateField(null=True, blank = True)
     comentario_cierre = models.TextField(blank=True, null=True)
+    pozo = models.ForeignKey(Pozo, on_delete=models.SET_NULL, null=True, blank=True, related_name='viaticos',)
 
     unique_together = ["folio", "distrito"]
 

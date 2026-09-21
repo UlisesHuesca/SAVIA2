@@ -6,6 +6,7 @@ from compras.models import Proveedor_direcciones
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
 from viaticos.models import Solicitud_Viatico
+from solicitudes.models import Pozo
 import decimal
 import xml.etree.ElementTree as ET
 from django.db.models import Q
@@ -147,6 +148,7 @@ class Articulo_Gasto(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True)
     subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True)
     activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True )
+    pozo = models.ForeignKey(Pozo,on_delete=models.SET_NULL,null=True,blank=True,related_name="articulos_gastos")
 
     
     

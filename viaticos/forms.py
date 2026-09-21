@@ -1,7 +1,7 @@
 from django import forms
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from tesoreria.models import Pago
-from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
+from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector, Pozo
 from user.models import Profile
 
 class Puntos_Intermedios_Form(forms.ModelForm):
@@ -12,12 +12,14 @@ class Puntos_Intermedios_Form(forms.ModelForm):
 class Solicitud_ViaticoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Viatico
-        fields = ['proyecto','subproyecto','superintendente','motivo','fecha_partida','hora_partida','fecha_retorno','colaborador','lugar_partida','lugar_comision','hospedaje','comidas_facturas','transporte','comentario_general','comentario_jefe_inmediato','phone','banco','cuenta_bancaria','clabe',]
+        fields = ['proyecto','subproyecto','superintendente','motivo','fecha_partida','hora_partida','fecha_retorno','colaborador','lugar_partida','lugar_comision','hospedaje','comidas_facturas',
+                  'transporte','comentario_general','comentario_jefe_inmediato','phone','banco','cuenta_bancaria','clabe','pozo']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['proyecto'].queryset = Proyecto.objects.none()
         self.fields['subproyecto'].queryset = Subproyecto.objects.none()
+        self.fields['pozo'].queryset = Pozo.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
         self.fields['colaborador'].queryset = Profile.objects.none()
         
@@ -31,6 +33,15 @@ class Solicitud_ViaticoForm(forms.ModelForm):
                         
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
+
+        if 'pozo' in self.data:
+            try:
+                pozo_id = int(self.data.get('pozo'))
+
+                self.fields['pozo'].queryset = (Pozo.objects.filter(id=pozo_id,cerrar_pozo=False,))
+
+            except (ValueError, TypeError):
+                pass
         
         if 'superintendente' in self.data:
             try:
@@ -51,12 +62,14 @@ class Solicitud_ViaticoForm(forms.ModelForm):
 class Solicitud_Viatico_Tipo_Form(forms.ModelForm):
     class Meta:
         model = Solicitud_Viatico
-        fields = ['proyecto','subproyecto','superintendente','motivo','fecha_partida','hora_partida','fecha_retorno','colaborador','lugar_partida','lugar_comision','hospedaje','comidas_facturas','transporte','comentario_general','comentario_jefe_inmediato','phone','banco','cuenta_bancaria','clabe','tipo',]
+        fields = ['proyecto','subproyecto','superintendente','motivo','fecha_partida','hora_partida','fecha_retorno','colaborador','lugar_partida','lugar_comision','hospedaje',
+                  'comidas_facturas','transporte','comentario_general','comentario_jefe_inmediato','phone','banco','cuenta_bancaria','clabe','tipo','pozo']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['proyecto'].queryset = Proyecto.objects.none()
         self.fields['subproyecto'].queryset = Subproyecto.objects.none()
+        self.fields['pozo'].queryset = Pozo.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
         self.fields['colaborador'].queryset = Profile.objects.none()
         
@@ -70,6 +83,15 @@ class Solicitud_Viatico_Tipo_Form(forms.ModelForm):
                         
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
+
+        if 'pozo' in self.data:
+            try:
+                pozo_id = int(self.data.get('pozo'))
+        
+                self.fields['pozo'].queryset = (Pozo.objects.filter(id=pozo_id,cerrar_pozo=False,))
+        
+            except (ValueError, TypeError):
+                pass
         
         if 'superintendente' in self.data:
             try:

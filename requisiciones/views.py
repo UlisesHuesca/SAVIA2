@@ -3095,7 +3095,7 @@ def generate_excel_report(salidas):
 def generate_excel_report2(salidas):
     output = io.BytesIO()
 
-    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha','Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Moneda','TC','Total']
+    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha','Solicitante', 'Proyecto', 'Subproyecto','Pozo', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Moneda','TC','Total']
     data = [columns]
 
     for salida in salidas:
@@ -3138,6 +3138,7 @@ def generate_excel_report2(salidas):
             solicitante,
             salida.vale_salida.solicitud.proyecto.nombre if salida.vale_salida.solicitud.proyecto else " ",
             salida.vale_salida.solicitud.subproyecto.nombre if salida.vale_salida.solicitud.subproyecto else " ",
+            salida.vale_salida.solicitud.pozo.nombre if salida.vale_salida.solicitud.pozo else " ",
             salida.producto.articulos.orden.operacion.nombre if salida.producto.articulos.orden.operacion else "Sin operación",
             salida.producto.articulos.producto.producto.codigo,
             salida.producto.articulos.producto.producto.nombre,
@@ -3177,13 +3178,13 @@ def generate_excel_report2(salidas):
 
    
     for row_num in range(2, len(data) + 1):
-        formula = f'=IF(O{row_num} = 0, M{row_num}*L{row_num}, M{row_num}*L{row_num}*O{row_num})'
-        ws[row_num][16].value = formula
+        formula = f'=IF(P{row_num} = 0, N{row_num}*M{row_num}, N{row_num}*M{row_num}*P{row_num})'
+        ws[row_num][17].value = formula
 
     for col_num in range(1, len(columns) + 1):
         if col_num == 3:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [13, 15, 16]:  # Dinero
+        elif col_num in [14, 16, 17]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)
