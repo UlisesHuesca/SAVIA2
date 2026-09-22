@@ -1,8 +1,9 @@
 from django import forms
+from django.core.validators import FileExtensionValidator
 from dashboard.models import Activo, Marca, Tipo_Activo, Profile 
 from requisiciones.models import Salidas
 from compras.models import Proveedor_direcciones
-from django.core.validators import FileExtensionValidator
+from .models import Vehiculo_Activo, UBM_Activo
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
 #from django.forms.fields import DateField
@@ -129,3 +130,181 @@ class MarcaForm(forms.ModelForm):
     class Meta:
         model = Marca
         fields = ['nombre','familia',]
+
+
+from django import forms
+from .models import Vehiculo_Activo
+
+
+class VehiculoActivoForm(forms.ModelForm):
+
+    vigencia_poliza = forms.DateField(
+        required=False,
+        input_formats=['%Y-%m-%d'],
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={
+                'type': 'date',
+                'class': 'form-control',
+            },
+        ),
+        label='Vigencia de póliza',
+    )
+
+    fecha_verificacion = forms.DateField(
+        required=False,
+        input_formats=['%Y-%m-%d'],
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={
+                'type': 'date',
+                'class': 'form-control',
+            },
+        ),
+        label='Fecha de verificación',
+    )
+
+    class Meta:
+        model = Vehiculo_Activo
+
+        # No incluimos "activo" porque se asignará desde la vista.
+        fields = ['tipo_vehiculo','anio_modelo','numero_motor','color','placas','estado_registro','vigencia_poliza','numero_poliza','cobertura',
+            'fecha_verificacion',
+        ]
+
+        widgets = {
+            'tipo_vehiculo': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+            'anio_modelo': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Año modelo',
+                    'min': '1900',
+                    'max': '2100',
+                }
+            ),
+            'numero_motor': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Número de motor',
+                }
+            ),
+            'color': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+            'placas': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Placas',
+                }
+            ),
+            'estado_registro': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+            'vigencia_poliza': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type': 'date',
+                }
+            ),
+            'numero_poliza': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Número de póliza',
+                }
+            ),
+            'cobertura': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+            'fecha_verificacion': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type': 'date',
+                }
+            ),
+        }
+
+class UBMActivoForm(forms.ModelForm):
+
+    class Meta:
+        model = UBM_Activo
+
+        fields = ['tipo_ubm','serie_acumulador','serie_cilindro','deposito_aceite','rack','pedestal','motor','bomba','manifold','pozo',]
+
+        widgets = {
+            'tipo_ubm': forms.Select(
+                attrs={
+                    'class': 'form-select',
+                }
+            ),
+            'serie_acumulador': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Serie del acumulador',
+                }
+            ),
+            'serie_cilindro': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Serie del cilindro',
+                }
+            ),
+            'deposito_aceite': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Depósito de aceite',
+                }
+            ),
+            'rack': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Rack',
+                }
+            ),
+            'pedestal': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Pedestal',
+                }
+            ),
+             'motor': forms.Select(
+                attrs={
+                    'class': 'form-select js-ubm-component',
+                }
+            ),
+            'bomba': forms.Select(
+                attrs={
+                    'class': 'form-select js-ubm-component',
+                }
+            ),
+            'manifold': forms.Select(
+                attrs={
+                    'class': 'form-select js-ubm-component',
+                }
+            ),
+            'pozo': forms.Select(
+                attrs={
+                    'class': 'form-select js-ubm-component',
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['motor'].empty_label = (
+            'Sin motor asignado'
+        )
+
+        self.fields['bomba'].empty_label = (
+            'Sin bomba asignada'
+        )
+
+        self.fields['manifold'].empty_label = (
+            'Sin manifold asignado'
+        )
+
+        self.fields['pozo'].empty_label = (
+            'Sin pozo asignado'
+        )

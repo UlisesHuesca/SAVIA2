@@ -14,137 +14,257 @@
        FILTROS RÁPIDOS POR CATEGORÍA
        ========================================================= */
 
-
     .sv-asset-summary {
-        --summary-color: #2563eb;
+        --summary-accent: #2563eb;
 
-        display: flex;
+        display: grid;
+        grid-template-columns:
+            minmax(250px, 1.25fr)
+            minmax(560px, 2.5fr)
+            minmax(110px, auto);
         align-items: center;
-        justify-content: space-between;
-        gap: 1.25rem;
-        margin-bottom: 1rem;
-        padding: 1rem 1.25rem;
+        gap: 24px;
+
+        margin: 20px 0 26px;
+        padding: 20px 24px;
+
         background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-left: 5px solid var(--summary-color);
-        border-radius: 14px;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+        border: 1px solid #dce3eb;
+        border-left: 6px solid var(--summary-accent);
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     }
 
-    .sv-asset-summary-main {
+    /* Colores por categoría */
+    .sv-asset-summary--todos {
+        --summary-accent: #2563eb;
+    }
+
+    .sv-asset-summary--vehiculo {
+        --summary-accent: #0891b2;
+    }
+
+    .sv-asset-summary--computo {
+        --summary-accent: #2563eb;
+    }
+
+    .sv-asset-summary--celular {
+        --summary-accent: #7c3aed;
+    }
+
+    .sv-asset-summary--ubm {
+        --summary-accent: #f97316;
+    }
+
+    .sv-asset-summary--epp {
+        --summary-accent: #16a34a;
+    }
+
+    .sv-asset-summary--maquinaria {
+        --summary-accent: #d97706;
+    }
+
+    .sv-asset-summary--otro {
+        --summary-accent: #64748b;
+    }
+
+    .sv-asset-summary-category {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 16px;
         min-width: 0;
     }
 
     .sv-asset-summary-icon {
         display: inline-flex;
-        flex: 0 0 52px;
         align-items: center;
         justify-content: center;
-        width: 52px;
-        height: 52px;
+        flex: 0 0 68px;
+        width: 68px;
+        height: 68px;
+
         color: #ffffff;
-        font-size: 1.3rem;
-        background: var(--summary-color);
-        border-radius: 14px;
+        background: var(--summary-accent);
+        border-radius: 18px;
+        font-size: 27px;
     }
 
-    .sv-asset-summary-info {
+    .sv-asset-summary-heading {
         min-width: 0;
     }
 
-    .sv-asset-summary-title {
-        margin: 0 0 0.2rem;
-        color: #1e293b;
-        font-size: 1.05rem;
+    .sv-asset-summary-label,
+    .sv-status-label,
+    .sv-asset-summary-total span {
+        display: block;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .sv-asset-summary-heading h2 {
+        margin: 3px 0 4px;
+        color: #0f172a;
+        font-size: 1.15rem;
         font-weight: 800;
         line-height: 1.2;
+        overflow-wrap: anywhere;
     }
 
-    .sv-asset-summary-subtitle {
+    .sv-asset-summary-heading p {
         margin: 0;
         color: #64748b;
-        font-size: 0.82rem;
+        font-size: 0.88rem;
+        line-height: 1.35;
     }
 
-    .sv-asset-summary-count {
-        flex: 0 0 auto;
-        text-align: right;
+    .sv-asset-summary-statuses {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(110px, 1fr));
+        gap: 10px;
+        min-width: 0;
     }
 
-    .sv-asset-summary-number {
+    .sv-status-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        min-height: 62px;
+        padding: 10px 12px;
+
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 13px;
+    }
+
+    .sv-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        font-size: 16px;
+    }
+
+    .sv-status-content {
+        min-width: 0;
+    }
+
+    .sv-status-content strong {
         display: block;
+        margin-top: 2px;
         color: #0f172a;
-        font-size: 2rem;
+        font-size: 1.25rem;
         font-weight: 800;
         line-height: 1;
     }
 
-    .sv-asset-summary-label {
+    .sv-status-item--alta .sv-status-icon {
+        color: #079455;
+        background: #dcfae6;
+    }
+
+    .sv-status-item--baja .sv-status-icon {
+        color: #dc2626;
+        background: #fee2e2;
+    }
+
+    .sv-status-item--stock .sv-status-icon {
+        color: #2563eb;
+        background: #dbeafe;
+    }
+
+    .sv-status-item--reparacion .sv-status-icon {
+        color: #d97706;
+        background: #fef3c7;
+    }
+
+    .sv-asset-summary-total {
+        min-width: 105px;
+        padding-left: 22px;
+        text-align: right;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .sv-asset-summary-total strong {
         display: block;
-        margin-top: 0.25rem;
-        color: #64748b;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        color: #0f172a;
+        font-size: 2.5rem;
+        font-weight: 900;
+        line-height: 1;
     }
 
-    .sv-summary-todos {
-        --summary-color: #2563eb;
+    .sv-asset-summary-total span {
+        margin-top: 6px;
     }
 
-    .sv-summary-ubm {
-        --summary-color: #f97316;
-    }
-
-    .sv-summary-vehiculo {
-        --summary-color: #0891b2;
-    }
-
-    .sv-summary-computo {
-        --summary-color: #2563eb;
-    }
-
-    .sv-summary-celular {
-        --summary-color: #7c3aed;
-    }
-
-    .sv-summary-epp {
-        --summary-color: #16a34a;
-    }
-
-    .sv-summary-maquinaria {
-        --summary-color: #d97706;
-    }
-
-    .sv-summary-otro {
-        --summary-color: #64748b;
-    }
-
-    @media (max-width: 575.98px) {
+    @media (max-width: 1200px) {
         .sv-asset-summary {
-            align-items: flex-start;
+            grid-template-columns: 1fr auto;
+        }
+
+        .sv-asset-summary-statuses {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .sv-asset-summary {
+            grid-template-columns: 1fr;
+            gap: 18px;
+            padding: 18px;
+        }
+
+        .sv-asset-summary-statuses {
+            grid-column: auto;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .sv-asset-summary-total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0 0;
+            text-align: left;
+            border-top: 1px solid #e2e8f0;
+            border-left: 0;
+        }
+
+        .sv-asset-summary-total strong {
+            order: 2;
+            font-size: 2rem;
+        }
+
+        .sv-asset-summary-total span {
+            order: 1;
+            margin: 0;
+        }
+    }
+
+    @media (max-width: 440px) {
+        .sv-asset-summary-statuses {
+            grid-template-columns: 1fr;
         }
 
         .sv-asset-summary-icon {
-            flex-basis: 44px;
-            width: 44px;
-            height: 44px;
-        }
-
-        .sv-asset-summary-number {
-            font-size: 1.55rem;
-        }
-
-        .sv-asset-summary-subtitle {
-            display: none;
+            flex-basis: 58px;
+            width: 58px;
+            height: 58px;
+            border-radius: 15px;
         }
     }
 
 </style>
+
+
+    
+
 <main class="sv-page sv-page-with-navbar" id="response-div">
     <header class="sv-page-header">
         <div>
@@ -156,31 +276,64 @@
             <p class="sv-page-subtitle">Consulta, administra y genera la documentación de los activos registrados.</p>
         </div>
     </header>
-    <section class="sv-asset-summary sv-summary-{{ resumen_activos.clase }}">
-    <div class="sv-asset-summary-main">
-        <span class="sv-asset-summary-icon">
+    <section class="sv-asset-summary sv-asset-summary--{{ resumen_activos.clase }}">
+    <div class="sv-asset-summary-category">
+        <div class="sv-asset-summary-icon">
             <i class="fa-solid {{ resumen_activos.icono }}"></i>
-        </span>
+        </div>
 
-        <div class="sv-asset-summary-info">
-            <h2 class="sv-asset-summary-title">
-                {{ resumen_activos.titulo }}
-            </h2>
-
-            <p class="sv-asset-summary-subtitle">
-                {{ resumen_activos.subtitulo }}
-            </p>
+        <div class="sv-asset-summary-heading">
+            <span class="sv-asset-summary-label">Categoría</span>
+            <h2>{{ resumen_activos.titulo }}</h2>
+            <p>{{ resumen_activos.subtitulo }}</p>
         </div>
     </div>
 
-    <div class="sv-asset-summary-count">
-        <span class="sv-asset-summary-number">
-            {{ resumen_activos.cantidad }}
-        </span>
+    <div class="sv-asset-summary-statuses">
+        <div class="sv-status-item sv-status-item--alta">
+            <span class="sv-status-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </span>
+            <span class="sv-status-content">
+                <span class="sv-status-label">Altas</span>
+                <strong>{{ resumen_activos.altas }}</strong>
+            </span>
+        </div>
 
-        <span class="sv-asset-summary-label">
-            Resultados
-        </span>
+        <div class="sv-status-item sv-status-item--baja">
+            <span class="sv-status-icon">
+                <i class="fa-solid fa-circle-down"></i>
+            </span>
+            <span class="sv-status-content">
+                <span class="sv-status-label">Bajas</span>
+                <strong>{{ resumen_activos.bajas }}</strong>
+            </span>
+        </div>
+
+        <div class="sv-status-item sv-status-item--stock">
+            <span class="sv-status-icon">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </span>
+            <span class="sv-status-content">
+                <span class="sv-status-label">Stock</span>
+                <strong>{{ resumen_activos.stock }}</strong>
+            </span>
+        </div>
+
+        <div class="sv-status-item sv-status-item--reparacion">
+            <span class="sv-status-icon">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+            </span>
+            <span class="sv-status-content">
+                <span class="sv-status-label">Reparación</span>
+                <strong>{{ resumen_activos.reparacion }}</strong>
+            </span>
+        </div>
+    </div>
+
+    <div class="sv-asset-summary-total">
+        <strong>{{ resumen_activos.cantidad }}</strong>
+        <span>Resultados</span>
     </div>
 </section>
 
@@ -322,6 +475,7 @@
                 <thead>
                     <tr>
                         <th scope="col">ECO</th>
+                        <th>Distrito</th>
                         <th scope="col" style="width: 28%; max-width: 320px; white-space: normal;">Producto</th>
                         <th scope="col" data-column="responsable">Responsable</th>
                         <th scope="col" data-column="tipo">Tipo de activo</th>
@@ -341,6 +495,7 @@
                     {% for item in activos %}
                     <tr>
                         <td><span class="sv-folio">{{ item.eco_unidad }}</span></td>
+                        <td>{{item.responsable.distritos}}</td>
                         <td style="width: 28%; max-width: 320px; white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{% if item.activo %}{{ item.activo.producto.nombre }}{% else %}—{% endif %}</span></td>
                         <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
                         <td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>

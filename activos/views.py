@@ -11,7 +11,8 @@ from django.utils import timezone
 
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
-from .models import Categoria_Activo
+from .forms import VehiculoActivoForm, UBMActivoForm
+from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo
 from compras.models import Proveedor_direcciones
 from .filters import ActivoFilter
 from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito
@@ -74,10 +75,7 @@ def activos(request):
     # ---------------------------------------------------------
     # FILTROS
     # ---------------------------------------------------------
-    myfilter = ActivoFilter(
-        request.GET or None,
-        queryset=activos_base,
-    )
+    myfilter = ActivoFilter(request.GET or None,queryset=activos_base,)
 
     activos_queryset = myfilter.qs.distinct()
 
@@ -126,6 +124,32 @@ def activos(request):
         },
     }
 
+    conteos_estatus = activos_queryset.aggregate(
+        total=Count('id', distinct=True),
+        altas=Count(
+            'id',
+            filter=Q(estatus__nombre__iexact='ALTA'),
+            distinct=True,
+        ),
+        bajas=Count(
+            'id',
+            filter=Q(estatus__nombre__iexact='BAJA'),
+            distinct=True,
+        ),
+        stock=Count(
+            'id',
+            filter=Q(estatus__nombre__iexact='STOCK'),
+            distinct=True,
+        ),
+        reparacion=Count(
+            'id',
+            filter=Q(estatus__nombre__iexact='REPARACION'),
+            distinct=True,
+        ),
+    )
+
+
+
     if categoria_seleccionada:
         nombre_categoria = (
             categoria_seleccionada.nombre or ''
@@ -139,20 +163,30 @@ def activos(request):
             },
         )
 
+
+
         resumen_activos = {
             'titulo': categoria_seleccionada.nombre,
             'subtitulo': 'Activos de la categoría seleccionada',
-            'cantidad': activos_queryset.count(),
+            'cantidad': conteos_estatus['total'],
             'icono': presentacion['icono'],
             'clase': presentacion['clase'],
+            'altas': conteos_estatus['altas'],
+            'bajas': conteos_estatus['bajas'],
+            'stock': conteos_estatus['stock'],
+            'reparacion': conteos_estatus['reparacion'],
         }
     else:
         resumen_activos = {
             'titulo': 'Todos los activos',
             'subtitulo': 'Resultados disponibles para el usuario',
-            'cantidad': activos_queryset.count(),
+            'cantidad': conteos_estatus['total'],
             'icono': 'fa-boxes-stacked',
             'clase': 'todos',
+            'altas': conteos_estatus['altas'],
+            'bajas': conteos_estatus['bajas'],
+            'stock': conteos_estatus['stock'],
+            'reparacion': conteos_estatus['reparacion'],
         }
 
     # ---------------------------------------------------------
@@ -436,10 +470,34 @@ def edit_activo(request, pk):
     else:
         marca_p = None
 
+    nombre_categoria = (activo.categoria.nombre.strip().upper() if activo.categoria and activo.categoria.nombre else '')
+
+    es_vehiculo = (nombre_categoria == 'VEHICULO')
+    es_ubm = (nombre_categoria == 'UBM')
+
+    extension_instance = None
+    ext_form = None
+    extension_form_class = None
+    extension_prefix = None
+    tipo_extension = None
+
+    if es_vehiculo:
+        extension_instance = Vehiculo_Activo.objects.filter(activo = activo).first()
+        extension_form_class = VehiculoActivoForm
+        extension_prefix = 'vehiculo'
+        tipo_extension = 'VEHICULO'
+    if es_ubm:
+        extension_instance = UBM_Activo.objects.filter(activo=activo).first()
+        extension_form_class = UBMActivoForm
+        extension_prefix = 'ubm'
+        tipo_extension = 'UBM'
+
     #productos_activos = productos.filter(activo_disponible = True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
     form.fields['activo'].queryset = productos
     factura_form = DocumentosActivoForm(instance= activo)
+    if extension_form_class is not None:
+        ext_form = extension_form_class(instance = extension_instance, prefix = extension_prefix,)
 
     productos_para_select2 = [
         {
@@ -620,22 +678,44 @@ def edit_activo(request, pk):
         else:
             print('Entrada al post')
             form = Edit_Activo_Form(request.POST, instance = activo)
-            if form.is_valid():
-                inventario = Inventario.objects.get(id = activo.activo.id)
-                if inventario.cantidad >= 1:
-                    inventario.cantidad -= 1
-                    inventario.save()
+            if extension_form_class is not None:
+                ext_form = extension_form_class(request.POST, instance = extension_instance, prefix = extension_prefix,)
+
+            form_activo_valido = form.is_valid()
+
+            form_extension_valido = (ext_form is None or ext_form.is_valid())
+
+            if form_activo_valido and form_extension_valido: 
+                #inventario = Inventario.objects.get(id = activo.activo.id)
+                #if inventario.cantidad >= 1:
+                #    inventario.cantidad -= 1
+                #    inventario.save()
                 activo = form.save(commit=False)
                 activo.completo = True
                 activo.modified_at = date.today()
                 activo.modified_by = perfil
-                activo.save()
+                campos_actualizados = list(form.changed_data)
+                campos_actualizados.extend(['completo','modified_at','modified_by',])
+
+                # Evitar nombres repetidos
+                campos_actualizados = list(dict.fromkeys(campos_actualizados))
+
+                activo.save(update_fields=campos_actualizados)
+
+                if ext_form is not None:
+                    extension = ext_form.save(commit = False)
+                    extension.activo = activo
+                    extension.save()
+
                 messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
                 return redirect('activos')
-            else:
-                for field, errors in form.errors.items():
-                    error_messages[field] = errors.as_text()
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
 
+            if ext_form is not None:
+                for field, errors in ext_form.errors.items():
+                    error_messages[f'{tipo_extension} - {field}'] = errors.as_text()
+            
 
     
     context = {
@@ -654,6 +734,8 @@ def edit_activo(request, pk):
         #'personal':personal,
         'marcas':marcas,
         'form':form,
+        'extension_form': ext_form,
+        'tipo_extension': tipo_extension,
         'factura_form': factura_form,
         'familia':familia,
         'subfamilia':subfamilia,

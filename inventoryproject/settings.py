@@ -149,6 +149,15 @@ DATABASES = {
 	}
 }
 
+LEGACY_ACTIVOS_DATABASE_NAME = os.getenv(
+    'LEGACY_ACTIVOS_DATABASE_NAME'
+)
+
+if LEGACY_ACTIVOS_DATABASE_NAME:
+    DATABASES['legacy_activos'] = DATABASES['default'].copy()
+    DATABASES['legacy_activos']['NAME'] = (
+        LEGACY_ACTIVOS_DATABASE_NAME
+    )
 #AUTH_USER_MODEL = 'user.CustomUser'
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

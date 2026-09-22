@@ -74,7 +74,7 @@
     </header>
 
     <section class="sv-card" id="activo-form-card">
-        <form method="POST" class="post-form" enctype="multipart/form-data">
+        <form method="POST" class="post-form" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
             <div class="sv-card-header">
@@ -85,9 +85,42 @@
             </div>
 
             <div class="sv-card-body">
-                {% if error_messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error_messages }}
+                {% if form.errors or vehiculo_form.errors %}
+                <div class="alert alert-danger mb-4">
+                    <div class="fw-bold mb-2">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        No fue posible guardar el activo
+                    </div>
+
+                    <ul class="mb-0">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                            <li>
+                                <strong>{{ field.label }}:</strong>
+                                {{ error }}
+                            </li>
+                            {% endfor %}
+                        {% endfor %}
+
+                        {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+
+                        {% if vehiculo_form %}
+                            {% for field in vehiculo_form %}
+                                {% for error in field.errors %}
+                                <li>
+                                    <strong>{{ field.label }}:</strong>
+                                    {{ error }}
+                                </li>
+                                {% endfor %}
+                            {% endfor %}
+
+                            {% for error in vehiculo_form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
                 </div>
                 {% endif %}
 
@@ -395,6 +428,416 @@
                         </div>
                     </div>
                 </div>
+
+                {% if tipo_extension == "VEHICULO" %}
+                <section class="sv-card mt-4">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-car-side"></i>
+                                Información del vehículo
+                            </h2>
+
+                            <p class="sv-card-subtitle">
+                                Información específica de la unidad vehicular.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        {% if extension_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ extension_form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ vehiculo_form.tipo_vehiculo.id_for_label }}"
+                                >
+                                    Tipo de vehículo
+                                </label>
+
+                                {{ extension_form.tipo_vehiculo }}
+
+                                {% for error in extension_form.tipo_vehiculo.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.anio_modelo.id_for_label }}"
+                                >
+                                    Año modelo
+                                </label>
+
+                                {{ extension_form.anio_modelo }}
+
+                                {% for error in extension_form.anio_modelo.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.numero_motor.id_for_label }}"
+                                >
+                                    Número de motor
+                                </label>
+
+                                {{ extension_form.numero_motor }}
+
+                                {% for error in extension_form.numero_motor.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.color.id_for_label }}"
+                                >
+                                    Color
+                                </label>
+
+                                {{ extension_form.color }}
+
+                                {% for error in extension_form.color.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.placas.id_for_label }}"
+                                >
+                                    Placas
+                                </label>
+
+                                {{ extension_form.placas }}
+
+                                {% for error in extension_form.placas.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.estado_registro.id_for_label }}"
+                                >
+                                    Estado de registro
+                                </label>
+
+                                {{ extension_form.estado_registro }}
+
+                                {% for error in extension_form.estado_registro.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.numero_poliza.id_for_label }}"
+                                >
+                                    Número de póliza
+                                </label>
+
+                                {{ extension_form.numero_poliza }}
+
+                                {% for error in extension_form.numero_poliza.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.cobertura.id_for_label }}"
+                                >
+                                    Cobertura
+                                </label>
+
+                                {{ extension_form.cobertura }}
+
+                                {% for error in extension_form.cobertura.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.vigencia_poliza.id_for_label }}"
+                                >
+                                    Vigencia de póliza
+                                </label>
+
+                                {{ extension_form.vigencia_poliza }}
+
+                                {% for error in extension_form.vigencia_poliza.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.fecha_verificacion.id_for_label }}"
+                                >
+                                    Fecha de verificación
+                                </label>
+
+                                {{ extension_form.fecha_verificacion }}
+
+                                {% for error in extension_form.fecha_verificacion.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {% elif tipo_extension == "UBM" %}
+             
+                <section class="sv-card mt-4">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-oil-well"></i>
+                                Información de la UBM
+                            </h2>
+
+                            <p class="sv-card-subtitle">
+                                Información técnica de la unidad de bombeo mecánico.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        {% if extension_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ extension_form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.tipo_ubm.id_for_label }}"
+                                >
+                                    Tipo de UBM
+                                </label>
+
+                                {{ extension_form.tipo_ubm }}
+
+                                {% for error in extension_form.tipo_ubm.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.serie_acumulador.id_for_label }}"
+                                >
+                                    Serie del acumulador
+                                </label>
+
+                                {{ extension_form.serie_acumulador }}
+
+                                {% for error in extension_form.serie_acumulador.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.serie_cilindro.id_for_label }}"
+                                >
+                                    Serie del cilindro
+                                </label>
+
+                                {{ extension_form.serie_cilindro }}
+
+                                {% for error in extension_form.serie_cilindro.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.deposito_aceite.id_for_label }}"
+                                >
+                                    Depósito de aceite
+                                </label>
+
+                                {{ extension_form.deposito_aceite }}
+
+                                {% for error in extension_form.deposito_aceite.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.rack.id_for_label }}"
+                                >
+                                    Rack
+                                </label>
+
+                                {{ extension_form.rack }}
+
+                                {% for error in extension_form.rack.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.pedestal.id_for_label }}"
+                                >
+                                    Pedestal
+                                </label>
+
+                                {{ extension_form.pedestal }}
+
+                                {% for error in extension_form.pedestal.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="border-top mt-4 pt-4">
+                            <div class="mb-3">
+                                <h3 class="h6 fw-bold mb-1">
+                                    <i class="fa-solid fa-gears text-primary"></i>
+                                    Componentes y ubicación
+                                </h3>
+
+                                <p class="text-muted small mb-0">
+                                    Componentes instalados actualmente y ubicación
+                                    operativa de la unidad.
+                                </p>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <label
+                                        class="form-label"
+                                        for="{{ extension_form.motor.id_for_label }}"
+                                    >
+                                        Motor
+                                    </label>
+
+                                    {{ extension_form.motor }}
+
+                                    {% for error in extension_form.motor.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <label
+                                        class="form-label"
+                                        for="{{ extension_form.bomba.id_for_label }}"
+                                    >
+                                        Bomba
+                                    </label>
+
+                                    {{ extension_form.bomba }}
+
+                                    {% for error in extension_form.bomba.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <label
+                                        class="form-label"
+                                        for="{{ extension_form.manifold.id_for_label }}"
+                                    >
+                                        Manifold
+                                    </label>
+
+                                    {{ extension_form.manifold }}
+
+                                    {% for error in extension_form.manifold.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <label
+                                        class="form-label"
+                                        for="{{ extension_form.pozo.id_for_label }}"
+                                    >
+                                        Pozo
+                                    </label>
+
+                                    {{ extension_form.pozo }}
+
+                                    {% for error in extension_form.pozo.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                {% endif %}
 
                 <div class="sv-actions justify-content-end">
                     <a class="sv-btn sv-btn-outline" id="cerrar" href="{% url 'activos' %}"><i class="fa-solid fa-xmark"></i> Cerrar</a>
@@ -854,6 +1297,12 @@ document.addEventListener('DOMContentLoaded', function () {
             mostrarIndicadorCarga('Guardando factura');
         });
     }
+
+    $('.js-ubm-component').select2({
+        width: '100%',
+        allowClear: true,
+        placeholder: 'Seleccionar',
+    });
 
     const inputPdf = document.getElementById('id_documento_factura_pdf');
     const inputXml = document.getElementById('id_documento_factura_xml');
