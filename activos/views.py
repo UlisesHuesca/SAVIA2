@@ -312,6 +312,7 @@ def add_activo(request):
     form.fields['responsable'].queryset = personal
 
     extension_form = None
+    factura_form = DocumentosActivoForm()
 
     if extension_form_class is not None:
         extension_form = extension_form_class(request.POST if request.method == 'POST' else None,prefix=extension_prefix,)
@@ -322,31 +323,34 @@ def add_activo(request):
     if request.method == 'POST':
         form_activo_valido = form.is_valid()
 
-        form_extension_valido = (extension_form is not None and extension_form.is_valid())
-        
+        form_extension_valido = (extension_form is None or extension_form.is_valid())
+        print(form_extension_valido)
         if form_activo_valido and form_extension_valido:
-            inventario = (Inventario.objects.select_for_update().get(pk=form.cleaned_data['activo'].pk))
-            if inventario.cantidad < 1:
-                form.add_error('activo','El producto ya no tiene existencia disponible.',)
-            else:
-                estatus_alta = (Estatus_Activo.objects.get(nombre ="ALTA"))
-                activo = form.save(commit=False)
-                activo.creado_por = perfil
-                activo.modified_por = perfil
-                activo.modified_at = date.today()
-                activo.completo = True
-                activo.estatus = estatus_alta
-                activo.save()
-                if extension_form is not None:
-                    extension = extension_form.save(commit=False)
-                    extension.activo = activo
-                    extension.save()
-            
-                inventario.cantidad -= 1 #Restar uno al inventario
-                inventario.save(update_fields=['cantidad',])
-                messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
-                return redirect('activos')
+            with transaction.atomic():
+                inventario = (Inventario.objects.select_for_update().get(pk=form.cleaned_data['activo'].pk))
+                if inventario.cantidad < 1:
+                    form.add_error('activo','El producto ya no tiene existencia disponible.',)
+                else:
+                    estatus_alta = (Estatus_Activo.objects.get(nombre ="ALTA"))
+                    activo = form.save(commit=False)
+                    activo.creado_por = perfil
+                    activo.modified_por = perfil
+                    activo.modified_at = date.today()
+                    activo.completo = True
+                    activo.estatus = estatus_alta
+                    activo.save()
+                    if extension_form is not None:
+                        extension = extension_form.save(commit=False)
+                        extension.activo = activo
+                        extension.save()
+                
+                    inventario.cantidad -= 1 #Restar uno al inventario
+                    inventario.save(update_fields=['cantidad',])
+                    messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
+                    return redirect('activos')
         else:
+            print("Errores del activo:", form.errors)
+            print("Errores de la extensión:", extension_form.errors if extension_form else None)
             messages.error(request, 'Hubo un error al agregar el activo.')
             for field, errors in form.errors.items():
                 for error in errors:
@@ -359,6 +363,7 @@ def add_activo(request):
         'marca_para_select2': marca_para_select2,
         'marcas': marcas,
         'form':form,
+        #'extension_form': extension_form,
         'productos_activos':productos,
     }
 

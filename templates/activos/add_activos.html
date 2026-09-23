@@ -10,6 +10,113 @@
     .sv-select2-expand { flex: 1 1 auto; min-width: 0; }
     .sv-select2-expand .select2-container { width: 100% !important; min-width: 0; }
     .sv-select2-expand .select2-selection__rendered { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sv-activo-create .sv-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+    .sv-activo-create .sv-file-upload {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 76px;
+        margin: 0;
+        padding: 12px 14px;
+        border: 1px dashed #c5d0d8;
+        border-radius: 10px;
+        background: #fafbfc;
+        cursor: pointer;
+        transition:
+            border-color 0.2s ease,
+            background-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .sv-activo-create .sv-file-upload:hover {
+        border-color: var(--sv-accent);
+        background: var(--sv-accent-soft);
+        transform: translateY(-1px);
+    }
+
+    .sv-activo-create .sv-file-upload-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        border-radius: 10px;
+        background: #eef1f3;
+        color: var(--sv-primary);
+        font-size: 20px;
+    }
+
+    .sv-activo-create .sv-file-upload-pdf
+    .sv-file-upload-icon {
+        background: #fbeaec;
+        color: var(--sv-danger);
+    }
+
+    .sv-activo-create .sv-file-upload-xml
+    .sv-file-upload-icon {
+        background: var(--sv-accent-soft);
+        color: var(--sv-accent);
+    }
+
+    .sv-activo-create .sv-file-upload-content {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .sv-activo-create .sv-file-upload-content strong,
+    .sv-activo-create .sv-file-upload-content small {
+        display: block;
+    }
+
+    .sv-activo-create .sv-file-upload-content strong {
+        margin-bottom: 3px;
+        color: var(--sv-text);
+        font-size: 13px;
+    }
+
+    .sv-activo-create .sv-file-upload-content small {
+        overflow: hidden;
+        color: var(--sv-text-muted);
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sv-activo-create .sv-file-upload-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 11px;
+        border: 1px solid var(--sv-border);
+        border-radius: 8px;
+        background: #ffffff;
+        color: var(--sv-primary);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    @media only screen and (max-width: 576px) {
+        .sv-activo-create .sv-file-upload {
+            align-items: flex-start;
+        }
+
+        .sv-activo-create .sv-file-upload-action {
+            padding: 8px;
+        }
+
+        .sv-activo-create .sv-file-upload-action span {
+            display: none;
+        }
+    }
 </style>
 
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -197,24 +304,87 @@
                             <p class="sv-card-subtitle">Carga los comprobantes PDF y XML relacionados con el activo.</p>
                         </div>
                     </div>
-                    <div class="sv-card-body">
-                        <div class="row g-3">
-                            <div class="col-12 col-lg-6">
-                                <label class="form-label fw-semibold" for="{{ form.factura_pdf.id_for_label }}">Factura PDF</label>
-                                <div id="subir_pdf" class="sv-input-group input-group">
-                                    {{ form.factura_pdf|add_class:"form-control" }}
-                                    <label class="input-group-text text-danger" for="{{ form.factura_pdf.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> PDF</label>
+                    <div class="sv-card-body sv-activo-create">
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <label
+                                class="form-label fw-semibold"
+                                for="{{ form.factura_pdf.id_for_label }}"
+                            >
+                                Factura PDF
+                            </label>
+
+                            <label
+                                class="sv-file-upload sv-file-upload-pdf"
+                                for="{{ form.factura_pdf.id_for_label }}"
+                            >
+                                <span class="sv-file-upload-icon">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </span>
+
+                                <span class="sv-file-upload-content">
+                                    <strong>Seleccionar archivo PDF</strong>
+
+                                    <small id="nombreFacturaPdf">
+                                        Ningún archivo seleccionado
+                                    </small>
+                                </span>
+
+                                <span class="sv-file-upload-action">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    Examinar
+                                </span>
+                            </label>
+
+                            {% render_field form.factura_pdf class="sv-file-input" accept=".pdf,application/pdf" %}
+
+                            {% for error in form.factura_pdf.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
                                 </div>
-                            </div>
-                            <div class="col-12 col-lg-6">
-                                <label class="form-label fw-semibold" for="{{ form.factura_xml.id_for_label }}">Factura XML</label>
-                                <div id="subir_xml" class="sv-input-group input-group">
-                                    {{ form.factura_xml|add_class:"form-control" }}
-                                    <label class="input-group-text" for="{{ form.factura_xml.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> XML</label>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label
+                                class="form-label fw-semibold"
+                                for="{{ form.factura_xml.id_for_label }}"
+                            >
+                                Factura XML
+                            </label>
+
+                            <label
+                                class="sv-file-upload sv-file-upload-xml"
+                                for="{{ form.factura_xml.id_for_label }}"
+                            >
+                                <span class="sv-file-upload-icon">
+                                    <i class="fa-solid fa-file-code"></i>
+                                </span>
+
+                                <span class="sv-file-upload-content">
+                                    <strong>Seleccionar archivo XML</strong>
+
+                                    <small id="nombreFacturaXml">
+                                        Ningún archivo seleccionado
+                                    </small>
+                                </span>
+
+                                <span class="sv-file-upload-action">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    Examinar
+                                </span>
+                            </label>
+
+                            {% render_field form.factura_xml class="sv-file-input" accept=".xml,application/xml,text/xml" %}
+
+                            {% for error in form.factura_xml.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
                                 </div>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
+                </div>
                 </section>
             </div>
 
@@ -276,5 +446,34 @@ $(document).ready(function () {
         });
     }
 });
+
+function mostrarNombreArchivo(inputId, destinoId) {
+    const input = document.getElementById(inputId);
+    const destino = document.getElementById(destinoId);
+
+    if (!input || !destino) {
+        return;
+    }
+
+    input.addEventListener('change', function () {
+        if (this.files && this.files.length) {
+            destino.textContent = this.files[0].name;
+            destino.title = this.files[0].name;
+        } else {
+            destino.textContent = 'Ningún archivo seleccionado';
+            destino.removeAttribute('title');
+        }
+    });
+}
+
+mostrarNombreArchivo(
+    '{{ form.factura_pdf.id_for_label }}',
+    'nombreFacturaPdf'
+);
+
+mostrarNombreArchivo(
+    '{{ form.factura_xml.id_for_label }}',
+    'nombreFacturaXml'
+);
 </script>
 {% endblock %}

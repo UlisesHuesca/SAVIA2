@@ -12,7 +12,7 @@ class Activo_Form(forms.ModelForm):
     class Meta:
         model = Activo
         fields = ['activo','categoria','descripcion','eco_unidad','serie','marca','modelo','comentario','cuenta_contable','factura_interna',
-                  'responsable','fecha_asignacion']
+                  'responsable','fecha_asignacion', 'factura_pdf', 'factura_xml']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
