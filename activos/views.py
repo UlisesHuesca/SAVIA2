@@ -95,11 +95,11 @@ def activos(request):
 
     presentacion_categorias = {
         'UBM': {
-            'icono': 'fa-gears',
+            'icono': 'fa-oil-well', # <i class="fa-solid fa-oil-well"></i>
             'clase': 'ubm',
         },
         'VEHICULO': {
-            'icono': 'fa-car-side',
+            'icono': 'fa-truck-pickup', #<i class="fa-sharp fa-solid fa-truck-pickup"></i>
             'clase': 'vehiculo',
         },
         'COMPUTO': {
@@ -247,7 +247,8 @@ def add_activo(request):
     # Inventario disponible
     # --------------------------
 
-    productos = (Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos, cantidad__gte = 1).select_related('producto','distrito').order_by('producto__nombre',))
+    #productos = (Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos, cantidad__gte = 1).select_related('producto','distrito').order_by('producto__nombre',))
+    productos = (Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos,).select_related('producto','distrito').order_by('producto__nombre',))
     #productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
     # ---------------------------
     # Responsables
@@ -312,7 +313,6 @@ def add_activo(request):
     form.fields['responsable'].queryset = personal
 
     extension_form = None
-    factura_form = DocumentosActivoForm()
 
     if extension_form_class is not None:
         extension_form = extension_form_class(request.POST if request.method == 'POST' else None,prefix=extension_prefix,)

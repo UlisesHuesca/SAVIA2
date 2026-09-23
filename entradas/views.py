@@ -54,62 +54,24 @@ from reportlab.lib import colors
 def pendientes_entrada(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
-    compras = Compra.objects.filter(
+    compras_base = Compra.objects.filter(
         Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
         req__orden__distrito = usuario.distritos, entrada_completa = False,
         autorizado2= True).order_by('-folio')
 
-    if usuario.tipo.nombre == "Admin":
+    if usuario.tipo.almacen == True:
+        entrada_productos = ArticuloComprado.objects.filter(
+            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True),
+            oc__in=compras_base,
+            entrada_completa=False,
+            producto__producto__articulos__producto__producto__servicio=False,
+        ).distinct()
+
+
+        compras = compras_base.filter(id__in = entrada_productos.values('oc_id'))
         
-        for compra in compras:
-            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
-            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
-            cant_entradas = articulos_entrada.count()
-            cant_servicios = servicios_pendientes.count()
-            if  cant_entradas == cant_servicios and cant_entradas > 0:
-                compra.solo_servicios = True
-                compra.save()
-        compras = compras.filter(solo_servicios= False)
-        #DECIMAL_14_2 = DecimalField(max_digits=14, decimal_places=2)
-
-
-        pendientes_qs = ArticuloComprado.objects.filter(
-            oc=OuterRef('pk'),
-            entrada_completa=False
-        ).filter(
-            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True)
-        )
-        compras = compras.annotate(
-            tiene_pendientes=Exists(pendientes_qs)
-        ).filter(tiene_pendientes=True)
-
-
-    elif usuario.tipo.almacen == True:
-        compras_servicios = compras.filter(Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)))
-        
-        for compra in compras_servicios:
-            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
-            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
-            cant_entradas = articulos_entrada.count()
-            cant_servicios = servicios_pendientes.count()
-         
-            if  cant_entradas == cant_servicios and cant_entradas > 0:
-                compra.solo_servicios = True
-                compra.save()
-
-        #El filtro devuelve todas las compras a crédito (O) pagadas (O) cuyo monto de los pagado sea mayor que 0 (Y)
-        # que NO sea un servicio (O) que sea un servicio (Y) del usuario que generó la order (Y)
-        # que sea del distrito del usuario (Y) que la entrada NO este completa (Y) que este autorizada 
-        compras = compras.filter(Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)))
-        pendientes_qs = ArticuloComprado.objects.filter(
-            oc=OuterRef('pk'),
-            entrada_completa=False
-        ).filter(
-            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True)
-        )
-        compras = compras.annotate(
-            tiene_pendientes=Exists(pendientes_qs)
-        ).filter(tiene_pendientes=True)
+       
+        #compras = compras_productos.filter(Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)))
         
     else:
         compras = Compra.objects.none()
@@ -118,12 +80,8 @@ def pendientes_entrada(request):
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
 
-    
-    # Ahora, usamos este queryset de compras para filtrar ArticuloComprado.
-    articulos_comprados = ArticuloComprado.objects.filter(oc__in=compras, entrada_completa = False).order_by('-oc__folio')
-
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        return convert_excel_matriz_compras_pendientes(articulos_comprados)
+        return convert_excel_matriz_compras_pendientes(entrada_productos)
 
     #Set up pagination
     p = Paginator(compras, 50)
@@ -143,44 +101,28 @@ def pendientes_entrada(request):
 def entrada_servicios(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
-    print(usuario)
-    compras = Compra.objects.filter(
+
+    compras_base = Compra.objects.filter(
             Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
-            req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+            req__orden__distrito = usuario.distritos, entrada_completa = False,
+            autorizado2= True).order_by('-folio')
 
-    if usuario.tipo.nombre == "Admin":
-        compras_servicios = compras.filter(solo_servicios= False)
-        
-        for compra in compras_servicios:
-            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
-            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
-            cant_entradas = articulos_entrada.count()
-            cant_servicios = servicios_pendientes.count()
-            if  cant_entradas == cant_servicios and cant_entradas > 0:
-                compra.solo_servicios = True
-                compra.save()
+    entrada_productos = ArticuloComprado.objects.filter(
+        Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True),
+        oc__in=compras_base,
+        entrada_completa=False,
+        producto__producto__articulos__producto__producto__servicio=True,
+        ).distinct()
 
-        compras = compras.filter(solo_servicios = True)  
+    if usuario.tipo.almacenista == True:
+        compras = compras_base.filter(id__in = entrada_productos.values('oc_id'))
+
     elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
-        compras = compras.filter(solo_servicios = True, req__orden__distrito = usuario.distritos, req__orden__proyecto__contrato__tiene_pozos = True)
+        compras = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = entrada_productos.values('oc_id'))
     else:
         #Este ciclo solo trae a la compras con servicios igual a false para utilizarla en el ciclo de abajo y ser marcadas como True en caso de que solo tengan servicios
-        compras_servicios = compras.filter( req__orden__staff = usuario, solo_servicios= False)
+        compras = compras_base.filter( req__orden__staff = usuario)
         
-        #print(compras)
-        for compra in compras_servicios:
-            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
-            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
-            cant_entradas = articulos_entrada.count()
-            cant_servicios = servicios_pendientes.count()
-                
-            if  cant_entradas == cant_servicios and cant_entradas > 0:
-                compra.solo_servicios = True
-                compra.save()
-        #Posterior a haber marcado las compras que solo tienen servicios, se vuelve a hacer la consulta para traer solo las que tienen servicios
-        compras = compras.filter( req__orden__staff = usuario, solo_servicios = True)
-        #print(usuario.staff.staff.first_name)
-
 
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
@@ -617,6 +559,7 @@ def articulos_entrada_servicios(request, pk):
         }
 
     return render(request, 'entradas/servicios_entradas.html', context)
+
 
 def evalua_entrada_completa(articulos_comprados, num_art_comprados, compra):
     for articulo in articulos_comprados:

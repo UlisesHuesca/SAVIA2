@@ -4950,7 +4950,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             compra_list.proveedor.nombre.razon_social,
             compra_list.estatus_original,
             compra_list.cond_de_pago.nombre,
-            compra_list.costo_oc,
+            compra_list.costo_plus_adicionales,
             compra_list.monto_pagado,
             'Pagada' if compra_list.pagada else 'No Pagada',
             primera_fecha_pago,

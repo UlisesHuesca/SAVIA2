@@ -4,7 +4,7 @@ from dashboard.models import ArticulosparaSurtir, Order, Inventario, PriceRefCha
 from user.models import Profile
 from gastos.models import Solicitud_Gasto, ValeRosa
 from tesoreria.models import Pago
-from compras.models import Compra
+from compras.models import Compra, ArticuloComprado
 from requisiciones.models import Requis, ValeSalidas, Devolucion
 from compras.models import Compra, Proveedor
 from viaticos.models import Solicitud_Viatico
@@ -219,17 +219,57 @@ def contadores_processor(request):
         conteo_gastos_pendientes = gastos_pendientes.count()
         conteo_viaticos = viaticos_pendientes.count()
       
-        if usuario.tipo.nombre == 'Admin':
-            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False)
-            servicios = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True)         
+        if usuario.tipo.almacenista == True:
+            compras_base = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
+                    req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+
+
+
+            entrada_productos_base = ArticuloComprado.objects.filter(
+                        Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True),
+                        oc__in=compras_base,
+                        entrada_completa=False,
+                    )
+
+            entrada_productos = entrada_productos_base.filter(producto__producto__articulos__producto__producto__servicio=False).distinct()
+            servicios_productos = entrada_productos_base.filter(producto__producto__articulos__producto__producto__servicio=True).distinct()
+            
+            entradas = compras_base.filter(id__in = entrada_productos.values('oc_id'))
+            servicios = compras_base.filter(id__in = servicios_productos.values('oc_id')) 
+        if usuario.tipo.nombre == 'SUPERVISIÓN_PROYECTOS':
+            compras_base = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
+                                req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+            
+            
+            
+            entrada_productos_base = ArticuloComprado.objects.filter(
+                Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True),
+                oc__in=compras_base,
+                entrada_completa=False,
+            )
+
+            entrada_productos = entrada_productos_base.filter(producto__producto__articulos__producto__producto__servicio=False).distinct()
+            servicios_productos = entrada_productos_base.filter(producto__producto__articulos__producto__producto__servicio=True).distinct()
+
+            entradas = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = entrada_productos.values('oc_id'))
+            servicios = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = servicios_productos.values('oc_id'))
+
         else:
-            entradas = Compra.objects.filter(
-            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
-            Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)),
-            req__orden__distrito = usuario.distritos,  
-            entrada_completa = False, 
-            autorizado2= True)
-            servicios = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario, req__orden__distrito__nombre = usuario.distritos)
+
+            compras_base = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
+                                req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+
+
+            entrada_productos_base = ArticuloComprado.objects.filter(
+                    Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True),
+                    oc__in=compras_base,
+                    entrada_completa=False,)
+          
+            entrada_productos = entrada_productos_base.filter(producto__producto__articulos__producto__producto__servicio=False).distinct()
+            servicios_productos = entrada_productos_base.filter(producto__producto__articulos__producto__producto__servicio=True).distinct()
+            
+            entradas = compras_base.filter(id__in = entrada_productos.values('oc_id'))
+            servicios = compras_base.filter(id__in = servicios_productos.values('oc_id'))
         conteo_entradas = entradas.count()
         conteo_servicios = servicios.count()
 
