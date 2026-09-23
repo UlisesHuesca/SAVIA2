@@ -1469,7 +1469,7 @@ def control_bancos_api(request, pk):
     })
 
 @api_view(["GET"])
-#@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def reporte_solicitudes_api(request):
     last_id = int(request.query_params.get("last_id", 0))
