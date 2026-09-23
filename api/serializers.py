@@ -430,3 +430,4 @@ class ReporteSolicitudesSerializer(serializers.Serializer):
     contrato = serializers.CharField(allow_blank=True,allow_null=True,required=False,)
     proyecto = serializers.CharField(allow_blank=True, required=False,)
     subproyecto = serializers.CharField(allow_blank=True, required=False,)
+    sector = serializers.CharField(allow_blank=True, required = False,)

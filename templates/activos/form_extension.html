@@ -1,0 +1,66 @@
+{% load widget_tweaks %}
+
+{% if extension_form %}
+<section class="sv-card mt-4">
+    <div class="sv-card-header">
+        <div>
+            <h2 class="sv-card-title">
+                {% if tipo_extension == 'VEHICULO' %}
+                    <i class="fa-solid fa-car-side"></i>
+                    Información del vehículo
+                {% elif tipo_extension == 'UBM' %}
+                    <i class="fa-solid fa-gears"></i>
+                    Información de la UBM
+                {% endif %}
+            </h2>
+
+            <p class="sv-card-subtitle">
+                Captura la información específica de esta categoría.
+            </p>
+        </div>
+    </div>
+
+    <div class="sv-card-body">
+        {% for hidden in extension_form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        <div class="row g-3">
+            {% for field in extension_form.visible_fields %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <label
+                    for="{{ field.id_for_label }}"
+                    class="form-label"
+                >
+                    {{ field.label }}
+
+                    {% if field.field.required %}
+                        <span class="text-danger">*</span>
+                    {% endif %}
+                </label>
+
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="form-check">
+                        {% render_field field class+="form-check-input" %}
+                    </div>
+                {% else %}
+                    {% render_field field class+="form-control" %}
+                {% endif %}
+
+                {% if field.help_text %}
+                    <div class="form-text">
+                        {{ field.help_text }}
+                    </div>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

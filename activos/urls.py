@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path('activos/', views.activos, name='activos'),
     path('activos/agregar', views.add_activo, name='add-activo'),
-    path('activos/agregar/<int:pk>', views.add_activo2, name='add-activo2'),
+    #path('activos/agregar/<int:pk>', views.add_activo2, name='add-activo2'),
     path('activos/edit/<int:pk>', views.edit_activo, name='edit-activo'),
     path('cambio_distrito_activo//<int:pk>', views.cambio_distrito_activo, name='cambio_distrito_activo'),
     path('filtrar_productos_activo/', views.filtrar_productos_activo_distrito, name='filtrar_productos_activo'),
@@ -20,4 +20,5 @@ urlpatterns = [
     path('activos/activos_producto/', views.activos_producto, name='activos_producto'),
     #path('activo/<int:pk>/documentos/',views.documentos_activo,name='documentos_activo',),
     path('carga-proveedor/',views.carga_proveedor_activo,name= 'carga_proveedor_activo'),
+    path('activos/cargar-extension/',views.cargar_formulario_extension_activo, name='cargar-formulario-extension-activo',),
     ]

@@ -11,7 +11,8 @@ from .models import Vehiculo_Activo, UBM_Activo
 class Activo_Form(forms.ModelForm):
     class Meta:
         model = Activo
-        fields = ['activo','tipo_activo','descripcion','eco_unidad','serie','marca','modelo','comentario','cuenta_contable','factura_interna','factura_pdf','factura_xml','responsable','fecha_asignacion']
+        fields = ['activo','categoria','descripcion','eco_unidad','serie','marca','modelo','comentario','cuenta_contable','factura_interna',
+                  'responsable','fecha_asignacion']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,6 +25,21 @@ class Activo_Form(forms.ModelForm):
                 self.fields['responsable'].queryset = Profile.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
+
+    def clean_eco_unidad(self):
+        eco = self.cleaned_data.get('eco_unidad')
+
+        if not eco:
+            return eco
+
+        eco = eco.strip().upper()
+
+        repetido = (Activo.objects.filter(eco_unidad__iexact=eco).exclude(pk=self.instance.pk).exists())
+
+        if repetido:
+            raise forms.ValidationError('Ya existe un activo con este ECO.')
+
+        return eco
 
 
 
@@ -57,7 +73,7 @@ class Edit_Activo_Form(forms.ModelForm):
 
     class Meta:
         model = Activo
-        fields = ['activo','tipo_activo','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna',
+        fields = ['activo','categoria','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna',
                   'documento_baja','fecha_asignacion','fecha_adquisicion','precio_adquisicion','proveedor_adquisicion','origen']
        
   
@@ -67,6 +83,7 @@ class Edit_Activo_Form(forms.ModelForm):
         self.fields['responsable'].queryset = Profile.objects.none()
         self.fields['marca'].queryset = Marca.objects.none()
         self.fields['proveedor_adquisicion'].queryset = (Proveedor_direcciones.objects.none())
+        self.fields['categoria'].required = True
 
         if 'proveedor_adquisicion' in self.data:
             try:

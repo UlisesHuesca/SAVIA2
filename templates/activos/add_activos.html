@@ -2,431 +2,279 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
-{% load l10n %}
-<html>
-<head>
-{% block title %} Agregar Activos {% endblock %}
-</head>
-<body>
+
+{% block title %}Agregar activo{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-<hr>
-<hr>
-<hr>
-<hr>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class="container">
-    <div class="card"  id="document" role="document">
-    <form method="POST" class="post-form" id="form_id" enctype="multipart/form-data" onsubmit="disableButton()">
-    
-        <div class="card-header">
-            <h4 class="card-title">Agregar Activo</h4>
-        </div>
-        <div class="card-body" style="color:white">
-            <div>
-                {% csrf_token %}
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.activo|add_class:"form-control"|append_attr:"placeholder=Activo"}}
-                            <label style="color: #121212;" for="id_lugar_partida">Activo*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Descripción*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-lg-6 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.tipo_activo|add_class:"form-control"|append_attr:"placeholder= Tipo de Activo"}}
-                            <label style="color: #121212;" for="id_lugar_partida"></label>
-                        </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.eco_unidad|add_class:"form-control"|append_attr:"placeholder= Eco"}}
-                            <label style="color: #121212;" for="id_lugar_partida">Eco*</label>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="row">
-                        <!--<div class="col-sm-6">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>    
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                <input type="text" list="personal" id="txt_personal" valor="{{personal.id}}" placeholder="Personal..." class="form-control">
-                                <label  style="color: #121212;" for="txt_personal">Personal*</label>
-                            </div>
-                            <datalist id="personal" name='personal'>
-                            {% for item in personal %}
-                                <option valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}} "></option>
-                            {% endfor %}
-                            </datalist>
-                            </div>
-                        </div>-->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.responsable}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.marca}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    
-                    
-                        <div id="serie" class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.serie|add_class:"form-control"|append_attr:"placeholder= Serie"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Serie</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">   
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.modelo|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Modelo</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.factura_interna|add_class:"form-control"|append_attr:"placeholder= Factura Interna"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Factura Interna</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">   
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cuenta_contable|add_class:"form-control"|append_attr:"placeholder= Cuenta Contable"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Cuenta Contable</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row"> 
-                        <div class="col-lg-12 col-sm-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.comentario|add_class:"form-control"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Observaciones*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field form.fecha_asignacion type="date" class="form-control" %}
-                                <label style="color: #121212;" for="id_subproyecto">Fecha Asignación:</label>
-                            </div>
-                        </div>
-                    </div>
+<style>
+    .sv-select2-expand { flex: 1 1 auto; min-width: 0; }
+    .sv-select2-expand .select2-container { width: 100% !important; min-width: 0; }
+    .sv-select2-expand .select2-selection__rendered { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
 
-                    <div id="subir_pdf" class="row">
-                        <div class="input-group mb-3" style="height:60px" >
-                                {{form.factura_pdf|add_class:"form-control"}}
-                            <label class="input-group-text" for="id_archivo_pdf" style="color:#980f0f"><i class="fa-solid fa-cloud-arrow-up"></i>PDF</label>
-                            
-                        </div>
-                    </div>
-                    <div id="subir_xml" class="row">
-                        <div class="input-group mb-3" style="height:60px" >
-                            {{form.factura_xml|add_class:"form-control"}}
-                            <label class="input-group-text" for="id_archivo_xml"><i class="fa-solid fa-cloud-arrow-up"></i>XML</label>
-                        </div>
-                    </div>
-            </div>
-        </div>
-    <div class="card-footer">
-        <button class="btn btn-success" id="crear" type="submit">Crear</button>
-        <a type="button" class="btn btn-secondary" id="cerrar" href="{% url 'activos' %}">Cerrar</a>
-    </div>
-   
-    </form>
-</div>
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-$(document).ready(function() {
-    // Datos para el select2 de tipo_activo (deberás pasarlos desde tu vista en el contexto)
-    var datosTipoActivo = {{ tipo_activo_para_select2|safe }};
-    $('#id_tipo_activo').select2({
-        allowClear: true,
-        width: '100%',
-        data: datosTipoActivo,
-        placeholder: 'Tipo de Activo*',
-        templateResult: formatRepo,
-        templateSelection: formatRepoSelection
-    });
-
-    // Datos para el select2 de marca (deberás pasarlos desde tu vista en el contexto)
-    var datosMarca = {{ marca_para_select2|safe }};
-    $('#id_marca').select2({
-        allowClear: true,
-        width: '100%',
-        data: datosMarca,
-        placeholder: 'Marca*',
-        templateResult: formatRepo,
-        templateSelection: formatRepoSelection
-    });
-});
-{% if activos_completos_json %}
-
-document.getElementById("etiqueta_comentario").addEventListener("dblclick", function(){
-    var comentario = document.getElementById("etiqueta_comentario")
-    var input_comentario = document.getElementById("input_comentario")
-    input_comentario.setAttribute("class","col-sm-6")
-    comentario.setAttribute("class","col-6 d-none")
-});
-// Convertir JSON a matriz JavaScript
-var activos_completos = JSON.parse('{{ activos_completos_json|escapejs }}');
-
-// Escuchar cambios en el select de activos
-document.getElementById("txt_activo").addEventListener("change", function(event){
-    activo = document.getElementById("txt_activo")
-    
-    var browserChildren = document.getElementById('activo').children;
-    var id = browserChildren[i].getAttribute('valor');
-    var id_activo = browserChildren[i].getAttribute('valor_activo');
-    var selectedActivoId = id_activo;
-    console.log(selectedActivoId)
-    console.log(activo.value)
-    //var other_select = document.getElementById('id_activo');
-    //other_select.value = id;
-    document.getElementById("hidden_activo").value = id_activo
-    
-    // Si el valor seleccionado es vacío, limpiar los campos y salir
-    if (activo.value == "") {
-        document.getElementById("contenido_activo").textContent = "";
-        document.getElementById("contenido_descripcion").textContent = "";
-        document.getElementById("contenido_marca").textContent = "";
-        document.getElementById("contenido_modelo").textContent = "";
-        document.getElementById("contenido_responsable").textContent = "";
-        document.getElementById("contenido_tipo_activo").textContent = "";
-        document.getElementById("contenido_comentario").textContent = "";
-        document.getElementById("contenido_eco").textContent = "";
-        return;
-    }
-    
-    // Buscar el activo seleccionado en la matriz
-    var selectedActivo = activos_completos.find(function(activo){
-        return activo.id == selectedActivoId;
-    });
-    console.log(activos_completos)
-    // Actualizar campos con los datos del activo seleccionado
-    if (selectedActivo) {
-        var fields = selectedActivo.fields;
-        document.getElementById("contenido_activo").textContent= fields.activo;
-        document.getElementById("contenido_descripcion").textContent= fields.descripcion;
-        document.getElementById("contenido_marca").textContent = fields.marca;
-        document.getElementById("contenido_modelo").textContent = fields.modelo;
-        document.getElementById("contenido_responsable").textContent = fields.responsable;
-        document.getElementById("contenido_tipo_activo").textContent = fields.tipo_activo;
-        document.getElementById("contenido_comentario").textContent = fields.comentario;
-        document.getElementById("contenido_eco").textContent = fields.eco_unidad;
-    }
-});
-
-{% else %}
-document.getElementById('id_tipo_activo').addEventListener('change', (event) => {
-tipo_activo = document.getElementById('id_tipo_activo');
-serie = document.getElementById('serie');
-
-console.log(tipo_activo.value)
-if (tipo_activo.value == 1){
-    serie.classList.add('d-none')
-}else {
-    serie.classList.remove('d-none')
-}
-    
-});
-
-/*document.getElementById("txt_personal").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_personal");
-    var browserChildren = document.getElementById('personal').children;
-    //var browserChildren = document.getElementById('proveedor')
-    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
-    var other_select = document.getElementById('id_responsable');
-    //var status_txt = document.getElementById('comparativo')
-
-    //cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        console.log(browserChildren[i].value)
-
-        if (browserChildren[i].value == select.value) {
-            //console.log(browserChildren[i])
-            //console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            //console.log(id)
-            let status = browserChildren[i].getAttribute('status')
-            console.log(id)
-
-
-            other_select.value = id;
-            cont = 1
-            }
-        }
-
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-        status_txt.setAttribute("class","row my-2 d-none")
-    }
-});
-
-document.getElementById("txt_marca").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_marca");
-    var browserChildren = document.getElementById('marca').children;
-    //var browserChildren = document.getElementById('proveedor')
-    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
-    var other_select = document.getElementById('id_marca');
-    //var status_txt = document.getElementById('comparativo')
-
-    //cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        console.log(browserChildren[i].value)
-
-        if (browserChildren[i].value == select.value) {
-            //console.log(browserChildren[i])
-            //console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            //console.log(id)
-            let status = browserChildren[i].getAttribute('status')
-            console.log(id)
-
-
-            other_select.value = id;
-            cont = 1
-            }
-        }
-
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-        status_txt.setAttribute("class","row my-2 d-none")
-    }
-});*/
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
 {% endif %}
 
-var datosResponsable= {{ responsables_para_select2|safe }};
-console.log(datosResponsable)
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Control patrimonial</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-plus"></i></span>
+                Agregar activo
+            </h1>
+            <p class="sv-page-subtitle">Registra la asignación, identificación y documentación del nuevo activo.</p>
+        </div>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-box-open"></i> Nuevo registro</span>
+        </div>
+    </header>
 
-$(document).ready(function() {
-    
-    $('#id_responsable').select2({
-        allowClear: true,
-        width: '100%',
-        data: datosResponsable,
-        placeholder: 'Responsable',
-        templateResult: formatRepo,
-        templateSelection: formatRepoSelection
+    <section class="sv-card" id="activo-form-card">
+        <form method="POST" class="post-form" id="form_id" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title"><i class="fa-solid fa-circle-info"></i> Información del activo</h2>
+                    <p class="sv-card-subtitle">Los campos marcados con * son obligatorios.</p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                {% if form.errors or extension_form.errors or error_messages %}
+                <div class="alert alert-danger mb-4" role="alert">
+                    <div class="fw-bold mb-2"><i class="fa-solid fa-circle-exclamation"></i> No fue posible crear el activo</div>
+                    {% if error_messages %}<div>{{ error_messages }}</div>{% endif %}
+                    <ul class="mb-0">
+                        {% for field in form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+                        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                        {% if extension_form %}
+                            {% for field in extension_form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+                            {% for error in extension_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-box-open"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.activo|add_class:"form-control"|append_attr:"placeholder=Activo" }}
+                                <label for="{{ form.activo.id_for_label }}">Activo*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.eco_unidad|add_class:"form-control"|append_attr:"placeholder=ECO" }}
+                                <label for="{{ form.eco_unidad.id_for_label }}">ECO*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ form.descripcion|add_class:"form-control"|append_attr:"placeholder=Descripción" }}
+                        <label for="{{ form.descripcion.id_for_label }}">Descripción*</label>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                <select name="categoria" id="id_categoria" class="form-select" hx-get="{% url 'cargar-formulario-extension-activo' %}" hx-trigger="change" hx-target="#contenedor-extension" hx-swap="innerHTML">
+                                    {% for value, label in form.categoria.field.choices %}
+                                    <option value="{{ value }}"{% if form.categoria.value|stringformat:"s" == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="id_categoria">Categoría*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                            <div class="sv-select2-expand">{{ form.responsable }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-copyright"></i></span>
+                            <div class="sv-select2-expand">{{ form.marca }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6" id="serie">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.serie|add_class:"form-control"|append_attr:"placeholder=Serie" }}
+                                <label for="{{ form.serie.id_for_label }}">Serie</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-cube"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.modelo|add_class:"form-control"|append_attr:"placeholder=Modelo" }}
+                                <label for="{{ form.modelo.id_for_label }}">Modelo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-file-invoice"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.factura_interna|add_class:"form-control"|append_attr:"placeholder=Factura interna" }}
+                                <label for="{{ form.factura_interna.id_for_label }}">Factura interna</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-calculator"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.cuenta_contable|add_class:"form-control"|append_attr:"placeholder=Cuenta contable" }}
+                                <label for="{{ form.cuenta_contable.id_for_label }}">Cuenta contable</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group mb-3">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field form.fecha_asignacion type="date" class="form-control" %}
+                                <label for="{{ form.fecha_asignacion.id_for_label }}">Fecha de asignación</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-message"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ form.comentario|add_class:"form-control"|append_attr:"placeholder=Observaciones" }}
+                        <label for="{{ form.comentario.id_for_label }}">Observaciones*</label>
+                    </div>
+                </div>
+
+                <div id="contenedor-extension">
+                    {% if extension_form %}{% include 'activos/partials/form_extension.html' %}{% endif %}
+                </div>
+
+                <section class="sv-card mt-3">
+                    <div class="sv-card-header">
+                        <div>
+                            <h3 class="sv-card-title"><i class="fa-solid fa-folder-open"></i> Documentación</h3>
+                            <p class="sv-card-subtitle">Carga los comprobantes PDF y XML relacionados con el activo.</p>
+                        </div>
+                    </div>
+                    <div class="sv-card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-6">
+                                <label class="form-label fw-semibold" for="{{ form.factura_pdf.id_for_label }}">Factura PDF</label>
+                                <div id="subir_pdf" class="sv-input-group input-group">
+                                    {{ form.factura_pdf|add_class:"form-control" }}
+                                    <label class="input-group-text text-danger" for="{{ form.factura_pdf.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> PDF</label>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6">
+                                <label class="form-label fw-semibold" for="{{ form.factura_xml.id_for_label }}">Factura XML</label>
+                                <div id="subir_xml" class="sv-input-group input-group">
+                                    {{ form.factura_xml|add_class:"form-control" }}
+                                    <label class="input-group-text" for="{{ form.factura_xml.id_for_label }}"><i class="fa-solid fa-cloud-arrow-up"></i> XML</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="sv-card-footer">
+                <div class="sv-actions justify-content-end">
+                    <a class="sv-btn sv-btn-outline" id="cerrar" href="{% url 'activos' %}"><i class="fa-solid fa-xmark"></i> Cerrar</a>
+                    <button class="sv-btn sv-btn-success" id="crear" type="submit"><i class="fa-solid fa-floppy-disk"></i> Crear activo</button>
+                </div>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+function formatRepo(repo) {
+    if (repo.loading) return repo.text;
+    const container = $("<div class='select2-result-repository clearfix'><div class='select2-result-repository__title'></div></div>");
+    container.find('.select2-result-repository__title').text(repo.text);
+    return container;
+}
+
+function formatRepoSelection(repo) { return repo.text || repo.id; }
+
+function formatResponsable(repo) {
+    if (repo.loading) return repo.text;
+    const container = $('<div></div>');
+    $('<span class="sv-cell-title d-block"></span>').text(repo.text || '').appendTo(container);
+    $('<span class="sv-cell-subtitle d-block"></span>').text(repo.distrito || 'Sin distrito asignado').appendTo(container);
+    return container;
+}
+
+function formatResponsableSelection(repo) {
+    const nombre = repo.text || repo.id || '';
+    return repo.distrito ? nombre + ' · ' + repo.distrito : nombre;
+}
+
+$(document).ready(function () {
+    const datosMarca = {{ marca_para_select2|safe }};
+    const datosResponsable = {{ responsables_para_select2|safe }};
+
+    $('#id_marca').select2({
+        allowClear: true, width: '100%', data: datosMarca, placeholder: 'Marca',
+        templateResult: formatRepo, templateSelection: formatRepoSelection
     });
-});
 
-function formatRepo (repo) {
-    if (repo.loading) {
-        return repo.text;
+    $('#id_responsable').select2({
+        allowClear: true, width: '100%', data: datosResponsable, placeholder: 'Responsable',
+        templateResult: formatResponsable, templateSelection: formatResponsableSelection
+    });
+
+    const form = document.getElementById('form_id');
+    const button = document.getElementById('crear');
+    if (form && button) {
+        form.addEventListener('submit', function () {
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando activo…';
+        });
     }
-
-    var $container = $("<div class='select2-result-repository clearfix'>" +
-        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
-
-    $container.find(".select2-result-repository__title").text(repo.text);
-    
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
-}
-
-function formatRepoSelection (repo) {
-    return repo.text || repo.id;
-}
-
-function disableButton() {
-    const button = document.getElementById("crear");
-    button.disabled = true; // Deshabilita el botón cuando las validaciones pasan
-    button.innerText = "Creando..."; // Cambia el texto del botón opcionalmente
-}
-
+});
 </script>
 {% endblock %}
-
-</body>
-</html>

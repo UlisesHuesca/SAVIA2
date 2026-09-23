@@ -15,7 +15,7 @@ from .forms import VehiculoActivoForm, UBMActivoForm
 from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo
 from compras.models import Proveedor_direcciones
 from .filters import ActivoFilter
-from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito
+from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito, Estatus_Activo
 from solicitudes.filters import InventarioFilter
 
 
@@ -215,65 +215,137 @@ def activos(request):
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
+def cargar_formulario_extension_activo(request):
+    categoria_id = request.GET.get('categoria')
+
+    extension_form = None
+    tipo_extension = None
+
+    if categoria_id:
+        categoria = get_object_or_404(Categoria_Activo,pk=categoria_id,)
+
+        nombre_categoria = (categoria.nombre.strip().upper())
+
+        if nombre_categoria == 'VEHICULO':
+            extension_form = VehiculoActivoForm(prefix='vehiculo',)
+            tipo_extension = 'VEHICULO'
+
+        elif nombre_categoria == 'UBM':
+            extension_form = UBMActivoForm(prefix='ubm',)
+            tipo_extension = 'UBM'
+
+    return render(request,'activos/form_extension.html',{'extension_form': extension_form,'tipo_extension': tipo_extension,},)
+
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_activo(request):
-    #perfil = Profile.objects.get(staff__id=request.user.id)
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
-    #activos = Activo.objects.filter(completo=True)
-    #productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos, cantidad__gte=1)  # Filtra por cantidad mayor o igual a 1
-    productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
-    personal = Profile.objects.all()
-    marcas = Marca.objects.all()
-    tipo_activo = Tipo_Activo.objects.all() 
-    #print(productos)
-    if perfil.tipo.nombre == "ADMIN_ACTIVOS":
-        responsables = personal.filter(st_activo = True)
-    else:
-        responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
+
+    # --------------------------
+    # Inventario disponible
+    # --------------------------
+
+    productos = (Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos, cantidad__gte = 1).select_related('producto','distrito').order_by('producto__nombre',))
+    #productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
+    # ---------------------------
+    # Responsables
+    # ---------------------------
+
+    personal = Profile.objects.filter(st_activo=True)
+    
+  
+    if perfil.tipo.nombre != "ADMIN_ACTIVOS":
+        personal = personal.filter(distritos = perfil.distritos)
 
     responsables_para_select2 = [
         {
             'id': responsable.id, 
             'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
-        } for responsable in responsables
+        } for responsable in personal
     ]
-    tipo_activo_para_select2 = [
-        {'id': tipo.id, 'text': tipo.nombre}
-        for tipo in tipo_activo
-    ]
+
+    # --------------------------
+    # Marcas
+    # --------------------------
+
+    marcas = Marca.objects.all().order_by('nombre')
+
 
     marca_para_select2 = [
         {'id': marca.id, 'text': marca.nombre}
         for marca in marcas
     ]
 
-    for producto in productos: #Asignar al producto que es un activo disponible si tiene más de 1
-        if producto.cantidad >= 1:
-            producto.activo_disponible = True
-        else:
-            producto.activo_disponible = False
-        producto.save()         
-            
-    activo, created = Activo.objects.get_or_create(creado_por=perfil, completo=False)
-    productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
-    #print(productos_activos)
-    form = Activo_Form(instance = activo)
+    categoria_id = request.POST.get('categoria')
 
-    form.fields['activo'].queryset = productos_activos
+    nombre_categoria = ''
+
+    if categoria_id:
+        nombre_categoria = (Categoria_Activo.objects.filter(pk=categoria_id).values_list('nombre', flat=True).first() or '')
+    
+    nombre_categoria = nombre_categoria.strip().upper()
+
+    extension_form_class = None
+    extension_prefix = None
+    tipo_extension = None
+
+    if nombre_categoria == 'VEHICULO':
+        extension_form_class = VehiculoActivoForm
+        extension_prefix = 'vehiculo'
+        tipo_extension = 'VEHICULO'
+
+    elif nombre_categoria == 'UBM':
+        extension_form_class = UBMActivoForm
+        extension_prefix = 'ubm'
+        tipo_extension = 'UBM'
+    
 
     if request.method =='POST':
-        form = Activo_Form(request.POST, request.FILES, instance = activo)
-        messages.success(request,f'Has agregado incorrectamente el activo')
-        if form.is_valid():
-            activo = form.save(commit=False)
-            activo.completo = True
-            activo.estatus.nombre = "ALTA"
-            activo.activo.cantidad -= 1 #Restar uno al inventario
-            activo.activo.cantidad_entradas -= 1 
-            activo.activo.save()  # Guarda el cambio en el inventario
-            activo.save()
-            messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
-            return redirect('activos')
+        form = Activo_Form(request.POST, request.FILES)
+    else:
+        form = Activo_Form()
+
+
+    form.fields['activo'].queryset = productos
+    form.fields['responsable'].queryset = personal
+
+    extension_form = None
+
+    if extension_form_class is not None:
+        extension_form = extension_form_class(request.POST if request.method == 'POST' else None,prefix=extension_prefix,)
+
+    # --------------------
+    # GUARDADO
+    #--------------------
+    if request.method == 'POST':
+        form_activo_valido = form.is_valid()
+
+        form_extension_valido = (extension_form is not None and extension_form.is_valid())
+        
+        if form_activo_valido and form_extension_valido:
+            inventario = (Inventario.objects.select_for_update().get(pk=form.cleaned_data['activo'].pk))
+            if inventario.cantidad < 1:
+                form.add_error('activo','El producto ya no tiene existencia disponible.',)
+            else:
+                estatus_alta = (Estatus_Activo.objects.get(nombre ="ALTA"))
+                activo = form.save(commit=False)
+                activo.creado_por = perfil
+                activo.modified_por = perfil
+                activo.modified_at = date.today()
+                activo.completo = True
+                activo.estatus = estatus_alta
+                activo.save()
+                if extension_form is not None:
+                    extension = extension_form.save(commit=False)
+                    extension.activo = activo
+                    extension.save()
+            
+                inventario.cantidad -= 1 #Restar uno al inventario
+                inventario.save(update_fields=['cantidad',])
+                messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
+                return redirect('activos')
         else:
             messages.error(request, 'Hubo un error al agregar el activo.')
             for field, errors in form.errors.items():
@@ -283,11 +355,11 @@ def add_activo(request):
     
     context = {
         'responsables_para_select2':responsables_para_select2,
-        'tipo_activo_para_select2': tipo_activo_para_select2,
+        #'tipo_activo_para_select2': tipo_activo_para_select2,
         'marca_para_select2': marca_para_select2,
         'marcas': marcas,
         'form':form,
-        'productos_activos':productos_activos,
+        'productos_activos':productos,
     }
 
     return render(request,'activos/add_activos.html', context)

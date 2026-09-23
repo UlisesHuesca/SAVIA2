@@ -1469,7 +1469,7 @@ def control_bancos_api(request, pk):
     })
 
 @api_view(["GET"])
-@authentication_classes([TokenAuthentication])
+#@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def reporte_solicitudes_api(request):
     last_id = int(request.query_params.get("last_id", 0))
@@ -1646,7 +1646,7 @@ def reporte_solicitudes_api(request):
             material = articulo_ordenado.producto.producto.nombre
         except Exception:
             material = ""
-
+        
         item = {
             "salida_id": salida.id,
             "folio_salida": salida.vale_salida.folio,
@@ -1670,6 +1670,7 @@ def reporte_solicitudes_api(request):
             "proyecto": proyecto.nombre if proyecto else "",
             "subproyecto":(order.subproyecto.nombre if order and order.subproyecto else ""),
             "contrato": (contrato.nombre or "" if contrato else ""),
+            "sector": (order.sector_texto or "") if order else "",
 
 
             "material_o_servicio_solicitado": material,
