@@ -3,213 +3,416 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Viáticos{% endblock %}
-</head>
-<body>
+
+{% block title %}Solicitudes de viáticos{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<h6>nbsp;</h6>
-<div class="row my-4">
-        <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtro de Viáticos</h5>
-            </div>
-            <div class="card-body">
-            <form method="GET" class="row g-7">
+<style>
+    #travelRequestsTable {
+        width: 100%;
+        min-width: 0;
+        table-layout: fixed;
+    }
+
+    #travelRequestsTable th,
+    #travelRequestsTable td {
+        min-width: 0;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+    #travelRequestsTable .sv-cell-title {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    #travelRequestsTable .sv-col-folio {
+        width: 6rem;
+    }
+
+    #travelRequestsTable .sv-col-gerencia {
+        width: 9rem;
+    }
+
+    #travelRequestsTable .sv-col-creado {
+        width: 7.5rem;
+    }
+
+    #travelRequestsTable .sv-col-detalle {
+        width: 5.5rem;
+    }
+
+    @media (max-width: 991.98px) {
+        #travelRequestsTable .sv-col-folio {
+            width: 5rem;
+        }
+
+        #travelRequestsTable .sv-col-gerencia {
+            width: 7.5rem;
+        }
+
+        #travelRequestsTable .sv-col-detalle {
+            width: 4.75rem;
+        }
+    }
+</style>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Viáticos</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-person-walking-luggage"></i></span>
+                Solicitudes de viáticos
+            </h1>
+            <p class="sv-page-subtitle">Consulta las solicitudes, responsables, proyectos y estado de sus autorizaciones.</p>
+        </div>
+
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                {{ ordenes_list.paginator.count }} registro{{ ordenes_list.paginator.count|pluralize }}
+            </span>
+
+            <form method="POST" class="d-inline">
                 {% csrf_token %}
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder=Solicitado por"}}
-                            <label for="id_staff">Solicitado por</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.solicitado|add_class:"form-control"|append_attr:"placeholder=Solicitado para"}}
-                            <label for="id_staff">Solicitado para</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto"}}
-                            <label for="id_staff">Proyecto</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio"}}
-                            <label for="id_lugar_partida">Folio</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto m-3">
-                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
+                <button class="sv-btn sv-btn-success" type="submit" name="btnExcel" value="1">
+                    <i class="fa-solid fa-file-excel"></i> Excel
+                </button>
             </form>
-            <hr>
-            <div class = "row mt-2 bg-white">
-                <form method=POST>
-                    {% csrf_token %}
-                <ul class="nav nav-pills">
-                    <!--<li class="nav-item mx-2">
-                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                    </li> -->
-                    <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                    </li>
-                    <!--<li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                    </li>-->
-                    <li class="nav-item mx-2">
-                        <a class="btn btn-outline-info" href="{% url 'solicitud-matriz-productos' %}">Productos</a>
-                    </li>
-                </ul>
-                </form>
+        </div>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">Búsqueda</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtro de viáticos</h2>
+                <p class="sv-card-subtitle">Combina uno o más criterios para reducir los resultados.</p>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="row my-4">
-    <div class="col-md-4">
-        {% for message in messages %}
-            {% if message %}
-            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-            <script>
-                var m = "{{ message }}";
-                swal("Excelente !", m, "success")
-            </script>
-            {% endif %}
-        {% endfor %}
-    </div>
-</div>
-<div class = "row mt-2">
-    <div class="col-md-10">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio</th>
-                    <th scope="col">Solicitado por:</th>
-                    <th scope="col">Solicitado para:</th>
-                    <th scope="col">Autorización Sptte</th>
-                    <th scope="col">Autorización Gerencia</th>
-                    <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Creado</th>
-                    <th scope="col">Detalles</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orden in ordenes_list %}
-                <tr>
-                    <th scope="row">{{orden.folio}}</th>
-                    <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
-                    <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}</td>
-                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}} |{% if orden.autorizar %}<span class="badge bg-primary">Autorizado</span> {% elif orden.autorizar == False %} <span class="badge bg-danger">Cancelado</span>{% else %}  <span class="badge bg-warning">No Autorizado Aún</span> {% endif %} </td>
-                    <td>{% if orden.autorizar2 %} <span class="badge bg-primary">Autorizado</span>{% elif orden.autorizar2 == False %}<span class="badge bg-danger">Cancelado</span> {% else %} <span class="badge bg-warning">No Autorizado Aún</span> {% endif %} </td>
-                    <td>{{orden.proyecto.nombre}}</td>
-                    <td>{{orden.subproyecto.nombre}}</td>
-                    <td>{{orden.created_at}}</td>
-                    <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos' orden.id %}">
-                            <i class="fa-solid fa-person-walking-luggage"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
+        <div class="sv-card-body">
+            <form method="GET" class="sv-filter-grid sv-filter-grid-4">
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-user-pen"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder=Solicitado por" }}
+                        <label for="{{ myfilter.form.staff.id_for_label }}">Solicitado por</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-user-check"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.solicitado|add_class:"form-control"|append_attr:"placeholder=Solicitado para" }}
+                        <label for="{{ myfilter.form.solicitado.id_for_label }}">Solicitado para</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                        <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                        <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                    </div>
+                </div>
+
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                    </div>
+                </div>
+
+                <div class="sv-actions">
+                    <button class="sv-btn sv-btn-primary" type="submit">
+                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <span class="sv-card-kicker">Resultados</span>
+                <h2 class="sv-card-title"><i class="fa-solid fa-list-check"></i> Viáticos registrados</h2>
+                <p class="sv-card-subtitle">Estado de las autorizaciones y acceso al detalle de cada solicitud.</p>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="dropdown">
+                    <button type="button" class="sv-btn sv-btn-outline dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-boundary="viewport" aria-expanded="false">
+                        <i class="fa-solid fa-table-columns"></i> Columnas
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow">
+                        <div class="small fw-bold text-muted px-2 py-1">Columnas visibles</div>
+
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="folio" checked> Folio
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitante" checked> Solicitado por
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="colaborador" checked> Solicitado para
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="superintendente" checked> Autorización Sptte.
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="gerencia" checked> Autorización Gerencia
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="proyecto" checked> Proyecto
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="subproyecto"> Subproyecto
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="creado"> Fecha de creación
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="detalle" checked> Detalle
+                        </label>
+
+                        <div class="dropdown-divider"></div>
+                        <button type="button" class="dropdown-item text-center" id="resetTravelRequestColumns">
+                            <i class="fa-solid fa-arrow-rotate-left me-1"></i> Restablecer vista compacta
+                        </button>
+                    </div>
+                </div>
+
+                <span class="sv-badge sv-badge-dark">Página {{ ordenes_list.number }} de {{ ordenes_list.paginator.num_pages }}</span>
+            </div>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table" id="travelRequestsTable">
+                <thead>
+                    <tr>
+                        <th scope="col" class="sv-col-folio">Folio</th>
+                        <th scope="col" class="sv-col-solicitante">Solicitado por</th>
+                        <th scope="col" class="sv-col-colaborador">Solicitado para</th>
+                        <th scope="col" class="sv-col-superintendente">Autorización Sptte.</th>
+                        <th scope="col" class="sv-col-gerencia">Autorización Gerencia</th>
+                        <th scope="col" class="sv-col-proyecto">Proyecto</th>
+                        <th scope="col" class="sv-col-subproyecto">Subproyecto</th>
+                        <th scope="col" class="sv-col-creado">Creado</th>
+                        <th scope="col" class="sv-col-detalle text-center">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orden in ordenes_list %}
+                    <tr>
+                        <td class="sv-col-folio"><span class="sv-folio">{{ orden.folio }}</span></td>
+                        <td class="sv-col-solicitante">
+                            <span class="sv-cell-title">{{ orden.staff.staff.staff.first_name }} {{ orden.staff.staff.staff.last_name }}</span>
+                        </td>
+                        <td class="sv-col-colaborador">
+                            <span class="sv-cell-title">{{ orden.colaborador.staff.staff.first_name }} {{ orden.colaborador.staff.staff.last_name }}</span>
+                        </td>
+                        <td class="sv-col-superintendente">
+                            {% if orden.superintendente %}
+                            <span class="sv-cell-title d-block">{{ orden.superintendente.staff.staff.first_name }} {{ orden.superintendente.staff.staff.last_name }}</span>
+                            {% endif %}
+
+                            {% if orden.autorizar %}
+                            <span class="sv-badge sv-badge-success">Autorizado</span>
+                            {% elif orden.autorizar == False %}
+                            <span class="sv-badge sv-badge-danger">Cancelado</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="sv-col-gerencia">
+                            {% if orden.autorizar2 %}
+                            <span class="sv-badge sv-badge-success">Autorizado</span>
+                            {% elif orden.autorizar2 == False %}
+                            <span class="sv-badge sv-badge-danger">Cancelado</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="sv-col-proyecto"><span class="sv-cell-title">{{ orden.proyecto.nombre }}</span></td>
+                        <td class="sv-col-subproyecto">{{ orden.subproyecto.nombre }}</td>
+                        <td class="sv-col-creado">
+                            <div class="sv-date">
+                                <strong>{{ orden.created_at|date:"d/m/Y" }}</strong>
+                                <small>{{ orden.created_at|date:"H:i" }}</small>
+                            </div>
+                        </td>
+                        <td class="sv-col-detalle text-center">
+                            <button type="button" class="sv-btn sv-btn-icon sv-btn-outline" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'detalles-viaticos' orden.id %}" title="Consultar detalle" aria-label="Consultar detalle del viático {{ orden.folio }}">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="sv-empty">
+                            <span class="sv-empty-icon"><i class="fa-solid fa-person-walking-luggage"></i></span>
+                            <strong class="sv-empty-title">No se encontraron viáticos</strong>
+                            <span class="sv-empty-text">Modifica los filtros para consultar otros resultados.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+            </table>
+        </div>
+
+        {% if ordenes_list.paginator.num_pages > 1 %}
+        <nav class="sv-pagination-wrap" aria-label="Paginación de solicitudes de viáticos">
+            <ul class="pagination sv-pagination justify-content-center mb-0">
                 {% if ordenes_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a>
+                </li>
                 {% endif %}
 
                 {% for item in ordenes_list.paginator.page_range %}
                     {% if ordenes_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
                     {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
                     {% endif %}
                 {% endfor %}
 
-                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
                 {% if ordenes_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a>
+                </li>
                 {% endif %}
             </ul>
         </nav>
+        {% endif %}
+    </section>
+
+    <div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
     </div>
-</div>
+</main>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+document.addEventListener('DOMContentLoaded', function () {
+    const columnDefaults = {
+        folio: true,
+        solicitante: true,
+        colaborador: true,
+        superintendente: true,
+        gerencia: true,
+        proyecto: true,
+        subproyecto: false,
+        creado: false,
+        detalle: true
+    };
+    const columnStorageKey = 'saviaSolicitudesViaticosColumnas';
+    let columnPreferences = Object.assign({}, columnDefaults);
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
+    try {
+        const savedPreferences = JSON.parse(localStorage.getItem(columnStorageKey));
+        if (savedPreferences && typeof savedPreferences === 'object') {
+            Object.keys(columnDefaults).forEach(function (column) {
+                if (typeof savedPreferences[column] === 'boolean') {
+                    columnPreferences[column] = savedPreferences[column];
+                }
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(columnStorageKey);
+    }
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
+    function updateTravelRequestColumn(column, visible) {
+        document.querySelectorAll('.sv-col-' + column).forEach(function (cell) {
+            cell.classList.toggle('d-none', !visible);
+        });
+    }
 
+    const columnToggles = Array.from(document.querySelectorAll('[data-column-toggle]'));
 
+    function applyColumnPreferences() {
+        columnToggles.forEach(function (checkbox) {
+            const column = checkbox.dataset.columnToggle;
+            const visible = columnPreferences[column] === true;
+            checkbox.checked = visible;
+            updateTravelRequestColumn(column, visible);
+        });
+    }
+
+    columnToggles.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const column = checkbox.dataset.columnToggle;
+            columnPreferences[column] = checkbox.checked;
+            updateTravelRequestColumn(column, checkbox.checked);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+        });
+    });
+
+    const resetColumnsButton = document.getElementById('resetTravelRequestColumns');
+    if (resetColumnsButton) {
+        resetColumnsButton.addEventListener('click', function () {
+            columnPreferences = Object.assign({}, columnDefaults);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+            applyColumnPreferences();
+        });
+    }
+
+    applyColumnPreferences();
+
+    const dialogElement = document.getElementById('dialog');
+    if (!dialogElement) return;
+
+    const modal = bootstrap.Modal.getOrCreateInstance(dialogElement);
+
+    if (window.htmx) {
+        htmx.on('htmx:beforeSwap', function (event) {
+            if (event.detail.target.id === 'document' && !event.detail.xhr.response) {
+                modal.hide();
+            }
+        });
+    }
+
+    dialogElement.addEventListener('hidden.bs.modal', function () {
+        window.location.reload();
+    });
+});
 </script>
 {% endblock %}
-</body>
-</html>

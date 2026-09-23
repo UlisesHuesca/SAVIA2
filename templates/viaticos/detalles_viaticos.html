@@ -1,93 +1,166 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-{& load humanize %}
-<html>
-<head>
-{% block title %}Autorización viaticos{% endblock %}
-</head>
-<body>
+
+{% block title %}Detalle de viático{% endblock %}
+
 {% block content %}
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Viático: {{viatico.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal-content" style="max-height: calc(100vh - 2rem); overflow: hidden;">
+    <div class="modal-header flex-shrink-0">
+        <div>
+            <span class="sv-page-eyebrow">Solicitud de viático</span>
+            <h2 class="modal-title sv-card-title">
+                <i class="fa-solid fa-person-walking-luggage"></i>
+                Viático {{ viatico.folio }}
+            </h2>
+            <p class="sv-card-subtitle mb-0">Información del colaborador, comisión e itinerario.</p>
         </div>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
 
-        <div class="modal-body">
-            <table class='table table-dark table striped'>
-                <thead>
-                    <tr>
-                    <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viático para:</th>
-                    <th scope="col">{{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="col"><i class="fa-solid fa-diagram-project"></i> Nivel:</th>
-                        <th scope="col">{{viatico.colaborador.staff.nivel}}</th>
-                    </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
-                    <th scope="col">{{viatico.proyecto.nombre}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Subproyecto:</th>
-                    <th scope="col">{{viatico.subproyecto.nombre}}</th>
-                </tr>
-                <tr>
-                    <th>Motivo</th>
-                    <th scope="col"> {{viatico.motivo}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Partida:</th>
-                    <th scope="col">{{viatico.fecha_partida}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Retorno:</th>
-                    <th scope="col">{{viatico.fecha_retorno}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-location-dot"></i> Lugar de Partida:</th>
-                    <th scope="col">{{viatico.lugar_partida}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-route"></i> Lugar de Comisión:</th>
-                    <th scope="col">{{viatico.lugar_comision}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-car-side"></i> Transporte:</th>
-                    <th scope="col">{{viatico.transporte}}</th>
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-hotel"></i> Hospedaje:</th>
-                    {% if viatico.hospedaje %}
-                    <th scope="col">Sí</th>
-                    {% else %}
-                    <th>No</th>
-                    {% endif %}
-                </tr>
-                <tr>
-                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
-                   
-                    <th scope="col"> {% if viatico.comentario_general == "None" %}No hay comentario {% else %}{{viatico.comentario_general}}{% endif %}</th>
-                </tr>
-                {% if viatico.comentario_cierre %}
-                <tr>
+    <div class="modal-body" style="min-height: 0; overflow-y: auto; overscroll-behavior: contain;">
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <section class="sv-card h-100">
+                    <div class="sv-card-header">
+                        <div>
+                            <h3 class="sv-card-title"><i class="fa-solid fa-user-tie"></i> Colaborador y comisión</h3>
+                            <p class="sv-card-subtitle">Datos de la persona y asignación del viático.</p>
+                        </div>
+                    </div>
 
-                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario Cierre</th>
-                    <th scope="col"> {{viatico.comentario_cierre}}</th>
-                </tr>
-                {% endif %}
-                </tbody> 
-            </table>
-        </div>   
-                
+                    <div class="sv-table-wrap">
+                        <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: 36%;">
+                                <col style="width: 64%;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-person-walking-luggage me-2"></i>Viático para</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">
+                                        <span class="sv-cell-title">
+                                            {{ viatico.colaborador.staff.staff.first_name }} {{ viatico.colaborador.staff.staff.last_name }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-ranking-star me-2"></i>Nivel</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">{{ viatico.colaborador.staff.nivel|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-diagram-project me-2"></i>Proyecto</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">
+                                        <span class="sv-cell-title">{{ viatico.proyecto.nombre|default:"—" }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-code-branch me-2"></i>Subproyecto</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">{{ viatico.subproyecto.nombre|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-bullseye me-2"></i>Motivo</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">{{ viatico.motivo|default:"—" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <section class="sv-card h-100">
+                    <div class="sv-card-header">
+                        <div>
+                            <h3 class="sv-card-title"><i class="fa-solid fa-route"></i> Itinerario</h3>
+                            <p class="sv-card-subtitle">Fechas, ubicaciones y medios requeridos.</p>
+                        </div>
+                    </div>
+
+                    <div class="sv-table-wrap">
+                        <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: 36%;">
+                                <col style="width: 64%;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th scope="row"><i class="fa-regular fa-calendar-days me-2"></i>Partida</th>
+                                    <td>{{ viatico.fecha_partida|date:"d/m/Y"|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-regular fa-calendar-check me-2"></i>Retorno</th>
+                                    <td>{{ viatico.fecha_retorno|date:"d/m/Y"|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-location-dot me-2"></i>Lugar de partida</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">{{ viatico.lugar_partida|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-map-location-dot me-2"></i>Lugar de comisión</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">{{ viatico.lugar_comision|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-car-side me-2"></i>Transporte</th>
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">{{ viatico.transporte|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><i class="fa-solid fa-hotel me-2"></i>Hospedaje</th>
+                                    <td>
+                                        {% if viatico.hospedaje %}
+                                        <span class="sv-badge sv-badge-success"><i class="fa-solid fa-check"></i> Sí</span>
+                                        {% else %}
+                                        <span class="sv-badge sv-badge-neutral">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12">
+                <section class="sv-card">
+                    <div class="sv-card-header">
+                        <div>
+                            <h3 class="sv-card-title"><i class="fa-solid fa-comments"></i> Comentarios</h3>
+                            <p class="sv-card-subtitle">Observaciones generales y comentarios de cierre.</p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        <div class="row g-3">
+                            <div class="col-12 {% if viatico.comentario_cierre %}col-lg-6{% endif %}">
+                                <span class="sv-cell-subtitle d-block mb-1">Comentario general</span>
+                                <div class="alert alert-secondary mb-0" role="note" style="white-space: normal; overflow-wrap: anywhere;">
+                                    {% if not viatico.comentario_general or viatico.comentario_general == "None" %}
+                                        No hay comentarios.
+                                    {% else %}
+                                        {{ viatico.comentario_general }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if viatico.comentario_cierre %}
+                            <div class="col-12 col-lg-6">
+                                <span class="sv-cell-subtitle d-block mb-1">Comentario de cierre</span>
+                                <div class="alert alert-secondary mb-0" role="note" style="white-space: normal; overflow-wrap: anywhere;">
+                                    {{ viatico.comentario_cierre }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer flex-shrink-0">
+        <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark"></i> Cerrar
+        </button>
     </div>
 </div>
-
 {% endblock %}
-</body>
-</html>
-<!--"{% url 'autorizar-viatico' viatico.id %}"-->
