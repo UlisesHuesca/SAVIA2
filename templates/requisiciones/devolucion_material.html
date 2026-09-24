@@ -3,261 +3,580 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load l10n %}
-<html>
-<head>
+
 {% block title %}Devolución{% endblock %}
-</head>
-<body>
 
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-</div>
-<hr>
-<hr>
-<hr>
-<hr>
-<div class="row">
-    <div class="col-lg-4">
-        <div class="card" id="form-wrapper">
-            <div class="card-header">
-            <!-- Aqui es el encabezado de los filtros -->
-                <h5>Devolución D{{devolucion.id}}| Solicitud: {{orden.folio}}</h5>
-            </div>
-            <div id="Solicitud-info">
-                    <form method="POST" id='OrderForm'>
-                        {% csrf_token %}
-                        {% if cantidad_items > 0 %}
-                        <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Comentario General:</strong></label>
-                        <div class="col-sm-8">
-                        {{form2.comentario|add_class:"form-control"}}
-                        </div>
-                        <div class="col-3">
-                            <input class="btn btn-outline-info btn-block btn-lg my-4" name="agregar_devolucion" type="submit" value="Devolver a Inventario">
-                        </div>
-                        {% endif %}
-                    </form>
-            </div>
-            <hr>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+            });
+        </script>
+    {% endfor %}
+{% endif %}
+
+<div class="sv-page">
+
+    <!-- Encabezado -->
+    <div class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">
+                Inventario
+            </span>
+
+            <h1 class="sv-page-title">
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+                Devolución a inventario
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Registra los productos devueltos de la solicitud
+                <strong>{{ orden.folio }}</strong>.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge rounded-pill bg-light text-dark border">
+                <i class="fa-solid fa-receipt me-1"></i>
+                Devolución D{{ devolucion.id }}
+            </span>
+
+            <span class="badge rounded-pill bg-dark">
+                {{ cantidad_items }} artículo{{ cantidad_items|pluralize }}
+            </span>
         </div>
     </div>
-    <div class="col-lg-7">
-        <div class="card">
-            <div class = "card-header">
-            <h5 id="devolucion" vale="{{devolucion.id|unlocalize}}">Producto Devolución</h5>
-            </div>
 
-            <div class='card-body'>
-                <form method="POST">
-                <div class="row">
-                    <div class="alert alert-dark" role="alert" id="producto" cantidad_sol="{{productos_sel.producto.articulos.producto.cantidad}}" cantidad={{productos_sel.cantidad}} valor={{productos_sel.producto.id|unlocalize}}>
-                        {{productos_sel.producto.articulos.producto.producto.codigo}} - {{productos_sel.producto.articulos.producto.producto.nombre}}
-                      </div>
-                        <div id="etiqueta_solicitado" class="col-4 mt-2">
-                            <div class="alert alert-secondary" role="alert">
-                            <h6>Solicitado:</h6>{{productos_sel.cantidad}}<h6 style="color: #121212;" id="solicitado"></h6>   
-                            </div>
-                        </div>
-                       
+    <div class="row g-4">
+
+        <!-- Resumen y confirmación -->
+        <div class="col-12 col-xl-4">
+            <section class="sv-card h-100">
+
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                            Confirmar devolución
+                        </h2>
+
+                        <p class="sv-card-subtitle">
+                            Agrega un comentario general antes de devolver los
+                            productos al inventario.
+                        </p>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
-                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+
+                <div class="sv-card-body">
+
+                    <div class="mb-4">
+                        <span class="sv-cell-subtitle">
+                            Solicitud relacionada
+                        </span>
+
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <span class="sv-icon-box">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </span>
+
+                            <div>
+                                <span class="sv-cell-title">
+                                    Solicitud {{ orden.folio }}
+                                </span>
+
+                                <div class="sv-cell-subtitle">
+                                    Devolución D{{ devolucion.id }}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                                <label style="color: #121212;" for="id_impuestos_adicionales">Comentario</label>
+
+                    {% if cantidad_items > 0 %}
+
+                        <form method="POST" id="OrderForm">
+                            {% csrf_token %}
+
+                            <div class="mb-4">
+                                <label
+                                    for="{{ form2.comentario.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Comentario general
+                                </label>
+
+                                {{ form2.comentario|add_class:"form-control"|append_attr:"placeholder=Describe brevemente el motivo de la devolución" }}
+
+                                {% if form2.comentario.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form2.comentario.errors }}
+                                    </div>
+                                {% endif %}
                             </div>
+
+                            <button
+                                class="sv-btn sv-btn-success w-100"
+                                name="agregar_devolucion"
+                                value="devolver"
+                                type="submit"
+                            >
+                                <i class="fa-solid fa-boxes-packing"></i>
+                                Devolver a inventario
+                            </button>
+                        </form>
+
+                    {% else %}
+
+                        <div class="alert alert-info mb-0" role="status">
+                            <i class="fa-solid fa-circle-info me-2"></i>
+                            Agrega al menos un producto para completar la devolución.
                         </div>
-                    </div>    
-                    <div class="col-sm-1 mt-3">
-                        <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
-                            Agregar
-                        </a>
-                    </div>
+
+                    {% endif %}
+
                 </div>
-                <hr>
-                <div class ="table-responsive-sm">
-                    <table class="table table-ligth table-striped mx-1">
-                    {% csrf_token %}
-                    <thead>
-                        <tr>
-                        <th scope="col" salidas="{{salidas}}">#</th>
-                        <th scope="col">Código</th>
-                        <th scope="col">Producto</th>
-                        <th scope="col">Cantidad</th>
-                        <!--<th scope="col">Precio</th>-->
-                        <th scope="col">Comentario</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in productos %}
-                        <tr>
-                            <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
-                            <th scope="col">{{item.producto.articulos.producto.producto.codigo|unlocalize}}</th>
-                            <th scope="col">{{item.producto.articulos.producto.producto.nombre}}</th>
-                            <th scope="col">{{item.cantidad}}</th>
-                            <!--<th scope="col">${{item.precio}}</th>-->
-                            <th scope="col">{{item.comentario}}</th>
-                            <th scope="col">
-                            <td>
-                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.vale_devolucion.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
-                                    <i class="fa-solid fa-trash-can"></i>
+            </section>
+        </div>
+
+        <!-- Captura y productos -->
+        <div class="col-12 col-xl-8">
+            <section class="sv-card">
+
+                <div class="sv-card-header">
+                    <div>
+                        <h2
+                            class="sv-card-title"
+                            id="devolucion"
+                            vale="{{ devolucion.id|unlocalize }}"
+                        >
+                            <i class="fa-solid fa-box-open"></i>
+                            Productos de la devolución
+                        </h2>
+
+                        <p class="sv-card-subtitle">
+                            Captura la cantidad y el comentario del producto seleccionado.
+                        </p>
+                    </div>
+
+                    <span class="badge rounded-pill bg-light text-primary border">
+                        {{ cantidad_items }} registro{{ cantidad_items|pluralize }}
+                    </span>
+                </div>
+
+                <div class="sv-card-body">
+
+                    <!-- Producto seleccionado -->
+                    <div
+                        class="alert alert-light border mb-4"
+                        id="producto"
+                        cantidad_sol="{{ productos_sel.producto.articulos.producto.cantidad }}"
+                        cantidad="{{ productos_sel.cantidad }}"
+                        valor="{{ productos_sel.producto.id|unlocalize }}"
+                    >
+                        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+
+                            <span class="sv-icon-box flex-shrink-0">
+                                <i class="fa-solid fa-box"></i>
+                            </span>
+
+                            <div class="flex-grow-1">
+                                <span class="sv-cell-subtitle">
+                                    Producto seleccionado
+                                </span>
+
+                                <div class="sv-cell-title mt-1">
+                                    {{ productos_sel.producto.articulos.producto.producto.codigo }}
+                                    ·
+                                    {{ productos_sel.producto.articulos.producto.producto.nombre }}
+                                </div>
+                            </div>
+
+                            <div
+                                id="etiqueta_solicitado"
+                                class="flex-shrink-0"
+                            >
+                                <span class="sv-cell-subtitle">
+                                    Cantidad solicitada
+                                </span>
+
+                                <div class="mt-1">
+                                    <span class="badge rounded-pill bg-dark">
+                                        {{ productos_sel.cantidad }}
+                                    </span>
+                                </div>
+
+                                <span id="solicitado"></span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Captura del producto -->
+                    <form method="POST" id="ProductReturnForm">
+                        {% csrf_token %}
+
+                        <div class="row g-3 align-items-end">
+
+                            <div class="col-12 col-md-4">
+                                <label
+                                    for="{{ form.cantidad.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Cantidad
+                                </label>
+
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-boxes-stacked"></i>
+                                    </span>
+
+                                    {{ form.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad" }}
+                                </div>
+
+                                {% if form.cantidad.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.cantidad.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 col-md-5">
+                                <label
+                                    for="{{ form.comentario.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Comentario
+                                </label>
+
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-comment"></i>
+                                    </span>
+
+                                    {{ form.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario del producto" }}
+                                </div>
+
+                                {% if form.comentario.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.comentario.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 col-md-3">
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-success w-100 update-purchase"
+                                    id="update-purchase"
+                                >
+                                    <i class="fa-solid fa-plus"></i>
+                                    Agregar
                                 </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+                            </div>
+
+                        </div>
                     </form>
+
+                </div>
+
+                <!-- Tabla -->
+                <div class="sv-table-wrap">
+                    <table class="sv-table" style="width: 100%; min-width: 0; table-layout: fixed;">
+
+                        <colgroup>
+                            <col style="width: 72px;">
+                            <col style="width: 15%;">
+                            <col style="width: 31%;">
+                            <col style="width: 12%;">
+                            <col style="width: 30%;">
+                            <col style="width: 76px;">
+                        </colgroup>
+
+                        <thead>
+                            <tr>
+                                <th scope="col" salidas="{{ salidas }}">
+                                    Imagen
+                                </th>
+                                <th scope="col">
+                                    Código
+                                </th>
+                                <th scope="col">
+                                    Producto
+                                </th>
+                                <th scope="col" class="text-center">
+                                    Cantidad
+                                </th>
+                                <th scope="col">
+                                    Comentario
+                                </th>
+                                <th scope="col" class="text-center">
+                                    Eliminar
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in productos %}
+                                <tr>
+                                    <td>
+                                        {% if item.producto.articulos.producto.producto.imageURL %}
+                                            <img
+                                                class="row-image rounded"
+                                                src="{{ item.producto.articulos.producto.producto.imageURL }}"
+                                                alt=""
+                                                loading="lazy"
+                                            >
+                                        {% else %}
+                                            <span class="sv-icon-box">
+                                                <i class="fa-solid fa-box"></i>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td style="overflow-wrap: anywhere;">
+                                        <span class="sv-cell-title">
+                                            {{ item.producto.articulos.producto.producto.codigo|unlocalize }}
+                                        </span>
+                                    </td>
+
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">
+                                        {{ item.producto.articulos.producto.producto.nombre }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill bg-light text-dark border">
+                                            {{ item.cantidad }}
+                                        </span>
+                                    </td>
+
+                                    <td style="white-space: normal; overflow-wrap: anywhere;">
+                                        {% if item.comentario %}
+                                            {{ item.comentario }}
+                                        {% else %}
+                                            <span class="sv-cell-subtitle">
+                                                Sin comentario
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button
+                                            type="button"
+                                            class="sv-btn sv-btn-danger sv-btn-icon"
+                                            onclick="deleteRow(this)"
+                                            data-devolucion="{{ item.vale_devolucion.id|unlocalize }}"
+                                            data-cantidad="{{ item.cantidad|unlocalize }}"
+                                            data-producto-id="{{ item.producto.id|unlocalize }}"
+                                            title="Eliminar producto"
+                                            aria-label="Eliminar producto"
+                                        >
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="p-5 text-center">
+                                            <i class="fa-solid fa-box-open fa-2x mb-3 text-muted"></i>
+
+                                            <h3 class="sv-card-title">
+                                                No hay productos agregados
+                                            </h3>
+
+                                            <p class="sv-card-subtitle mb-0">
+                                                Agrega un producto para preparar la devolución.
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
                     </table>
                 </div>
-            </div>
-            <div class="card-footer">
-            <h5 class>Artículos: {{cantidad_items}}</h5>
-            </div>
 
-        </div>
-    </div>
-    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+                <div class="sv-card-body border-top">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
 
+                        <div>
+                            <span class="sv-cell-subtitle">
+                                Total de artículos
+                            </span>
+
+                            <div class="sv-cell-title">
+                                {{ cantidad_items }}
+                            </div>
+                        </div>
+
+                        <a
+                            href="{% url 'dashboard-index' %}"
+                            class="sv-btn sv-btn-outline"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                            Cerrar
+                        </a>
+
+                    </div>
+                </div>
+
+            </section>
         </div>
+
     </div>
 </div>
 
+<div
+    class="modal fade"
+    id="dialog"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-lg modal-dialog-centered"
+        id="document"
+        role="document"
+        hx-target="this"
+    ></div>
+</div>
 
+<script>
+    const updateBtn = document.getElementById('update-purchase');
 
+    if (updateBtn) {
+        updateBtn.addEventListener('click', function () {
+            const vale = document.getElementById('devolucion');
+            const productoElement = document.getElementById('producto');
+            const quantityInput = document.getElementById('id_cantidad');
+            const comentarioInput = document.getElementById('id_comentario');
 
+            const devolucion = vale.getAttribute('vale');
+            const productoId = productoElement.getAttribute('valor');
+            const cantidadDisponible = parseFloat(
+                productoElement.getAttribute('cantidad')
+            );
+            const cantidadDevuelta = parseFloat(quantityInput.value);
+            const comentario = comentarioInput
+                ? comentarioInput.value.trim()
+                : '';
 
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
+            if (
+                !Number.isFinite(cantidadDevuelta) ||
+                cantidadDevuelta <= 0
+            ) {
+                Swal.fire({
+                    title: 'Cantidad inválida',
+                    text: 'La cantidad ingresada debe ser mayor que cero.',
+                    icon: 'error'
+                });
 
+                quantityInput.focus();
+                return;
+            }
 
-var updateBtn = document.getElementById('update-purchase')
-let count=0;
-let suma = 0;
-let suma_iva = 0;
+            if (cantidadDevuelta > cantidadDisponible) {
+                Swal.fire({
+                    title: 'Cantidad excedida',
+                    text: 'La cantidad a devolver es mayor que la cantidad de la salida.',
+                    icon: 'error'
+                });
 
-updateBtn.addEventListener('click',function(){
-        let vale = document.getElementById('devolucion');
-        devolucion = vale.getAttribute('vale')
-        var label_producto = document.getElementById('producto');
-        let id = label_producto.getAttribute('valor')
-        
-        
-        let cantidad = parseFloat(label_producto.getAttribute('cantidad'));
-        console.log('cantidad solicitada:',cantidad)
-        //Esta es la cantidad que se está devolviendo
-        var quantity = document.getElementById('id_cantidad');
-        let val_cantidad = parseFloat(quantity.value);
-         console.log('cantidad a devolver:',val_cantidad)
+                quantityInput.focus();
+                return;
+            }
 
-        var comentario = document.getElementById("id_comentario").value
+            updateBtn.disabled = true;
 
-        var action = "add";
+            ActualizarArticulos(
+                devolucion,
+                productoId,
+                cantidadDevuelta,
+                'add',
+                comentario
+            );
+        });
+    }
 
-        
-        
-        //Si la "cantidad devuelta" es mayor que "la cantidad recibida"
-        if (val_cantidad > cantidad)  {
+    function deleteRow(element) {
+        const devolucion = element.dataset.devolucion;
+        const productoId = element.dataset.productoId;
+        const cantidad = element.dataset.cantidad;
+
+        Swal.fire({
+            title: '¿Eliminar producto?',
+            text: 'El producto será retirado de esta devolución.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cerrar',
+            confirmButtonColor: '#dc3545'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                element.disabled = true;
+
+                ActualizarArticulos(
+                    devolucion,
+                    productoId,
+                    cantidad,
+                    'remove',
+                    ''
+                );
+            }
+        });
+    }
+
+    function ActualizarArticulos(
+        devolucion,
+        productoId,
+        cantidad,
+        action,
+        comentario
+    ) {
+        fetch('/requisiciones/update_devolucion/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                devolucion: devolucion,
+                id: productoId,
+                val_cantidad: cantidad,
+                action: action,
+                comentario: comentario
+            })
+        })
+        .then(function (response) {
+            if (!response.ok) {
+                throw new Error('No fue posible actualizar la devolución.');
+            }
+
+            return response.json();
+        })
+        .then(function () {
+            location.reload();
+        })
+        .catch(function (error) {
+            if (updateBtn) {
+                updateBtn.disabled = false;
+            }
+
             Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad a devolver es mayor que la cantidad de la salida",
-                    "icon":"error",
-                })
-        //Si "la cantidad comprada" es menor que cero
-        } else if (quantity.value <= 0 ) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"La cantidad ingresada debe ser mayor que 0",
-                    "icon":"error",
-                })
-        } else {
-            console.log('val:',val_cantidad)
-            console.log('devolucion:',devolucion)
-            console.log('id:',id)
-            console.log('action:',action)
-            console.log('comentario:',comentario)
-          
-            ActualizarArticulos(devolucion,id,val_cantidad,action,comentario);
-            //current_option.setAttribute("class","d-none");
-            //select.value = default_sel;
-
-            //document.getElementById("id_cantidad").value= null;
-            //document.getElementById("id_precio_unitario_0").value= null;
-        }
-
-})
-
-function deleteRow(element) {
-    let devolucion = document.getElementById('delete');
-    devolucion = devolucion.getAttribute('id_salida')
-    id = element.getAttribute('producto_id');
-    val_cantidad = element.getAttribute('cantidad');
-    var action = "remove"
-    comentario = ""
-    ActualizarArticulos(devolucion,id,val_cantidad,action,comentario);
-}
-
-
-
-function ActualizarArticulos(devolucion,id,val_cantidad,action,comentario){
-    console.log('User is logged in, sending data...' )
-
-    var url = '/requisiciones/update_devolucion/'
-
-    fetch( url, {
-        method:'POST',
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRFToken': csrftoken,
-        },
-        body:JSON.stringify({'devolucion':devolucion, 'id':id, 'val_cantidad':val_cantidad, 'action':action,'comentario':comentario})
-    })
-    .then((response)=>{
-        return response.json()
-    })
-    .then((data)=>{
-        console.log('data:', data)
-        location.reload()
-    })
-}
-
+                title: 'Error',
+                text: error.message,
+                icon: 'error'
+            });
+        });
+    }
 </script>
-{% endblock %}
-</body>
-</html>
 
+{% endblock %}

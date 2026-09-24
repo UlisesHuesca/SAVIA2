@@ -428,16 +428,19 @@ button.sv-navbar-icon-link {
                                     <a class="dropdown-item" href="{% url 'tiempo-proceso-autorizacion' %}">Tiempo Proceso Autorización</a>
                                 </div>   
                             {% endif %}
-                            {% if usuario.tipo.activos == True or usuario.tipo.nombre == "Admin"%}
-                                <div>
-                            {% else %}
-                                <div class="d-none">
-                            {% endif %}
-                                    <a class="dropdown-item" href="{% url 'activos' %}">Activos</a>
-                                    <a class="dropdown-item" href="{% url 'activos_producto' %}">Inventario Activos</a>
-                                </div>   
-                         
                         </div>
+
+                        {% if usuario.tipo.activos == True or usuario.tipo.nombre == "Admin"%}
+                        <div>
+                        {% else %}
+                         <div class="d-none">
+                        {% endif %}
+                        <h6 class="dropdown-header">Activos</h6>
+                        <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'entrada-activos' %}">Entrada Activos</a>
+                            <a class="dropdown-item" href="{% url 'activos' %}">Activos</a>
+                            <!--<a class="dropdown-item" href="{% url 'activos_producto' %}">Inventario Activos</a>-->
+                        </div>   
                     <div class="dropdown-divider"></div>
                     {% if usuario.tipo.proveedor_externo == False  %}
                    

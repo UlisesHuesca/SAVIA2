@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, Max, OuterRef,Exists #Value, DecimalField , Subquery, Avg
 from django.db.models.functions import Coalesce
+from django.db import IntegrityError, transaction
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, Http404
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import render_to_string
@@ -16,15 +17,15 @@ from utils.email_theme import obtener_tema_correo
 from compras.models import Compra, ArticuloComprado, Evidencia
 from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
-from dashboard.models import Inventario, Order, ArticulosparaSurtir
-from requisiciones.models import Salidas, ArticulosRequisitados, Requis
+from dashboard.models import Inventario, Order, ArticulosparaSurtir, Activo, Estatus_Activo
+from requisiciones.models import Salidas, ArticulosRequisitados
+from requisiciones.views import get_image_base64
 from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, NC_Articulo, Tipo_Nc
 from .forms import EntradaArticuloForm, Reporte_CalidadForm, NoConformidadForm, NC_ArticuloForm, Cierre_NCForm
 from proveedores_externos.forms import UploadFileForm
-
 from tesoreria.models import Pago
 from user.models import Profile
-from requisiciones.views import get_image_base64
+
 import json
 import decimal
 import os
@@ -65,7 +66,7 @@ def pendientes_entrada(request):
             oc__in=compras_base,
             entrada_completa=False,
             producto__producto__articulos__producto__producto__servicio=False,
-        ).distinct()
+        ).exclude(producto__producto__articulos__producto__producto__activo=True).distinct()
 
 
         compras = compras_base.filter(id__in = entrada_productos.values('oc_id'))
@@ -148,6 +149,57 @@ def entrada_servicios(request):
     return render(request, 'entradas/pendientes_servicios.html', context)
 
 @perfil_seleccionado_required
+def entrada_activos(request):
+    pk = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk)
+
+    compras_base = Compra.objects.filter(
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
+            req__orden__distrito = usuario.distritos, entrada_completa = False,
+            autorizado2= True).order_by('-folio')
+
+    entrada_productos = ArticuloComprado.objects.filter(
+        Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True),
+        oc__in=compras_base,
+        entrada_completa=False,
+        producto__producto__articulos__producto__producto__activo=True,
+        ).distinct()
+
+    if usuario.tipo.activos == True:
+        compras = compras_base.filter(id__in = entrada_productos.values('oc_id'))
+
+    elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+        compras = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = entrada_productos.values('oc_id'))
+    else:
+        #Este ciclo solo trae a la compras con servicios igual a false para utilizarla en el ciclo de abajo y ser marcadas como True en caso de que solo tengan servicios
+        compras = compras_base.filter( req__orden__staff = usuario)
+        
+
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+
+    
+    # Ahora, usamos este queryset de compras para filtrar ArticuloComprado.
+    articulos_comprados = ArticuloComprado.objects.filter(oc__in=compras, entrada_completa = False).order_by('-oc__folio')
+
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_matriz_compras_pendientes(articulos_comprados)
+
+    #Set up pagination
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
+
+    context = {
+        'compras':compras,
+        'myfilter':myfilter,
+        'compras_list':compras_list,
+        'activo': True,
+        }
+
+    return render(request, 'entradas/pendientes_entrada.html', context)
+
+@perfil_seleccionado_required
 def pendientes_calidad(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
@@ -186,6 +238,73 @@ def entrada_usada(request):
     return render(request, 'entradas/entrada_been_used.html')
 
 
+def obtener_economicos_por_articulo(request, articulos_entrada):
+    """Lee y valida un económico por cada unidad activa recibida."""
+    economicos_por_articulo = {}
+    todos_los_economicos = []
+
+    for articulo in articulos_entrada:
+        producto = (articulo.articulo_comprado.producto.producto.articulos.producto.producto)
+
+        if not producto.activo:
+            continue
+
+        cantidad_decimal = Decimal(str(articulo.cantidad))
+
+        if cantidad_decimal != cantidad_decimal.to_integral_value():
+            raise ValidationError(
+                f"La cantidad recibida de {producto.codigo} - "
+                f"{producto.nombre} debe ser un número entero."
+            )
+
+        cantidad_recibida = int(cantidad_decimal)
+        economicos_articulo = []
+
+        for numero in range(1, cantidad_recibida + 1):
+            nombre_campo = f"eco_{articulo.id}_{numero}"
+            eco_unidad = request.POST.get(nombre_campo, "").strip().upper()
+
+            if not eco_unidad:
+                raise ValidationError(
+                    f"Debes capturar el económico de la unidad {numero} de "
+                    f"{producto.codigo} - {producto.nombre}."
+                )
+
+            economicos_articulo.append(eco_unidad)
+            todos_los_economicos.append(eco_unidad)
+
+        economicos_por_articulo[articulo.id] = economicos_articulo
+
+    repetidos = sorted(
+        eco
+        for eco in set(todos_los_economicos)
+        if todos_los_economicos.count(eco) > 1
+    )
+
+    if repetidos:
+        raise ValidationError(
+            "Los siguientes económicos están repetidos en la entrada: "
+            + ", ".join(repetidos)
+        )
+
+    if todos_los_economicos:
+        consulta = Q()
+        for eco_unidad in todos_los_economicos:
+            consulta |= Q(eco_unidad__iexact=eco_unidad)
+
+        existentes = list(
+            Activo.objects.filter(consulta).values_list("eco_unidad", flat=True)
+        )
+
+        if existentes:
+            raise ValidationError(
+                "Los siguientes económicos ya están registrados: "
+                + ", ".join(str(eco) for eco in existentes)
+            )
+
+    return economicos_por_articulo
+
+
 @perfil_seleccionado_required
 @tipo_usuario_requerido('almacenista')
 def articulos_entrada(request, pk):
@@ -209,12 +328,20 @@ def articulos_entrada(request, pk):
     
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
-        articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False, seleccionado = False)
+        articulos = ArticuloComprado.objects.filter(
+            oc=compra, entrada_completa=False, 
+            producto__producto__articulos__producto__producto__servicio = False,
+            producto__producto__articulos__producto__producto__activo = False, 
+            seleccionado = False
+            )
     else:
         articulos = ArticuloComprado.objects.none()
 
     entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
-    articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
+    articulos_entrada = EntradaArticulo.objects.filter(
+        entrada = entrada,
+        articulo_comprado__producto__producto__articulos__producto__producto__activo=False,
+        )
   
     conteo_de_articulos = articulos.count()
     articulos_html = """
@@ -394,18 +521,6 @@ def articulos_entrada(request, pk):
                             solicitud.requisitar = False
                             solicitud.save()
             #######################################################################################################
-            elif entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
-                print('Activo valores antes de las cuentas')
-                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
-                articulo.articulo_comprado.producto.producto.cantidad = 0
-                articulo.articulo_comprado.producto.producto.cantidad_requisitar = 0
-                articulo.articulo_comprado.producto.producto.surtir = False
-                articulo.articulo_comprado.producto.producto.requisitar = False
-                inv_de_producto.cantidad += articulo.cantidad
-                #inv_de_producto.cantidad_entradas += articulo.cantidad
-                inv_de_producto.save()
-                articulo.save()
-                print('Tiene producto activo esta orden de tipo normal')
             elif entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
                     producto_surtir.surtir = False
@@ -431,6 +546,207 @@ def articulos_entrada(request, pk):
         'compra':compra,
         'form':form,
         'articulos_entrada':articulos_entrada,
+        'es_entrada_activos': False,
+        }
+
+    return render(request, 'entradas/articulos_entradas.html', context)
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('almacenista')
+def articulos_entrada_activos(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    compra = Compra.objects.get(id=pk)
+    try:
+        entrada = Entrada.objects.get(oc=compra, almacenista= usuario, completo = False)
+    except Entrada.DoesNotExist:
+        entrada = None  # Set entrada to None if no matching object is foundexcept 
+    
+    # Check if the `pk` is currently in use
+    #print('entrada_value:', entrada)
+    cache_key = f'compra_in_use_{pk}'
+    if cache.get(cache_key) and entrada is None:
+        messages.error(
+            request,
+            'Esta entrada está siendo utilizada por otro usuario.',
+        )
+        return redirect('entrada-usada')
+    # Mark the `pk` as in use in the cache
+    cache.set(cache_key,True,timeout=300,)
+
+    
+    
+    vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
+    if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
+        articulos = ArticuloComprado.objects.filter(
+            oc=compra, entrada_completa=False, 
+            producto__producto__articulos__producto__producto__servicio = False,
+            producto__producto__articulos__producto__producto__activo = True, 
+            seleccionado = False
+            )
+    else:
+        articulos = ArticuloComprado.objects.none()
+
+    entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
+    articulos_entrada = EntradaArticulo.objects.filter(
+        entrada = entrada,
+        articulo_comprado__producto__producto__articulos__producto__producto__activo=True,
+        )
+  
+    #conteo_de_articulos = articulos.count()
+    #articulos_html = """
+    #    <table border="1" style="border-collapse: collapse; width: 100%;">
+    #        <thead>
+    #            <tr>
+    #                <th>Producto Crítico</th>
+    #                <th>Requisitos</th>
+    #                <th>Requerimiento</th>
+    #            </tr>
+    #        </thead>
+    #        <tbody>
+    #    """
+
+    
+    form = EntradaArticuloForm()
+    #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+    max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+    nuevo_folio = (max_folio or 0) + 1
+    
+    for articulo in articulos:
+        #print('estoy pasando por aquí')
+        if articulo.cantidad_pendiente == None or articulo.cantidad_pendiente == "":
+            #print(articulo.cantidad)
+            articulo.cantidad_pendiente = articulo.cantidad
+            articulo.save()
+
+    print("METHOD:", request.method)
+    print("POST:", request.POST)
+    print("ENTRADA:", request.POST.get("entrada"))
+
+
+    if request.method == 'POST' and 'entrada' in request.POST:
+        print('en algun punto se está deteniendo')
+        try:
+            # Primero se validan todos los economicos.
+            # En este momento todavía no se modifica la base de datos.
+            economicos_por_articulo = (obtener_economicos_por_articulo(request=request, articulos_entrada=articulos_entrada,))
+            with transaction.atomic():
+                #Bloquear la entrada durante el cierre.
+                entrada = Entrada.objects.select_for_update().get(id = entrada.id, completo = False)
+                # Volver a consultar las partidas dentro de la transacción.
+                articulos_entrada = EntradaArticulo.objects.filter(
+                    entrada=entrada, 
+                    articulo_comprado__producto__producto__articulos__producto__producto__activo=True,
+                ).select_related(
+                    'articulo_comprado__producto__producto__articulos__producto__producto'
+                )
+                if not articulos_entrada.exists():
+                    raise ValidationError('No hay activos agregados a la entrada.')
+
+                articulos_comprados = ArticuloComprado.objects.filter(oc=compra)
+                num_art_comprados = articulos_comprados.count()
+                max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+                nuevo_folio = (max_folio or 0) + 1
+
+                entrada.completo = True
+                entrada.folio = nuevo_folio
+                entrada.entrada_date = datetime.now()
+        
+                articulos_comprados.filter(entrada_completa=True, seleccionado = True).update(seleccionado = False)
+
+                for articulo in articulos_entrada:
+                    producto_surtir = (ArticulosparaSurtir.objects.select_for_update().get(articulos = (articulo.articulo_comprado.producto.producto.articulos)))
+                    producto = (producto_surtir.articulos.producto.producto)
+
+                    #Proteccion adicional del lado del servidor
+                    if not producto.activo:
+                        raise ValidationError(f'El producto {producto.codigo} no está configurado como activo')
+
+                    cantidad_decimal = Decimal(str(articulo.cantidad))
+
+                    if (cantidad_decimal != cantidad_decimal.to_integral_value()):
+                        raise ValidationError(f'La cantidad recibida de 'f'{producto.codigo} debe ser entera.')
+
+                    cantidad_recibida = int(cantidad_decimal)
+
+                    economicos = economicos_por_articulo.get(articulo.id,[],)
+
+                    if len(economicos) != cantidad_recibida:
+                        raise ValidationError(f'La cantidad de económicos capturados para {producto.codigo} no coincide con la cantidad recibida.')
+
+                    inv_de_producto = (Inventario.objects.select_for_update().get(producto=producto, distrito=usuario.distritos,))
+
+                    producto_surtir.seleccionado = False
+                    producto_surtir.cantidad = 0
+                    producto_surtir.cantidad_requisitar = 0
+                    producto_surtir.surtir = False
+                    producto_surtir.requisitar = False
+
+                    
+                       
+                    inv_de_producto.cantidad += articulo.cantidad
+                    inv_de_producto.save(update_fields=['cantidad'])
+
+                    producto_surtir.save(update_fields=['seleccionado','cantidad','cantidad_requisitar','surtir','requisitar',])
+
+                    if producto.critico:
+                        articulo.liberado = False
+                        articulo.save(update_fields=['liberado'])
+
+                    #Se crea ub objeto Activo Individual por cada económico capturado
+                    estatus_pre_alta = Estatus_Activo.objects.get(nombre='PREALTA')
+
+                    for eco_unidad in economicos:
+                        Activo.objects.create(
+                            nombre=producto.nombre,
+                            descripcion=producto.nombre,
+                            activo = inv_de_producto,
+                            eco_unidad = eco_unidad,
+                            creado_por=usuario,
+                            entrada_articulo=articulo,
+                            completo = True,
+                            estatus= estatus_pre_alta,
+                            proveedor_adquisicion=entrada.oc.proveedor,
+                            )
+                evalua_entrada_completa(articulos_comprados, num_art_comprados, compra,)
+                entrada.save(update_fields=['completo','folio','entrada_date',])
+        except ValidationError as error:
+            messages.error(request,str(error),)
+            return redirect(request.path)
+
+        except IntegrityError:
+            messages.error(
+                request,
+                (
+                    'No fue posible crear los activos. Verifica que '
+                    'los números económicos no estén registrados.'
+                ),
+            )
+            return redirect(request.path)
+
+        messages.success(
+            request,
+            (
+                f'La entrada {entrada.folio} se realizó correctamente '
+                'y los activos fueron registrados.'
+            ),
+        )
+
+        cache.delete(cache_key)
+
+        return redirect('entrada-activos')
+    else:
+        print('en algun punto se está deteniendo')
+
+                        
+    context = {
+        'articulos':articulos,
+        'max_folio': nuevo_folio,
+        'entrada':entrada,
+        'compra':compra,
+        'form':form,
+        'articulos_entrada':articulos_entrada,
+        'es_entrada_activos': True,
         }
 
     return render(request, 'entradas/articulos_entradas.html', context)

@@ -27,11 +27,21 @@
                 <span class="sv-page-title-icon">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </span>
+                {% if es_entrada_activos %}
+                Registrar Entrada Activo
+                {% else %}
                 {% if usuario.distritos.nombre == "BRASIL" %}Registrar entrada{% else %}Entrada de artículos{% endif %}
+                {% endif %}
             </h1>
+            {% if es_entrada_activos %}
+             <p class="sv-page-subtitle">
+                Selecciona los productos recibidos y confirma la entrada al almacén activos.
+            </p>
+            {% else %}
             <p class="sv-page-subtitle">
                 Selecciona los productos recibidos y confirma la entrada al almacén.
             </p>
+            {% endif %}
         </div>
         <div class="d-flex flex-wrap justify-content-end gap-2">
             <span id="entrada" class="sv-badge sv-badge-primary"
@@ -226,23 +236,108 @@
             </table>
         </div>
 
-        <div class="sv-card-body border-top">
-            <form id="myForm2" method="POST">
-                {% csrf_token %}
-                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
-                    <a id="cerrar" class="sv-btn sv-btn-outline cerrar"
-                       href="{% url 'pendientes_entrada' %}">
-                        <i class="fa-solid fa-xmark"></i>
-                        {% if usuario.distritos.nombre == "BRASIL" %}Fechar{% else %}Cerrar{% endif %}
-                    </a>
-                    <button id="Btn_Crear" type="submit" class="sv-btn sv-btn-success"
-                            name="entrada_articulo">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        {% if usuario.distritos.nombre == "BRASIL" %}Criar entrada{% else %}Crear entrada{% endif %}
-                    </button>
+        <form id="myForm2" method="POST" action="{% if es_entrada_activos %}{% url 'articulos-entrada-activos' compra.id %}{% else %}{% url 'articulos-entrada' compra.id %}{% endif %}">
+            {% csrf_token %}
+
+            <div id="activosEconomicos" class="sv-card-body border-top d-none">
+                <div class="mb-3">
+                    <h3 class="sv-card-title">
+                        <i class="fa-solid fa-barcode"></i>
+                        Económicos de los activos
+                    </h3>
+                    <p class="sv-card-subtitle mb-0">
+                        Captura un número económico diferente por cada unidad recibida.
+                    </p>
                 </div>
-            </form>
-        </div>
+
+                <div id="contenedorPartidasActivos" class="row g-3">
+                    {% for producto in articulos_entrada %}
+                        {% if producto.articulo_comprado.producto.producto.articulos.producto.producto.activo %}
+                        <div class="col-12" data-partida-activo data-articulo-id="{{ producto.id|unlocalize }}" data-cantidad="{{ producto.cantidad|unlocalize }}"
+                            data-codigo="{{ producto.articulo_comprado.producto.producto.articulos.producto.producto.codigo }}"
+                            data-nombre="{{ producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre }}">
+                            <section class="sv-card">
+                                <div class="sv-card-header">
+                                    <div>
+                                        <h4 class="sv-card-title">
+                                            <i class="fa-solid fa-laptop-file"></i>
+                                            {{ producto.articulo_comprado.producto.producto.articulos.producto.producto.codigo }}
+                                        </h4>
+
+                                        <p class="sv-card-subtitle mb-0">
+                                            {{ producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre }}
+                                        </p>
+                                    </div>
+
+                                    <span class="sv-badge sv-badge-dark">
+                                        {{ producto.cantidad }}
+                                        unidad{{ producto.cantidad|pluralize:"es" }}
+                                    </span>
+                                </div>
+
+                                <div class="sv-card-body">
+                                    <div class="row g-3" data-campos-economicos></div>
+                                </div>
+                            </section>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0" role="note">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Los económicos se asignarán individualmente a los activos al crear la entrada.
+                </div>
+            </div>
+
+            <div class="sv-card-body border-top">
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                    {% if es_entrada_activos %}
+                    <a
+                        id="cerrar" class="sv-btn sv-btn-outline cerrar" href="{% url 'entrada-activos' %}">
+                        <i class="fa-solid fa-xmark"></i>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                            Fechar
+                        {% else %}
+                            Cerrar
+                        {% endif %}
+                    </a>
+                
+                    
+                    {% else %}
+                    <a
+                        id="cerrar" class="sv-btn sv-btn-outline cerrar" href="{% url 'pendientes_entrada' %}">
+                        <i class="fa-solid fa-xmark"></i>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                            Fechar
+                        {% else %}
+                            Cerrar
+                        {% endif %}
+                    </a>
+                    {% endif %}
+
+                    {% if es_entrada_activos %}
+                     <button id="Btn_Crear" type="submit" class="sv-btn sv-btn-success" name="entrada"  value="crear">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                            Criar entrada
+                        {% else %}
+                            Crear entrada Activos
+                        {% endif %}
+                    </button>
+                    {% else %}
+                    <button id="Btn_Crear" type="submit" class="sv-btn sv-btn-success" name="entrada"  value="crear">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                            Criar entrada
+                        {% else %}
+                            Crear entrada
+                        {% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
     </section>
 </main>
 
@@ -251,7 +346,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content sv-modal">
             <div class="modal-body d-flex align-items-center gap-3">
-                {% if usuario.distritos.nombre == "NEGRO" %}
+                {% if usuario.distritos.nombre == "Yerod" %}
                 <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
                      alt="SAVIA Negro" width="72" height="72" class="rounded-circle">
                 {% else %}
@@ -271,6 +366,8 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+
+   
 const viewKey = "{{ compra.id|unlocalize }}";
 let ownsViewLock = false;
 
@@ -296,6 +393,10 @@ const requestedLabel = document.getElementById('solicitado');
 const addButton = document.getElementById('update-entrada');
 const createForm = document.getElementById('myForm2');
 const createButton = document.getElementById('Btn_Crear');
+const activosEconomicos = document.getElementById('activosEconomicos');
+const partidasActivos = document.querySelectorAll('[data-partida-activo]');
+
+crearCamposEconomicos(); 
 
 function entryRowCount() {
     return document.querySelectorAll('#mytbl tr[data-entry-row]').length;
@@ -322,19 +423,129 @@ function updateAddButton() {
     addButton.classList.toggle('d-none', !valid);
 }
 
+function crearCamposEconomicos() {
+    if (!partidasActivos.length) {
+        return;
+    }
+
+    activosEconomicos.classList.remove('d-none');
+
+    partidasActivos.forEach(function (partida) {
+        const articuloId = partida.dataset.articuloId;
+        const codigo = partida.dataset.codigo;
+        const nombre = partida.dataset.nombre;
+        const cantidad = Number(partida.dataset.cantidad);
+        const contenedor = partida.querySelector('[data-campos-economicos]');
+
+        contenedor.innerHTML = '';
+
+        if (!Number.isInteger(cantidad) || cantidad <= 0) {
+            contenedor.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger mb-0">
+                        La cantidad recibida de ${codigo} - ${nombre}
+                        debe ser un número entero.
+                    </div>
+                </div>
+            `;
+
+            return;
+        }
+
+        for (let numero = 1; numero <= cantidad; numero++) {
+            const columna = document.createElement('div');
+
+            columna.className = 'col-12 col-md-6 col-xl-4';
+
+            columna.innerHTML = `
+                <label class="form-label" for="eco_${articuloId}_${numero}">
+                    Económico Activo ${numero}
+                </label>
+
+                <div class="sv-input-group">
+                    <span class="input-group-text">
+                        <i class="fa-solid fa-barcode"></i>
+                    </span>
+
+                    <div class="form-floating">
+                        <input type="text" class="form-control campo-economico" id="eco_${articuloId}_${numero}" name="eco_${articuloId}_${numero}"
+                            placeholder="Número económico" maxlength="50" autocomplete="off" data-codigo="${codigo}" required>
+
+                        <label for="eco_${articuloId}_${numero}">
+                            Ej. ACT-001
+                        </label>
+                    </div>
+                </div>
+            `;
+
+            contenedor.appendChild(columna);
+        }
+    });
+}
+
 createForm.addEventListener('submit', function (event) {
     if (entryRowCount() < 1) {
         event.preventDefault();
+
         Swal.fire({
             title: 'Error',
             text: 'No tienes productos seleccionados',
             icon: 'error'
         });
+
         return;
     }
 
-    createButton.setAttribute('name', 'entrada');
+    const camposEconomicos = Array.from(
+        document.querySelectorAll('.campo-economico')
+    );
+
+    const economicos = camposEconomicos.map(function (campo) {
+        const valorNormalizado = campo.value.trim().toUpperCase();
+        campo.value = valorNormalizado;
+
+        return valorNormalizado;
+    });
+
+    const campoVacio = camposEconomicos.find(function (campo) {
+        return !campo.value.trim();
+    });
+
+    if (campoVacio) {
+        event.preventDefault();
+
+        campoVacio.focus();
+
+        Swal.fire({
+            title: 'Económico requerido',
+            text: 'Debes capturar un económico por cada activo recibido.',
+            icon: 'error'
+        });
+
+        return;
+    }
+
+    const economicosUnicos = new Set(economicos);
+
+    if (economicosUnicos.size !== economicos.length) {
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Económicos repetidos',
+            text: 'No puedes asignar el mismo económico a dos activos.',
+            icon: 'error'
+        });
+
+        return;
+    }
+
     showLoading();
+
+    setTimeout(function(){
+        createButton.disabled = true;
+    }, 0)
+    
+    
 });
 
 document.querySelectorAll('.cerrar').forEach(function (button) {

@@ -1154,32 +1154,76 @@ def matriz_pagos(request):
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.rh == True:
+
+        vales_gasto_aprobados = ValeRosa.objects.filter(
+            gasto_id=OuterRef('gasto_id'),
+            esta_aprobado=True,
+        )
+        
+        vales_viatico_aprobados = ValeRosa.objects.filter(
+            viatico_id=OuterRef('viatico_id'),
+            esta_aprobado=True,
+        )
+        
+        
+        facturas_oc = Facturas.objects.filter(
+            oc=OuterRef('oc'),
+            hecho=True
+        )
+        
+        facturas_oc_pendientes = facturas_oc.exclude(
+            autorizada = True
+        )
+        
+        facturas_gasto = Factura.objects.filter(
+            solicitud_gasto=OuterRef('gasto'),
+            hecho=True
+        )
+        
+        facturas_gasto_pendientes = facturas_gasto.exclude(
+            autorizada = True
+        )
+        
+        facturas_viatico = Viaticos_Factura.objects.filter(
+            solicitud_viatico=OuterRef('viatico'),
+            hecho=True
+        )
+        
+        facturas_viatico_pendientes = facturas_viatico.exclude(
+            autorizada = True
+        )
+
+
         pagos = Pago.objects.filter(
-        gasto__distrito__in = almacenes_distritos, gasto__autorizar2 = True, gasto__tipo__tipo__in = ['APOYOS A EMPLEADOS', 'APOYO DE RENTA',] , 
+            gasto__distrito__in = almacenes_distritos,
+            gasto__autorizar2 = True, 
+            gasto__tipo__tipo__in = ['APOYOS A EMPLEADOS', 'APOYO DE RENTA',] , 
         hecho=True
+        ).select_related(
+            'gasto',
+            'gasto__distrito',
+            'gasto__tipo',
         ).annotate(
-        # Detectar la relación que tiene facturas
-        total_facturas=Count(
-            'oc__facturas', filter=Q(oc__facturas__hecho=True)
-        ) + Count(
-            'gasto__facturas__hecho', filter=Q(gasto__facturas__hecho=True)
-        ) + Count(
-            'viatico__facturas__hecho', filter=Q(viatico__facturas__hecho=True)
-        ),
-        autorizadas=Count(
-            Case(
-                When(Q(oc__facturas__autorizada=True, oc__facturas__hecho=True), then=Value(1))
-            )
-        ) + Count(
-            Case(
-                When(Q(gasto__facturas__autorizada=True, gasto__facturas__hecho=True), then=Value(1))
-            )
-        ) + Count(
-            Case(
-                When(Q(viatico__facturas__autorizada=True, viatico__facturas__hecho=True), then=Value(1))
-            )
-        ),
-        ).order_by('-pagado_real')
+            tiene_facturas_gasto=Exists(
+                facturas_gasto,
+            ),
+            pendientes_gasto=Exists(
+                facturas_gasto_pendientes,
+            ),
+            ).annotate(
+                estado_facturas=Case(
+                    When(
+                        tiene_facturas_gasto=False,
+                        then=Value('sin_facturas'),
+                    ),
+                    When(
+                        pendientes_gasto=False,
+                        then=Value('todas_autorizadas'),
+                    ),
+                    default=Value('pendientes'),
+                    output_field=CharField(),
+                ),
+            ).order_by('-pagado_real')
     elif usuario.distritos.nombre == "MATRIZ":
         filtro_pagos = (
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |

@@ -286,6 +286,7 @@ class Activo(models.Model):
     fecha_adquisicion = models.DateField(null=True,blank=True,)
     proveedor_adquisicion = models.ForeignKey('compras.Proveedor_direcciones',on_delete=models.PROTECT, null=True,blank=True,related_name='activos_adquiridos',)
     origen = models.CharField(max_length=10, choices=OrigenActivo.choices, null=True, blank=True,)
+    entrada_articulo = models.ForeignKey('entradas.EntradaArticulo',on_delete=models.PROTECT, related_name ='activos_generados', null=True, blank=True, verbose_name='Partida de Entrada')
 
     @property   
     def emisor(self):

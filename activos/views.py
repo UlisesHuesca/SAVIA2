@@ -60,8 +60,10 @@ def activos(request):
     # ---------------------------------------------------------
     if usuario.tipo.nombre in ["ADMIN_ACTIVOS", "Admin"]:
         activos_base = Activo.objects.filter(
+            Q(responsable__distritos__id__in=almacenes_distritos)|
+            Q(activo__distrito__in=almacenes_distritos),
             completo=True,
-            responsable__distritos__id__in=almacenes_distritos,
+           
         )
     else:
         activos_base = Activo.objects.filter(
@@ -69,14 +71,14 @@ def activos(request):
             | Q(activo__distrito=usuario.distritos),
             completo=True,
         )
-
+    
     activos_base = activos_base.distinct()
-
+    print(activos_base)
     # ---------------------------------------------------------
     # FILTROS
     # ---------------------------------------------------------
     myfilter = ActivoFilter(request.GET or None,queryset=activos_base,)
-
+    print(activos_base)
     activos_queryset = myfilter.qs.distinct()
 
     # ---------------------------------------------------------

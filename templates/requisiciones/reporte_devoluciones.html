@@ -3,215 +3,546 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
-<html>
-<head>
+{% load l10n %}
+
 {% block title %}Devoluciones{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class="row my-4">
-        <div class="card">
-           <div class="card-header">
-            <h5>Solicitudes Devoluciones</h5>
-            </div>
-        <div class="card-body">
-            
-            <form method="GET" class="row g-7">
-                {% csrf_token %}
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
-                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
-                            <label style="color: #121212;" for="id_staff">Folio</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-helmet-safety"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.almacenista|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                            <label style="color: #121212;" for="id_proyecto">Almacenista</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="serie" class="col-lg-4 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.inicio type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="serie" class="col-lg-4 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.fin type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
-            </form>
-            <hr>
-            <div class = "row mt-2 bg-white">
-                <form method=POST>
-                    {% csrf_token %}
-                <ul class="nav nav-pills">
-                    <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                    </li>
-                </ul>
-                </form>
-            </div>
+
+<div class="sv-page">
+
+    <!-- Encabezado -->
+    <div class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">
+                Inventario
+            </span>
+
+            <h1 class="sv-page-title">
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+                Solicitudes de devolución
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta las devoluciones registradas y los productos asociados.
+            </p>
+        </div>
+
+        <div>
+            <span class="badge rounded-pill bg-light text-primary border">
+                {{ ordenes_list.paginator.count }}
+                registro{{ ordenes_list.paginator.count|pluralize }}
+            </span>
         </div>
     </div>
-</div>
 
-<div class = "row mt-2">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio solicitud</th>
-                    <th class="d-none d-lg-table-cell">Solicito</th>
-                    <th class="d-none d-lg-table-cell">Almacenista</th>
-                    <th class="d-none d-lg-table-cell">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th>Fecha devolución</th>
-                    <th>Productos</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Autorizada</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orden in ordenes_list %}
-                <tr>
-                    <th scope="row">{{orden.solicitud.folio}}</th>
-                    <td>{{orden.solicitud.staff.staff.staff.first_name}} {{orden.solicitud.staff.staff.staff.last_name}}</td>
-                    <th scope="row">{{orden.almacenista.staff.staff.first_name}} {{orden.almacenista.staff.staff.last_name}}</th>
-                    <td>{{orden.solicitud.proyecto.nombre}}</td>
-                    <td>{{orden.solicitud.subproyecto.nombre}}</td>
-                    {% if orden.fecha %}
-                        <td>{{ orden.fecha }} {{ orden.hora }}</td>
-                    {% else %}
-                        <td>Sin fecha</td>
-                    {% endif %}
-                    <td>
-                        <!-- Botón para abrir el modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productosModal{{ orden.id }}">
-                            Productos
+    <!-- Filtros -->
+    <section class="sv-card mb-4">
+
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros de búsqueda
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Localiza devoluciones por folio, usuario, almacenista o fecha.
+                </p>
+            </div>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+            <div class="row g-3">
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="sv-input-group">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+
+                        <div class="form-floating">
+                            {{ myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder=Solicitado por" }}
+                            <label for="{{ myfilter.form.solicitud.id_for_label }}">
+                                Solicitado por
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="sv-input-group">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </span>
+
+                        <div class="form-floating">
+                            {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                            <label for="{{ myfilter.form.folio.id_for_label }}">
+                                Folio
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="sv-input-group">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-helmet-safety"></i>
+                        </span>
+
+                        <div class="form-floating">
+                            {{ myfilter.form.almacenista|add_class:"form-control"|append_attr:"placeholder=Almacenista" }}
+                            <label for="{{ myfilter.form.almacenista.id_for_label }}">
+                                Almacenista
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="sv-input-group">
+                        <span class="input-group-text">
+                            <i class="fa-regular fa-calendar"></i>
+                        </span>
+
+                        <div class="form-floating">
+                            {% render_field myfilter.form.inicio type="date" class="form-control" placeholder="Desde" %}
+                            <label for="{{ myfilter.form.inicio.id_for_label }}">
+                                Desde
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="sv-input-group">
+                        <span class="input-group-text">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </span>
+
+                        <div class="form-floating">
+                            {% render_field myfilter.form.fin type="date" class="form-control" placeholder="Hasta" %}
+                            <label for="{{ myfilter.form.fin.id_for_label }}">
+                                Hasta
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="d-flex align-items-stretch gap-2 h-100">
+
+                        <button
+                            class="sv-btn sv-btn-primary flex-grow-1"
+                            type="submit"
+                        >
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
                         </button>
 
-                        <!-- Modal de productos -->
-                        <div class="modal fade" id="productosModal{{ orden.id }}" tabindex="-1" aria-labelledby="productosModalLabel{{ orden.id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="productosModalLabel{{ orden.id }}">Productos de la Solicitud {{ orden.solicitud.folio }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <ul>
-                                            {% for producto in orden.solicitud.productos.all %}
-                                                <li>{{ producto.producto.producto.nombre}} Cantidad: {{ producto.cantidad }}</li>
-                                            {% empty %}
-                                                <li>No hay productos para esta solicitud.</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                    </div>
+                        <a
+                            class="sv-btn sv-btn-outline"
+                            href="{{ request.path }}"
+                            title="Limpiar filtros"
+                            aria-label="Limpiar filtros"
+                        >
+                            <i class="fa-solid fa-eraser"></i>
+                            Limpiar
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+           
+
+        </div>
+
+        <div class="sv-card-body border-top">
+            <form method="POST">
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="sv-btn sv-btn-success"
+                    name="btnExcel"
+                    value="excel"
+                >
+                    <i class="fa-solid fa-file-excel"></i>
+                    Exportar Excel
+                </button>
+            </form>
+        </div>
+
+    </section>
+
+    <!-- Tabla -->
+    <section class="sv-card">
+
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Devoluciones registradas
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Resultados encontrados de acuerdo con los filtros seleccionados.
+                </p>
+            </div>
+
+            <span class="badge rounded-pill bg-dark">
+                Página {{ ordenes_list.number }}
+                de {{ ordenes_list.paginator.num_pages }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table
+                class="sv-table"
+                style="width: 100%; min-width: 0; table-layout: auto;"
+            >
+          
+
+                <thead>
+                    <tr>
+                        <th scope="col">Solicitud</th>
+                        <th scope="col" class="d-none d-lg-table-cell">Solicitó</th>
+                        <th scope="col" class="d-none d-lg-table-cell">Almacenista</th>
+                        <th scope="col" class="d-none d-xl-table-cell">Proyecto</th>
+                        <th scope="col" class="d-none d-xl-table-cell">Subproyecto</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col" class="text-center">Productos</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col" class="text-center">Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for orden in ordenes_list %}
+                        <tr>
+                            <td style="overflow-wrap: anywhere;">
+                                <span class="sv-cell-title">
+                                    {{ orden.solicitud.folio }}
+                                </span>
+
+                                <div class="sv-cell-subtitle d-lg-none">
+                                    {{ orden.solicitud.staff.staff.staff.first_name }}
+                                    {{ orden.solicitud.staff.staff.staff.last_name }}
                                 </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>{{orden.tipo.nombre}}</td>
-                    {% if orden.autorizada == True %}
-                        <td>Autorizada</td>
-                    {% elif orden.autorizada == False %}
-                        <td>No Autorizada</td>
-                    {% else %} 
-                        <td>Pendiente</td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if ordenes_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
+                            </td>
 
-                {% for item in ordenes_list.paginator.page_range %}
-                    {% if ordenes_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-                    {% endif %}
-                {% endfor %}
+                            <td
+                                class="d-none d-lg-table-cell"
+                                style="white-space: normal; overflow-wrap: anywhere;"
+                            >
+                                <span class="sv-cell-title">
+                                    {{ orden.solicitud.staff.staff.staff.first_name }}
+                                    {{ orden.solicitud.staff.staff.staff.last_name }}
+                                </span>
+                            </td>
 
-                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
-                {% endif %}
+                            <td
+                                class="d-none d-lg-table-cell"
+                                style="white-space: normal; overflow-wrap: anywhere;"
+                            >
+                                {% if orden.almacenista %}
+                                    {{ orden.almacenista.staff.staff.first_name }}
+                                    {{ orden.almacenista.staff.staff.last_name }}
+                                {% else %}
+                                    <span class="sv-cell-subtitle">
+                                        Sin asignar
+                                    </span>
+                                {% endif %}
+                            </td>
 
-                {% if ordenes_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
+                            <td
+                                class="d-none d-xl-table-cell"
+                                style="white-space: normal; overflow-wrap: anywhere;"
+                            >
+                                {{ orden.solicitud.proyecto.nombre|default:"Sin proyecto" }}
+                            </td>
+
+                            <td
+                                class="d-none d-xl-table-cell"
+                                style="white-space: normal; overflow-wrap: anywhere;"
+                            >
+                                {{ orden.solicitud.subproyecto.nombre|default:"Sin subproyecto" }}
+                            </td>
+
+                            <td style="white-space: normal;">
+                                {% if orden.fecha %}
+                                    <span class="sv-cell-title">
+                                        {{ orden.fecha|date:"d/m/Y" }}
+                                    </span>
+
+                                    {% if orden.hora %}
+                                        <div class="sv-cell-subtitle">
+                                            {{ orden.hora|time:"H:i" }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="sv-cell-subtitle">
+                                        Sin fecha
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-outline sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#productosModal{{ orden.id |unlocalize }}"
+                                    title="Ver productos"
+                                    aria-label="Ver productos"
+                                >
+                                    <i class="fa-solid fa-boxes-stacked"></i>
+                                </button>
+                            </td>
+
+                            <td style="overflow-wrap: anywhere;">
+                                <span class="badge rounded-pill bg-light text-dark border">
+                                    {{ orden.tipo.nombre }}
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                {% if orden.autorizada == True %}
+                                    <span
+                                        class="badge rounded-pill bg-success"
+                                        title="Autorizada"
+                                    >
+                                        <i class="fa-solid fa-check"></i>
+                                    </span>
+                                {% elif orden.autorizada == False %}
+                                    <span
+                                        class="badge rounded-pill bg-danger"
+                                        title="No autorizada"
+                                    >
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </span>
+                                {% else %}
+                                    <span
+                                        class="badge rounded-pill bg-warning text-dark"
+                                        title="Pendiente"
+                                    >
+                                        <i class="fa-solid fa-clock"></i>
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="9">
+                                <div class="p-5 text-center">
+                                    <i class="fa-solid fa-inbox fa-2x mb-3 text-muted"></i>
+
+                                    <h3 class="sv-card-title">
+                                        No se encontraron devoluciones
+                                    </h3>
+
+                                    <p class="sv-card-subtitle mb-0">
+                                        Ajusta los filtros para realizar una nueva búsqueda.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if ordenes_list.paginator.num_pages > 1 %}
+            <div class="sv-card-body border-top">
+                <nav aria-label="Paginación de devoluciones">
+                    <ul class="pagination justify-content-center mb-0">
+
+                        {% if ordenes_list.has_previous %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="{% my_url 1 'page' request.GET.urlencode %}"
+                                    aria-label="Primera página"
+                                >
+                                    <i class="fa-solid fa-angles-left"></i>
+                                </a>
+                            </li>
+
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"
+                                    aria-label="Página anterior"
+                                >
+                                    <i class="fa-solid fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for item in ordenes_list.paginator.page_range %}
+                            {% if ordenes_list.number == item %}
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        {{ item }}
+                                    </span>
+                                </li>
+                            {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                                <li class="page-item">
+                                    <a
+                                        class="page-link"
+                                        href="{% my_url item 'page' request.GET.urlencode %}"
+                                    >
+                                        {{ item }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if ordenes_list.has_next %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"
+                                    aria-label="Página siguiente"
+                                >
+                                    <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                            </li>
+
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                                    aria-label="Última página"
+                                >
+                                    <i class="fa-solid fa-angles-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+
+    </section>
+
 </div>
 
-<!-- Modal para mostrar los productos -->
-<div class="modal fade" id="productosModal" tabindex="-1" role="dialog" aria-labelledby="productosModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productosModalLabel">Productos de la Orden</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <ul id="productosList" class="list-group">
-                    <!-- Aquí se insertarán los productos -->
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+<!-- Modales fuera de la tabla -->
+{% for orden in ordenes_list %}
+    <div
+        class="modal fade"
+        id="productosModal{{ orden.id|unlocalize }}"
+        tabindex="-1"
+        aria-labelledby="productosModalLabel{{ orden.id|unlocalize }}"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content sv-modal">
+
+                <div class="modal-header">
+                    <div>
+                        <span class="sv-page-eyebrow">
+                            Detalle de devolución
+                        </span>
+
+                        <h2
+                            class="modal-title sv-card-title"
+                            id="productosModalLabel{{ orden.id|unlocalize }}"
+                        >
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            Productos de la solicitud {{ orden.solicitud.folio }}
+                        </h2>
+
+                        <p class="sv-card-subtitle mb-0">
+                            Artículos asociados con esta devolución.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"
+                    ></button>
+                </div>
+
+                <div class="modal-body p-0">
+                    <div class="sv-table-wrap">
+                        <table
+                            class="sv-table"
+                            style="width: 100%; min-width: 0; table-layout: auto;"
+                        >
+                          
+
+                            <thead>
+                                <tr>
+                                    <th scope="col">Producto</th>
+                                    <th scope="col" class="text-end">Cantidad</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for producto in orden.solicitud.productos.all %}
+                                    <tr>
+                                        <td style="white-space: normal; overflow-wrap: anywhere;">
+                                            <span class="sv-cell-title">
+                                                {{ producto.producto.producto.nombre }}
+                                            </span>
+                                        </td>
+
+                                        <td class="text-end">
+                                            <span class="badge rounded-pill bg-light text-dark border">
+                                                {{ producto.cantidad }}
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="2">
+                                            <div class="p-5 text-center">
+                                                <i class="fa-solid fa-box-open fa-2x mb-3 text-muted"></i>
+
+                                                <h3 class="sv-card-title">
+                                                    No hay productos
+                                                </h3>
+
+                                                <p class="sv-card-subtitle mb-0">
+                                                    Esta solicitud no contiene productos asociados.
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                        Cerrar
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- JavaScript para cargar productos en el modal -->
+{% endfor %}
+
 {% endblock %}
-</body>
-</html>

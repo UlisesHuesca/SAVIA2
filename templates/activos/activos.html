@@ -478,6 +478,7 @@
                         <th>Distrito</th>
                         <th scope="col" style="width: 28%; max-width: 320px; white-space: normal;">Producto</th>
                         <th scope="col" data-column="responsable">Responsable</th>
+                        <th scope="col" data-column="tipo">Categoría</th>
                         <th scope="col" data-column="tipo">Tipo de activo</th>
                         <th scope="col" data-column="serie">Serie</th>
                         <th scope="col" data-column="marca">Marca</th>
@@ -498,6 +499,7 @@
                         <td>{{item.responsable.distritos}}</td>
                         <td style="width: 28%; max-width: 320px; white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{% if item.activo %}{{ item.activo.producto.nombre }}{% else %}—{% endif %}</span></td>
                         <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
+                        <td data-column="tipo">{{ item.categoria|default:"—" }}</td>
                         <td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>
                         <td data-column="serie">{{ item.serie|default:"—" }}</td>
                         <td data-column="marca">{{ item.marca|default:"NR" }}</td>

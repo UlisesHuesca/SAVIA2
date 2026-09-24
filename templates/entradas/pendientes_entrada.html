@@ -3,7 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-{% block title %}Entradas pendientes{% endblock %}
+{% block title %}Entradas pendientes {% if activo %} - Activos {% endif %}{% endblock %}
 
 {% block content %}
 <main class="sv-page sv-page-with-navbar">
@@ -13,7 +13,7 @@
                 <span class="sv-page-title-icon">
                     <i class="fa-solid fa-truck-ramp-box"></i>
                 </span>
-                Entradas pendientes
+                Entradas pendientes {% if activo %} - Activos {% endif %}
             </h1>
             <p class="sv-page-subtitle">
                 Consulta las órdenes pendientes y registra la recepción de materiales.
@@ -222,11 +222,19 @@
                     {% endif %}
                     <td>
                         <div class="sv-actions">
+                            {% if activo %}
+                            <a class="sv-btn sv-btn-info sv-btn-icon"
+                               href="{% url 'articulos-entrada-activos' compra.id %}"
+                               title="Registrar entrada" aria-label="Registrar entrada">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </a>
+                            {% else %}
                             <a class="sv-btn sv-btn-info sv-btn-icon"
                                href="{% url 'articulos-entrada' compra.id %}"
                                title="Registrar entrada" aria-label="Registrar entrada">
                                 <i class="fa-solid fa-box-archive"></i>
                             </a>
+                            {% endif %}
                             <a class="sv-btn sv-btn-success sv-btn-icon"
                                href="{% url 'productos' compra.id %}"
                                title="Ver productos" aria-label="Ver productos">
