@@ -551,8 +551,8 @@ def update_oc(request):
             if productos.cantidad_comprada == productos.cantidad:
                 productos.art_surtido = True
             if comp_item.cantidad == None:
-                comp_item.cantidad = 0
-                comp_item.cantidad_pendiente = 0
+                comp_item.cantidad = decimal.Decimal('0')
+                comp_item.cantidad_pendiente =  decimal.Decimal('0')
             comp_item.cantidad = comp_item.cantidad + decimal.Decimal(cantidad)
             comp_item.cantidad_pendiente = comp_item.cantidad_pendiente + decimal.Decimal(cantidad)
             comp_item.precio_unitario = precio
