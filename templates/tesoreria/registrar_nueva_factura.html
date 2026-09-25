@@ -1,77 +1,290 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load widget_tweaks %}
 {% load static %}
-<html>
-<head>
-{% block title %}Facturas{% endblock %}
-</head>
-<body>
-{% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title": "Error",
-                    "text": "{{ message }}",
-                    "icon": "error",
-                })
-                </script>
-                {% elif message.tags == "warning" %}
-                <script>
-                Swal.fire({
-                    "title": "Facturas repetidas",
-                    "text": "{{ message }}",
-                    "icon": "warning",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title": "Excelente",
-                    "text": "{{ message }}",
-                    "icon": "success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
 
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Folio</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+{% block title %}Facturas{% endblock %}
+
+{% block content %}
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: (
+                    "{{ message.tags|escapejs }}" === "error"
+                        ? "Error"
+                        : "{{ message.tags|escapejs }}" === "warning"
+                            ? "Facturas repetidas"
+                            : "Excelente"
+                ),
+                text: "{{ message|escapejs }}",
+                icon: (
+                    "{{ message.tags|escapejs }}" === "error"
+                        ? "error"
+                        : "{{ message.tags|escapejs }}" === "warning"
+                            ? "warning"
+                            : "success"
+                ),
+                confirmButtonText: "Entendido"
+            });
+        </script>
+    {% endfor %}
+{% endif %}
+
+
+<!--
+    Este contenido se inserta dentro de #document.
+    No debe incluir otro modal ni otro modal-dialog.
+-->
+<div class="modal-content sv-modal">
+
+    <div class="modal-header">
+        <div>
+            <h2 class="modal-title sv-card-title">
+                <i class="fa-solid fa-file-invoice"></i>
+                Cargar facturas
+            </h2>
+
+            <p class="sv-card-subtitle mb-0">
+                Sube los archivos PDF y XML relacionados.
+            </p>
         </div>
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Cerrar">
+        </button>
+    </div>
+
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        hx-post="{{ request.path }}"
+        hx-encoding="multipart/form-data"
+        hx-target="#document"
+        hx-swap="innerHTML"
+        hx-indicator="#facturasLoading"
+        hx-disabled-elt="find button[type='submit']">
+
+        {% csrf_token %}
+
         <div class="modal-body">
-            <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
-                {% csrf_token %}
-                <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
-                <input type="file" name="archivo_pdf" class="form-control" multiple>
-                <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
-                <input type="file" name="archivo_xml" class="form-control" multiple>
-                <label for="comentario" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
-                <textarea name="comentario" class="form-control" maxlength="100" placeholder="Escribe tu comentario (máx. 100 caracteres)"></textarea>
-                <div class="row">
-                    <div class="col-auto my-2">
-                        <button type="submit" name="btn_registrar" class="btn btn-outline-success" data-bs-dismiss="modal">
-                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
-                        </button>
-                    </div>
-                    <div class="col-auto my-2">
-                        <button type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-dismiss="modal">Cerrar</button>
+
+            <div class="row g-3">
+
+                <!-- Facturas PDF -->
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+
+                            <label
+                                for="archivo_pdf"
+                                class="form-label fw-semibold">
+                                Facturas PDF
+                            </label>
+
+                            <input
+                                type="file"
+                                id="archivo_pdf"
+                                name="archivo_pdf"
+                                class="form-control"
+                                accept=".pdf,application/pdf"
+                                multiple>
+
+                            <span
+                                id="resumenArchivosPdf"
+                                class="sv-cell-subtitle d-block mt-2">
+                                Puedes seleccionar uno o varios archivos PDF.
+                            </span>
+
+                        </div>
+                    </section>
+                </div>
+
+
+                <!-- Facturas XML -->
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+
+                            <label
+                                for="archivo_xml"
+                                class="form-label fw-semibold">
+                                Facturas XML
+                            </label>
+
+                            <input
+                                type="file"
+                                id="archivo_xml"
+                                name="archivo_xml"
+                                class="form-control"
+                                accept=".xml,text/xml,application/xml"
+                                multiple>
+
+                            <span
+                                id="resumenArchivosXml"
+                                class="sv-cell-subtitle d-block mt-2">
+                                Puedes seleccionar uno o varios archivos XML.
+                            </span>
+
+                        </div>
+                    </section>
+                </div>
+
+
+                <!-- Comentario -->
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+
+                            <div class="d-flex justify-content-between gap-3">
+                                <label
+                                    for="comentario"
+                                    class="form-label fw-semibold">
+                                    Comentario
+                                </label>
+
+                                <span
+                                    id="contadorComentario"
+                                    class="sv-cell-subtitle">
+                                    0 / 100
+                                </span>
+                            </div>
+
+                            <textarea
+                                id="comentario"
+                                name="comentario"
+                                class="form-control"
+                                rows="3"
+                                maxlength="100"
+                                placeholder="Escribe tu comentario (máximo 100 caracteres)"></textarea>
+
+                            <span class="sv-cell-subtitle d-block mt-2">
+                                El comentario es opcional.
+                            </span>
+
+                        </div>
+                    </section>
+                </div>
+
+
+                <!-- Indicador de procesamiento -->
+                <div class="col-12">
+                    <div
+                        id="facturasLoading"
+                        class="htmx-indicator alert alert-info mb-0"
+                        role="status">
+
+                        <div class="d-flex align-items-center gap-3">
+                            <div
+                                class="spinner-border spinner-border-sm"
+                                aria-hidden="true">
+                            </div>
+
+                            <div>
+                                <strong>Procesando facturas</strong>
+
+                                <p class="sv-cell-subtitle mb-0">
+                                    Por favor espera mientras se cargan los documentos.
+                                </p>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-            </form>
+
+            </div>
         </div>
-    </div>
+
+
+        <div class="modal-footer">
+            <div class="sv-actions">
+
+                <button
+                    type="button"
+                    class="sv-btn sv-btn-outline"
+                    data-bs-dismiss="modal">
+
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    name="btn_registrar"
+                    value="1"
+                    class="sv-btn sv-btn-success"
+                    data-bs-dismiss="modal">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Guardar facturas
+                </button>
+
+            </div>
+        </div>
+
+    </form>
 </div>
+
+
+<script>
+(function () {
+    const inputPdf = document.getElementById('archivo_pdf');
+    const inputXml = document.getElementById('archivo_xml');
+
+    const resumenPdf = document.getElementById('resumenArchivosPdf');
+    const resumenXml = document.getElementById('resumenArchivosXml');
+
+    const comentario = document.getElementById('comentario');
+    const contadorComentario = document.getElementById(
+        'contadorComentario'
+    );
+
+    function actualizarResumen(input, resumen, extension) {
+        if (!input || !resumen) {
+            return;
+        }
+
+        const cantidad = input.files.length;
+
+        if (cantidad === 0) {
+            resumen.textContent =
+                'Puedes seleccionar uno o varios archivos ' +
+                extension +
+                '.';
+
+            resumen.classList.remove('text-success');
+            return;
+        }
+
+        resumen.innerHTML =
+            '<i class="fa-solid fa-circle-check me-1"></i>' +
+            cantidad +
+            (cantidad === 1
+                ? ' archivo seleccionado'
+                : ' archivos seleccionados');
+
+        resumen.classList.add('text-success');
+    }
+
+    inputPdf?.addEventListener('change', function () {
+        actualizarResumen(inputPdf, resumenPdf, 'PDF');
+    });
+
+    inputXml?.addEventListener('change', function () {
+        actualizarResumen(inputXml, resumenXml, 'XML');
+    });
+
+    comentario?.addEventListener('input', function () {
+        contadorComentario.textContent =
+            comentario.value.length + ' / 100';
+    });
+})();
+</script>
+
 {% endblock %}
-</body>
-</html>

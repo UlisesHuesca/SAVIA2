@@ -2065,7 +2065,7 @@ def render_salida_pdf(request, pk):
         color_barra_inferior = color_acento
 
         logo_path = finders.find(
-            'images/SAVIA_Negro_Verde.jpg'
+            'images/SAVIA_Negro_verde.jpg'
         )
 
         logo_width = 1.75 * cm
@@ -2349,7 +2349,7 @@ def render_entrada_pdf(request, pk):
         color_acento = Color(40 / 255,140 / 255,69 / 255,)
         color_folio = color_acento
 
-        logo_path = finders.find('images/SAVIA_Negro_Verde.jpg')
+        logo_path = finders.find('images/SAVIA_Negro_verde.jpg')
 
         logo_max_width = 1.75 * cm
         logo_max_height = 1.75 * cm

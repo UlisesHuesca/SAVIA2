@@ -4,7 +4,7 @@
 {% load crispy_forms_tags %}
 {% load l10n %}
 
-{% block title %}Editar activo{% endblock %}
+{% block title %}Editar activo  {{tipo_extension}}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
@@ -211,7 +211,7 @@
                         </div>
                     </div>
 
-                    <div id="etiqueta_cantidad" class="col-6 col-lg-1">
+                    <!--<div id="etiqueta_cantidad" class="col-6 col-lg-1">
                         <div class="alert alert-secondary h-100 mb-0 px-2 py-2" role="status">
                             <span class="sv-cell-subtitle d-block">Disponible</span>
                             <strong id="cantidad" class="sv-cell-title">0.00</strong>
@@ -223,7 +223,7 @@
                             <span class="sv-cell-subtitle d-block">Distrito</span>
                             <strong id="lblDistrito" class="sv-cell-title">—</strong>
                         </div>
-                    </div>
+                    </div>-->
                 </div>
 
                 <div class="sv-input-group input-group mb-3">
@@ -304,7 +304,7 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <!--<div class="row">
                     <div class="col-12 col-lg-6">
                         <div class="sv-input-group input-group mb-3">
                             <span class="input-group-text"><i class="fa-solid fa-file-invoice"></i></span>
@@ -324,7 +324,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
                 <div class="sv-card mb-3">
                     <div class="sv-card-header">
                         <div>
@@ -336,6 +336,13 @@
                                 Datos relacionados con la adquisición y propiedad del activo.
                             </p>
                         </div>
+
+                        {% if oc_origen %}
+                            <span class="badge rounded-pill bg-success">
+                                <i class="fa-solid fa-link me-1"></i>
+                                Vinculado a OC
+                            </span>
+                        {% endif %}
                     </div>
 
                     <div class="sv-card-body">
@@ -406,6 +413,252 @@
                                 </div>
                             </div>
                         </div>
+
+                        {% if oc_origen %}
+                            <hr class="my-4">
+
+                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                                <div>
+                                    <h4 class="sv-card-title mb-1">
+                                        <i class="fa-solid fa-file-invoice text-primary"></i>
+                                        Orden de compra de origen
+                                    </h4>
+                                    <p class="sv-card-subtitle mb-0">
+                                        Información obtenida de la entrada con la que se creó el activo.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span class="badge rounded-pill bg-dark fs-6">
+                                        OC {{ oc_origen.folio }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <div class="border rounded-3 p-3 h-100">
+                                        <span class="sv-cell-subtitle d-block mb-1">
+                                            Orden de compra
+                                        </span>
+                                        <strong class="sv-cell-title">
+                                            {{ oc_origen.folio }}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <div class="border rounded-3 p-3 h-100">
+                                        <span class="sv-cell-subtitle d-block mb-1">
+                                            Proveedor
+                                        </span>
+                                        <strong class="sv-cell-title">
+                                            {{ oc_origen.proveedor.nombre.razon_social|default:"Sin proveedor" }}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <div class="border rounded-3 p-3 h-100">
+                                        <span class="sv-cell-subtitle d-block mb-1">
+                                            Moneda
+                                        </span>
+                                        <strong class="sv-cell-title">
+                                            {{ oc_origen.moneda|default:"No especificada" }}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-6 col-xl-3">
+                                    <div class="border rounded-3 p-3 h-100">
+                                        <span class="sv-cell-subtitle d-block mb-1">
+                                            Facturas relacionadas
+                                        </span>
+                                        <strong class="sv-cell-title">
+                                            {{ facturas_oc|length }}
+                                            factura{{ facturas_oc|length|pluralize }}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-top">
+                                <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                                    <div>
+                                        <h4 class="sv-card-title mb-1">
+                                            <i class="fa-solid fa-file-invoice text-primary"></i>
+                                            Facturas de la orden de compra
+                                        </h4>
+
+                                        <p class="sv-card-subtitle mb-0">
+                                            Documentos fiscales relacionados con la adquisición del activo.
+                                        </p>
+                                    </div>
+
+                                    <span class="badge rounded-pill bg-dark align-self-start">
+                                        {{ facturas_oc|length }}
+                                        factura{{ facturas_oc|length|pluralize }}
+                                    </span>
+                                </div>
+
+                                <div class="sv-table-wrap">
+                                    <table class="sv-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Emisor y fechas</th>
+                                                <th>Método</th>
+                                                <th>Comentario</th>
+                                                <th>Documentos</th>
+                                                <th>Complementos</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {% for p in facturas_oc %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="sv-folio">
+                                                            {{ p.id|unlocalize }}
+                                                        </span>
+                                                    </td>
+
+                                                    <td>
+                                                        {% if p.emisor.nombre_emisor %}
+                                                            <span class="sv-cell-title d-block">
+                                                                {{ p.emisor.nombre_emisor }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="sv-cell-title d-block">
+                                                                Emisor no identificado
+                                                            </span>
+                                                        {% endif %}
+
+                                                        {% if p.emisor.rfc_emisor %}
+                                                            <span class="sv-cell-subtitle d-block">
+                                                                RFC: {{ p.emisor.rfc_emisor }}
+                                                            </span>
+                                                        {% endif %}
+
+                                                        <span class="sv-cell-subtitle d-block mt-1">
+                                                            Timbrado:
+                                                            {{ p.emisor.fecha_timbrado|default:"Sin timbrado" }}
+                                                        </span>
+
+                                                        <span class="sv-cell-subtitle d-block">
+                                                            Subida:
+                                                            {{ p.fecha_subida|date:"d/m/Y" }}
+                                                        </span>
+                                                    </td>
+
+                                                    <td>
+                                                        {% if p.emisor.metodo_pago %}
+                                                            <span class="sv-badge sv-badge-neutral">
+                                                                {{ p.emisor.metodo_pago }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="sv-cell-subtitle">—</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td>
+                                                        {% if p.comentario %}
+                                                            <span class="text-break">
+                                                                {{ p.comentario }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="sv-cell-subtitle">
+                                                                Sin comentario
+                                                            </span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td>
+                                                        <div class="sv-actions">
+
+                                                            {% if p.factura_pdf %}
+                                                                <button
+                                                                    type="button"
+                                                                    class="sv-btn sv-btn-danger sv-btn-icon"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#pdfPreviewModal"
+                                                                    data-document-url="{{ p.factura_pdf.url }}"
+                                                                    data-document-title="Factura #{{ p.id|unlocalize }}"
+                                                                    title="Visualizar PDF original"
+                                                                    aria-label="Visualizar PDF original">
+
+                                                                    <i class="fa-solid fa-file-pdf"></i>
+                                                                </button>
+                                                            {% endif %}
+
+                                                            {% if p.factura_xml %}
+                                                                <a
+                                                                    href="{{ p.factura_xml.url }}"
+                                                                    download
+                                                                    class="sv-btn sv-btn-info sv-btn-icon"
+                                                                    title="Descargar XML"
+                                                                    aria-label="Descargar XML">
+
+                                                                    <i class="fa-solid fa-file-code"></i>
+                                                                </a>
+                                                            {% endif %}
+
+                                                            <button
+                                                                type="button"
+                                                                class="sv-btn sv-btn-outline sv-btn-icon"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#pdfPreviewModal"
+                                                                data-document-url="{% url 'generar_cfdi' p.id %}"
+                                                                data-document-title="Representación SAVIA #{{ p.id|unlocalize }}"
+                                                                title="Visualizar representación SAVIA"
+                                                                aria-label="Visualizar representación SAVIA">
+
+                                                                <i class="fa-solid fa-eye"></i>
+                                                            </button>
+
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        {% if p.emisor.metodo_pago == 'PPD' or p.emisor.metodo_pago == 'Por definir' %}
+                                                            <a
+                                                                href="{% url 'matriz-complementos' p.id %}"
+                                                                class="sv-btn {% if p.complementos.exists %}sv-btn-info{% else %}sv-btn-danger{% endif %} sv-btn-icon"
+                                                                title="{% if p.complementos.exists %}Ver complementos{% else %}Sin complementos registrados{% endif %}"
+                                                                aria-label="Complementos de pago">
+
+                                                                <i class="fa-solid fa-file-invoice"></i>
+                                                            </a>
+                                                        {% else %}
+                                                            <span class="sv-cell-subtitle">
+                                                                No aplica
+                                                            </span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="6" class="sv-empty">
+                                                        <span class="sv-empty-icon">
+                                                            <i class="fa-solid fa-file-circle-xmark"></i>
+                                                        </span>
+
+                                                        <span class="sv-empty-title">
+                                                            Sin facturas registradas
+                                                        </span>
+
+                                                        <span class="sv-cell-subtitle">
+                                                            La orden de compra no tiene documentos fiscales.
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -624,6 +877,7 @@
                         </div>
                     </div>
                 </section>
+               
                 {% elif tipo_extension == "UBM" %}
              
                 <section class="sv-card mt-4">
@@ -835,6 +1089,47 @@
                             </div>
                         </div>
                     </div>
+                </section>
+
+                {% elif tipo_extension == "MOTOR" %}
+                 <section class="sv-card mt-4">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-duotone fa-thin fa-engine"></i>
+                                Información de Motor
+                            </h2>
+
+                            <p class="sv-card-subtitle">
+                                Información técnica del Motor.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        {% if extension_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ extension_form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <label
+                                    class="form-label"
+                                    for="{{ extension_form.tipo.id_for_label }}"
+                                >
+                                    Tipo
+                                </label>
+
+                                {{ extension_form.tipo }}
+
+                                {% for error in extension_form.tipo.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                        </div>
+                    </div>  
                 </section>
                 
                 {% endif %}
@@ -1075,12 +1370,70 @@
     </div>
 </div>
 
+<div
+    class="modal fade"
+    id="pdfPreviewModal"
+    tabindex="-1"
+    aria-labelledby="pdfPreviewModalLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+                <div>
+                    <h2
+                        class="modal-title sv-card-title"
+                        id="pdfPreviewModalLabel">
+
+                        <i class="fa-solid fa-file-pdf text-danger"></i>
+                        Documento
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+                        Vista previa del documento fiscal.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body p-0">
+                <iframe
+                    id="pdfPreviewFrame"
+                    title="Vista previa del documento"
+                    style="display:block; width:100%; height:75vh; border:0;">
+                </iframe>
+            </div>
+
+            <div class="modal-footer">
+                <div class="sv-actions">
+                    <button
+                        type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+
+                        <i class="fa-solid fa-xmark"></i>
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loadingIndicatorLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content sv-modal">
             <div class="modal-body d-flex align-items-center gap-3 p-4">
                 {% if perfil.distritos.nombre == "Yerod" %}
-                <img src="{% static 'images/SAVIA_Negro_Verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
                 {% else %}
                 <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
                 {% endif %}
@@ -1099,6 +1452,34 @@
 <script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js"></script>
 
 <script>
+(function () {
+    const previewModal = document.getElementById('pdfPreviewModal');
+
+    if (!previewModal) {
+        return;
+    }
+
+    previewModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const frame = document.getElementById('pdfPreviewFrame');
+        const title = document.getElementById('pdfPreviewModalLabel');
+
+        const documentUrl = button.getAttribute('data-document-url');
+        const documentTitle = button.getAttribute('data-document-title');
+
+        frame.src = documentUrl || '';
+
+        title.innerHTML =
+            '<i class="fa-solid fa-file-pdf text-danger"></i> ' +
+            (documentTitle || 'Documento');
+    });
+
+    previewModal.addEventListener('hidden.bs.modal', function () {
+        document.getElementById('pdfPreviewFrame').src = '';
+    });
+})();
+
+
 function formatRepo(repo) {
     if (repo.loading) {
         return repo.text;

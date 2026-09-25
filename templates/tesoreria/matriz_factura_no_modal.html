@@ -325,9 +325,13 @@
     </form>
 </main>
 
-<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
-         role="document" hx-target="this"></div>
+<div id="dialog" class="modal">
+    <div id="document" class="modal-dialog">
+        <!-- HTMX inserta aquí: -->
+        <div class="modal-content">
+            ...
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="pdfPreviewModal" tabindex="-1"

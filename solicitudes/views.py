@@ -2716,7 +2716,7 @@ def convert_excel_solicitud_matriz(ordenes, usuario):
         color_principal = '002E5E3F'  # Verde Yerod
         color_titulo = '002E5E3F'
         color_texto_header = '00FFFFFF'
-        nombre_logo = 'SAVIA_Negro_Verde.jpg'
+        nombre_logo = 'SAVIA_Negro_verde.jpg'
     else:
         color_principal = '00003366'  # Azul Vordcab
         color_titulo = '00003366'

@@ -3,7 +3,7 @@ from django.core.validators import FileExtensionValidator
 from dashboard.models import Activo, Marca, Tipo_Activo, Profile 
 from requisiciones.models import Salidas
 from compras.models import Proveedor_direcciones
-from .models import Vehiculo_Activo, UBM_Activo
+from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
 #from django.forms.fields import DateField
@@ -73,7 +73,7 @@ class Edit_Activo_Form(forms.ModelForm):
 
     class Meta:
         model = Activo
-        fields = ['activo','categoria','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna',
+        fields = ['activo','categoria','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus',#'cuenta_contable','factura_interna',
                   'documento_baja','fecha_asignacion','fecha_adquisicion','precio_adquisicion','proveedor_adquisicion','origen']
        
   
@@ -119,13 +119,13 @@ class Edit_Activo_Form(forms.ModelForm):
                 self.fields['marca'].queryset = Marca.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
-        if 'tipo_activo' in self.data:
-            try:
-                seleccion_actual = int(self.data.get('tipo_activo'))
+        #if 'tipo_activo' in self.data:
+        #    try:
+        #        seleccion_actual = int(self.data.get('tipo_activo'))
                 # Lógica para determinar el nuevo queryset basado en la selección actual
-                self.fields['tipo_activo'].queryset = Tipo_Activo.objects.filter(id= seleccion_actual)
-            except (ValueError, TypeError):
-                pass  # Manejo de errores en caso de entrada no válida
+        #        self.fields['tipo_activo'].queryset = Tipo_Activo.objects.filter(id= seleccion_actual)
+        #    except (ValueError, TypeError):
+        #        pass  # Manejo de errores en caso de entrada no válida
 
 class UpdateResponsableForm(forms.ModelForm):
     
@@ -147,11 +147,6 @@ class MarcaForm(forms.ModelForm):
     class Meta:
         model = Marca
         fields = ['nombre','familia',]
-
-
-from django import forms
-from .models import Vehiculo_Activo
-
 
 class VehiculoActivoForm(forms.ModelForm):
 
@@ -325,3 +320,33 @@ class UBMActivoForm(forms.ModelForm):
         self.fields['pozo'].empty_label = (
             'Sin pozo asignado'
         )
+
+
+
+class MotorUBMForm(forms.ModelForm):
+
+    class Meta:
+        model = Motor_UBM
+        fields = [
+            'tipo',
+        ]
+
+        labels = {
+            'tipo': 'Tipo de motor',
+        }
+
+        widgets = {
+            'tipo': forms.Select(
+                attrs={
+                    'class': 'form-select',
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['tipo'].required = False
+        self.fields['tipo'].widget.attrs.update({
+            'class': 'form-select',
+        })

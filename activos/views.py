@@ -11,9 +11,10 @@ from django.utils import timezone
 
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
-from .forms import VehiculoActivoForm, UBMActivoForm
+from .forms import VehiculoActivoForm, UBMActivoForm, MotorUBMForm
 from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo, Motor_UBM
 from compras.models import Proveedor_direcciones
+from tesoreria.models import Facturas
 from .filters import ActivoFilter
 from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito, Estatus_Activo
 from solicitudes.filters import InventarioFilter
@@ -223,7 +224,6 @@ def activos(request):
 @perfil_seleccionado_required
 def cargar_formulario_extension_activo(request):
     categoria_id = request.GET.get('categoria')
-
     extension_form = None
     tipo_extension = None
 
@@ -231,6 +231,7 @@ def cargar_formulario_extension_activo(request):
         categoria = get_object_or_404(Categoria_Activo,pk=categoria_id,)
 
         nombre_categoria = (categoria.nombre.strip().upper())
+        
 
         if nombre_categoria == 'VEHICULO':
             extension_form = VehiculoActivoForm(prefix='vehiculo',)
@@ -239,6 +240,10 @@ def cargar_formulario_extension_activo(request):
         elif nombre_categoria == 'UBM':
             extension_form = UBMActivoForm(prefix='ubm',)
             tipo_extension = 'UBM'
+
+        elif nombre_categoria == 'MOTOR':
+            extension_form = MotorUBMForm(prefix='motor',)
+            tipo_extension = 'MOTOR'
 
     return render(request,'activos/form_extension.html',{'extension_form': extension_form,'tipo_extension': tipo_extension,},)
 
@@ -307,6 +312,11 @@ def add_activo(request):
         extension_form_class = UBMActivoForm
         extension_prefix = 'ubm'
         tipo_extension = 'UBM'
+
+    elif nombre_categoria == 'MOTOR':
+        extension_form_class = MotorUBMForm
+        extension_prefix = 'motor'
+        tipo_extension = 'MOTOR'
     
 
     if request.method =='POST':
@@ -557,6 +567,9 @@ def edit_activo(request, pk):
 
     es_vehiculo = (nombre_categoria == 'VEHICULO')
     es_ubm = (nombre_categoria == 'UBM')
+    es_motor = (nombre_categoria == 'MOTOR')
+
+    print('es motor:',es_motor)
 
     extension_instance = None
     ext_form = None
@@ -574,6 +587,12 @@ def edit_activo(request, pk):
         extension_form_class = UBMActivoForm
         extension_prefix = 'ubm'
         tipo_extension = 'UBM'
+    if es_motor:
+        extension_instance = Motor_UBM.objects.filter(activo=activo).first()
+        extension_form_class = MotorUBMForm
+        extension_prefix = 'motor'
+        tipo_extension = 'MOTOR'
+
 
     #productos_activos = productos.filter(activo_disponible = True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
@@ -581,6 +600,8 @@ def edit_activo(request, pk):
     factura_form = DocumentosActivoForm(instance= activo)
     if extension_form_class is not None:
         ext_form = extension_form_class(instance = extension_instance, prefix = extension_prefix,)
+        
+        #print('ext_form:',ext_form)
         # Filtrar motores disponibles para esta UBM
         if es_ubm and activo.activo:
             distrito_ubm = activo.activo.distrito
@@ -667,6 +688,25 @@ def edit_activo(request, pk):
         tipo_activo_predeterminado = None
 
     error_messages = {}    
+
+    # --------------------------------
+    # INFORMACION DE LA OC, SI EXISTE 
+    # --------------------------------
+    oc_origen = None
+    facturas_oc = Facturas.objects.none()
+
+    if activo.entrada_articulo_id:
+        entrada_articulo = activo.entrada_articulo
+
+        if entrada_articulo.entrada_id and entrada_articulo.entrada.oc_id:
+            oc_origen = entrada_articulo.entrada.oc
+
+            if oc_origen:
+                facturas_oc = (
+                    oc_origen.facturas
+                    .filter(hecho=True)
+                    .order_by('-fecha_timbrado', '-id')
+                )
 
     if request.method =='POST':
         # -----------------------------
@@ -840,6 +880,9 @@ def edit_activo(request, pk):
         'factura_form': factura_form,
         'familia':familia,
         'subfamilia':subfamilia,
+        
+        'oc_origen': oc_origen,
+        'facturas_oc': facturas_oc,
     }
 
     return render(request,'activos/edit_activos.html', context)

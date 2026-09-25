@@ -35,7 +35,7 @@ def obtener_tema_correo(static_path, es_savia_negro):
         logo_encabezado_path = os.path.join(
             static_path,
             "images",
-            "SAVIA_Negro_Verde.jpg",
+            "SAVIA_Negro_verde.jpg",
         )
 
         return {

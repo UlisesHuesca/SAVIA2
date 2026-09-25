@@ -1575,7 +1575,7 @@ def generar_pdf_viatico(pk):
         color_folio = color_acento
 
         logo_path = finders.find(
-            'images/SAVIA_Negro_Verde.jpg'
+            'images/SAVIA_Negro_verde.jpg'
         )
 
         logo_width = 1.75 * cm

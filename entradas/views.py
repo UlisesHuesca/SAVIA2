@@ -695,6 +695,51 @@ def articulos_entrada_activos(request, pk):
 
                     #Se crea ub objeto Activo Individual por cada económico capturado
                     estatus_pre_alta = Estatus_Activo.objects.get(nombre='PREALTA')
+                    # Precio unitario original del artículo comprado
+                    precio_unitario = Decimal(
+                        str(articulo.articulo_comprado.precio_unitario or 0)
+                    )
+
+                    # Valores generales de la OC
+                    costo_oc = Decimal(str(compra.costo_oc or 0))
+                    costo_total_oc = Decimal(str(compra.costo_plus_adicionales or 0))
+
+                    # Prorratear impuestos, retenciones y fletes
+                    if costo_oc > 0:
+                        factor_prorrateo = costo_total_oc / costo_oc
+                        precio_adquisicion = precio_unitario * factor_prorrateo
+                    else:
+                        precio_adquisicion = precio_unitario
+
+                    precio_prorrateado = precio_adquisicion.quantize(
+                        Decimal('0.01'),
+                        rounding=ROUND_HALF_UP,
+                    )
+
+                    pago_con_tipo_cambio = (compra.pagos.filter(hecho=True, tipo_de_cambio__isnull=False,).exclude(tipo_de_cambio=0).order_by('-pagado_real', '-id').first())
+
+                    moneda_oc = compra.moneda.nombre.upper() if compra.moneda else ''
+
+                    if moneda_oc == 'DOLARES':
+                        if pago_con_tipo_cambio is None:
+                            messages.error(
+                                request,
+                                'La orden de compra está en dólares, pero no existe '
+                                'un pago con tipo de cambio registrado.'
+                            )
+                            return redirect(request.path)
+
+                        tipo_cambio = Decimal(
+                            str(pago_con_tipo_cambio.tipo_de_cambio)
+                        )
+
+                        precio_adquisicion = precio_prorrateado * tipo_cambio
+
+                    else:
+                        tipo_cambio = Decimal('1')
+                        precio_adquisicion = precio_prorrateado
+
+
 
                     for eco_unidad in economicos:
                         Activo.objects.create(
@@ -707,7 +752,10 @@ def articulos_entrada_activos(request, pk):
                             completo = True,
                             estatus= estatus_pre_alta,
                             proveedor_adquisicion=entrada.oc.proveedor,
+                            precio_adquisicion=precio_adquisicion,
+                            fecha_adquisicion = entrada.entrada_date,
                             )
+                        
                 evalua_entrada_completa(articulos_comprados, num_art_comprados, compra,)
                 entrada.save(update_fields=['completo','folio','entrada_date',])
         except ValidationError as error:

@@ -426,9 +426,9 @@
                         <i class="fa-solid fa-file-pdf"></i> Responsiva gerente
                     </a>
                     {% if usuario.tipo.activos == True %}
-                    <a class="sv-btn sv-btn-outline" href="{% url 'gestionar_tipo_activo' %}">
+                    <!--<a class="sv-btn sv-btn-outline" href="{% url 'gestionar_tipo_activo' %}">
                         <i class="fa-solid fa-plus"></i> Tipo de activo
-                    </a>
+                    </a>-->
                     <a class="sv-btn sv-btn-outline" href="{% url 'gestionar_marca' %}">
                         <i class="fa-solid fa-plus"></i> Marca
                     </a>
@@ -464,7 +464,7 @@
                 <div class="dropdown-menu dropdown-menu-end p-3" style="z-index: 1080;" aria-labelledby="columnasActivos">
                     <h3 class="h6 mb-3">Mostrar columnas</h3>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="responsable" id="colResponsable"><label class="form-check-label" for="colResponsable">Responsable</label></div>
-                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="tipo" id="colTipo"><label class="form-check-label" for="colTipo">Tipo de activo</label></div>
+                    <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="categoria" id="colCategoria"><label class="form-check-label" for="colCategoria">Categoría</label></div>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="serie" id="colSerie"><label class="form-check-label" for="colSerie">Serie</label></div>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="marca" id="colMarca"><label class="form-check-label" for="colMarca">Marca</label></div>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="modelo" id="colModelo"><label class="form-check-label" for="colModelo">Modelo</label></div>
@@ -482,8 +482,8 @@
                         <th>Distrito</th>
                         <th scope="col" style="width: 28%; max-width: 320px; white-space: normal;">Producto</th>
                         <th scope="col" data-column="responsable">Responsable</th>
-                        <th scope="col" data-column="tipo">Categoría</th>
-                        <th scope="col" data-column="tipo">Tipo de activo</th>
+                        <th scope="col" data-column="categoria">Categoría</th>
+                        <!--<th scope="col" data-column="tipo">Tipo de activo</th>-->
                         <th scope="col" data-column="serie">Serie</th>
                         <th scope="col" data-column="marca">Marca</th>
                         <th scope="col" data-column="modelo">Modelo</th>
@@ -503,8 +503,8 @@
                         <td>{{item.responsable.distritos}}</td>
                         <td style="width: 28%; max-width: 320px; white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{% if item.activo %}{{ item.activo.producto.nombre }}{% else %}—{% endif %}</span></td>
                         <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
-                        <td data-column="tipo">{{ item.categoria|default:"—" }}</td>
-                        <td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>
+                        <td data-column="categoria">{{ item.categoria|default:"—" }}</td>
+                        <!--<td data-column="tipo">{{ item.tipo_activo|default:"—" }}</td>-->
                         <td data-column="serie">{{ item.serie|default:"—" }}</td>
                         <td data-column="marca">{{ item.marca|default:"NR" }}</td>
                         <td data-column="modelo">{{ item.modelo|default:"—" }}</td>
