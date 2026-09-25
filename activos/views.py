@@ -12,7 +12,7 @@ from django.utils import timezone
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
 from .forms import VehiculoActivoForm, UBMActivoForm
-from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo
+from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo, Motor_UBM
 from compras.models import Proveedor_direcciones
 from .filters import ActivoFilter
 from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito, Estatus_Activo
@@ -119,6 +119,10 @@ def activos(request):
         'MAQUINARIA Y HERRAMIENTA': {
             'icono': 'fa-screwdriver-wrench',
             'clase': 'maquinaria',
+        },
+        'MOTOR':{
+            'icono': 'fa-engine', #<i class="fa-duotone fa-thin fa-engine"></i>
+            'clase':'motor',
         },
         'OTRO': {
             'icono': 'fa-boxes-stacked',
@@ -577,6 +581,24 @@ def edit_activo(request, pk):
     factura_form = DocumentosActivoForm(instance= activo)
     if extension_form_class is not None:
         ext_form = extension_form_class(instance = extension_instance, prefix = extension_prefix,)
+        # Filtrar motores disponibles para esta UBM
+        if es_ubm and activo.activo:
+            distrito_ubm = activo.activo.distrito
+
+            ext_form.fields['motor'].queryset = (
+                Motor_UBM.objects
+                .filter(
+                    activo__activo__distrito=distrito_ubm,
+                    activo__estatus__nombre__iexact='ALTA',
+                )
+                .select_related(
+                    'activo',
+                    'activo__activo',
+                    'activo__activo__distrito',
+                    'activo__estatus',
+                )
+                .order_by('activo__eco_unidad')
+            )
 
     productos_para_select2 = [
         {
