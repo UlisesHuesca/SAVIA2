@@ -550,11 +550,14 @@ def update_oc(request):
             #messages.success(request,f'Estos son los productos comprados ahora {productos.cantidad_comprada}')
             if productos.cantidad_comprada == productos.cantidad:
                 productos.art_surtido = True
-            if comp_item.cantidad == None:
+            if comp_item.cantidad is None:
                 comp_item.cantidad = decimal.Decimal('0')
+            if comp_item.cantidad_pendiente is None:
                 comp_item.cantidad_pendiente =  decimal.Decimal('0')
-            comp_item.cantidad = comp_item.cantidad + decimal.Decimal(cantidad)
-            comp_item.cantidad_pendiente = comp_item.cantidad_pendiente + decimal.Decimal(cantidad)
+            print(cantidad)
+            # Acumular cantidades
+            comp_item.cantidad += decimal.Decimal(cantidad)
+            comp_item.cantidad_pendiente += decimal.Decimal(cantidad)
             comp_item.precio_unitario = precio
             comp_item.marca = marca
             productos.sel_comp = True
@@ -652,7 +655,11 @@ def oc_modal(request, pk):
         ]
 
         for item in productos_comp:
-            subtotal = decimal.Decimal(subtotal + item.cantidad * item.precio_unitario)
+            # Si es None o está vacío, toma 0 por defecto
+            cantidad = item.cantidad or decimal.Decimal('0')
+            precio = item.precio_unitario or decimal.Decimal('0')
+            print(type(item.cantidad), type(item.precio_unitario))
+            subtotal += decimal.Decimal(cantidad) * decimal.Decimal(precio)
             if item.producto.producto.articulos.producto.producto.iva == True:
                 iva = round(subtotal * decimal.Decimal(0.16),2)
             total = decimal.Decimal(subtotal + decimal.Decimal(iva))
