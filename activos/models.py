@@ -93,7 +93,7 @@ class Motor_UBM(models.Model):
         V6_48 = 'V6_48', 'CI V6 4.8 L'
         V8_57 = 'V8_57', 'CI V8 5.7 L'
 
-    activo = models.OneToOneField('dashboard.Activo', on_delete=models.CASCADE,related_name='motor', null=True, blank=True,)
+    activo = models.OneToOneField('dashboard.Activo', on_delete=models.CASCADE,related_name='motor')
     tipo = models.CharField(max_length=20, choices=TipoMotor.choices, null=True, blank=True,)
     #serie = models.CharField(max_length=30,null=True,blank=True,)
     #factura = models.CharField(max_length=50,null=True,blank=True,)
