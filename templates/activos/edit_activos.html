@@ -186,20 +186,7 @@
                     </div>
                 </div>
 
-                {% if activo.factura_xml %}
-                <div class="sv-card mt-3" role="status">
-                    <div class="sv-card-body">
-                        <span class="sv-cell-subtitle">Proveedor</span>
-                        <strong class="sv-cell-title">{{ activo.emisor.nombre|default:"—" }}</strong>
-                    </div>
-                </div>
-
-                {% if activo.emisor.resultados %}
-                <div class="alert alert-secondary mt-2" role="status">
-                    {{ activo.emisor.resultados }}
-                </div>
-                {% endif %}
-                {% endif %}
+              
 
                 <div class="row g-2 align-items-stretch mt-4 mb-3">
                     <div class="col-12 col-lg-9">
@@ -603,18 +590,7 @@
                                                                 </a>
                                                             {% endif %}
 
-                                                            <button
-                                                                type="button"
-                                                                class="sv-btn sv-btn-outline sv-btn-icon"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#pdfPreviewModal"
-                                                                data-document-url="{% url 'generar_cfdi' p.id %}"
-                                                                data-document-title="Representación SAVIA #{{ p.id|unlocalize }}"
-                                                                title="Visualizar representación SAVIA"
-                                                                aria-label="Visualizar representación SAVIA">
-
-                                                                <i class="fa-solid fa-eye"></i>
-                                                            </button>
+                                                     
 
                                                         </div>
                                                     </td>
@@ -1173,19 +1149,122 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6">
-                    <div class="d-flex justify-content-between align-items-center gap-3">
-                        <div class="sv-document-info">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                        <div class="sv-document-info" style="min-width: 0;">
                             <span class="sv-cell-subtitle d-block">Factura XML</span>
-                            <strong class="sv-cell-title sv-document-name" title="{% if activo.factura_xml %}{{ activo.factura_xml.name|cut:'xml_activos/' }}{% else %}Sin documento{% endif %}">
-                                {% if activo.factura_xml %}{{ activo.factura_xml.name|cut:"xml_activos/" }}{% else %}Sin documento{% endif %}
+                            <strong class="sv-cell-title sv-document-name d-block"
+                                    title="{% if activo.factura_xml %}{{ activo.factura_xml.name|cut:'xml_activos/' }}{% else %}Sin documento{% endif %}">
+                                {% if activo.factura_xml %}
+                                    {{ activo.factura_xml.name|cut:"xml_activos/" }}
+                                {% else %}
+                                    Sin documento
+                                {% endif %}
                             </strong>
                         </div>
 
                         {% if activo.factura_xml %}
-                        <a class="sv-btn sv-btn-info sv-document-action" href="{{ activo.factura_xml.url }}" download>
-                            <i class="fa-solid fa-file-code"></i> XML
-                        </a>
+                            <a href="{{ activo.factura_xml.url }}"
+                            class="btn sv-btn-primary flex-shrink-0"
+                            download>
+                                <i class="fa-solid fa-download me-1"></i>
+                                Descargar XML
+                            </a>
+                        {% endif %}
+                    </div>
+
+                        {% if activo.factura_xml %}
+                            {% with cfdi=activo.emisor %}
+                                {% if cfdi %}
+                                    <div class="border rounded p-3 mt-3">
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-md-6">
+                                                <span class="sv-cell-subtitle d-block">Emisor</span>
+                                                <strong>{{ cfdi.nombre_emisor|default:"—" }}</strong>
+                                                <span class="sv-cell-subtitle d-block">
+                                                    RFC: {{ cfdi.rfc_emisor|default:"—" }}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <span class="sv-cell-subtitle d-block">Fecha del CFDI</span>
+                                                <strong>{{ cfdi.fecha|slice:":10"|default:"—" }}</strong>
+                                            </div>
+                                            <div class="col-md-3 text-md-end">
+                                                <span class="sv-cell-subtitle d-block">Total facturado</span>
+                                                <strong>{{ cfdi.moneda }} ${{ cfdi.total|floatformat:2 }}</strong>
+                                            </div>
+                                        </div>
+
+                                        <div class="sv-cell-subtitle mb-3">
+                                            UUID: {{ cfdi.uuid|default:"—" }}
+                                        </div>
+
+                                        <h6 class="fw-semibold mb-3">Conceptos facturados</h6>
+
+                                        {% if cfdi.resultados %}
+                                            <div class="d-flex flex-column gap-3">
+                                                {% for concepto in cfdi.resultados %}
+                                                    <div>
+                                                        <div class="d-flex align-items-start gap-2">
+                                                            <span class="sv-badge sv-badge-primary">
+                                                                {{ forloop.counter }}
+                                                            </span>
+                                                            <div>
+                                                                <span class="sv-cell-title d-block">
+                                                                    {{ concepto.descripcion|default:"Sin descripción" }}
+                                                                </span>
+                                                                <span class="sv-cell-subtitle">
+                                                                    Clave: {{ concepto.clave|default:"—" }}
+                                                                    · Unidad: {{ concepto.unidad|default:"—" }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row g-2 mt-1">
+                                                            <div class="col-4">
+                                                                <span class="sv-cell-subtitle d-block">Cantidad</span>
+                                                                <strong>{{ concepto.cantidad|floatformat:2 }}</strong>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <span class="sv-cell-subtitle d-block">Precio unitario</span>
+                                                                <strong>${{ concepto.precio|floatformat:2 }}</strong>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <span class="sv-cell-subtitle d-block">Importe</span>
+                                                                <strong>${{ concepto.importe|floatformat:2 }}</strong>
+                                                            </div>
+                                                        </div>
+
+                                                        {% if concepto.impuesto and concepto.impuesto != "N/A" %}
+                                                            <div class="mt-2">
+                                                                <span class="sv-badge sv-badge-neutral">
+                                                                    Impuesto: ${{ concepto.impuesto|floatformat:2 }}
+                                                                    {% if concepto.tipo_factor and concepto.tipo_factor != "N/A" %}
+                                                                        · {{ concepto.tipo_factor }}
+                                                                    {% endif %}
+                                                                    {% if concepto.tasa_cuota and concepto.tasa_cuota != "N/A" %}
+                                                                        · Tasa {{ concepto.tasa_cuota }}
+                                                                    {% endif %}
+                                                                </span>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+
+                                                    {% if not forloop.last %}
+                                                        <hr class="my-0">
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="sv-cell-subtitle">XML sin conceptos</span>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-danger mt-2">
+                                        No fue posible leer los datos de este XML.
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
                         {% endif %}
                     </div>
                 </div>
@@ -1335,7 +1414,11 @@
                                     <label for="id_documento_factura_xml" class="form-label fw-semibold">Factura XML</label>
                                     <input type="file" id="id_documento_factura_xml" name="factura_xml" class="form-control" accept=".xml,application/xml,text/xml">
                                     <span id="nombreXmlSeleccionado" class="sv-cell-subtitle sv-document-name mt-2" title="{% if activo.factura_xml %}{{ activo.factura_xml.name|cut:'xml_activos/' }}{% endif %}">
-                                        {% if activo.factura_xml %}Actual: {{ activo.factura_xml.name|cut:"xml_activos/" }}{% else %}Sin documento actual{% endif %}
+                                        {% if activo.factura_xml %}Actual: {{ activo.factura_xml.name|cut:"xml_activos/" }}
+                                        
+                                        {% else %}
+                                            Sin documento actual
+                                        {% endif %}
                                     </span>
                                 </div>
                             </div>
