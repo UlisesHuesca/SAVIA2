@@ -467,7 +467,7 @@
                                             </div>
                                             {% endif %}
                                         {% endfor %}
-                                        {% if documentos_count.csf > documentos_validados_count.csf %}
+                                        {% if documentos_count.csf > documentos_validados_count.csf and usuario.tipo.proveedores_edicion %}
                                         <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Constancia" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
                                             <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                         </a> 
@@ -581,6 +581,7 @@
                                     
                             </td>
                             <td>
+                                {% if usuario.tipo.proveedores_edicion %}
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "comprobante_domicilio" and not documento.obsoleto %}
                                         {% if documento.validada  %}
@@ -623,6 +624,7 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
+                                {% endif %}
                             </td>
                              
                             <td class="" id="comentario_3_{{proveedor.id|unlocalize}}" tipo ="domicilio" >{% if proveedor.comentario_comprobante_domicilio %} {{proveedor.comentario_comprobante_domicilio}} {% endif %}</td>
@@ -711,7 +713,7 @@
                                                    
                                                 {% endif %}
                                             {% endfor %}
-                                            {% if documentos_count.opinion_cumplimiento > documentos_validados_count.opinion_cumplimiento %}
+                                            {% if documentos_count.opinion_cumplimiento > documentos_validados_count.opinion_cumplimiento and usuario.tipo.proveedores_edicion %}
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de Cumplimiento 32D" hx-target="#document" hx-get="{% url 'edit-opinion-cumplimiento' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1199,7 +1201,7 @@
                                                    
                                                 {% endif %}
                                             {% endfor %}
-                                            {% if documentos_count.otros > documentos_validados_count.otros %}
+                                            {% if documentos_count.otros > documentos_validados_count.otros and usuario.tipo.proveedores_edicion %}
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento" hx-target="#document" hx-get="{% url 'edit-otros' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1424,7 +1426,7 @@
                                                    
                                                 {% endif %}
                                             {% endfor %}
-                                            {% if documentos_count.busqueda_mediatica > documentos_validados_count.busqueda_mediatica %}
+                                            {% if documentos_count.busqueda_mediatica > documentos_validados_count.busqueda_mediatica and  usuario.tipo.proveedores_edicion %}
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documentos de Calidad" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
