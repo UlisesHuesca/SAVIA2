@@ -210,18 +210,34 @@
                         <tr>
                             <td><span class="sv-folio">{{ p.id }}</span></td>
                             <td>
-                                <span class="sv-cell-title d-block">
-                                    {{ p.emisor.fecha_timbrado|default:"Sin timbrado" }}
-                                </span>
                                 <span class="sv-cell-subtitle">
-                                    Subida: {{ p.fecha_subida|date:"d/m/Y" }}
+                                    Subida: {{ p.fecha_subido|date:"d/m/Y" }}
                                 </span>
                             </td>
-                            <td>
-                                {% if p.emisor.metodo_pago %}
-                                <span class="sv-badge sv-badge-neutral">{{ p.emisor.metodo_pago }}</span>
-                                {% else %}—{% endif %}
+
+                            
+                                {% with emisor=p.emisor %}
+                                <td>
+                                {% if emisor %}
+                                    <strong class="sv-cell-title d-block">
+                                        {{ emisor.nombre_emisor|default:"Emisor sin nombre" }}
+                                    </strong>
+                                    <span class="sv-cell-subtitle d-block">
+                                        RFC: {{ emisor.rfc_emisor|default:"—" }}
+                                    </span>
+                                    <span class="sv-cell-title d-block mt-1">
+                                        ${{ emisor.total|floatformat:2 }} {{ emisor.moneda|default:"" }}
+                                    </span>
+                                    <span class="sv-badge sv-badge-neutral mt-1">
+                                        {{ emisor.metodo_pago|default:"Sin método" }}
+                                    </span>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">Sin datos XML</span>
+                                {% endif %}
                             </td>
+                            {% endwith %}
+                             
+                           
                             <td>
                                 {% if p.comentario %}{{ p.comentario }}{% else %}
                                 <span class="sv-cell-subtitle">Sin comentario</span>
