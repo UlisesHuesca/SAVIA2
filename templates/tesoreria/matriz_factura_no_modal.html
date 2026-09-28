@@ -209,6 +209,7 @@
                         {% for p in facturas %}
                         <tr>
                             <td><span class="sv-folio">{{ p.id }}</span></td>
+                          
                             <td>
                                 <span class="sv-cell-subtitle">
                                     Subida: {{ p.fecha_subido|date:"d/m/Y" }}
@@ -227,6 +228,9 @@
                                     </span>
                                     <span class="sv-cell-title d-block mt-1">
                                         ${{ emisor.total|floatformat:2 }} {{ emisor.moneda|default:"" }}
+                                    </span>
+                                    <span class="sv-cell-subtitle d-block">
+                                        {{ emisor.uuid }}
                                     </span>
                                     <span class="sv-badge sv-badge-neutral mt-1">
                                         {{ emisor.metodo_pago|default:"Sin método" }}

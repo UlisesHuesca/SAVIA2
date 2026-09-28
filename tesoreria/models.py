@@ -3,6 +3,8 @@ from compras.models import Compra, Moneda, Banco
 from user.models import Profile, Distrito, Banco, Empresa
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
+from django import template
+
 #from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
@@ -11,6 +13,7 @@ from .utils import encontrar_variables, extraer_texto_pdf_prop, extraer_texto_de
 import os
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
+
 # Create your models here.
 
 
@@ -373,8 +376,7 @@ class Complemento_Pago(models.Model):
     validado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='validado_complemento')
     validado_fecha = models.DateTimeField(null=True)
 
-    import xml.etree.ElementTree as ET
-
+    
     @property
     def emisor(self):
         if not self.complemento_xml:
