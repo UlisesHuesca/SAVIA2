@@ -3942,7 +3942,9 @@ def factura_nueva(request, pk):
                 archivos_xml = request.FILES.getlist('archivo_xml')
                 if not archivos_pdf and not archivos_xml:
                     messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
-                    return HttpResponse(status=204)
+                    response = HttpResponse(status=204)
+                    response["HX-Refresh"] = "true"
+                    return response
                 
                 # Iterar sobre el número máximo de archivos en cualquiera de las listas
                 max_len = max(len(archivos_pdf), len(archivos_xml))
@@ -4034,7 +4036,9 @@ def factura_nueva(request, pk):
                     messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
                 if facturas_mes_invalido:
                     messages.error(request, f'Las siguientes facturas no se pudieron registrar porque no corresponden al mes y año actual: {", ".join(facturas_mes_invalido)}')
-                #return HttpResponse(status=204)
+                response = HttpResponse(status=204)
+                response["HX-Refresh"] = "true"
+                return response
 
             else:
                 messages.error(request,'No se pudo subir tu documento')
