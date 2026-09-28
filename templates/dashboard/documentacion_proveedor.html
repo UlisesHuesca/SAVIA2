@@ -47,7 +47,7 @@
 <form method="POST" id="proveedorEvaluationForm">
     {% csrf_token %}
 <div class="row g-3 mb-4">
-    {% if usuario.proveedor_edicion %}
+    {% if usuario.tipo.proveedores_edicion %}
     <div class="col-12 col-lg-3">
         
         <div class="sv-card h-100">
@@ -313,7 +313,7 @@
                             <th>Documento</th>
                             <th>Información Adicional</th>
                             <th>Comentarios</th>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <th>Edit</th>
                             <th class="text-success">
                                 <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
@@ -338,7 +338,7 @@
                         <tr>
                             <td>Credencial Elector/Acta Constitutiva</td>
                             <td>    
-                                {% if documentos_count.credencial_acta_constitutiva == 0  and usuario.proveedor_edicion %}
+                                {% if documentos_count.credencial_acta_constitutiva == 0  and usuario.tipo.proveedores_edicion %}
                                         <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-acta-credencial' proveedor.id %}">
                                             <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                         </a>
@@ -385,7 +385,7 @@
                             </td>
                               
                             <td class="" id="comentario_1_{{proveedor.id|unlocalize}}" tipo = "acta">{% if proveedor.comentario_acta %} {{proveedor.comentario_acta}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_1_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_1_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -435,7 +435,7 @@
                         <tr>
                             <td>Constancia de Situación Fiscal</td>
                             <td>  
-                                {% if documentos_count.csf == 0 and usuario.proveedor_edicion %}
+                                {% if documentos_count.csf == 0 and usuario.tipo.proveedores_edicion %}
                                     <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Constancia" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
                                         <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                     </a>
@@ -490,7 +490,7 @@
                             </td>
 
                             <td class="" id="comentario_2_{{proveedor.id|unlocalize}}" tipo = "csf">{% if proveedor.comentario_csf %} {{proveedor.comentario_csf}} {% endif %}</td>
-                             {% if usuario.proveedor_edicion %}
+                             {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_2_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_2_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -538,7 +538,7 @@
                         <tr>
                             <td>Comprobante de Domicilio</td>
                             <td>
-                                    {% if documentos_count.comprobante_domicilio == 0 and usuario.proveedor_edicion %}  
+                                    {% if documentos_count.comprobante_domicilio == 0 and usuario.tipo.proveedores_edicion %}  
                                         <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Domicilio" hx-target="#document" hx-get="{% url 'edit-comprobante-domicilio' proveedor.id %}">
                                             <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                         </a>
@@ -626,7 +626,7 @@
                             </td>
                              
                             <td class="" id="comentario_3_{{proveedor.id|unlocalize}}" tipo ="domicilio" >{% if proveedor.comentario_comprobante_domicilio %} {{proveedor.comentario_comprobante_domicilio}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_3_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_3_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -676,7 +676,7 @@
                             <td>Opinión de Cumplimiento 32D</td>
                             <td>
                              
-                                        {% if documentos_count.opinion_cumplimiento == 0 and usuario.proveedor_edicion %}   
+                                        {% if documentos_count.opinion_cumplimiento == 0 and usuario.tipo.proveedores_edicion %}   
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinion" hx-target="#document" hx-get="{% url 'edit-opinion-cumplimiento' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -733,7 +733,7 @@
                             </td>
                              
                             <td class="" id="comentario_4_{{proveedor.id|unlocalize}}" tipo ="opinion" >{% if proveedor.comentario_opinion_cumplimiento %} {{proveedor.comentario_opinion_cumplimiento}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_4_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_4_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -782,7 +782,7 @@
                             <td>Calificación</td>
                             <td>
 
-                                        {% if documentos_count.calificacion == 0  and usuario.proveedor_edicion %}   
+                                        {% if documentos_count.calificacion == 0  and usuario.tipo.proveedores_edicion %}   
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Calificación" hx-target="#document" hx-get="{% url 'edit-calificacion' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -829,7 +829,7 @@
                             
                             </td>
                             <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calificacion" >{% if proveedor.comentario_calificacion %} {{proveedor.comentario_calificacion}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_9_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_9_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -878,7 +878,7 @@
                             <td>Visita</td>
                             <td>
 
-                                {% if documentos_count.visita == 0  and usuario.proveedor_edicion %}   
+                                {% if documentos_count.visita == 0  and usuario.tipo.proveedores_edicion %}   
                                     <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Visita" hx-target="#document" hx-get="{% url 'edit-visita' proveedor.id %}">
                                         <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                     </a>
@@ -925,7 +925,7 @@
                             
                             </td>
                             <td class="" id="comentario_12_{{proveedor.id|unlocalize}}" tipo ="visita" >{% if proveedor.comentario_visita %} {{proveedor.comentario_visita}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_12_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_12_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -974,7 +974,7 @@
                             <td>Calidad</td>
                             <td>
                              
-                                        {% if documentos_count.calidad == 0 and usuario.proveedor_edicion %}   
+                                        {% if documentos_count.calidad == 0 and usuario.tipo.proveedores_edicion %}   
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Calidad" hx-target="#document" hx-get="{% url 'edit-calidad' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1021,7 +1021,7 @@
                             
                             </td>
                             <td class="" id="comentario_11_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calidad %} {{proveedor.comentario_calidad}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_11_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_11_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1069,7 +1069,7 @@
                             <td>Cotización</td>
                             <td>
                              
-                                        {% if documentos_count.cotizacion == 0 and usuario.proveedor_edicion %}   
+                                        {% if documentos_count.cotizacion == 0 and usuario.tipo.proveedores_edicion %}   
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Cotización" hx-target="#document" hx-get="{% url 'edit-cotizacion' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1116,7 +1116,7 @@
                             
                             </td>
                             <td class="" id="comentario_13_{{proveedor.id|unlocalize}}" tipo ="cotizacion" >{% if proveedor.comentario_cotizacion %} {{proveedor.comentario_cotizacion}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_13_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_13_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1164,7 +1164,7 @@
                             <td>Otros</td>
                             <td>
                              
-                                        {% if documentos_count.otros == 0 and usuario.proveedor_edicion %}   
+                                        {% if documentos_count.otros == 0 and usuario.tipo.proveedores_edicion %}   
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento" hx-target="#document" hx-get="{% url 'edit-otros' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1211,7 +1211,7 @@
                             
                             </td>
                             <td class="" id="comentario_10_{{proveedor.id|unlocalize}}" tipo ="otros" >{% if proveedor.comentario_otros %} {{proveedor.comentario_otros}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_10_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_10_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1274,7 +1274,7 @@
                             <td>
                             
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td>
                             
                             </td>
@@ -1294,7 +1294,7 @@
                             <td>Carta de Crédito</td>
                             <td>
 
-                                {% if documentos_count.carta_credito == 0 and usuario.proveedor_edicion %}   
+                                {% if documentos_count.carta_credito == 0 and usuario.tipo.proveedores_edicion %}   
                                     <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Visita" hx-target="#document" hx-get="{% url 'edit-carta-credito' proveedor.id %}">
                                         <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                     </a>
@@ -1341,7 +1341,7 @@
                             
                             </td>
                             <td class="" id="comentario_14_{{proveedor.id|unlocalize}}" tipo ="carta_credito" >{% if proveedor.comentario_carta_credito %} {{proveedor.comentario_carta_credito}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_14_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_14_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1389,7 +1389,7 @@
                             <td>Búsqueda Mediática</td>
                             <td>
                              
-                                        {% if documentos_count.busqueda_mediatica == 0 and usuario.proveedor_edicion %}   
+                                        {% if documentos_count.busqueda_mediatica == 0 and usuario.tipo.proveedores_edicion %}   
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Búsqueda Mediática" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1514,7 +1514,7 @@
                             <th>Documento</th>
                             <th>Comentarios</th>
                             <th>Fecha</th>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <th>Edit</th>
                             <th class="text-success">
                                 <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
@@ -1540,7 +1540,7 @@
                         <tr>
                             <td>Contrato</td>
                             <td>
-                                {% if documentos_count.contrato == 0 and usuario.proveedor_edicion %} 
+                                {% if documentos_count.contrato == 0 and usuario.tipo.proveedores_edicion %} 
                                     <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'subir-documento-contrato' proveedor.id %}">
                                         <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                     </a>
@@ -1583,7 +1583,7 @@
                             <td class="" id="comentario_7_{{proveedor.id|unlocalize}}" tipo ="contrato" >
                                 {% if proveedor.comentario_contrato %} {{proveedor.comentario_contrato}} {% endif %}
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_7_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_7_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1676,7 +1676,7 @@
                             <td>Curriculum de Servicios</td>
                             <td> 
                              
-                                        {% if documentos_count.curriculum == 0 and usuario.proveedor_edicion %}    
+                                        {% if documentos_count.curriculum == 0 and usuario.tipo.proveedores_edicion %}    
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar CV" hx-target="#document" hx-get="{% url 'edit-curriculum' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1719,7 +1719,7 @@
                                    
                             </td> 
                             <td class="" id="comentario_5_{{proveedor.id|unlocalize}}" tipo ="cv" >{% if proveedor.comentario_curriculum %} {{proveedor.comentario_curriculum}} {% endif %}</td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_5_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_5_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1774,7 +1774,7 @@
                             <td>Competencias</td>
                             <td>
                               
-                                        {% if documentos_count.competencias == 0 and usuario.proveedor_edicion %} 
+                                        {% if documentos_count.competencias == 0 and usuario.tipo.proveedores_edicion %} 
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Competencias" hx-target="#document" hx-get="{% url 'subir-documento-competencia' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1817,7 +1817,7 @@
                             <td class="" id="comentario_6_{{proveedor.id|unlocalize}}" tipo ="competencias" >
                                 {% if proveedor.comentario_competencias %} {{proveedor.comentario_competencias}} {% endif %}
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_6_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_6_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1868,7 +1868,7 @@
                             <td>Opinión de cumplimiento del IMSS</td>
                             <td>
                               
-                                        {% if documentos_count.cumplimiento_imss == 0 and usuario.proveedor_edicion %} 
+                                        {% if documentos_count.cumplimiento_imss == 0 and usuario.tipo.proveedores_edicion %} 
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de cumplimiento" hx-target="#document" hx-get="{% url 'edit-cumplimiento-imss' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -1911,7 +1911,7 @@
                             <td class="" id="comentario_15_{{proveedor.id|unlocalize}}" tipo ="cumplimiento_imss" >
                                 {% if proveedor.comentario_cumplimiento_imss %} {{proveedor.comentario_cumplimiento_imss}} {% endif %}
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_15_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_15_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1963,7 +1963,7 @@
                             <td>Repse</td>
                             <td>
                               
-                                        {% if documentos_count.repse == 0 and usuario.proveedor_edicion %} 
+                                        {% if documentos_count.repse == 0 and usuario.tipo.proveedores_edicion %} 
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Repse" hx-target="#document" hx-get="{% url 'edit-repse' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -2007,7 +2007,7 @@
                             <td class="" id="comentario_16_{{proveedor.id|unlocalize}}" tipo ="repse" >
                                 {% if proveedor.comentario_repse %} {{proveedor.comentario_repse}} {% endif %}
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_16_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_16_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -2078,7 +2078,7 @@
                             <th>Nombre del Documento</th>
                             <th>Documento</th>
                             <th>Comentarios</th>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <th>Edit</th>
                             <th>Fecha</th>
                             
@@ -2105,7 +2105,7 @@
                         <tr>
                             <td>Contrato</td>
                             <td>
-                                        {% if documentos_count.contrato == 0 and usuario.proveedor_edicion %} 
+                                        {% if documentos_count.contrato == 0 and usuario.tipo.proveedores_edicion %} 
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'subir-documento-contrato' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -2138,7 +2138,7 @@
                                                  
                                                 {% endif %}
                                             {% endfor %}
-                                            {% if documentos_count.contrato > documentos_validados_count.contrato and usuario.proveedor_edicion %}
+                                            {% if documentos_count.contrato > documentos_validados_count.contrato and usuario.tipo.proveedores_edicion %}
                                                 <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Subir Contrato" hx-target="#document" hx-get="{% url 'subir-documento-contrato' proveedor.id %}">
                                                     <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                                 </a>
@@ -2150,7 +2150,7 @@
                             <td class="" id="comentario_7_{{proveedor.id|unlocalize}}" tipo ="contrato" >
                                 {% if proveedor.comentario_contrato %} {{proveedor.comentario_contrato}} {% endif %}
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_7_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_7_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -2241,7 +2241,7 @@
                             <td>Factura del Bien/Predial</td>
                             <td>
                                
-                                        {% if documentos_count.factura_predial == 0  and usuario.proveedor_edicion %}  
+                                        {% if documentos_count.factura_predial == 0  and usuario.tipo.proveedores_edicion %}  
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Predial" hx-target="#document" hx-get="{% url 'subir-documento-factura-predial' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
@@ -2275,7 +2275,7 @@
                                                
                                                 {% endif %}
                                             {% endfor %}
-                                            {% if documentos_count.factura_predial > documentos_validados_count.factura_predial and usuario.proveedor_edicion %}
+                                            {% if documentos_count.factura_predial > documentos_validados_count.factura_predial and usuario.tipo.proveedores_edicion %}
                                                     <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Factura/Predial" hx-target="#document" hx-get="{% url 'subir-documento-factura-predial' proveedor.id %}">
                                                         <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                                     </a>
@@ -2285,7 +2285,7 @@
                             <td class="" id="comentario_8_{{proveedor.id|unlocalize}}" tipo ="factura" >
                                 {% if proveedor.comentario_factura %} {{proveedor.comentario_factura}} {% endif %}
                             </td>
-                            {% if usuario.proveedor_edicion %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_8_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_8_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
