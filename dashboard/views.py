@@ -2092,7 +2092,7 @@ def upload_batch_proveedores_direcciones(request):
     return render(request,'dashboard/upload_batch_proveedor_direcciones.html', context)
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('proveedores_edicion')
+@tipo_usuario_requerido('proveedores_edicion','proveedores')
 def documentacion_proveedores(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)

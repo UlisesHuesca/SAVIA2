@@ -149,7 +149,7 @@
                             <th scope="col">Edición</th>
                         {% endif %}
                         <th scope="col">Direcciones</th>
-                        {% if usuario.tipo.proveedores_edicion %}
+                        {% if usuario.tipo.proveedores %}
                             <th>Documentación</th>
                         {% endif %}
                     {% endif %}
@@ -188,7 +188,7 @@
                         </a>
                     </td>
                   
-                    {% if usuario.tipo.proveedores_edicion %}
+                    {% if usuario.tipo.proveedores %}
                     <td>
                         <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{ request.path|urlencode }}&razon_social={{ request.GET.razon_social|urlencode }}&rfc={{ request.GET.rfc|urlencode }}" title="Ver documentación">
                             <i class="fa-duotone fa-solid fa-file-check"></i>
