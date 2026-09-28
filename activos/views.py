@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 from requisiciones.models import Salidas 
@@ -200,7 +201,7 @@ def activos(request):
     # EXPORTACIÓN
     # ---------------------------------------------------------
     if request.method == "POST" and 'btnExcel' in request.POST:
-        return convert_activos_to_xls(activos_queryset)
+        return convert_activos_to_xls(activos_queryset, categoria=categoria_seleccionada)
 
     # ---------------------------------------------------------
     # PAGINACIÓN
@@ -1258,9 +1259,76 @@ def generate_qr(request, pk):
     
     return FileResponse(response, as_attachment=True, filename='qr.png')
 
-def convert_activos_to_xls(activos):
+from datetime import date, datetime
+from decimal import Decimal
+
+from django.db.models import DateField, DateTimeField
+from django.utils import timezone
+
+
+# Ajustar las claves a los valores reales de Activo.categoria
+# y los nombres a los related_name reales de tus OneToOneField.
+EXTENSION_POR_CATEGORIA = {
+    "VEHICULO": "vehiculo",
+    "UBM": "ubm",
+    "MOTOR": "motor",
+    # "COMPUTO": "computo",
+    # "EPP": "epp",
+}
+
+
+def campos_extension(relacion):
+    relacion_modelo = Activo._meta.get_field(relacion)
+    modelo = relacion_modelo.related_model
+
+    return [
+        campo
+        for campo in modelo._meta.concrete_fields
+        if not campo.primary_key
+        and not (campo.is_relation and campo.related_model == Activo)
+    ]
+
+
+def valor_extension(instancia, campo):
+    if instancia is None:
+        return ""
+
+    if campo.choices:
+        valor = getattr(instancia, f"get_{campo.name}_display")()
+    elif campo.is_relation:
+        valor = getattr(instancia, campo.name, None)
+    else:
+        valor = getattr(instancia, campo.name, None)
+
+    if valor is None:
+        return ""
+
+    if isinstance(campo, DateTimeField) and timezone.is_aware(valor):
+        return timezone.make_naive(valor)
+
+    if isinstance(valor, bool):
+        return "Sí" if valor else "No"
+
+    if isinstance(valor, (date, datetime, int, float, Decimal)):
+        return valor
+
+    # También cubre relaciones, archivos y otros valores.
+    return str(valor)
+
+
+def escribir_celda(worksheet, fila, columna, valor, estilos):
+    if isinstance(valor, (date, datetime)):
+        worksheet.write_datetime(fila, columna, valor, estilos["fecha"])
+    elif isinstance(valor, (int, float, Decimal)) and not isinstance(valor, bool):
+        worksheet.write_number(fila, columna, float(valor), estilos["numero"])
+    else:
+        worksheet.write_string(fila, columna, str(valor or ""), estilos["texto"])
+
+def convert_activos_to_xls(activos, categoria = None):
       #print('si entra a la función')
     # Crea un objeto BytesIO para guardar el archivo Excel
+    nombre_categoria = (categoria.nombre or "").strip().upper() if categoria else ""
+
     output = BytesIO()
 
     # Crea un libro de trabajo y añade una hoja
@@ -1268,18 +1336,32 @@ def convert_activos_to_xls(activos):
     worksheet = workbook.add_worksheet("Matriz_Activos")
 
      
-    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
-    # Define los estilos
-    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
-    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
-    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
-    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
-    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    estilos = {
+        "encabezado": workbook.add_format({
+            "bold": True, "font_color": "FFFFFF",
+            "bg_color": "333366", "font_name": "Arial",
+        }),
+        "texto": workbook.add_format({"font_name": "Calibri", "font_size": 10}),
+        "numero": workbook.add_format({"font_name": "Calibri", "font_size": 10}),
+        "fecha": workbook.add_format({
+            "num_format": "dd/mm/yyyy",
+            "font_name": "Calibri", "font_size": 10,
+        }),
+    }
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Eco','Producto','Familia','Subfamilia', 'Responsable', 'Tipo Activo', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
+    columnas_base = ['Eco','Producto','Familia','Subfamilia', 'Responsable', 'Categoría', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
 
-    columna_max = len(columns)+2
+    relacion = EXTENSION_POR_CATEGORIA.get(nombre_categoria.upper())
+    campos = campos_extension(relacion) if relacion else []
+
+    columnas = columnas_base + [
+        f"{nombre_categoria.title()} - {campo.verbose_name}"
+        for campo in campos
+    ]
+
+
+    columna_max = len(columnas)+2
 
     worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.1.', messages_style)
 
@@ -1287,83 +1369,78 @@ def convert_activos_to_xls(activos):
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
 
-    for i, column in enumerate(columns):
-        worksheet.write(0, i, column, head_style)
-        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+    for numero, titulo in enumerate(columnas):
+        worksheet.write(0, numero, titulo, estilos["encabezado"])
+        worksheet.set_column(numero, numero, 20)
 
-    #worksheet.set_column('L:L', 12,  money_style)
-    #worksheet.set_column('M:M', 12, money_style) 
-    
-    row_num = 0
-    for activo in activos:
-        if activo.activo is None:
-            familia = 'Sin producto asociado'
-            subfamilia = ''
-        else:
-            familia = activo.activo.producto.familia.nombre
-            if activo.activo.producto.subfamilia:
-                subfamilia = activo.activo.producto.subfamilia.nombre
-            else:
-                subfamilia = ''
-        row_num += 1
-        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
-        #pagos = Pago.objects.filter(oc=compra_list)
-        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+    # Evita consultas adicionales al recorrer activos y extensiones.
+    relaciones = [
+        "activo__producto__familia",
+        "activo__producto__subfamilia",
+        "responsable__staff__staff",
+        "categoria",
+        "marca",
+        "estatus",
+    ]
+    if relacion:
+        relaciones.append(relacion)
+        relaciones.extend(
+            f"{relacion}__{campo.name}"
+            for campo in campos
+            if campo.many_to_one
+        )
 
-        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
-        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
-        #tipo_de_cambio = '' if tipo == 0 else tipo
-        #created_at = compra_list.created_at.replace(tzinfo=None)
-        #approved_at = compra_list.req.approved_at
+    activos = activos.select_related(*relaciones)
 
-        row = [
+    for fila, activo in enumerate(activos, start=1):
+        producto = activo.activo.producto if activo.activo else None
+        responsable = activo.responsable
+
+        valores = [
             activo.eco_unidad,
-            activo.activo.producto.nombre if activo.activo else " ",
-            familia,
-            subfamilia,
-            f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}" if activo.responsable else "No Asignado",
-            activo.tipo_activo.nombre,
+            producto.nombre if producto else "",
+            producto.familia.nombre if producto and producto.familia else "",
+            producto.subfamilia.nombre if producto and producto.subfamilia else "",
+            (
+                f"{responsable.staff.staff.first_name} "
+                f"{responsable.staff.staff.last_name}"
+                if responsable else "No asignado"
+            ),
+            activo.categoria.nombre if activo.categoria else "",
             activo.serie,
-            activo.marca.nombre if activo.marca else " ",
+            activo.marca.nombre if activo.marca else "",
             activo.modelo,
             activo.descripcion,
-            activo.estatus.nombre
+            activo.estatus.nombre if activo.estatus else "",
         ]
-        
-        for col_num, cell_value in enumerate(row):
-        # Define el formato por defecto
-            cell_format = body_style
 
-            # Aplica el formato de fecha para las columnas con fechas
-            #if col_num in [7, 8]:  # Asume que estas son tus columnas de fechas
-            #    cell_format = date_style
-        
-            # Aplica el formato de dinero para las columnas con valores monetarios
-            #elif col_num in [11, 12]:  # Asume que estas son tus columnas de dinero
-            #    cell_format = money_style
+        extension = getattr(activo, relacion, None) if relacion else None
+        valores.extend(valor_extension(extension, campo) for campo in campos)
 
-            # Finalmente, escribe la celda con el valor y el formato correspondiente
-            worksheet.write(row_num, col_num, cell_value, cell_format)
+        for columna, valor in enumerate(valores):
+            escribir_celda(worksheet, fila, columna, valor, estilos)
 
-      
-        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
-    
-   
     workbook.close()
-
-    # Construye la respuesta
     output.seek(0)
 
     response = HttpResponse(
-        output.read(), 
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-    response['Content-Disposition'] = f'attachment; filename=Matriz_Activos_{dt.date.today()}.xlsx'
-      # Establecer una cookie para indicar que la descarga ha iniciado
-    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
-    output.close()
-    return response
+        output.getvalue(),
+        content_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+    )
 
+    if nombre_categoria:
+        nombre_archivo = f"Matriz_Activos_{slugify(nombre_categoria)}_{date.today()}.xlsx"
+    else:
+        nombre_archivo = f"Matriz_Activos_{date.today()}.xlsx"
+    
+    response["Content-Disposition"] = (
+        f'attachment; filename="{nombre_archivo}"'
+    )
+    response.set_cookie("descarga_iniciada", "true", max_age=20)
+    return response
 
 
 def render_pdf_responsiva_activos(request, pk):
