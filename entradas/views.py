@@ -552,7 +552,7 @@ def articulos_entrada(request, pk):
     return render(request, 'entradas/articulos_entradas.html', context)
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('almacenista')
+@tipo_usuario_requerido('activos')
 def articulos_entrada_activos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -577,13 +577,14 @@ def articulos_entrada_activos(request, pk):
     
     
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
-    if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
+    if usuario.tipo.activos == True: #and compra.req.orden.staff == usuario:
         articulos = ArticuloComprado.objects.filter(
             oc=compra, entrada_completa=False, 
             producto__producto__articulos__producto__producto__servicio = False,
             producto__producto__articulos__producto__producto__activo = True, 
             seleccionado = False
             )
+        
     else:
         articulos = ArticuloComprado.objects.none()
 

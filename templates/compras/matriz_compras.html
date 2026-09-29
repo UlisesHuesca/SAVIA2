@@ -616,32 +616,20 @@ document.addEventListener("DOMContentLoaded", function () {
         const url = button?.dataset.documentUrl;
         previewTitle.textContent = button?.dataset.documentTitle || "Orden de compra";
 
-        if (objectUrl) {
-            URL.revokeObjectURL(objectUrl);
-            objectUrl = null;
-        }
-
         previewFrame.classList.add("d-none");
         previewFrame.removeAttribute("src");
         previewLoading.classList.remove("d-none");
 
-        if (!url) return;
-
-        try {
-            const response = await fetch(url, { credentials: "same-origin" });
-            if (!response.ok) throw new Error("No fue posible cargar la orden de compra.");
-
-            const blob = await response.blob();
-            objectUrl = URL.createObjectURL(blob);
-            previewFrame.src = objectUrl + "#zoom=85";
-            previewFrame.classList.remove("d-none");
-            previewLoading.classList.add("d-none");
-        } catch (error) {
-            previewLoading.classList.add("d-none");
-            bootstrap.Modal.getInstance(previewModal)?.hide();
-            Swal.fire({ title: "Error", text: error.message, icon: "error" });
+        if (url) {
+            previewFrame.src = url + "#zoom=85";
         }
     });
+
+    previewFrame.addEventListener("load", function () {
+    previewFrame.classList.remove("d-none");
+    previewLoading.classList.add("d-none");
+    });
+
 
     previewModal.addEventListener("hidden.bs.modal", function () {
         previewFrame.removeAttribute("src");
