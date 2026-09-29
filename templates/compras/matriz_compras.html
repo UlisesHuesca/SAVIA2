@@ -625,16 +625,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
     
+    previewFrame.addEventListener("load", function () {
+    if (!previewFrame.getAttribute("src")) return;
+
+        previewFrame.classList.remove("d-none");
+        previewLoading.classList.add("d-none");
+    });
+
 
     previewModal.addEventListener("hidden.bs.modal", function () {
         previewFrame.removeAttribute("src");
         previewFrame.classList.add("d-none");
         previewLoading.classList.remove("d-none");
 
-        if (objectUrl) {
-            URL.revokeObjectURL(objectUrl);
-            objectUrl = null;
-        }
+        
     });
 
     const mostrarBotonExcel = localStorage.getItem("mostrarBotonExcel");
