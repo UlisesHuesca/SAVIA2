@@ -186,7 +186,10 @@
             </div>
         </div>
     </div>
+
 </div>
+
+{{ activos_veracruz_para_select2|json_script:"activos-veracruz-data" }}
 
 
 <!--AJAX CALL-->
@@ -521,7 +524,7 @@ function ActualizarComentario(solicitud_id,dato, tipo){
     })
 }
 var datosProyectos = {{proyectos_para_select2|safe}}
-var datosSectores = {{sectores_para_select2|safe}};
+//var datosSectores = {{sectores_para_select2|safe}};
 var datosOperaciones = {{operaciones_para_select2|safe}};
 var datosActivos = {{activos_para_select2|safe}};
 var datosSuperintendentes = {{ superintendentes_para_select2|safe }};
@@ -687,38 +690,91 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
-    var orden = document.getElementById('order');
-    var orden_id = orden.getAttribute('orden');
-    $('#id_activo').select2({
+    const orden_id = document.getElementById('order').getAttribute('orden');
+    const claveStorage = "id_solicitud_" + orden_id;
+
+    const proyectoVeracruzId = "781";
+
+    const datosActivosVeracruz = JSON.parse(
+        document.getElementById('activos-veracruz-data').textContent
+    );
+
+    const $activo = $('#id_activo');
+    const $proyecto = $('#id_proyecto');
+
+    $activo.select2({
         allowClear: true,
         width: '100%',
         placeholder: 'Activo',
-        data: datosActivos,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
     });
-    $('#id_activo').on('select2:select', function(e){
-        var data = e.params.data;
-        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
-        cambio_en_formulario(data,'activo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
-    });
-    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
-    var activoSelect = $('#id_activo');
-    //Si hay datos se rellena el campo con los datos del local storage
-    if (datos) {
-        if (datos.activo){
-            var option = new Option(datos.activo_text, datos.activo, true, true);
-            activoSelect.append(option).trigger('change');
-            $('#id_activo').on('select2:unselect', function(e){
 
-                datos.activo = '';
-                datos.activo_text ='';
-                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+    function actualizarActivos(proyectoId) {
+        const lista = String(proyectoId || '') === proyectoVeracruzId
+            ? datosActivosVeracruz
+            : datosActivos;
 
-            })
+        const datos = JSON.parse(
+            localStorage.getItem(claveStorage)
+        ) || {};
+
+        // Conserva el activo seleccionado si pertenece a la nueva lista.
+        const activoId = $activo.val() || datos.activo;
+
+        const activoValido = lista.some(function(item) {
+            return String(item.id) === String(activoId);
+        });
+
+        $activo.empty();
+        $activo.append(new Option('', '', false, false));
+
+        lista.forEach(function(item) {
+            $activo.append(
+                new Option(item.text, item.id, false, false)
+            );
+        });
+
+        $activo.val(
+            activoValido ? String(activoId) : null
+        ).trigger('change');
+
+        // Si ya no está disponible, limpia también lo almacenado.
+        if (activoId && !activoValido) {
+            datos.activo = '';
+            datos.activo_text = '';
+            localStorage.setItem(claveStorage, JSON.stringify(datos));
         }
     }
+
+    $activo.on('select2:select', function(e) {
+        cambio_en_formulario(e.params.data, 'activo');
+    });
+
+    // Siempre se registra, aunque no haya un activo guardado.
+    $activo.on('select2:unselect', function() {
+        const datos = JSON.parse(
+            localStorage.getItem(claveStorage)
+        ) || {};
+
+        datos.activo = '';
+        datos.activo_text = '';
+        localStorage.setItem(claveStorage, JSON.stringify(datos));
+    });
+
+    // Actualiza los activos al seleccionar o quitar el proyecto.
+    $proyecto.on('select2:select select2:unselect', function() {
+        actualizarActivos($proyecto.val());
+    });
+
+    // Recupera la lista correspondiente al proyecto previamente guardado.
+    const datos = JSON.parse(
+        localStorage.getItem(claveStorage)
+    ) || {};
+
+    actualizarActivos($proyecto.val() || datos.proyecto);
 });
+    
 
 console.log(datosSuperintendentes)
 

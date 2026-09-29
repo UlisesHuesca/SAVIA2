@@ -261,9 +261,10 @@ def checkout(request):
     #***************************************************
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito=usuario.distritos )
     subproyectos = Subproyecto.objects.all()
-    activos = Activo.objects.filter(responsable__distritos = usuario.distritos)
+    activos_veracruz = Activo.objects.filter(responsable__distritos__nombre__in = ["VILLAHERMOSA","VERACRUZ"] ).exclude(estatus__nombre = "BAJA")
+    activos = Activo.objects.filter(responsable__distritos = usuario.distritos).exclude(estatus__nombre = "BAJA")
     tipo = Tipo_Orden.objects.get(tipo ='normal')
-    sectores = Sector.objects.all()
+    #sectores = Sector.objects.all()
     operaciones = Operacion.objects.exclude(nombre='GASTO')
 
     order, created = ordenes.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
@@ -278,7 +279,7 @@ def checkout(request):
 
     #print(usuario.distritos)
     if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "Yerod": 
-        print("Quev")
+        #print("Quev")
         superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
     elif usuario.distritos.nombre == "BRASIL":
         superintendentes = usuarios.filter(tipo__oc_gerencia = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos).exclude(tipo__nombre="Admin")
@@ -297,12 +298,12 @@ def checkout(request):
         } for item in proyectos
     ]
 
-    sectores_para_select2 = [
-        {
-            'id': item.id, 
-            'text': str(item.nombre)
-        } for item in sectores
-    ]
+    #sectores_para_select2 = [
+    #    {
+    #        'id': item.id, 
+    #        'text': str(item.nombre)
+    #    } for item in sectores
+    #]
 
     activos_para_select2 = [
         {
@@ -310,7 +311,15 @@ def checkout(request):
             'text': str(item.eco_unidad) + ('|') + str(item.descripcion)
         } for item in activos
     ]
-    
+
+    activos_veracruz_para_select2 = [
+        {
+            'id': item.id,
+            'text': str(item.eco_unidad) + ('|') + str(item.descripcion)
+        } for item in activos_veracruz
+    ]
+
+   
 
     operaciones_para_select2 = [
         {
@@ -555,7 +564,8 @@ def checkout(request):
     context= {
         'error_messages':error_messages,
         'proyectos_para_select2': proyectos_para_select2,
-        'sectores_para_select2':sectores_para_select2,
+        #'sectores_para_select2':sectores_para_select2,
+        'activos_veracruz_para_select2': activos_veracruz_para_select2,
         'operaciones_para_select2':operaciones_para_select2,
         'activos_para_select2':activos_para_select2,
         'superintendentes_para_select2':superintendentes_para_select2,
