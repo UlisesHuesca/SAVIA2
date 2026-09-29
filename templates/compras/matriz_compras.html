@@ -624,12 +624,7 @@ document.addEventListener("DOMContentLoaded", function () {
             previewFrame.src = url + "#zoom=85";
         }
     });
-
-    previewFrame.addEventListener("load", function () {
-    previewFrame.classList.remove("d-none");
-    previewLoading.classList.add("d-none");
-    });
-
+    
 
     previewModal.addEventListener("hidden.bs.modal", function () {
         previewFrame.removeAttribute("src");

@@ -1468,15 +1468,15 @@ def render_pdf_responsiva_activos(request, pk):
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
     c.drawString(150,caja_iso-20,'Número de documento')
-    c.drawString(160,caja_iso-30,'SEOV-AFI-N4-01.08')
+    c.drawString(160,caja_iso-30,'SEOV-AFI-N4-01.09')
     c.drawString(245,caja_iso-20,'Clasificación del documento')
     c.drawString(275,caja_iso-30,'Controlado')
     c.drawString(355,caja_iso-20,'Nivel del documento')
     c.drawString(380,caja_iso-30, 'N5')
     c.drawString(440,caja_iso-20,'Revisión No.')
-    c.drawString(452,caja_iso-30,'000')
+    c.drawString(452,caja_iso-30,'001')
     c.drawString(510,caja_iso-20,'Fecha de Emisión')
-    c.drawString(525,caja_iso-30,'10/07/2024')
+    c.drawString(525,caja_iso-30,'14/08/2026')
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
@@ -1752,9 +1752,9 @@ def render_pdf_responsiva_activos_gerente(request):
     c.drawString(355,caja_iso-20,'Nivel del documento')
     c.drawString(380,caja_iso-30, 'N5')
     c.drawString(440,caja_iso-20,'Revisión No.')
-    c.drawString(452,caja_iso-30,'000')
+    c.drawString(452,caja_iso-30,'001')
     c.drawString(510,caja_iso-20,'Fecha de Emisión')
-    c.drawString(525,caja_iso-30,'10/07/2024')
+    c.drawString(525,caja_iso-30,'15/08/2026')
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)

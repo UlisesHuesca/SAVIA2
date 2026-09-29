@@ -105,6 +105,13 @@
                     </div>
                 </div>
                 {% endif %}
+                <div class="sv-input-group input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ myfilter.form.sector_texto|add_class:"form-control"|append_attr:"placeholder=Sector" }}
+                        <label for="id_distrito">Sector</label>
+                    </div>
+                </div>
 
                 <div class="sv-input-group input-group">
                     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
@@ -159,6 +166,7 @@
                         {% endif %}
                         <th>Proyecto</th>
                         <th>Subproyecto</th>
+                        <th>Sector</th>
                         <th>A.F.</th>
                         <th>Operación</th>
                         <th>Creado</th>
@@ -180,6 +188,7 @@
                         {% endif %}
                         <td><span class="sv-cell-title">{{ orden.proyecto.nombre }}</span></td>
                         <td>{{ orden.subproyecto.nombre }}</td>
+                        <td>{{orden.sector|default:"—"}}</td>
                         <td>{{ orden.activo.eco_unidad|default:"—" }}</td>
                         <td>{{ orden.operacion|default:"—" }}</td>
                         <td class="text-nowrap">{{ orden.created_at|date:"d/m/Y H:i" }}</td>
