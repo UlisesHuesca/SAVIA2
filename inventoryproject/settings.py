@@ -368,4 +368,4 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 # Opcional: Cookies seguras (recomendado para producción con HTTPS)
 SESSION_COOKIE_SECURE = False  # Cambia a True si usas HTTPS
 
-DATA_UPLOAD_MAX_NUMBER_FILES = 2500
+DATA_UPLOAD_MAX_NUMBER_FILES = 4000
