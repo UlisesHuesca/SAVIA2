@@ -275,9 +275,20 @@ def add_activo(request):
     responsables_para_select2 = [
         {
             'id': responsable.id, 
-            'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
+            'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name),
+            'distrito': responsable.distritos.nombre if responsable.distritos else "",
         } for responsable in personal
     ]
+
+    productos_para_select2 = [
+        {
+            "id": producto.id,
+            "text": str(producto.producto.codigo) + ('|') + str(producto.producto.nombre) ,  # Conserva aquí tu texto actual.
+            "distrito": producto.distrito.nombre if producto.distrito else "",
+        } for producto in productos
+    ] 
+
+    print(productos_para_select2)
 
     # --------------------------
     # Marcas
@@ -287,7 +298,10 @@ def add_activo(request):
 
 
     marca_para_select2 = [
-        {'id': marca.id, 'text': marca.nombre}
+        {
+            'id': marca.id, 
+            'text': marca.nombre
+        }
         for marca in marcas
     ]
 
@@ -326,8 +340,8 @@ def add_activo(request):
         form = Activo_Form()
 
 
-    form.fields['activo'].queryset = productos
-    form.fields['responsable'].queryset = personal
+    #form.fields['activo'].queryset = productos
+    #form.fields['responsable'].queryset = personal
 
     extension_form = None
 
@@ -345,26 +359,26 @@ def add_activo(request):
         if form_activo_valido and form_extension_valido:
             with transaction.atomic():
                 inventario = (Inventario.objects.select_for_update().get(pk=form.cleaned_data['activo'].pk))
-                if inventario.cantidad < 1:
-                    form.add_error('activo','El producto ya no tiene existencia disponible.',)
-                else:
-                    estatus_alta = (Estatus_Activo.objects.get(nombre ="ALTA"))
-                    activo = form.save(commit=False)
-                    activo.creado_por = perfil
-                    activo.modified_por = perfil
-                    activo.modified_at = date.today()
-                    activo.completo = True
-                    activo.estatus = estatus_alta
-                    activo.save()
-                    if extension_form is not None:
-                        extension = extension_form.save(commit=False)
-                        extension.activo = activo
-                        extension.save()
+                #if inventario.cantidad < 1:
+                #    form.add_error('activo','El producto ya no tiene existencia disponible.',)
+                #else:
+                estatus_alta = (Estatus_Activo.objects.get(nombre ="ALTA"))
+                activo = form.save(commit=False)
+                activo.creado_por = perfil
+                activo.modified_por = perfil
+                activo.modified_at = date.today()
+                activo.completo = True
+                activo.estatus = estatus_alta
+                activo.save()
+                if extension_form is not None:
+                    extension = extension_form.save(commit=False)
+                    extension.activo = activo
+                    extension.save()
                 
-                    inventario.cantidad -= 1 #Restar uno al inventario
-                    inventario.save(update_fields=['cantidad',])
-                    messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
-                    return redirect('activos')
+                    #inventario.cantidad -= 1 #Restar uno al inventario
+                #inventario.save(update_fields=['cantidad',])
+                messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
+                return redirect('activos')
         else:
             print("Errores del activo:", form.errors)
             print("Errores de la extensión:", extension_form.errors if extension_form else None)
@@ -378,10 +392,10 @@ def add_activo(request):
         'responsables_para_select2':responsables_para_select2,
         #'tipo_activo_para_select2': tipo_activo_para_select2,
         'marca_para_select2': marca_para_select2,
-        'marcas': marcas,
+        #'marcas': marcas,
         'form':form,
         #'extension_form': extension_form,
-        'productos_activos':productos,
+        'productos_para_select2':productos_para_select2,
     }
 
     return render(request,'activos/add_activos.html', context)

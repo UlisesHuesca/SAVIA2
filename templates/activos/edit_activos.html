@@ -1588,6 +1588,7 @@ function formatResponsable(repo) {
     return container;
 }
 
+
 function formatResponsableSelection(repo) {
     const nombre = repo.text || repo.id || '';
     return repo.distrito ? nombre + ' · ' + repo.distrito : nombre;
@@ -1627,10 +1628,10 @@ $(document).ready(function () {
         ]
     });
 
-    const datosTipoActivo = {{ tipo_activo_para_select2|safe }};
-    const tipoActivoSeleccionado = {{ tipo_activo_predeterminado|default:"null"|safe }};
+    //const datosTipoActivo = {{ tipo_activo_para_select2|safe }};
+    //const tipoActivoSeleccionado = {{ tipo_activo_predeterminado|default:"null"|safe }};
 
-    $('#id_tipo_activo').select2({
+    /*$('#id_tipo_activo').select2({
         allowClear: true,
         width: '100%',
         data: datosTipoActivo,
@@ -1644,7 +1645,7 @@ $(document).ready(function () {
     }
 
     $('#id_tipo_activo').on('change', aparecerSerie);
-    aparecerSerie();
+    aparecerSerie(); */
 
     const datosProductos = {{ productos_para_select2|safe }};
     const productoSelect = $('#id_activo');

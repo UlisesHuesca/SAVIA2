@@ -1,6 +1,6 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
-from dashboard.models import Activo, Marca, Tipo_Activo, Profile 
+from dashboard.models import Activo, Marca, Tipo_Activo, Profile, Inventario
 from requisiciones.models import Salidas
 from compras.models import Proveedor_direcciones
 from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM
@@ -11,13 +11,14 @@ from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM
 class Activo_Form(forms.ModelForm):
     class Meta:
         model = Activo
-        fields = ['activo','categoria','descripcion','eco_unidad','serie','marca','modelo','comentario','cuenta_contable','factura_interna',
+        fields = ['activo','categoria','descripcion','eco_unidad','serie','marca','modelo','comentario',
                   'responsable','fecha_asignacion', 'factura_pdf', 'factura_xml']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['responsable'].queryset = Profile.objects.none()
-        #self.fields['marca'].queryset = Marca.objects.none()
+        self.fields['activo'].queryset = Inventario.objects.none()
+        self.fields['marca'].queryset = Marca.objects.none()
         if 'responsable' in self.data:
             try:
                 seleccion_actual = int(self.data.get('responsable'))
@@ -25,6 +26,22 @@ class Activo_Form(forms.ModelForm):
                 self.fields['responsable'].queryset = Profile.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
+        if 'activo' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('activo'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['activo'].queryset = Inventario.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
+        if 'marca' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('marca'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['marca'].queryset = Marca.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
+                
+
 
     def clean_eco_unidad(self):
         eco = self.cleaned_data.get('eco_unidad')
