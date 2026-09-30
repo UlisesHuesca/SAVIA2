@@ -112,9 +112,7 @@
             <form method="GET">
                 <div class="row g-3 align-items-end">
                     <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label fw-semibold" for="{{ myfilter.form.status_entrega.id_for_label }}">
-                            Estado de entrega
-                        </label>
+                      
                         <div class="input-group sv-input-group">
                             <span class="input-group-text"><i class="fa-solid fa-truck-fast"></i></span>
                             {{ myfilter.form.status_entrega|add_class:"form-control"|append_attr:"placeholder=Estado de entrega" }}
@@ -122,9 +120,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label fw-semibold" for="{{ myfilter.form.nombre.id_for_label }}">
-                            Proyecto
-                        </label>
+                       
                         <div class="input-group sv-input-group">
                             <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
                             {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre del proyecto" }}
@@ -132,9 +128,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label fw-semibold" for="{{ myfilter.form.cliente.id_for_label }}">
-                            Cliente
-                        </label>
+                        
                         <div class="input-group sv-input-group">
                             <span class="input-group-text"><i class="fa-solid fa-building-user"></i></span>
                             {{ myfilter.form.cliente|add_class:"form-control"|append_attr:"placeholder=Cliente" }}
@@ -142,9 +136,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label fw-semibold" for="{{ myfilter.form.contrato.id_for_label }}">
-                            Contrato
-                        </label>
+                        
                         <div class="input-group sv-input-group">
                             <span class="input-group-text"><i class="fa-solid fa-file-contract"></i></span>
                             {{ myfilter.form.contrato|add_class:"form-control"|append_attr:"placeholder=Contrato" }}
@@ -152,9 +144,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label fw-semibold" for="{{ myfilter.form.fecha.id_for_label }}">
-                            Creado hasta
-                        </label>
+                        
                         <div class="input-group sv-input-group">
                             <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
                             {% render_field myfilter.form.fecha type="date" class="form-control" %}
