@@ -2163,7 +2163,7 @@ def render_salida_pdf(request, pk):
 
     data =[]
     productos_data = []
-    #high = 650
+    high = 650
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''']) #,'''P.Unitario''', '''Importe'''
 
     for producto in productos:
