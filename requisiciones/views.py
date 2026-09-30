@@ -568,7 +568,7 @@ def devolucion_material(request, pk):
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has hecho la devolución de manera exitosa')
                 email = EmailMessage(
                     f'Cancelación de solicitud: {orden.folio}',
-                    f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                    f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.1',
                     settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
                     )
@@ -1249,7 +1249,7 @@ def requisicion_autorizar(request, pk):
                 f'Requisición Autorizada {requi.folio}',
                 body=html_message,
                 from_email = settings.DEFAULT_FROM_EMAIL,
-                to= ['ulises_huesc@hotmail.com',requi.orden.staff.staff.staff.email],
+                to= [requi.orden.staff.staff.staff.email],
                 headers={'Content-Type': 'text/html'}
                 )
             email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1292,7 +1292,7 @@ def requisicion_cancelar_compras(request, pk):
                     f'Requisición Rechazada {requis.folio}',
                     f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {comentario_rechazo} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
                     settings.DEFAULT_FROM_EMAIL,
-                    ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
+                    [requis.orden.staff.staff.staff.email],
                     )
                 email.send()
                 messages.success(request,f'Has cancelado la requisición {requis.folio}')
@@ -1333,7 +1333,7 @@ def requisicion_cancelar(request, pk):
                     f'Requisición Rechazada {requis.folio}',
                     f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {comentario} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
                     settings.DEFAULT_FROM_EMAIL,
-                    ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
+                    [requis.orden.staff.staff.staff.email],
                     )
                 email.send()
                 messages.success(request,f'Has cancelado la requisición {requis.folio}')

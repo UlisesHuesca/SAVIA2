@@ -3,219 +3,345 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Proyectos{% endblock %}
-</head>
-<body>
-{% block content %}
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="col">
-        <div class="card col-md-12">
-        <div class="card-header">
-            <h5>Filtro de proyectos</h5>
-        </div>
-        <div class="card-body">
-            <form method="GET" class="row g-7">
-                {% csrf_token %}
-                <div class="col-md-12 col-lg-3">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.status_entrega|add_class:"form-control"|append_attr:"placeholder=Status de Entrega"}}
-                        <label style="color: #121212;" for="id_codigo">Status de Entrega</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-12 col-lg-3">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                        <label style="color: #121212;" for="id_codigo">Proyecto</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-12 col-lg-3">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.cliente|add_class:"form-control"|append_attr:"placeholder= Cliente"}}
-                        <label style="color: #121212;" for="id_codigo">Cliente</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-12 col-lg-3">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.contrato|add_class:"form-control"|append_attr:"placeholder= Contrato"}}
-                        <label style="color: #121212;" for="id_codigo">Contrato</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.fecha type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                <button class="btn btn-outline-success mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
-            </form>
-            <hr>
-            <div class = "row mt-2 bg-white">
-                <form method=POST>
-                    {% csrf_token %}
-                <ul class="nav nav-pills">
-                    <!--<li class="nav-item mx-2">
-                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                    </li> -->
-                    <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                    </li>
-                    <!--<li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                    </li>-->
-                    <li class="nav-item mx-2">
-                        <a class="btn btn-outline-info" href="{% url 'proyectos-add' %}"><i class="fa-solid fa-plus"></i>Agregar Proyectos</a>
-                    </li>
-                </ul>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row my-4">
-    <div class="col-md-4">
+{% block title %}Proyectos{% endblock %}
+
+{% block content %}
+<style>
+    .sv-project-main {
+        min-width: 15rem;
+    }
+
+    .sv-project-description {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .sv-project-finance {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(8.5rem, 1fr));
+        gap: .65rem 1rem;
+        min-width: 18rem;
+    }
+
+    .sv-project-finance-item {
+        min-width: 0;
+    }
+
+    .sv-project-finance-item strong,
+    .sv-project-finance-item span {
+        display: block;
+    }
+
+    .sv-project-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .5rem;
+        min-width: 12rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .sv-project-finance {
+            grid-template-columns: 1fr;
+            min-width: 11rem;
+        }
+    }
+</style>
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Configuración</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-diagram-project"></i>
+                </span>
+                Proyectos
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta contratos, presupuestos y movimientos relacionados con cada proyecto.
+            </p>
+        </div>
+
+        <div class="sv-actions">
+            <form method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="sv-btn sv-btn-success" name="btnReporte" value="1">
+                    <i class="fa-solid fa-file-excel"></i>
+                    Exportar Excel
+                </button>
+            </form>
+
+            <a class="sv-btn sv-btn-primary" href="{% url 'proyectos-add' %}">
+                <i class="fa-solid fa-plus"></i>
+                Agregar proyecto
+            </a>
+        </div>
+    </header>
+
+    {% if messages %}
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% for message in messages %}
-            {% if message %}
-            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-            <script>
-                var m = "{{ message }}";
-                swal("Excelente !", m, "success")
-            </script>
-            {% endif %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+            });
+        </script>
         {% endfor %}
-    </div>
-</div>
-<div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th>Contrato</th>
-                    <th scope="col">Proyecto</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Status de entrega</th>
-                    <th scope="col">Presupuesto</th>
-                    <th scope="col">Salidas de Almacén</th>
-                    <th>Entradas Servicios</th>
-                    <th scope="col">Pagos de gastos</th>
-                    <th scope="col">Pagos de viáticos</th>
-                    <th scope="col">Creado</th>
-                    <th scope="col">Editar</th>
-                    <th scope="col">Subproyectos</th>
-                    <th>Pozos</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for proyecto in proyectos_list %}
-                <tr>
-                    <th scope="row">{% if proyecto.contrato %}{{proyecto.contrato}}{% else %}N/A{% endif %}</th>
-                    <td>{{proyecto.nombre}}</td>
-                    {% if proyecto.descripcion %}
-                    <td>{{proyecto.descripcion}}</td>
-                    {% else %}
-                    <td></td>
-                    {% endif %}
-                    {% if proyecto.status_de_entrega %}
-                    <td>{{proyecto.status_de_entrega}}</td>
-                    {% else %}
-                    <td></td>
-                    {% endif %}
-                    {% if proyecto.get_projects_total %}
-                    <td id='monto'>${{proyecto.get_projects_total}}</td>
-                    {% else %}
-                    <td>$0</td>
-                    {% endif %}
-                    <td>${{ proyecto.total_salidas|default:0|floatformat:2 }}</td>
-                    <td>${{ proyecto.total_compras_servicios|default:0|floatformat:2 }}</td>
-                    <td>${{ proyecto.total_gastos|default:0|floatformat:2 }}</td>
-                    <td>${{ proyecto.total_viaticos|default:0|floatformat:2 }}</td>
-                    
-                    <td>{{proyecto.created_at}}</td>
-                    <td>
-                    <a type="button" class="btn btn-outline-info" href="{% url 'proyectos-edit' proyecto.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
-                    </td>
-                    <td>
-                        <a type="button" class="btn btn-outline-info" href="{% url 'subproyectos' proyecto.id %}">Subproyectos</a>
-                    </td>
-                    <td>
-                        {% if proyecto.contrato.tiene_pozos %}
-                        <a href="{% url 'desglose-pozos-proyecto' proyecto.id %}" class="btn btn-outline-info btn-sm" title="Desglose de Pozos">
-                            <i class="fa-solid fa-oil-well"></i>Pozos
-                        </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if proyectos_list.has_previous %}
+    {% endif %}
+
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtrar proyectos
+                </h2>
+                <p class="sv-card-subtitle">
+                    Reduce los resultados por estado, proyecto, cliente, contrato o fecha.
+                </p>
+            </div>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label fw-semibold" for="{{ myfilter.form.status_entrega.id_for_label }}">
+                            Estado de entrega
+                        </label>
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-truck-fast"></i></span>
+                            {{ myfilter.form.status_entrega|add_class:"form-control"|append_attr:"placeholder=Estado de entrega" }}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label fw-semibold" for="{{ myfilter.form.nombre.id_for_label }}">
+                            Proyecto
+                        </label>
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                            {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre del proyecto" }}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label fw-semibold" for="{{ myfilter.form.cliente.id_for_label }}">
+                            Cliente
+                        </label>
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building-user"></i></span>
+                            {{ myfilter.form.cliente|add_class:"form-control"|append_attr:"placeholder=Cliente" }}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label fw-semibold" for="{{ myfilter.form.contrato.id_for_label }}">
+                            Contrato
+                        </label>
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-file-contract"></i></span>
+                            {{ myfilter.form.contrato|add_class:"form-control"|append_attr:"placeholder=Contrato" }}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label fw-semibold" for="{{ myfilter.form.fecha.id_for_label }}">
+                            Creado hasta
+                        </label>
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            {% render_field myfilter.form.fecha type="date" class="form-control" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-9">
+                        <div class="sv-actions justify-content-md-end">
+                            <a class="sv-btn sv-btn-outline" href="{{ request.path }}">
+                                <i class="fa-solid fa-eraser"></i>
+                                Limpiar
+                            </a>
+                            <button class="sv-btn sv-btn-primary" type="submit">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Proyectos registrados
+                </h2>
+                <p class="sv-card-subtitle">
+                    Resumen operativo y financiero de los proyectos encontrados.
+                </p>
+            </div>
+            <span class="sv-badge sv-badge-primary">
+                {{ proyectos_list|length }} registro{{ proyectos_list|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table" style="width: 100%; table-layout: auto;">
+                <thead>
+                    <tr>
+                        <th scope="col">Proyecto</th>
+                        <th scope="col">Entrega</th>
+                        <th scope="col" class="text-end">Presupuesto</th>
+                        <th scope="col">Movimientos</th>
+                        <th scope="col">Creado</th>
+                        <th scope="col" class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proyecto in proyectos_list %}
+                    <tr>
+                        <td class="sv-project-main">
+                            <span class="sv-cell-title d-block">{{ proyecto.nombre }}</span>
+                            <span class="sv-cell-subtitle d-block">
+                                <i class="fa-solid fa-file-contract me-1"></i>
+                                {% if proyecto.contrato %}{{ proyecto.contrato }}{% else %}Sin contrato{% endif %}
+                            </span>
+                            {% if proyecto.descripcion %}
+                            <span class="sv-cell-subtitle sv-project-description mt-1" title="{{ proyecto.descripcion }}">
+                                {{ proyecto.descripcion }}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if proyecto.status_de_entrega %}
+                            <span class="sv-badge sv-badge-neutral">{{ proyecto.status_de_entrega }}</span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">Sin estado</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end text-nowrap">
+                            <span class="sv-cell-title">
+                                $ {{ proyecto.get_projects_total|default:0|floatformat:2 }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="sv-project-finance">
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">Salidas de almacén</span>
+                                    <strong>$ {{ proyecto.total_salidas|default:0|floatformat:2 }}</strong>
+                                </div>
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">Entradas de servicios</span>
+                                    <strong>$ {{ proyecto.total_compras_servicios|default:0|floatformat:2 }}</strong>
+                                </div>
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">Pagos de gastos</span>
+                                    <strong>$ {{ proyecto.total_gastos|default:0|floatformat:2 }}</strong>
+                                </div>
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">Pagos de viáticos</span>
+                                    <strong>$ {{ proyecto.total_viaticos|default:0|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="text-nowrap">
+                            <span class="sv-cell-title d-block">{{ proyecto.created_at|date:"d/m/Y" }}</span>
+                            <span class="sv-cell-subtitle">{{ proyecto.created_at|time:"H:i" }}</span>
+                        </td>
+
+                        <td>
+                            <div class="sv-project-actions">
+                                <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                   href="{% url 'proyectos-edit' proyecto.id %}"
+                                   title="Editar proyecto"
+                                   aria-label="Editar proyecto {{ proyecto.nombre }}">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+
+                                <a class="sv-btn sv-btn-info"
+                                   href="{% url 'subproyectos' proyecto.id %}">
+                                    <i class="fa-solid fa-sitemap"></i>
+                                    Subproyectos
+                                </a>
+
+                                {% if proyecto.contrato.tiene_pozos %}
+                                <a class="sv-btn sv-btn-primary"
+                                   href="{% url 'desglose-pozos-proyecto' proyecto.id %}">
+                                    <i class="fa-solid fa-oil-well"></i>
+                                    Pozos
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-diagram-project"></i></span>
+                                <span class="sv-empty-title">No se encontraron proyectos</span>
+                                <span class="sv-cell-subtitle">Modifica los filtros o registra un nuevo proyecto.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if proyectos_list.paginator.num_pages > 1 %}
+        <div class="sv-card-body border-top">
+            <nav aria-label="Paginación de proyectos">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if proyectos_list.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" style="color:#3E92CC" 
-                            href="{% my_url proyectos_list.previous_page_number 'page' request.GET.urlencode %}">
+                        <a class="page-link"
+                           href="{% my_url proyectos_list.previous_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página anterior">
                             <i class="fa-solid fa-angle-left"></i>
                         </a>
                     </li>
-                {% endif %}
-                {% for page in proyectos_list.paginator.page_range  %}
-                    {% if proyectos_list.number == page.number %}
-                        <li class="page-item active" aria-current="page">
-                            <a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" 
-                                href="{% my_url page 'page' request.GET.urlencode %}" id="{{page}}">{{page}}
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item">
-                            <a class="page-link" style="color:#3E92CC" 
-                                href="{% my_url page 'page' request.GET.urlencode %}" id="{{page}}">{{page}}
-                            </a>
-                        </li>
                     {% endif %}
-                {% endfor %}
-                {% if proyectos_list.has_next %}
-                <li class="page-item">
-                    <a class="page-link" style="color:#3E92CC" 
-                        href="{% my_url proyectos_list.next_page_number 'page' request.GET.urlencode %}">
-                        <i class="fa-solid fa-angle-right"></i>
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
 
+                    {% for page in proyectos_list.paginator.page_range %}
+                    <li class="page-item {% if proyectos_list.number == page %}active{% endif %}">
+                        <a class="page-link"
+                           href="{% my_url page 'page' request.GET.urlencode %}">
+                            {{ page }}
+                        </a>
+                    </li>
+                    {% endfor %}
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
+                    {% if proyectos_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url proyectos_list.next_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
 
-    </div>
+<div class="modal fade" id="dialog" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
 </div>
-
 {% endblock %}
-</body>
-</html>
