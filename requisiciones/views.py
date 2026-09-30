@@ -2163,7 +2163,7 @@ def render_salida_pdf(request, pk):
 
     data =[]
     productos_data = []
-    high = 650
+    #high = 650
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''']) #,'''P.Unitario''', '''Importe'''
 
     for producto in productos:
@@ -2185,7 +2185,7 @@ def render_salida_pdf(request, pk):
     
     # Variables de paginación
     width, height = letter
-    high = 680  # Posición inicial en la primera página
+    high = 650  # Posición inicial en la primera página
     rows_per_page_first = 21
     rows_per_page_subsequent = 24
     row_height = 18  # Altura por fila en puntos
