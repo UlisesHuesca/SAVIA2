@@ -147,8 +147,10 @@ class UBM_Activo(models.Model):
     rack = models.CharField(max_length=50,null=True,blank=True,)
     pedestal = models.CharField(max_length=50,null=True,blank=True,)
     motor = models.OneToOneField(Motor_UBM, on_delete=models.SET_NULL, null=True, blank=True, related_name='ubm_actual',)
-    bomba = models.OneToOneField(Bomba_UBM,on_delete=models.SET_NULL,null=True,blank=True,related_name='ubm_actual',)
-    manifold = models.OneToOneField(Manifold_UBM,on_delete=models.SET_NULL,null=True,blank=True,related_name='ubm_actual',)
+    bomba = models.CharField(max_length=50,null=True,blank=True,)
+    #models.OneToOneField(Bomba_UBM,on_delete=models.SET_NULL,null=True,blank=True,related_name='ubm_actual',)
+    manifold = models.CharField(max_length=50,null=True,blank=True,)
+    #models.OneToOneField(Manifold_UBM,on_delete=models.SET_NULL,null=True,blank=True,related_name='ubm_actual',)
     pozo = models.ForeignKey(Pozo, on_delete=models.SET_NULL, null=True, blank=True, related_name='ubms',)
 
     @property
