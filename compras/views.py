@@ -2385,10 +2385,10 @@ def comparativos(request):
 
 @perfil_seleccionado_required
 def crear_comparativo(request):
-    start_time = time.time()  # Tiempo de inicio
+    #start_time = time.time()  # Tiempo de inicio
     pk_perfil = request.session.get('selected_profile_id')
-    colaborador_sel = Profile.objects.all()
-    usuario = colaborador_sel.get(id = pk_perfil)
+    usuario = Profile.objects.get(id = pk_perfil)
+    #usuario = colaborador_sel.get(id = pk_perfil)
     
     comparativo, created = Comparativo.objects.get_or_create(completo= False, creada_por=usuario)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
@@ -2406,7 +2406,7 @@ def crear_comparativo(request):
                 comparativo = form.save(commit=False)
                 comparativo.completo = True
                 comparativo.created_at = date.today()
-                comparativo.creado_por =  usuario
+                comparativo.creada_por =  usuario
                 comparativo.save()
                 messages.success(request, f'El comparativo {comparativo.id} ha sido creado')
                 return redirect('comparativos')
@@ -2427,29 +2427,6 @@ def crear_comparativo(request):
                 for field, errors in form_item.errors.items():
                     error_messages[field] = errors.as_text()
                 messages.error(request,f'No está validando {error_messages}' )
-        #if "btn_files" in request.POST:
-            #mi_id = request.POST.get('mi_id')
-        #    form = UploadFileForm(request.POST or None, request.FILES or None)
-        #    files = request.FILES.getlist('file')
-        #    cont = 0
-        #    if form.is_valid():
-                #comparativo = comparativos.get(id=mi_id)
-                #comparativo = form.save(commit = False)
-        #        for f in files:
-        #            if cont == 0:
-        #                comparativo.cotizacion = files[cont]
-        #            elif cont == 1:
-        #                comparativo.cotizacion2 = files[cont]
-        #            elif cont == 2:
-        #                comparativo.cotizacion3 = files[cont]
-        #            elif cont == 3:
-        #                comparativo.cotizacion4 = files[cont]
-        #            elif cont == 4:
-        #                comparativo.cotizacion5 = files[cont]
-        #            cont+=1
-        #        comparativo.save()
-        #        messages.success(request,f'Entrando {files}')
-        #        return redirect('crear_comparativo')
         else:
             post_data = request.POST
             post_items = [f"{key}: {value}" for key, value in post_data.items()]
@@ -2457,8 +2434,8 @@ def crear_comparativo(request):
             messages.error(request, f"Datos recibidos en POST: {post_content}")
         
 
-    end_time = time.time()  # Tiempo de finalización
-    total_time = end_time - start_time  # Tiempo total de ejecución    
+    #end_time = time.time()  # Tiempo de finalización
+    #total_time = end_time - start_time  # Tiempo total de ejecución    
     
     context= {
         'error_messages': error_messages,
@@ -2466,7 +2443,7 @@ def crear_comparativo(request):
         'form':form,
         'form_item':form_item,
         'comparativo':comparativo,
-        'total_time': total_time,
+        #'total_time': total_time,
     }
 
     return render(request, 'compras/crear_comparativo.html', context)

@@ -4,374 +4,410 @@
 {% load static %}
 {% load tt_extras %}
 {% load l10n %}
-<html>
-<head>
-    
+
 {% block title %}Comparativos{% endblock %}
-</head>
-<body>
+
 {% block content %}
-<hr>
-<div class = "row mt-2 bg-white">
-    <ul class="nav nav-pills" >
-        <li class="nav-item mx-2 pl-5">
-            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                <i class="fa-solid fa-file-excel fa-2xl"></i>
+<main class="sv-page sv-page-with-navbar" id="response-div">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Compras</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </span>
+                Comparativos
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta cotizaciones, revisa propuestas y administra los comparativos registrados.
+            </p>
+        </div>
+
+        <div class="sv-page-actions">
+            <a class="sv-btn sv-btn-primary" href="{% url 'crear_comparativo' %}">
+                <i class="fa-solid fa-plus"></i>
+                Nuevo comparativo
+            </a>
+
+            <button type="submit" form="reportesComparativosForm" class="sv-btn sv-btn-success"
+                    name="btnReporte" value="Reporte Excel" title="Generar reporte Excel">
+                <i class="fa-solid fa-file-excel"></i>
+                Excel
             </button>
-        </li>
-        <li class="nav-item mx-2">
-            <button type="button" class="btn btn-outline-danger">
-                <i class="fa-solid fa-file-pdf fa-2xl"></i>
-            </button>
-        </li>
-    </ul>
-</div>
 
+            <!--<button type="submit" form="reportesComparativosForm" class="sv-btn sv-btn-danger"
+                    name="btnPdf" value="Reporte PDF" title="Generar reporte PDF">
+                <i class="fa-solid fa-file-pdf"></i>
+                PDF
+            </button>-->
+        </div>
+    </header>
 
+    <form id="reportesComparativosForm" method="POST" class="d-none">
+        {% csrf_token %}
+    </form>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
+    {% if messages %}
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
 
-<div class="row">
-    <div class="col-sm-12 col-lg-2">
-        <div class="card text-center">
-            <div class="card-header">
-                <h5 class="card-title">Crear</h5>
-            </div>
-            <div class="card-body">
-           
-                <a type="button" class="btn btn-outline-info btn-lg" href="{% url 'crear_comparativo' %}"><i class="fa-solid fa-plus"></i> Comparativo</a>
-            
-            </div>
-            <div class="card-footer text-muted">  
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros
+                </h2>
+                <p class="sv-card-subtitle">
+                    Localiza comparativos por nombre, proveedor, responsable o periodo.
+                </p>
             </div>
         </div>
-    </div>  
-    <div class="col-sm-12 col-lg-10">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">Filtros</h5>
-            </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= Nombre"}}
-                                <label style="color: #121212;" for="id_nombre">Nombre</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                                <label style="color: #121212;" for="id_id">Proveedor</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor2|add_class:"form-control"|append_attr:"placeholder= Proveedor2"}}
-                                <label style="color: #121212;" for="id_id">Proveedor2</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor3|add_class:"form-control"|append_attr:"placeholder= Proveedor3"}}
-                                <label style="color: #121212;" for="id_id">Proveedor3</label>
-                            </div>
-                        </div>
-                    </div>
-                
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.creada_por|add_class:"form-control"|append_attr:"placeholder= Creado por"}}
-                                <label style="color: #121212;" for="id_id">Creado por</label>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre" }}
+                                <label for="{{ myfilter.form.nombre.id_for_label }}">Nombre</label>
                             </div>
                         </div>
                     </div>
 
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor 1" }}
+                                <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor 1</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.proveedor2|add_class:"form-control"|append_attr:"placeholder=Proveedor 2" }}
+                                <label for="{{ myfilter.form.proveedor2.id_for_label }}">Proveedor 2</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.proveedor3|add_class:"form-control"|append_attr:"placeholder=Proveedor 3" }}
+                                <label for="{{ myfilter.form.proveedor3.id_for_label }}">Proveedor 3</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-user-pen"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ myfilter.form.creada_por|add_class:"form-control"|append_attr:"placeholder=Elaborado por" }}
+                                <label for="{{ myfilter.form.creada_por.id_for_label }}">Elaborado por</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating flex-grow-1">
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                            <div class="form-floating flex-grow-1">
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <!--onclick="regenerar()"-->
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+                    <div class="col-12 col-md-6 col-xl-2 d-flex gap-2">
+                        <button id="btnBuscar" class="sv-btn sv-btn-primary flex-grow-1"
+                                onclick="if (typeof guardar_variable === 'function') guardar_variable();"
+                                type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            Buscar
+                        </button>
+                        <a class="sv-btn sv-btn-outline sv-btn-icon" href="{{ request.path }}"
+                           title="Limpiar filtros" aria-label="Limpiar filtros">
+                            <i class="fa-solid fa-eraser"></i>
+                        </a>
                     </div>
                 </div>
-                
-                </form>
-            </div>
+            </form>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <div class="card">
-            <div class ="table-responsive-sm">
-                <table class="table bg-white">
-                    <thead class="text-black" style="background-color: #F5F5F5;">
-                        <tr>
-                            <th scope="col">Comparativo</th>
-                            <th scope="col">Nombre</th>
-                            <th scope="col">Elaborado por</th>
-                            <th scope="col">Fecha</th>
-                            <th scope="col">Comentarios</th>
-                            <th>Cotización 1</th>
-                            <th>Cotización 2</th>
-                            <th>Cotización 3</th>
-                            <th>Clonar</th>
-                            <th>Detalle</th>
-                            <!--<th>Comparativos</th>-->
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in comparativos_list %}
-                        <tr>
-                            <th scope="row">{{item.id}}</th>
-                            <th scope="row">{{item.nombre}}</th>
-                            <th scope="row">{{item.creada_por.staff.staff.first_name}} {{item.creada_por.staff.staff.last_name}}</th>
-                            <td>{{item.created_at.date}}</td>
-                            <td>{{item.comentarios}}</td>
-                            <td>  
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Comparativos registrados
+                </h2>
+                <p class="sv-card-subtitle">
+                    Cotizaciones y acciones disponibles para cada comparativo.
+                </p>
+            </div>
+
+            <span class="sv-badge sv-badge-primary">
+                {{ comparativos_list.paginator.count }} registro{{ comparativos_list.paginator.count|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th scope="col">Comparativo</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Elaborado por</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Comentarios</th>
+                        <th scope="col">Cotizaciones</th>
+                        <th scope="col" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in comparativos_list %}
+                    <tr>
+                        <td>
+                            <span class="sv-folio">{{ item.id|unlocalize }}</span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">{{ item.nombre }}</span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title d-block">
+                                {{ item.creada_por.staff.staff.first_name }} {{ item.creada_por.staff.staff.last_name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="sv-cell-title">{{ item.created_at|date:"d/m/Y" }}</span>
+                           
+                        </td>
+                        <td>
+                            {% if item.comentarios %}
+                                <span title="{{ item.comentarios }}">{{ item.comentarios|truncatechars:80 }}</span>
+                            {% else %}
+                                <span class="sv-cell-subtitle">Sin comentarios</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="sv-actions">
                                 {% if item.cotizacion %}
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ item.id|unlocalize }}" title="Ver cotización">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cotizacionPreviewModal"
+                                        data-document-url="{{ item.cotizacion.url }}"
+                                        data-document-title="Cotización 1 · Comparativo {{ item.id|unlocalize }}"
+                                        title="Ver cotización 1" aria-label="Ver cotización 1">
+                                    <i class="fa-solid fa-file-pdf text-danger"></i>
+                                    <span class="visually-hidden">Cotización 1</span>
                                 </button>
-                                <!-- Modal con visor de PDF -->
-                                <div class="modal fade" id="pdfModal{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ item.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel{{ item.id|unlocalize }}">Cotización 1</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ item.cotizacion.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% endif %}
 
-                                <!--<a href="{{item.cotizacion.url}}" download class="btn btn-outline-danger">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                </a>-->
-                                {% endif %}
-                            </td>
-                            <td>  
                                 {% if item.cotizacion2 %}
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModalDos{{ item.id|unlocalize }}" title="Ver cotizacion 2">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cotizacionPreviewModal"
+                                        data-document-url="{{ item.cotizacion2.url }}"
+                                        data-document-title="Cotización 2 · Comparativo {{ item.id|unlocalize }}"
+                                        title="Ver cotización 2" aria-label="Ver cotización 2">
+                                    <i class="fa-solid fa-file-pdf text-danger"></i>
+                                    <span class="visually-hidden">Cotización 2</span>
                                 </button>
-                                <!-- Modal con visor de PDF -->
-                                <div class="modal fade" id="pdfModalDos{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabelDos{{ item.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabelDos{{ item.id|unlocalize }}">Cotización 2</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ item.cotizacion2.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 {% endif %}
-                            </td>
-                            <td>  
+
                                 {% if item.cotizacion3 %}
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal3{{ item.id|unlocalize }}" title="Ver cotizacion 3">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cotizacionPreviewModal"
+                                        data-document-url="{{ item.cotizacion3.url }}"
+                                        data-document-title="Cotización 3 · Comparativo {{ item.id|unlocalize }}"
+                                        title="Ver cotización 3" aria-label="Ver cotización 3">
+                                    <i class="fa-solid fa-file-pdf text-danger"></i>
+                                    <span class="visually-hidden">Cotización 3</span>
                                 </button>
-                                <!-- Modal con visor de PDF -->
-                                <div class="modal fade" id="pdfModal3{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel3{{ item.id|unlocalize }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel3{{ item.id|unlocalize }}">Cotización 3</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <iframe src="{{ item.cotizacion3.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 {% endif %}
-                            </td>
-                            <td>
-                                <a class="btn btn-outline-info" id="btnActualizar" href="{% url 'clonar-comparativo' item.id %}" type="button">
+
+                                {% if not item.cotizacion and not item.cotizacion2 and not item.cotizacion3 %}
+                                    <span class="sv-cell-subtitle">Sin archivos</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="sv-actions justify-content-center">
+                                <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                   href="{% url 'clonar-comparativo' item.id %}"
+                                   title="Clonar comparativo" aria-label="Clonar comparativo">
                                     <i class="fa-solid fa-copy"></i>
                                 </a>
-                            </td>
-                            <td>
-                                <ul class="nav nav-pills">
-                                    <li class="nav-item mx-1">
-                                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-comparativo' item.id %}"><i class="fa-solid fa-circle-info"></i></a>
-                                    </li>
-                                </ul>
-                            </td>
-                            <!--<td>
-                                <button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                                <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
-                                {% csrf_token %} 
-                                <div class="mb-3">
-                                    <input class="form-control" type="file" name="file" multiple>
-                                    <input type="hidden" name="mi_id" value="{{item.id}}">
-                                </div>
-                                <button id="btn_files" name="btn_files" type="submit" class="btn btn-outline-info"><i class="fa-solid fa-file-arrow-up"></i></button>
-                                <button id="cancel" type="button" class="btn btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
-                                {% if error_messages %}
-                                <div>{{error_messages}}</div>
-                                {% endif %}
-                                </form>
-                            </td>-->
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+
+                                <button type="button" class="sv-btn sv-btn-primary sv-btn-icon"
+                                        data-bs-toggle="modal" data-bs-target="#dialog"
+                                        hx-target="#document"
+                                        hx-get="{% url 'articulos-comparativo' item.id %}"
+                                        title="Ver detalle" aria-label="Ver detalle">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                                <span class="sv-empty-title">No se encontraron comparativos</span>
+                                <span class="sv-cell-subtitle">Prueba modificando los filtros de búsqueda.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if comparativos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
-
-                {% for item in comparativos_list.paginator.page_range %}
-                    {% if comparativos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > comparativos_list.number|add:'-2' and item < comparativos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+        {% if comparativos_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación de comparativos">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if comparativos_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url comparativos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
                     {% endif %}
-                {% endfor %}
 
-                {% if comparativos_list.paginator.num_pages > comparativos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{comparativos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{comparativos_list.paginator.num_pages}}</a></li>
-                {% endif %}
+                    {% for pagina in comparativos_list.paginator.page_range %}
+                        {% if pagina == comparativos_list.number %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ pagina }}</span>
+                        </li>
+                        {% elif pagina > comparativos_list.number|add:'-3' and pagina < comparativos_list.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% my_url pagina 'page' request.GET.urlencode %}">{{ pagina }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
 
-                {% if comparativos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
+                    {% if comparativos_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url comparativos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url comparativos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+         id="document" role="document" hx-target="this"></div>
+</div>
+
+<div class="modal fade" id="cotizacionPreviewModal" tabindex="-1"
+     aria-labelledby="cotizacionPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <span class="sv-page-eyebrow">Documento del comparativo</span>
+                    <h2 class="modal-title sv-card-title" id="cotizacionPreviewModalLabel">
+                        <i class="fa-solid fa-file-pdf text-danger"></i>
+                        Cotización
+                    </h2>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="ratio ratio-4x3">
+                    <iframe id="cotizacionPreviewFrame" title="Vista previa de la cotización"></iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
     </div>
 </div>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg-12 modal-dialog-centered" id="document" role="document" hx-target="this">
 
-    </div>
-</div>
-
-
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
+document.addEventListener('DOMContentLoaded', function () {
+    const htmxModalElement = document.getElementById('dialog');
+    if (htmxModalElement && window.htmx) {
+        const htmxModal = bootstrap.Modal.getOrCreateInstance(htmxModalElement);
+
+        htmx.on('htmx:beforeSwap', function (event) {
+            if (event.detail.target.id === 'document' && !event.detail.xhr.response) {
+                htmxModal.hide();
+            }
+        });
+    }
+
+    const previewModal = document.getElementById('cotizacionPreviewModal');
+    const previewFrame = document.getElementById('cotizacionPreviewFrame');
+    const previewTitle = document.getElementById('cotizacionPreviewModalLabel');
+
+    if (previewModal && previewFrame) {
+        previewModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const documentUrl = button ? button.getAttribute('data-document-url') : '';
+            const documentTitle = button ? button.getAttribute('data-document-title') : 'Cotización';
+
+            previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf text-danger"></i> ' + documentTitle;
+            previewFrame.src = documentUrl ? documentUrl + '#zoom=80' : 'about:blank';
+        });
+
+        previewModal.addEventListener('hidden.bs.modal', function () {
+            previewFrame.src = 'about:blank';
+        });
+    }
 });
-
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
-
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-
-var myModal = document.getElementById('dialog')
-
-/*document.getElementById('start_upload').addEventListener('click',show_file_input)
-document.getElementById('cancel').addEventListener('click',cancel_show)
-
-function show_file_input() {
-    var form = document.getElementById('FileForm');
-    var btn_start = document.getElementById('start_upload');
-    form.classList.remove('d-none');
-    btn_start.classList.add('d-none');
-};
-
-function cancel_show(){
-    var form = document.getElementById('FileForm');
-    var btn_start = document.getElementById('start_upload');
-    form.classList.add('d-none');
-    btn_start.classList.remove('d-none');
-};
-
-
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})*/
-
 </script>
 {% endblock %}
-</body>
-</html>

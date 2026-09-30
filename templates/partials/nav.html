@@ -756,7 +756,7 @@ button.sv-navbar-icon-link {
                                 </a>
                                 </div>
                                 {% if usuario.tipo.nombre == 'Admin' %}
-                                <a class="dropdown-item" href="{% url 'matriz-salida-activos' %}">Revisión Activos</a>
+                                <!-- <a class="dropdown-item" href="{% url 'matriz-salida-activos' %}">Revisión Activos</a>-->
                                 {% endif %}
                             {% if usuario.tipo.superintendente or usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" %}
                                 <div>

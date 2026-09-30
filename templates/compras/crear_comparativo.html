@@ -3,667 +3,648 @@
 {% load crispy_forms_tags %}
 {% load l10n %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Crear Comparativo{% endblock %}
-</head>
-<body>
+
+{% block title %}Crear comparativo{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-4 col-sm-12">
-        <div class="card" id="form-wrapper">
-            <div class="card-header text-center">
-				<h2 time="{{total_time}}">Comparativo</h2>
-            </div>
-            <div class="card-body">
-				<form method="POST" id='OrderForm' enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="row my-2">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-folder-plus"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.nombre|add_class:"form-control"|append_attr:"placeholder= Comparativo"}}
-                                    <label for="id_nombre">Comparativo*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row my-2">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.comentarios|add_class:"form-control"|append_attr:"placeholder= Comentarios"}}
-                                    <label for="id_comentarios">Comentarios*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row my-3">
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.proveedor}}    
-                                </div>
-                            </div>  
-                        </div>
-                    </div>
-                    <div class="row my-3">
-                        <div class="col-12">
-                            <div class="input-group mb-3">  
-                                {{form.cotizacion|add_class:"form-control"|append_attr:"placeholder= Cotización 1" }}  
-                            </div>  
-                        </div>
-                    </div>
-                    <div class="row my-3">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                            {{form.proveedor2}}  
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row my-3">
-                        <div class="col-12">
-                            <div class="input-group mb-3">  
-                                {{form.cotizacion2|add_class:"form-control"|append_attr:"placeholder= Cotización 2" }}  
-                            </div>  
-                        </div>
-                    </div>
-                    <div class="row my-3">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">  
-                            {{form.proveedor3}}
-                            </div>
-                        </div>  
-                    </div>
-                    <div class="row my-3">
-                        <div class="col-12">
-                            <div class="input-group mb-3">  
-                                {{form.cotizacion3|add_class:"form-control"|append_attr:"placeholder= Cotización 3" }}  
-                            </div>  
-                        </div>
-                    </div>
-                    <!-- <div class ="table-responsive-sm">
-                        <table class="table table-light table-striped table-hover">
-                        <thead>
-                            <tr>
-                            <th>
-                                Archivo
-                            </th>
-                            <th>
-                                Nombre
-                            </th>
-                            </tr>
-                        </thead>
-                        <tbody>    
-                        {% if comparativo.cotizacion %}
-                            <tr>
-                                <td>
-                                    <a href="{{comparativo.cotizacion.url}}" download class="download-link btn">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    {{ comparativo.cotizacion.name|default:"Archivo" }}
-                                </td>
-                            </tr>
-                        {% endif %}
-                        {% if comparativo.cotizacion2 %}
-                        <tr>
-                            <td>
-                                <a href="{{comparativo.cotizacion2.url}}" download class="download-link btn">
-                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
-                            </td>
-                            <td>
-                                {{ comparativo.cotizacion2.name|default:"Archivo" }}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% if comparativo.cotizacion3 %}
-                        <tr>
-                            <td>
-                                <a href="{{comparativo.cotizacion3.url}}" download class="download-link btn">
-                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
-                            </td>
-                            <td>
-                                {{ comparativo.cotizacion3.name|default:"Archivo" }}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% if comparativo.cotizacion4 %}
-                        <tr>
-                            <td>
-                                <a href="{{comparativo.cotizacion4.url}}" download class="download-link btn">
-                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
-                            </td>
-                            <td>
-                                {{ comparativo.cotizacion4.name|default:"Archivo" }}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% if comparativo.cotizacion5 %}
-                        <tr>
-                            <td>
-                                <a href="{{comparativo.cotizacion5.url}}" download class="download-link btn">
-                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
-                            </td>
-                            <td>
-                                {{ comparativo.cotizacion5.name|default:"Archivo" }}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        </tbody>
-                    </table> 
-                        
+<style>
+    /* Mantiene icono y Select2 en una sola línea dentro de cada tarjeta. */
+    .sv-provider-select {
+        display: grid;
+        grid-template-columns: 3.5rem minmax(0, 1fr);
+        width: 100%;
+        align-items: stretch;
+    }
 
-                    </div> -->
-                    {% if productos %}
-                    <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_creacion" id="btn_agregar" type="submit" value="Crear">
-                    {% endif %}
-                </form>
-                <!--<button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
-                    {% csrf_token %} 
-                    <div class="mb-3">
-                        <input class="form-control" type="file" name="file" multiple>
-                        <input type="hidden" name="mi_id" value="{{comparativo.id}}">
-                    </div>
-                    <button  id="btn_files" name="btn_files" type="submit" class="btn btn-outline-info"><i class="fa-solid fa-file-arrow-up"></i></button>
-                    <button id="cancel" type="button" class="btn btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
-                    {% if error_messages %}
-                    <div>{{error_messages}}</div>
-                    {% endif %}
-                </form>-->
-            </div>
+    .sv-provider-select__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.5rem;
+        color: var(--sv-text, #243746);
+        background: var(--sv-surface-muted, #f1f5f7);
+        border: 1px solid var(--sv-border, #ced8df);
+        border-radius: .75rem 0 0 .75rem;
+    }
+
+    .sv-provider-select__control {
+        min-width: 0;
+    }
+
+    .sv-provider-select__control .select2-container {
+        display: block;
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    .sv-provider-select__control .select2-selection--single {
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 3.5rem !important;
+        min-height: 3.5rem;
+        border-left: 0 !important;
+        border-radius: 0 .75rem .75rem 0 !important;
+    }
+
+    .sv-provider-select__control .select2-selection__rendered {
+        width: 100%;
+        min-width: 0;
+        padding-left: 1rem !important;
+        padding-right: 4.25rem !important;
+        line-height: normal !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sv-provider-select__control .select2-selection__arrow {
+        top: 50% !important;
+        right: .65rem !important;
+        transform: translateY(-50%);
+    }
+
+    .sv-provider-select__control .select2-selection__clear {
+        position: absolute !important;
+        top: 50%;
+        right: 2.45rem;
+        z-index: 2;
+        margin: 0 !important;
+        padding: .25rem;
+        line-height: 1;
+        transform: translateY(-50%);
+    }
+
+    @media (max-width: 1199.98px) {
+        .sv-provider-select__control .select2-selection__rendered {
+            padding-right: 4.5rem !important;
+        }
+    }
+</style>
+
+<main class="sv-page sv-page-with-navbar" id="response-div">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Compras</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </span>
+                Crear comparativo
+            </h1>
+            <p class="sv-page-subtitle">
+                Registra proveedores, adjunta sus cotizaciones y compara cada partida.
+            </p>
         </div>
-    </div>
+    </header>
 
-    <div class="col-lg-8 col-sm-12">
-        <div class="card">    
-            <div class="card-header text-center">
-                <h4>Productos de Comparativo</h4>
+    {% if messages %}
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+
+    {% if error_messages %}
+    <div class="alert alert-danger" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>
+        {{ error_messages }}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="OrderForm" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        Información general
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Identifica el comparativo y agrega las observaciones necesarias.
+                    </p>
+                </div>
             </div>
-            <div class="card-body">
-                <form method="POST">
-                {% csrf_token %}
-                {% if error_messages %}
+
+            <div class="sv-card-body">
+                {% if form.errors %}
                 <div class="alert alert-danger" role="alert">
-                    {{error_messages}}
+                    {% for field in form %}
+                        {% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
                 </div>
                 {% endif %}
-                <div class="row my-2">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.producto}}
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-folder-plus"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre del comparativo" }}
+                                <label for="{{ form.nombre.id_for_label }}">Nombre del comparativo *</label>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-lg-3 col-md-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
-                                <label for="id_cantidad">Cantidad*</label>
+
+                    <div class="col-12 col-lg-8">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-comment"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentarios" }}
+                                <label for="{{ form.comentarios.id_for_label }}">Comentarios *</label>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" value="" id="tiempoCheck">
-                    <label class="form-check-label" for="tiempoCheck">
-                        Tiempo de Entrega
-                    </label>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" value="" id="marcaCheck">
-                    <label class="form-check-label" for="marcaCheck">
-                        Marca
-                    </label>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" value="" id="modeloCheck">
-                    <label class="form-check-label" for="modeloCheck">
-                        Modelo
-                    </label>
-                </div>
-                
-                <div class="row">
-                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder= Tiempo de Entrega"}}
-                                <label for="id_dias_de_entrega">Tiempo de entrega</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4 modelo-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.modelo|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
-                                <label for="id_modelo">Modelo</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4 marca-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
-                                <label for="id_marca">Marca</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.precio|add_class:"form-control"|append_attr:"placeholder= Precio"}}
-                                <label for="id_precio">Precio*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div> 
-                <div class="row">
-                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.dias_de_entrega2|add_class:"form-control"|append_attr:"placeholder= Tiempo de Entrega"}}
-                                <label for="id_dias_de_entrega2">Tiempo de entrega</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4 modelo-field d-none">
-                        <div class="input-group mb-3 ">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.modelo2|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
-                                <label for="id_modelo2">Modelo</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4 marca-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.marca2|add_class:"form-control"|append_attr:"placeholder= Marca"}}
-                                <label for="id_marca2">Marca</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.precio2|add_class:"form-control"|append_attr:"placeholder= Precio"}}
-                                <label for="id_precio2">Precio*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.dias_de_entrega3|add_class:"form-control"|append_attr:"placeholder= Tiempo de entrega"}}
-                                <label for="id_dias_de_entrega3">Tiempo de entrega</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4 modelo-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.modelo3|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
-                                <label for="id_modelo3">Modelo</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4 marca-field d-none">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.marca3|add_class:"form-control"|append_attr:"placeholder= Marca"}}
-                                <label for="id_marca3">Marca</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5 col-md-4">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.precio3|add_class:"form-control"|append_attr:"placeholder= Precio"}}
-                                <label for="id_precio3">Precio*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div  class="row">
-                    <div class="col-sm-1">
-                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
-                    </div>
-                </div>
-                </form>
-            
-        
-                <div class ="table-responsive-sm">
-                    <table class="table table-light table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Producto</th>
-                                <th scope="col">Cantidad</th>
-                                <th scope="col">Unidad</th>
-                                <th style="color:#478800" scope="col">P.U.</th>
-                                <th scope="col">P.U.</th>
-                                <th scope="col">P.U.</th>
-                                <th scope="col">Eliminar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mytbl">
-                            {% for producto in productos%}
-                            <tr>
-                                <td scope="col">{{producto.producto.producto.codigo}}</td>
-                                <td scope="col">{{producto.producto.producto.nombre}}</td>
-                                <td scope="col">{{producto.cantidad|floatformat:2}}</td>
-                                <td scope="col">{{producto.producto.producto.unidad.nombre}}</td>
-                                <td style="color:#478800" scope="col">${{producto.precio|floatformat:2}}</td>
-                                <td scope="col">${{producto.precio2|floatformat:2}}</td>
-                                <td scope="col">${{producto.precio3|floatformat:2}}</td>
-                                <td scope="col">
-                                    <a class="btn btn-danger" value="Delete" name="btn_delete" href="{% url 'articulo-comparativo-delete' producto.id %}"   id="delete">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
                 </div>
             </div>
+        </section>
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-building"></i>
+                        Proveedores y cotizaciones
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Puedes registrar hasta tres propuestas para realizar la comparación.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-xl-4">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <div>
+                                    <span class="sv-page-eyebrow">Propuesta 1</span>
+                                    <h3 class="sv-card-title">Proveedor principal</h3>
+                                </div>
+                                <span class="sv-badge sv-badge-primary">1</span>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="sv-provider-select mb-3">
+                                    <span class="sv-provider-select__icon" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
+                                    <div class="sv-provider-select__control">
+                                        {{ form.proveedor }}
+                                    </div>
+                                </div>
+
+                                <label class="form-label fw-semibold" for="{{ form.cotizacion.id_for_label }}">
+                                    Cotización
+                                </label>
+                                {{ form.cotizacion|add_class:"form-control" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <div>
+                                    <span class="sv-page-eyebrow">Propuesta 2</span>
+                                    <h3 class="sv-card-title">Segundo proveedor</h3>
+                                </div>
+                                <span class="sv-badge sv-badge-neutral">2</span>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="sv-provider-select mb-3">
+                                    <span class="sv-provider-select__icon" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
+                                    <div class="sv-provider-select__control">
+                                        {{ form.proveedor2 }}
+                                    </div>
+                                </div>
+
+                                <label class="form-label fw-semibold" for="{{ form.cotizacion2.id_for_label }}">
+                                    Cotización
+                                </label>
+                                {{ form.cotizacion2|add_class:"form-control" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <div>
+                                    <span class="sv-page-eyebrow">Propuesta 3</span>
+                                    <h3 class="sv-card-title">Tercer proveedor</h3>
+                                </div>
+                                <span class="sv-badge sv-badge-neutral">3</span>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="sv-provider-select mb-3">
+                                    <span class="sv-provider-select__icon" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
+                                    <div class="sv-provider-select__control">
+                                        {{ form.proveedor3 }}
+                                    </div>
+                                </div>
+
+                                <label class="form-label fw-semibold" for="{{ form.cotizacion3.id_for_label }}">
+                                    Cotización
+                                </label>
+                                {{ form.cotizacion3|add_class:"form-control" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% if productos %}
+        <section class="sv-card mb-3">
+            <div class="sv-card-body">
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                    <button class="sv-btn sv-btn-success" name="btn_creacion" id="btn_agregar"
+                            type="submit" value="Crear">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Crear comparativo
+                    </button>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+    </form>
+
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-cart-plus"></i>
+                    Agregar producto
+                </h2>
+                <p class="sv-card-subtitle">
+                    Selecciona una partida y captura los datos de cada propuesta.
+                </p>
+            </div>
         </div>
-    </div>
+
+        <form method="POST" id="ProductForm">
+            {% csrf_token %}
+
+            <div class="sv-card-body border-bottom">
+                {% if form_item.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for field in form_item %}
+                        {% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}
+                    {% endfor %}
+                    {% for error in form_item.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-lg-9">
+                        <label class="form-label fw-semibold" for="{{ form_item.producto.id_for_label }}">Producto *</label>
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
+                            <div class="sv-select2-expand flex-grow-1">
+                                {{ form_item.producto }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-cubes-stacked"></i></span>
+                            <div class="form-floating flex-grow-1">
+                                {{ form_item.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad" }}
+                                <label for="{{ form_item.cantidad.id_for_label }}">Cantidad *</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-3 mt-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="tiempoCheck">
+                        <label class="form-check-label" for="tiempoCheck">Tiempo de entrega</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="marcaCheck">
+                        <label class="form-check-label" for="marcaCheck">Marca</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="modeloCheck">
+                        <label class="form-check-label" for="modeloCheck">Modelo</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-xl-4">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <h3 class="sv-card-title">Propuesta 1</h3>
+                                <span class="sv-badge sv-badge-primary">1</span>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="input-group sv-input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.precio|add_class:"form-control"|append_attr:"placeholder=Precio" }}
+                                        <label for="{{ form_item.precio.id_for_label }}">Precio *</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group tiempo-field d-none mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-truck-fast"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder=Tiempo de entrega" }}
+                                        <label for="{{ form_item.dias_de_entrega.id_for_label }}">Tiempo de entrega</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group marca-field d-none mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-tag"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.marca|add_class:"form-control"|append_attr:"placeholder=Marca" }}
+                                        <label for="{{ form_item.marca.id_for_label }}">Marca</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group modelo-field d-none">
+                                    <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.modelo|add_class:"form-control"|append_attr:"placeholder=Modelo" }}
+                                        <label for="{{ form_item.modelo.id_for_label }}">Modelo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <h3 class="sv-card-title">Propuesta 2</h3>
+                                <span class="sv-badge sv-badge-neutral">2</span>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="input-group sv-input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.precio2|add_class:"form-control"|append_attr:"placeholder=Precio" }}
+                                        <label for="{{ form_item.precio2.id_for_label }}">Precio *</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group tiempo-field d-none mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-truck-fast"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.dias_de_entrega2|add_class:"form-control"|append_attr:"placeholder=Tiempo de entrega" }}
+                                        <label for="{{ form_item.dias_de_entrega2.id_for_label }}">Tiempo de entrega</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group marca-field d-none mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-tag"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.marca2|add_class:"form-control"|append_attr:"placeholder=Marca" }}
+                                        <label for="{{ form_item.marca2.id_for_label }}">Marca</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group modelo-field d-none">
+                                    <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.modelo2|add_class:"form-control"|append_attr:"placeholder=Modelo" }}
+                                        <label for="{{ form_item.modelo2.id_for_label }}">Modelo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="sv-card h-100">
+                            <div class="sv-card-header">
+                                <h3 class="sv-card-title">Propuesta 3</h3>
+                                <span class="sv-badge sv-badge-neutral">3</span>
+                            </div>
+                            <div class="sv-card-body">
+                                <div class="input-group sv-input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.precio3|add_class:"form-control"|append_attr:"placeholder=Precio" }}
+                                        <label for="{{ form_item.precio3.id_for_label }}">Precio *</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group tiempo-field d-none mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-truck-fast"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.dias_de_entrega3|add_class:"form-control"|append_attr:"placeholder=Tiempo de entrega" }}
+                                        <label for="{{ form_item.dias_de_entrega3.id_for_label }}">Tiempo de entrega</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group marca-field d-none mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-tag"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.marca3|add_class:"form-control"|append_attr:"placeholder=Marca" }}
+                                        <label for="{{ form_item.marca3.id_for_label }}">Marca</label>
+                                    </div>
+                                </div>
+                                <div class="input-group sv-input-group modelo-field d-none">
+                                    <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                                    <div class="form-floating flex-grow-1">
+                                        {{ form_item.modelo3|add_class:"form-control"|append_attr:"placeholder=Modelo" }}
+                                        <label for="{{ form_item.modelo3.id_for_label }}">Modelo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sv-card-footer">
+                <div class="d-flex justify-content-end">
+                    <button class="sv-btn sv-btn-primary" name="btn_producto" id="btn_producto"
+                            type="submit" value="Agregar">
+                        <i class="fa-solid fa-plus"></i>
+                        Agregar producto
+                    </button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Productos del comparativo
+                </h2>
+                <p class="sv-card-subtitle">
+                    Partidas capturadas y precios unitarios por propuesta.
+                </p>
+            </div>
+            <span class="sv-badge sv-badge-primary">
+                {{ productos|length }} producto{{ productos|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide">
+                <thead>
+                    <tr>
+                        <th scope="col">Producto</th>
+                        <th scope="col" class="text-center">Cantidad</th>
+                        <th scope="col">Propuesta 1</th>
+                        <th scope="col">Propuesta 2</th>
+                        <th scope="col">Propuesta 3</th>
+                        <th scope="col" class="text-center">Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="mytbl">
+                    {% for producto in productos %}
+                    <tr>
+                        <td>
+                            <span class="sv-cell-title d-block">{{ producto.producto.producto.nombre }}</span>
+                            <span class="sv-cell-subtitle d-block">
+                                {{ producto.producto.producto.codigo }} · {{ producto.producto.producto.unidad.nombre }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="sv-badge sv-badge-neutral">{{ producto.cantidad|floatformat:2 }}</span>
+                        </td>
+                        <td><strong>$ {{ producto.precio|floatformat:2 }}</strong></td>
+                        <td><strong>$ {{ producto.precio2|floatformat:2 }}</strong></td>
+                        <td><strong>$ {{ producto.precio3|floatformat:2 }}</strong></td>
+                        <td class="text-center">
+                            <a class="sv-btn sv-btn-danger sv-btn-icon js-delete-product"
+                               href="{% url 'articulo-comparativo-delete' producto.id %}"
+                               title="Eliminar producto" aria-label="Eliminar producto">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-box-open"></i></span>
+                                <span class="sv-empty-title">Sin productos agregados</span>
+                                <span class="sv-cell-subtitle">Agrega al menos una partida para crear el comparativo.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
 </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-
-tiempoCheck.addEventListener('change', function() {
-var tiempoCheck = this;
-var tiempoFields = document.getElementsByClassName("tiempo-field");
-    for (var i = 0; i < tiempoFields.length; i++) {
-        if(tiempoCheck.checked) {
-            tiempoFields[i].classList.remove("d-none");
-        } else {
-            tiempoFields[i].classList.add("d-none");
-        }
-    }
-});
-
-marcaCheck.addEventListener('change', function() {
-var marcaCheck = document.getElementById("marcaCheck");
-var marcaFields = document.getElementsByClassName("marca-field");
-    for (var i = 0; i < marcaFields.length; i++) {
-        if(marcaCheck.checked) {
-            marcaFields[i].classList.remove("d-none");
-        } else {
-            marcaFields[i].classList.add("d-none");
-        }
-    }
-});
-
-modeloCheck.addEventListener('change', function() {
-var modeloCheck = document.getElementById("modeloCheck");
-var modeloFields = document.getElementsByClassName("modelo-field");
-    for (var i = 0; i < modeloFields.length; i++) {
-        if(modeloCheck.checked) {
-            modeloFields[i].classList.remove("d-none");
-        } else {
-            modeloFields[i].classList.add("d-none");
-        }
-    }
-});
-
-//document.getElementById('start_upload').addEventListener('click',show_file_input)
-//document.getElementById('cancel').addEventListener('click',cancel_show)
-
-function show_file_input() {
-    var form = document.getElementById('FileForm');
-    var btn_start = document.getElementById('start_upload');
-    form.classList.remove('d-none');
-    btn_start.classList.add('d-none');
-};
-
-function cancel_show(){
-    var form = document.getElementById('FileForm');
-    var btn_start = document.getElementById('start_upload');
-    form.classList.add('d-none');
-    btn_start.classList.remove('d-none');
-};
-
-$(document).ready(function(){
-    $('#id_proveedor').select2({
-        placeholder:'Seleccione Proveedor',
-        escapeMarkup : function(markup){
-            return markup;
-        },
-        
-        allowClear: true,
-        width: '100%',
-        ajax: {
-            url: "{% url 'carga-proveedor-comparativo' %}",
-            datatype: 'json',
-            delay: 250,
-            data: function (params){
-                return {
-                    term: params.term
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function(item){
-                        return {id: item.id, text: item.razon_social};
-                    })
-
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    
-});
-
-$(document).ready(function(){
-    $('#id_proveedor2').select2({
-        placeholder:'Seleccione Proveedor',
-        escapeMarkup : function(markup){
-            return markup;
-        },
-        allowClear: true,
-        width: '100%',
-        ajax: {
-            url: "{% url 'carga-proveedor-comparativo' %}",
-            datatype: 'json',
-            delay: 250,
-            data: function (params){
-                return {
-                    term: params.term
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function(item){
-                        return {id: item.id, text: item.razon_social};
-                    })
-
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    
-});
-
-$(document).ready(function(){
-    $('#id_proveedor3').select2({
-        placeholder:'Seleccione Proveedor',
-        escapeMarkup : function(markup){
-            return markup;
-        },
-        allowClear: true,
-        width: '100%',
-        
-        ajax: {
-            url: "{% url 'carga-proveedor-comparativo' %}",
-            datatype: 'json',
-            delay: 250,
-            data: function (params){
-                return {
-                    term: params.term
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function(item){
-                        return {id: item.id, text: item.razon_social};
-                    })
-
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    
-});
-
-
-
-$(document).ready(function(){
-    $('#id_producto').select2({
-        placeholder:'Selecciona el producto',
-
-        escapeMarkup : function(markup){
-            return markup;
-        },
-        allowClear: true,
-        width: '100%',
-        
-        ajax: {
-            url: "{% url 'carga-productos' %}",
-            datatype: 'json',
-            delay: 250,
-            data: function (params){
-                return {
-                    term: params.term
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function(item){
-                        return {id: item.id, text: item.producto__nombre};
-                    })
-
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    
-});
-
-function formatRepo (repo) {
-    if (repo.loading) {
-        return repo.text;
-    }
-
-    var $container = $("<div class='select2-result-repository clearfix'>" +
-        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
-        "</div>");
-
-    $container.find(".select2-result-repository__title").text(repo.text);
-    // Aquí podrías agregar más elementos al contenedor si es necesario.
-
-    return $container;
-}
-function formatRepoSelection (repo) {
-    return repo.text || repo.id;
-}
-
 document.addEventListener('DOMContentLoaded', function () {
-    var links = document.querySelectorAll('.download-link');
-    links.forEach(function(link) {
-        var url = link.getAttribute('href');
-        if (url.endsWith('.pdf')) {
-            link.classList.add('btn-outline-danger');
-        } else if (url.endsWith('.xlsx')) {
-            link.classList.add('btn-outline-success');
-        }
+    function configurarCampos(checkId, fieldClass) {
+        const check = document.getElementById(checkId);
+        if (!check) return;
+
+        const fields = Array.from(document.getElementsByClassName(fieldClass));
+        const actualizar = function () {
+            fields.forEach(function (field) {
+                field.classList.toggle('d-none', !check.checked);
+            });
+        };
+
+        check.addEventListener('change', actualizar);
+        actualizar();
+    }
+
+    configurarCampos('tiempoCheck', 'tiempo-field');
+    configurarCampos('marcaCheck', 'marca-field');
+    configurarCampos('modeloCheck', 'modelo-field');
+
+    document.querySelectorAll('.js-delete-product').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            const url = link.href;
+
+            Swal.fire({
+                title: '¿Eliminar producto?',
+                text: 'La partida se retirará del comparativo.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            }).then(function (result) {
+                if (result.isConfirmed) window.location.href = url;
+            });
+        });
     });
 });
 
+$(document).ready(function () {
+    function formatRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        const container = $('<div></div>');
+        $('<span class="sv-cell-title d-block"></span>').text(repo.text || '').appendTo(container);
+        return container;
+    }
+
+    function formatRepoSelection(repo) {
+        return repo.text || repo.id;
+    }
+
+    function configurarSelectAjax(selector, placeholder, url, mapItem) {
+        const element = $(selector);
+        if (!element.length) return;
+
+        // La opción vacía permite que Select2 muestre y procese la “x”.
+        if (!element.find('option[value=""]').length) {
+            element.prepend(new Option('', '', false, false));
+        }
+
+        element.select2({
+            placeholder: placeholder,
+            allowClear: true,
+            width: '100%',
+            ajax: {
+                url: url,
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { term: params.term };
+                },
+                processResults: function (data) {
+                    return { results: $.map(data, mapItem) };
+                },
+                cache: true
+            },
+            minimumInputLength: 1,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+    }
+
+    const proveedorUrl = "{% url 'carga-proveedor-comparativo' %}";
+    ['#id_proveedor', '#id_proveedor2', '#id_proveedor3'].forEach(function (selector) {
+        configurarSelectAjax(selector, 'Seleccionar proveedor', proveedorUrl, function (item) {
+            return { id: item.id, text: item.razon_social };
+        });
+    });
+
+    configurarSelectAjax('#id_producto', 'Seleccionar producto', "{% url 'carga-productos' %}", function (item) {
+        return { id: item.id, text: item.producto__nombre };
+    });
+});
 </script>
 {% endblock %}
-</body>
-</html>

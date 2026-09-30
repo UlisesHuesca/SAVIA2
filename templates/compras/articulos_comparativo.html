@@ -1,68 +1,155 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load static %}
+{% load l10n %}
 
-<html>
-<head>
 {% block title %}Comparativo{% endblock %}
 
-</head>
-
-<body>
 {% block content %}
-
-<div class="modal-dialog modal-lg" style="max-width:100%" role="document">
-    <div class="modal-content">
+<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+    <div class="modal-content sv-modal">
         <div class="modal-header">
-            <h5 class="modal-title">Comparativo</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+            <div>
+                <span class="sv-page-eyebrow">Detalle del comparativo</span>
+                <h2 class="modal-title sv-card-title">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    Comparativo de artículos
+                </h2>
+                <p class="sv-card-subtitle mb-0">
+                    Revisa las cantidades y precios ofrecidos por cada proveedor.
+                </p>
+            </div>
+
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
 
         <div class="modal-body">
-            <div class='box-element-2'>
-            <table class="table table-dark table-striped table-hover mx-2">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Código</th>
-                    <th scope="col">Artículo</th>
-                    <th scope="col">Unidad</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Proveedor</th>
-                    <th scope="col">Precio1</th>
-                    <th scope="col">Proveedor2</th>
-                    <th scope="col">Precio2</th>
-                    <th scope="col">Proveedor3</th>
-                    <th scope="col">Precio3</th>
-                </tr>
-            </thead>
-            <tbody id="mytbl">
-                {% for item in articulos %}
-                <tr>
-                    <td scope="col"><img class='row-image' src="{{item.producto.producto.imageURL}}"></td>
-                    <td scope="col">{{item.producto.producto.codigo}}</td>
-                    <td scope="col">{{item.producto.producto.nombre}}</td>
-                    <td scope="col">{{item.producto.producto.unidad}}</td>
-                    <td scope="col"><p class='quantity' id='prod_quantity'>{{item.cantidad}}</p></td>
-                    <td scope="col">{{item.comparativo.proveedor.razon_social}}</td>
-                    <td scope="col">{{item.precio|floatformat:2}}</td>
-                    <td scope="col">{{item.comparativo.proveedor2.razon_social}}</td>
-                    <td scope="col">{{item.precio2|floatformat:2}}</td>
-                    <td scope="col">{{item.comparativo.proveedor3.razon_social}}</td>
-                    <td scope="col">{{item.precio3|floatformat:2}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            </table>
-            </div>
+            <section class="sv-card">
+                <div class="sv-card-header">
+                    <div>
+                        <h3 class="sv-card-title">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            Artículos cotizados
+                        </h3>
+                        <p class="sv-card-subtitle">
+                            Cada propuesta agrupa al proveedor y su precio correspondiente.
+                        </p>
+                    </div>
+
+                    <span class="sv-badge sv-badge-primary">
+                        {{ articulos|length }} artículo{{ articulos|length|pluralize }}
+                    </span>
+                </div>
+
+                <div class="sv-table-wrap">
+                    <table class="sv-table sv-table-wide">
+                        <thead>
+                            <tr>
+                                <th scope="col">Imagen</th>
+                                <th scope="col">Artículo</th>
+                                <th scope="col" class="text-center">Cantidad</th>
+                                <th scope="col">Propuesta 1</th>
+                                <th scope="col">Propuesta 2</th>
+                                <th scope="col">Propuesta 3</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="mytbl">
+                            {% for item in articulos %}
+                            <tr>
+                                <td>
+                                    {% if item.producto.producto.imageURL %}
+                                    <img class="row-image rounded"
+                                         src="{{ item.producto.producto.imageURL }}"
+                                         alt=""
+                                         loading="lazy">
+                                    {% else %}
+                                    <span class="sv-btn sv-btn-outline sv-btn-icon" aria-hidden="true">
+                                        <i class="fa-solid fa-box"></i>
+                                    </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="sv-cell-title d-block">
+                                        {{ item.producto.producto.nombre }}
+                                    </span>
+                                    <span class="sv-cell-subtitle d-block">
+                                        Código: {{ item.producto.producto.codigo|default:"Sin código" }}
+                                    </span>
+                                    <span class="sv-cell-subtitle d-block">
+                                        Unidad: {{ item.producto.producto.unidad|default:"—" }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="sv-badge sv-badge-neutral">
+                                        {{ item.cantidad }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% if item.comparativo.proveedor %}
+                                    <span class="sv-cell-title d-block">
+                                        {{ item.comparativo.proveedor.razon_social }}
+                                    </span>
+                                    <span class="sv-cell-subtitle d-block">Precio unitario</span>
+                                    <strong>$ {{ item.precio|floatformat:2 }}</strong>
+                                    {% else %}
+                                    <span class="sv-cell-subtitle">Sin propuesta</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if item.comparativo.proveedor2 %}
+                                    <span class="sv-cell-title d-block">
+                                        {{ item.comparativo.proveedor2.razon_social }}
+                                    </span>
+                                    <span class="sv-cell-subtitle d-block">Precio unitario</span>
+                                    <strong>$ {{ item.precio2|floatformat:2 }}</strong>
+                                    {% else %}
+                                    <span class="sv-cell-subtitle">Sin propuesta</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if item.comparativo.proveedor3 %}
+                                    <span class="sv-cell-title d-block">
+                                        {{ item.comparativo.proveedor3.razon_social }}
+                                    </span>
+                                    <span class="sv-cell-subtitle d-block">Precio unitario</span>
+                                    <strong>$ {{ item.precio3|floatformat:2 }}</strong>
+                                    {% else %}
+                                    <span class="sv-cell-subtitle">Sin propuesta</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="sv-empty">
+                                        <span class="sv-empty-icon">
+                                            <i class="fa-solid fa-box-open"></i>
+                                        </span>
+                                        <span class="sv-empty-title">No hay artículos registrados</span>
+                                        <span class="sv-cell-subtitle">
+                                            Este comparativo todavía no contiene productos.
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
 
         <div class="modal-footer">
+            <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+                <i class="fa-solid fa-xmark"></i>
+                Cerrar
+            </button>
         </div>
     </div>
 </div>
-
-
-
 {% endblock %}
-</body>
-</html>
