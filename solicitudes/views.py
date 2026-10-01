@@ -262,7 +262,8 @@ def checkout(request):
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito=usuario.distritos )
     subproyectos = Subproyecto.objects.all()
     activos_veracruz = Activo.objects.filter(responsable__distritos__nombre__in = ["VILLAHERMOSA","VERACRUZ"] ).exclude(estatus__nombre = "BAJA")
-    activos = Activo.objects.filter(responsable__distritos = usuario.distritos).exclude(estatus__nombre = "BAJA")
+    categorias_excluidas = ["COMPUTO", "CELULAR", "OTRO"]
+    activos = Activo.objects.filter(responsable__distritos = usuario.distritos).exclude(estatus__nombre = "ALTA").exclude(categoria__nombre__in=categorias_excluidas).order_by("eco_unidad")
     tipo = Tipo_Orden.objects.get(tipo ='normal')
     #sectores = Sector.objects.all()
     operaciones = Operacion.objects.exclude(nombre='GASTO')

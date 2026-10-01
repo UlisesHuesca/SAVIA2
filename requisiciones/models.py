@@ -98,6 +98,7 @@ class ValeSalidas(models.Model):
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Almacen')
     proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True, blank=True)
     subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True, blank=True)
+    activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True, blank = True)
     material_recibido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Vale')
     created_at = models.DateField(default=timezone.now)
     complete = models.BooleanField(null=True, default=False)

@@ -1499,6 +1499,7 @@ def reporte_solicitudes_api(request):
             'BRASIL',
             'ALTAMIRA ALTERNATIVO',
             'VH SECTOR 6',
+            'Yerod',
         ])
         .exclude(vale_salida__folio__isnull=True)
 

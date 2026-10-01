@@ -21,7 +21,7 @@ class DevolucionArticulosForm(forms.ModelForm):
 class ValeSalidasForm(forms.ModelForm):
     class Meta:
         model = ValeSalidas
-        fields = ['material_recibido_por','comentario']
+        fields = ['material_recibido_por','comentario','activo',]
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)

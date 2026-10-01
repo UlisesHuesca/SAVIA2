@@ -2,323 +2,569 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Agregar Proveedor{% endblock %}
 
-</head>
-<body>
+{% block title %}Agregar proveedor{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<div class="container">
-    <div class="row mt-5">
-        <div class="col-md-8 offset-md-3">
-            <div class="border bg-white p-3">
-                <h3>Agregar Proveedor [Nuevo]</h3>
-                <hr>
-                {% if error_messages %}
-                        <div class="alert alert-danger" role="alert">
-                            {{error_messages}}
-                        </div>
-                {% endif %}
-                <form method="POST" class="post-form" id='ProductForm'>
-                    {% csrf_token %}
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón Social"}}
-                            <label for="id_lugar_partida">Razón Social*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-12">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card-clip"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {% if usuario.distritos.nombre == "BRASIL" %}
-                                {{form.rfc|add_class:"form-control"|append_attr:"placeholder=CNPJ/CPF"}}
-                                <label for="id_lugar_partida">CPF*</label>
-                            {% else %}
-                                {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
-                                <label for="id_lugar_partida">RFC*</label>
-                            {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.familia|add_class:"form-control"|append_attr:"placeholder=Familia"}}
-                            <label for="id_lugar_partida">Familia</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row ms-3 my-2">
-                        <div class="form-check form-switch col-sm">
-                        <label for="form.visita" class="form-check-label"><strong>Visita</strong></label>
-                            {{form.visita|add_class:"form-check-input"}}
-                        </div>
-                    </div>
-                    {{ formset.management_form}}
-                    <hr>
-                    {% for f in formset %}
-                    {{f.id}}
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
-                            <label for="id_lugar_partida">Domicilio*</label>
-                            </div>
-                        </div>
-                    </div>
-                   
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto"}}
-                            <label for="id_lugar_partida">Contacto*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-map-location"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.estado|add_class:"form-select required"|append_attr:"placeholder=Estado"}}
-                            <label for="id_lugar_partida">Estado*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.telefono|add_class:"form-control required"|append_attr:"placeholder=Teléfono"}}
-                            <label for="id_lugar_partida">Teléfono*</label>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-at"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.email|add_class:"form-control required"|append_attr:"placeholder=Email"}}
-                            <label for="id_lugar_partida">Email*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.email_opt|add_class:"form-control"|append_attr:"placeholder=Email 2"}}
-                            <label for="id_lugar_partida">Email 2*</label>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.banco|add_class:"form-control"|append_attr:"placeholder=Banco"}}
-                            <label for="id_lugar_partida">Banco*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
-                            <label for="id_lugar_partida">Cuenta*</label>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
-                            <label for="id_clabe">Clabe*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% if usuario.distritos.nombre == "BRASIL" %}
-                                {{f.swift|add_class:"form-control"|append_attr:"placeholder=Agencia"}}
-                                <label for="id_clabe">Sucursal</label>
-                                {% else %}
-                                {{f.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
-                                <label for="id_clabe">Swift</label>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
-                            <label for="id_lugar_partida">Financiamiento*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito"}}
-                            <label for="id_lugar_partida">Distrito*</label>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{f.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
-                                <label for="id_lugar_partida">Días de crédito*</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{f.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
-                                <label for="id_lugar_partida">Status*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{f.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia"}}
-                                <label for="id_lugar_partida">Referencia</label>
-                                </div>
-                            </div>
-                        </div>
-                         <div class="col-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">  
-                                    {% if usuario.distritos.nombre == "BRASIL" %}
-                                    {{f.convenio|add_class:"form-control"|append_attr:"placeholder=Número de Banco"}}
-                                    <label for="id_lugar_partida">Número de Banco</label>
-                                    {% else %}
-                                    {{f.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
-                                    <label for="id_lugar_partida">Convenio</label>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">  
-                                {% if usuario.distritos.nombre == "BRASIL" %}
-                                    {{f.spid|add_class:"form-control"|append_attr:"placeholder=Pix"}}
-                                    <label for="id_clabe">Pix*</label>
-                                {% else %} 
-                                    {{f.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
-                                    <label for="id_clabe">Spid*</label>    
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>  
-                    <div class="row ms-3 my-2">
-                        <div class="form-check form-switch col-sm">
-                        <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>
-                            {{f.producto|add_class:"form-check-input"}}
-                        </div>
-                    </div>
-                    <div class="row ms-3 my-2">
-                        <div class="form-check form-switch col-sm">
-                        <label for="form.logistica" class="form-check-label"><strong>Servicio</strong></label>
-                            {{f.servicio|add_class:"form-check-input"}}
-                        </div>
-                    </div>
-                    <div class="row ms-3 my-2">
-                        <div class="form-check form-switch col-sm">
-                        <label for="form.logistica" class="form-check-label"><strong>Arrendamiento</strong></label>
-                            {{f.arrendamiento|add_class:"form-check-input"}}
-                        </div>
-                    </div>
-                    {% endfor %}
-                    <hr>
-                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
-                    <input id="BtnActualizar" class="btn btn-outline-info d-none" type='submit' value="Actualizar">
-                </form>
-            </div>
+<style>
+    .sv-provider-form .form-floating,
+    .sv-provider-form .form-floating > .form-control,
+    .sv-provider-form .form-floating > .form-select {
+        min-width: 0;
+    }
+
+    .sv-provider-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .sv-provider-option {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        min-height: 3.25rem;
+        padding: .75rem 1rem;
+        border: 1px solid var(--sv-border, #d8e0e6);
+        border-radius: .75rem;
+        background: var(--sv-surface, #fff);
+    }
+
+    .sv-provider-option .form-check-input {
+        flex: 0 0 auto;
+        margin: 0;
+    }
+
+    .sv-select2-field {
+        display: grid;
+        grid-template-columns: 3.5rem minmax(0, 1fr);
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .sv-select2-field__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.5rem;
+        color: var(--sv-text, #243746);
+        background: var(--sv-surface-muted, #f1f5f7);
+        border: 1px solid var(--sv-border, #ced8df);
+        border-radius: .75rem 0 0 .75rem;
+    }
+
+    .sv-select2-field__control {
+        min-width: 0;
+    }
+
+    .sv-select2-field__control .select2-container {
+        display: block;
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    .sv-select2-field__control .select2-selection--single {
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 3.5rem !important;
+        min-height: 3.5rem;
+        border-left: 0 !important;
+        border-radius: 0 .75rem .75rem 0 !important;
+    }
+
+    .sv-select2-field__control .select2-selection__rendered {
+        width: 100%;
+        min-width: 0;
+        padding-left: 1rem !important;
+        padding-right: 4rem !important;
+        line-height: normal !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sv-select2-field__control .select2-selection__arrow {
+        top: 50% !important;
+        right: .65rem !important;
+        transform: translateY(-50%);
+    }
+
+    .sv-select2-field__control .select2-selection__clear {
+        position: absolute !important;
+        top: 50%;
+        right: 2.4rem;
+        z-index: 2;
+        margin: 0 !important;
+        transform: translateY(-50%);
+    }
+</style>
+
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Catálogo de proveedores</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-building-circle-check"></i>
+                </span>
+                Agregar proveedor
+            </h1>
+            <p class="sv-page-subtitle">
+                Registra los datos fiscales, de contacto, bancarios y comerciales del proveedor.
+            </p>
         </div>
 
+        <div class="sv-actions">
+            <a class="sv-btn sv-btn-outline" href="{% url 'dashboard-proveedores' %}">
+                <i class="fa-solid fa-arrow-left"></i>
+                Volver a proveedores
+            </a>
+        </div>
+    </header>
+
+    {% if messages %}
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+
+    {% if error_messages %}
+    <div class="alert alert-danger" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>
+        {{ error_messages }}
     </div>
-</div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var inputs = document.querySelectorAll("input");
-        inputs.forEach(function(input) {
-            if (input.name.endsWith('-DELETE')) {
-                input.style.display = 'none'; // Oculta el checkbox
-                var label = document.querySelector("label[for='"+input.id+"']"); // Busca el label asociado
-                if (label) { // Si existe un label asociado...
-                    label.style.display = 'none'; // Oculta el label
-                }
-            }
-        });
+    {% endif %}
+
+    {% if form.errors or form_direccion.errors %}
+    <div class="alert alert-danger" role="alert">
+        <div class="fw-semibold mb-1">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>
+            Revisa los siguientes campos:
+        </div>
+
+        {% for field in form %}
+            {% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+
+        {% for field in form_direccion %}
+            {% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}
+        {% endfor %}
+        {% for error in form_direccion.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="sv-provider-form" id="ProductForm" novalidate>
+        {% csrf_token %}
+        {{ form_direccion.id }}
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-address-card"></i>
+                        Datos generales
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Identificación fiscal y clasificación principal del proveedor.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón social" }}
+                                <label for="{{ form.razon_social.id_for_label }}">Razón social *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-id-card-clip"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{ form.rfc|add_class:"form-control"|append_attr:"placeholder=CNPJ/CPF" }}
+                                    <label for="{{ form.rfc.id_for_label }}">CNPJ/CPF *</label>
+                                {% else %}
+                                    {{ form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC" }}
+                                    <label for="{{ form.rfc.id_for_label }}">RFC *</label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="sv-select2-field">
+                            <span class="sv-select2-field__icon" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.familia|add_class:"form-select"}}
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="sv-provider-options">
+                            <label class="sv-provider-option" for="{{ form.visita.id_for_label }}">
+                                {{ form.visita|add_class:"form-check-input" }}
+                                <span>
+                                    <strong class="d-block">Requiere visita</strong>
+                                    <small class="sv-cell-subtitle">Marca esta opción cuando el proveedor necesite visita de validación.</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-location-dot"></i>
+                        Contacto y domicilio
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Información de localización y medios de contacto.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio" }}
+                                <label for="{{ form_direccion.domicilio.id_for_label }}">Domicilio *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-user-tie"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto" }}
+                                <label for="{{ form_direccion.contacto.id_for_label }}">Contacto *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="sv-select2-field">
+                            <span class="sv-select2-field__icon" aria-hidden="true">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </span>
+                            <div class="sv-select2-field__control">
+                                {{ form_direccion.estado|add_class:"form-select required" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.telefono|add_class:"form-control required"|append_attr:"placeholder=Teléfono" }}
+                                <label for="{{ form_direccion.telefono.id_for_label }}">Teléfono *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.email|add_class:"form-control required"|append_attr:"placeholder=Correo electrónico" }}
+                                <label for="{{ form_direccion.email.id_for_label }}">Correo electrónico *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.email_opt|add_class:"form-control"|append_attr:"placeholder=Correo alternativo" }}
+                                <label for="{{ form_direccion.email_opt.id_for_label }}">Correo alternativo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-building-columns"></i>
+                        Información bancaria
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Cuenta y referencias utilizadas para realizar pagos.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-select2-field">
+                            <span class="sv-select2-field__icon" aria-hidden="true">
+                                <i class="fa-solid fa-building-columns"></i>
+                            </span>
+                            <div class="sv-select2-field__control">
+                                {{ form_direccion.banco|add_class:"form-select" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-money-check-dollar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta" }}
+                                <label for="{{ form_direccion.cuenta.id_for_label }}">Cuenta</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.clabe|add_class:"form-control"|append_attr:"placeholder=CLABE" }}
+                                <label for="{{ form_direccion.clabe.id_for_label }}">CLABE</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-code-branch"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{ form_direccion.swift|add_class:"form-control"|append_attr:"placeholder=Sucursal" }}
+                                    <label for="{{ form_direccion.swift.id_for_label }}">Sucursal</label>
+                                {% else %}
+                                    {{ form_direccion.swift|add_class:"form-control"|append_attr:"placeholder=SWIFT" }}
+                                    <label for="{{ form_direccion.swift.id_for_label }}">SWIFT</label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-file-signature"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{ form_direccion.convenio|add_class:"form-control"|append_attr:"placeholder=Número de banco" }}
+                                    <label for="{{ form_direccion.convenio.id_for_label }}">Número de banco</label>
+                                {% else %}
+                                    {{ form_direccion.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio" }}
+                                    <label for="{{ form_direccion.convenio.id_for_label }}">Convenio</label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{ form_direccion.pix|add_class:"form-control"|append_attr:"placeholder=PIX" }}
+                                    <label for="{{ form_direccion.pix.id_for_label }}">PIX</label>
+                                {% else %}
+                                    {{ form_direccion.spid|add_class:"form-control"|append_attr:"placeholder=SPID" }}
+                                    <label for="{{ form_direccion.spid.id_for_label }}">SPID</label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-handshake"></i>
+                        Condiciones comerciales
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Configura el distrito, crédito, estado y tipos de operación permitidos.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-coins"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento" }}
+                                <label for="{{ form_direccion.financiamiento.id_for_label }}">Financiamiento</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-warehouse"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito" }}
+                                <label for="{{ form_direccion.distrito.id_for_label }}">Distrito *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar-days"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito" }}
+                                <label for="{{ form_direccion.dias_credito.id_for_label }}">Días de crédito</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-signal"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.estatus|add_class:"form-control"|append_attr:"placeholder=Estado" }}
+                                <label for="{{ form_direccion.estatus.id_for_label }}">Estado *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-address-book"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia" }}
+                                <label for="{{ form_direccion.referencia.id_for_label }}">Referencia</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="sv-provider-options">
+                            <label class="sv-provider-option" for="{{ form_direccion.producto.id_for_label }}">
+                                {{ form_direccion.producto|add_class:"form-check-input" }}
+                                <span><strong>Producto</strong></span>
+                            </label>
+
+                            <label class="sv-provider-option" for="{{ form_direccion.servicio.id_for_label }}">
+                                {{ form_direccion.servicio|add_class:"form-check-input" }}
+                                <span><strong>Servicio</strong></span>
+                            </label>
+
+                            <label class="sv-provider-option" for="{{ form_direccion.arrendamiento.id_for_label }}">
+                                {{ form_direccion.arrendamiento|add_class:"form-check-input" }}
+                                <span><strong>Arrendamiento</strong></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-card">
+            <div class="sv-card-body">
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                    <a class="sv-btn sv-btn-outline" href="{% url 'dashboard-proveedores' %}">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancelar
+                    </a>
+
+                    <button id="BtnActualizar" class="sv-btn sv-btn-success d-none" type="submit">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Guardar proveedor
+                    </button>
+                </div>
+            </div>
+        </section>
+    </form>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('ProductForm');
+    const submitButton = document.getElementById('BtnActualizar');
+
+    if (!form || !submitButton) return;
+
+    form.querySelectorAll('input').forEach(function (input) {
+        if (!input.name.endsWith('-DELETE')) return;
+
+        input.classList.add('d-none');
+
+        const label = form.querySelector('label[for="' + input.id + '"]');
+        if (label) label.classList.add('d-none');
     });
 
-// Selecciona todos los campos requeridos
-let requiredFields = document.querySelectorAll('.required');
-// Selecciona el botón de envío
-let submitButton = document.getElementById('BtnActualizar');
+    const requiredFields = Array.from(form.querySelectorAll('.required'));
 
-
-// Escucha los eventos de entrada en los campos requeridos
-requiredFields.forEach(function(field) {
-    
-    field.addEventListener('input', function() {
-        // Verifica si todos los campos requeridos están llenos
-        let isFormValid = Array.from(requiredFields).every(function(field) {
-            return field.value;
+    function actualizarBoton() {
+        const formularioCompleto = requiredFields.every(function (field) {
+            return field.disabled || String(field.value || '').trim() !== '';
         });
 
-        // Muestra el botón de envío solo si todos los campos requeridos están llenos
-        if (isFormValid) {
-            submitButton.setAttribute('class',"btn btn-outline-info");
-            
-        } else {
-            console.log(requiredFields)
-            submitButton.setAttribute('class',"btn btn-outline-info d-none");
+        submitButton.classList.toggle('d-none', !formularioCompleto);
+    }
+
+    requiredFields.forEach(function (field) {
+        field.addEventListener('input', actualizarBoton);
+        field.addEventListener('change', actualizarBoton);
+    });
+
+    function configurarSelect2(selector, placeholder, allowClear) {
+        const field = window.jQuery(selector);
+
+        if (!field.length || !window.jQuery.fn.select2) return;
+
+        if (allowClear && !field.find('option[value=""]').length) {
+            field.prepend(new Option('', '', false, false));
         }
-    });
+
+        field.select2({
+            width: '100%',
+            placeholder: placeholder,
+            allowClear: allowClear
+        });
+    }
+
+    configurarSelect2('#{{ form_direccion.banco.id_for_label }}', 'Seleccionar banco', true);
+    configurarSelect2('#{{ form_direccion.estado.id_for_label }}', 'Seleccionar estado', false);
+    configurarSelect2('#{{ form.familia.id_for_label }}', 'Seleccionar familia', true);
+
+    actualizarBoton();
 });
-  </script>
+</script>
 {% endblock %}

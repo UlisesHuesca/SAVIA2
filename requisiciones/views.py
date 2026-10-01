@@ -36,7 +36,7 @@ from decimal import Decimal
 from PIL import Image
 from solicitudes.models import Proyecto, Subproyecto
 from solicitudes.filters import SolicitudesFilter
-from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Inventario_Batch, Product, Marca
+from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Inventario_Batch, Product, Marca, Activo
 from dashboard.forms import  Inventario_BatchForm
 from entradas.models import Entrada, EntradaArticulo
 from requisiciones.models import Salidas, ValeSalidas
@@ -477,6 +477,16 @@ def salida_material(request, pk):
     formVale = ValeSalidasForm()
     form = SalidasForm()
     users = Profile.objects.filter(distritos = usuario.distritos, st_activo = True )
+
+    categorias_excluidas = ["COMPUTO", "CELULAR", "OTRO"]
+
+    formVale.fields["activo"].queryset = Activo.objects.filter(
+        activo__distrito=usuario.distritos,
+        estatus__nombre="ALTA",
+    ).exclude(categoria__nombre__in=categorias_excluidas).order_by("eco_unidad")
+
+    formVale.fields["activo"].required = False
+    formVale.fields["activo"].empty_label = "Usar activo de la solicitud"
 
     material_recibido_por = [
         {'id': user.id, 

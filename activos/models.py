@@ -165,3 +165,37 @@ class UBM_Activo(models.Model):
 
     def __str__(self):
         return f'{self.activo.eco_unidad} - {self.get_tipo_ubm_display()}'
+
+
+class HistorialAsignacionActivo(models.Model):
+
+    class TipoMovimiento(models.TextChoices):
+        ASIGNACION = 'ASIGNACION', 'Asignación'
+        REASIGNACION = 'REASIGNACION', 'Reasignación'
+        DESASIGNACION = 'DESASIGNACION', 'Desasignación'
+
+    activo = models.ForeignKey('dashboard.Activo', on_delete=models.PROTECT,related_name='historial_asignaciones',)
+    responsable_anterior = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, blank=True, related_name='activos_asignacion_anterior',)
+    responsable_nuevo = models.ForeignKey(Profile,on_delete=models.SET_NULL,null=True,blank=True,related_name='activos_asignacion_nueva',)
+    registrado_por = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True,blank=True,related_name='cambios_responsable_activos',)
+    tipo_movimiento = models.CharField(max_length=20,choices=TipoMovimiento.choices,)
+    fecha = models.DateTimeField(auto_now_add=True,db_index=True,)
+    observacion = models.CharField(max_length=255, blank=True,default='',)
+    #eco_unidad = models.CharField(max_length=50, blank=True, default='',)
+
+    class Meta:
+        ordering = ['-fecha', '-id']
+        verbose_name = 'Historial de asignación de activo'
+        verbose_name_plural = 'Historial de asignaciones de activos'
+        indexes = [
+            models.Index(
+                fields=['activo', '-fecha'],
+                name='idx_asig_activo_fecha',
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f'{self.eco_unidad} - '
+            f'{self.get_tipo_movimiento_display()}'
+        )

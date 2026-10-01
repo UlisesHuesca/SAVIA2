@@ -1596,61 +1596,84 @@ def add_proveedor_direccion(request, pk):
 @perfil_seleccionado_required
 def add_proveedores2(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
-    colaborador_sel = Profile.objects.all()
-    usuario = colaborador_sel.get(id = pk_perfil)
-    if usuario.tipo.nombre == "Subdirector_Alt":
-        proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
-        proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
-    elif usuario.tipo.proveedores == True:
-        proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
-        proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
-    
-    proveedores = Proveedor.objects.filter(direcciones__id__in=proveedores_dir_ids)
-    print('proveedores:',proveedores.count())
+    #colaborador_sel = Profile.objects.all()
+    usuario = Profile.objects.get(id = pk_perfil)
+    DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"]  # Sustituir por los IDs reales
 
+   
+
+    
     if usuario.tipo.nombre == "Subdirector_Alt":
-        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDir_Alt_Form, extra=1)
+        FormularioDireccion = Add_ProveedoresDir_Alt_Form
+        #proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
+    elif usuario.tipo.proveedores == True and usuario.distritos.nombre == "BRASIL":
+        FormularioDireccion = Add_ProveedoresDir_Alt_Form
+        DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"] 
+    elif usuario.tipo.proveedores == True and usuario.distritos.nombre == "Yerod":
+            FormularioDireccion = Add_ProveedoresDir_Alt_Form
+            DISTRITOS_EXCLUIDOS = ["BRASIL", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"]
     elif usuario.tipo.proveedores == True:
-        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDireccionesForm, extra=1)
-    else:
-        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=ProveedoresDireccionesForm, extra=1)
-        
+        FormularioDireccion = Add_ProveedoresDireccionesForm
+        DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO", "BRASIL"] 
+    #else: No creo que sea necesario, ya que ningún otro usuario debería tener acceso a esta vista, pero lo dejo comentado por si acaso
+    #    FormularioDireccion = ProveedoresDireccionesForm
+    distritos_disponibles = (
+            Distrito.objects.filter(status=True)
+            .exclude(nombre__in=DISTRITOS_EXCLUIDOS)
+            .order_by('nombre')
+        )
+    # Instancias sin guardar: un GET no crea registros.
+    proveedor = Proveedor(creado_por=usuario)
+    direccion = Proveedor_direcciones(creado_por=usuario)
+
+
+    datos = request.POST if request.method == 'POST' else None
+    archivos = request.FILES if request.method == 'POST' else None
+
+
+    form = ProveedoresForm(datos, archivos, instance=proveedor, prefix='proveedor',)
+
+    form_direccion = FormularioDireccion(datos, archivos, instance=direccion, prefix='direccion',)
+
+    # Debe asignarse antes de is_valid()
+    form_direccion.fields['distrito'].queryset = distritos_disponibles
     error_messages = {}
     if request.method == 'POST':
-        form = ProveedoresForm(request.POST, instance = proveedor)
-        formset = ProveedorDireccionesFormSet(request.POST, instance=proveedor)
-        if form.is_valid() and formset.is_valid():
-            proveedor = form.save(commit=False)
-            proveedor.completo = True
-            proveedor.save()
-            direcciones = formset.save(commit=False)
-            direccion = direcciones[0]
-            #direccion.distrito = usuario.distritos
-            if usuario.tipo.proveedores == False:
-                estatus = Estatus_proveedor.objects.get(nombre ="REVISION")
-                direccion.estatus = estatus
-            direccion.creado_por = usuario
-            direccion.enviado_fecha = date.today()
-            direccion.completo = True
-            direccion.save()
-            messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
-            return redirect('dashboard-proveedores')
-        else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
-            for form in formset.forms:
-                for field, errors in form.errors.items():
-                    error_messages[field] = errors.as_text()
-                
-    else:
-        form = ProveedoresForm(instance=proveedor)
-        formset = ProveedorDireccionesFormSet(instance=proveedor)
+        # Validar por separado permite mostrar errores de ambos.
+        proveedor_valido = form.is_valid()
+        direccion_valida = form_direccion.is_valid()
 
-    #else:
-        #raise Http404("No tienes permiso para ver esta vista")
+        if proveedor_valido and direccion_valida:
+            with transaction.atomic():
+                proveedor = form.save(commit=False)
+                proveedor.creado_por = usuario
+                proveedor.completo = True
+                proveedor.save()
+                form.save_m2m()
+                direccion = form_direccion.save(commit=False)
+                direccion.nombre = proveedor
+                direccion.creado_por = usuario
+                direccion.enviado_fecha = date.today()
+                direccion.completo = True
+               
+                if usuario.tipo.proveedores == False:
+                    estatus = Estatus_proveedor.objects.get(nombre ="REVISION")
+                    direccion.estatus = estatus
+                direccion.save()
+                form_direccion.save_m2m()
+                messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
+                return redirect('dashboard-proveedores')
+            for prefijo, formulario in (
+                ('proveedor', form),
+                ('direccion', form_direccion),
+            ):
+                for campo, errores in formulario.errors.items():
+                    error_messages[f'{prefijo}.{campo}'] = errores.as_text()
+                
+    
     context = {
         'form': form,
-        'formset': formset,
+        'form_direccion': form_direccion,
         'error_messages': error_messages,
     }
     return render(request, 'dashboard/add_proveedores_&_direccion.html', context)
