@@ -389,7 +389,7 @@ def checkout(request):
                 "nombre_solicitante": nombre_solicitante,
                 "articulos": articulos_correo,
             })
-            if usuario.tipo.supervisor == True or usuario.distritos.nombre == "BRASIL": #Si el usuario es supervisor
+            if usuario.tipo.supervisor == True or usuario.distritos.nombre == "BRASIL" or usuario.distritos.nombre == "Yerod": #Si el usuario es supervisor
                
                 for producto in productos:
                     # We fetch inventory product corresponding to product (that's why we use product.id)
