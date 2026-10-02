@@ -9,7 +9,11 @@
 
 {% block content %}
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<style>
+    #loadingIndicator wa-random-content:not(:defined) {
+    visibility: hidden;
+}
+</style>
 {% if messages %}
     {% for message in messages %}
     <script>
@@ -563,28 +567,61 @@
         </div>
     </div>
 
-    <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body d-flex align-items-center gap-3">
-                    {% if usuario.distritos.nombre == "Yerod" %}
-                    <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
-                    {% else %}
-                    <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
-                    {% endif %}
-                    <div>
-                        <strong>Generando reporte</strong>
-                        <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
+    <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loadingIndicatorTitle" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body d-flex align-items-center gap-3">
+
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Yerod"
+                     width="72"
+                     height="72"
+                     class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="SAVIA Vordcab"
+                     width="96"
+                     class="img-fluid rounded">
+                {% endif %}
+
+                <div>
+                    <strong id="loadingIndicatorTitle">
+                        Generando reporte
+                    </strong>
+
+                    <p class="sv-cell-subtitle mb-0" role="status">
+                        Por favor espera…
+                        <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+                    </p>
+
+                    <div class="sv-cell-subtitle mt-2" aria-hidden="true">
+                        <wa-random-content
+                            mode="sequence"
+                            animation="fade"
+                            autoplay
+                            autoplay-interval="4000">
+                            <span>Un café mientras los datos toman forma.</span>
+                            <span>Cada dato cuenta para tomar mejores decisiones.</span>
+                            <span>Una buena decisión comienza con información clara.</span>
+                            <span>SAVIA conecta la información de tu operación.</span>
+                        </wa-random-content>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
+</div>
 </main>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script type="module"> import 'https://ka-f.webawesome.com/webawesome@3.14.0/components/random-content/random-content.js';</script>
 <script>
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const dialogElement = document.getElementById("dialog");
     const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
