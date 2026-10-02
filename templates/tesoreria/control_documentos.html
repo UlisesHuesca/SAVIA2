@@ -5,792 +5,796 @@
 {% load tt_extras %}
 {% load l10n %}
 
-<html>
-<head>
 {% block title %}Control de Documentos{% endblock %}
-</head>
-<body>
 
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<div class = "col" id="response-div">
-        <div class="card">
-            <div class="card-header">
-            <h5>Filtro de Pagos</h5>
+<main class="sv-page sv-page-with-navbar" id="response-div">
+    <header class="sv-page-header">
+        <div>
+            <div class="sv-page-eyebrow">Tesorería</div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-folder-tree"></i></span>
+                Control de documentos
+            </h1>
+            <p class="sv-page-subtitle">Consulta los pagos, revisa sus documentos y agrúpalos en un Exhibit.</p>
+        </div>
+    </header>
+
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-filter"></i> Filtro de pagos</h2>
+                <p class="sv-card-subtitle">Localiza movimientos por folio, proyecto, responsable, documentos o periodo.</p>
             </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row">
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                                <label style="color: #121212;" for="id_id">Proyecto</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
-                                <label style="color: #121212;" for="id_id">Tipo</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{ myfilter.form.tiene_facturas|add_class:"form-control"|append_attr:"placeholder= Tiene Facturas"}}
-                                <label style="color: #121212;" for="id_id">Tiene Facturas</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder= Facturas Completas"}}
-                                <label style="color: #121212;" for="id_id">Facturas Completas</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.tesorero|add_class:"form-control"|append_attr:"placeholder= Tesorero"}}
-                                <label style="color: #121212;" for="id_id">Tesorero</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor/Colaborador"}}
-                                <label style="color: #121212;" for="id_id">Proveedor/Colaborador</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                            </div>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="sv-filter-grid sv-filter-grid-4">
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                            <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
                         </div>
                     </div>
 
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto" }}
+                            <label for="{{ myfilter.form.proyecto.id_for_label }}">Proyecto</label>
+                        </div>
                     </div>
-                </div>
-                </form>
-            </div>
-        </div>
-</div>
 
-<div class = "row my-4">
-<div class = "col-sm-12 col-lg-2">
-    <div class="card">
-        <form id = "reporteForm" method=POST>
-        {% csrf_token %}
-        <div class="card-header">
-            <h6>Reportes</h6>
-        </div>
-        <div class="card-body">
-            <ul class="nav nav-pills">
-                    <li class="nav-item mx-2">
-                        <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                            <i class="fa-solid fa-file-excel fa-2xl"></i>
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder=Tipo" }}
+                            <label for="{{ myfilter.form.tipo.id_for_label }}">Tipo</label>
+                        </div>
+                    </div>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-file-invoice"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.tiene_facturas|add_class:"form-control"|append_attr:"placeholder=Tiene facturas" }}
+                            <label for="{{ myfilter.form.tiene_facturas.id_for_label }}">Tiene facturas</label>
+                        </div>
+                    </div>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-file-circle-check"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder=Facturas completas" }}
+                            <label for="{{ myfilter.form.facturas_completas.id_for_label }}">Facturas completas</label>
+                        </div>
+                    </div>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user-shield"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.tesorero|add_class:"form-control"|append_attr:"placeholder=Tesorero" }}
+                            <label for="{{ myfilter.form.tesorero.id_for_label }}">Tesorero</label>
+                        </div>
+                    </div>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user-group"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor o colaborador" }}
+                            <label for="{{ myfilter.form.proveedor.id_for_label }}">Proveedor / colaborador</label>
+                        </div>
+                    </div>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                        </div>
+                    </div>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="sv-btn sv-btn-primary" type="submit">
+                            <i class="fa-solid fa-magnifying-glass"></i> Buscar
                         </button>
-                    </li>
-                    <!--<li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger">
-                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                        <a class="sv-btn sv-btn-outline" href="{{ request.path }}" title="Limpiar filtros">
+                            <i class="fa-solid fa-eraser"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-xl-3">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-chart-line"></i> Reporte de pagos</h2>
+                        <p class="sv-card-subtitle">Exporta los resultados del periodo filtrado.</p>
+                    </div>
+                </div>
+                <div class="sv-card-body">
+                    <form id="reporteForm" method="POST">
+                        {% csrf_token %}
+                        <button name="btnReporte" type="submit" class="sv-btn sv-btn-success" value="Reporte Excel">
+                            <i class="fa-solid fa-file-excel"></i> Generar Excel
                         </button>
-                    </li>-->
-                </ul>
-        </form>
+                    </form>
+                </div>
+            </section>
         </div>
-    </div>
-</div>
-<div class = "col-lg-8">
-    <div class = "card">
-    <form method=POST onsubmit="mostrarIndicadorCarga()">
-        {% csrf_token %}
-        <div class="card-header">
-            <h6>Facturas | Descarga</h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control">
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <input type="date" id="fecha_fin" name="fecha_fin" class="form-control">
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <input id="folio" name="folio" class="form-control">
-                        <label style="color: #121212;" for="id_subproyecto">Folio:</label>
-                    </div>
-                </div>
-            </div>
-            {% if usuario.distritos.nombre == "MATRIZ" %}
-            <div class="col-lg-3 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <select id="distrito" name="distrito" class="form-select">
-                            <option value="">Todos</option>
-                            {% for distrito in distritos %}
-                                <option value="{{ distrito.id }}">{{ distrito.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                        <label style="color: #121212;" for="id_id">Distrito</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <select id="tesorero" name="tesorero" class="form-select">
-                            <option value="">Todos</option>
-                            {% for tesorero in tesoreros %}
-                                <option value="{{ tesorero.id }}">{{ tesorero.staff.staff.first_name }} {{tesorero.staff.staff.last_name}}</option>
-                            {% endfor %}
-                        </select>
-                        <label style="color: #121212;" for="id_id">Tesorero</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <select id="empresa" name="empresa" class="form-select">
-                            <option value="">Todas</option>
-                            {% for empresa in empresas %}
-                                <option value="{{ empresa.id }}">{{ empresa.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                        <label style="color: #121212;" for="empresa">Empresa</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text"><i class="fa-solid fa-bank"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        <select id="cuenta_bancaria" name="cuenta_bancaria" class="form-select">
-                            <option value="">Todas</option>
-                            {% for cuenta in cuentas %}
-                                <option value="{{ cuenta.id }}">{{ cuenta.cuenta }} |({{ cuenta.moneda }})</option>
-                            {% endfor %}
-                        </select>
-                        <label style="color: #121212;" for="cuenta_bancaria">Cuenta bancaria</label>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-                <div class="col-lg-4 col-sm-12">
-               
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">       
-                            <select id="tipo_documento" name="tipo_documento" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="gastos">Gastos</option>
-                                <option value="compras">Compras</option>
-                                <option value="viaticos">Viáticos</option>
-                            </select>
-                            <label for="tipo_documento">Tipo de Documento:</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="validacion" name="validacion">
-                    <img src="{% static 'images/SAT.jpg' %}" alt="Validar SAT"
-                    style="width: 40px; height: auto; vertical-align: middle; margin-right: 8px;">
-                    <label class="form-check-label" for="validacion">Validar en SAT</label>
-                </div>
-            </div>
-            <div class="col-lg-3 col-sm-12 m-3">
-                <button type="submit" name="btnDescargarFacturas" class="btn btn-primary "><i class="fa-solid fa-circle-chevron-down"></i></button>
-               
-                <button name="btnReporteXML" type="submit" class="btn btn-outline-success" value='Reporte Excel de XML' title ="Generar reporte de XML">
-                    <i class="fa-solid fa-file-excel fa-2xl"></i>
-                </button>
-               
-            </div>
-            </div>
-        </div>        
-    </form>
-    </div>
-</div>
-</div>
-        
-    
-    <!-- Aquí terminan el encabezado de los filtros -->
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
+        <div class="col-12 col-xl-9">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-file-arrow-down"></i> Facturas y XML</h2>
+                        <p class="sv-card-subtitle">Descarga documentos o genera el concentrado XML.</p>
+                    </div>
+                </div>
 
-<div class = "card">
-    <form id="form_asignar_exhibit" method="post" action="{% url 'control-documentos' %}">
-       
-        <ul class="nav nav-pills">
-            <li class="nav-item mx-2">
-                <div col-lg-2>
-                    <div class="alert alert-primary" role="alert">Total OC seleccionadas: <span id="oc_count">0</span></div>
-                </div>
-            </li>
-            <li class="nav-item mx-2">
-                <div col-lg-2>
-                    <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
-                </div>
-            </li>
-            <li class="nav-item mx-2">
-                <div class="form-group">
-                    <label for="exhibit_id"><strong>Selecciona un Exhibit:</strong></label>
-                    <select class="form-control" name="exhibit_id" id="exhibit_id" required>
-                        <option value="">--- Selecciona ---</option>
-                        {% for exhibit in exhibits %}
-                            <option value="{{ exhibit.id }}">Folio {{ exhibit.folio }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-              
-            </li>
-            <li class="nav-item mx-2 mt-4">
-                <button name="asignar_exhibit" type="submit" class="btn btn-outline-info">Asignar</button>
-            </li>
-            <li class="nav-item mx-2 mt-4">
-                 <a href="{% url 'matriz-exhibit' %}" class="btn btn-secondary mb-3"> Exhibits</a>
-            </li>
-        </ul>
-       
-   
-    {% csrf_token %}
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
-                <tr>
-                    <th class="d-none d-lg-table-cell">Id</th>
-                    <th scope="col">Compra/Gasto</th>
-                    <th>Distrito</th>
-                    <th class="d-none d-lg-table-cell">Solicitado</th>
-                    <th scope="col">Proyecto</th>
-                    <th class="d-none d-lg-table-cell">Subproyecto</th>
-                    <th scope="col">Autorizado</th>
-                    <th scope="col">Proveedor/Colaborador</th>
-                   
-                    <th scope="col">Facturas Completas</th>
-                    <th>Facturas</th>
-                    <th scope="col">Importe</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Acción</th>
-                    <th>Asignar Exhibit</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pago in pagos_list %}
-                <tr>
-                    <th class="d-none d-lg-table-cell">{{pago.id}}</th>
-                    {% if pago.oc %}
-                        
-                        <td>{{pago.oc.folio}}</td>
-                        <td>{{pago.oc.req.orden.distrito.nombre}}</td>
-                        <td class="d-none d-lg-table-cell">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
-                        <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
-                        <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
-                        <td>{{pago.oc.proveedor}}</td>
-                        
-                        {% if pago.oc.facturas_completas == True %}
-                            <td>Completas</td>
-                        {% else %}
-                            <td>Incompletas</td>
-                        {% endif %}
-                        
-                            <td>
-                                <ul class="nav nav-pills">
-                                    <li class="nav-item mx-1">
-                                        {% if pago.estado_facturas == "sin_facturas" %}
-                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                                <i class="fa-solid fa-file-circle-xmark"></i>
-                                            </a>
-                                        {% elif pago.estado_facturas == "todas_autorizadas" %}
-                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
-                                                <i class="fa-solid fa-file-circle-check"></i>
-                                            </a>
-                                        {% elif pago.estado_facturas == "pendientes" %}
-                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
-                                                <i class="fa-solid fa-file-circle-exclamation"></i>
-                                            </a>
-                                        {% endif %}
-                                    </li>
-                                </ul>
-                            </td>
-                           
-                    {% endif %}
-                   
-                    {% if pago.gasto %}
-                        <td>G{{pago.gasto.folio}}</td>
-                        <td>{{pago.gasto.distrito.nombre}}</td>
-                        <td class="d-none d-lg-table-cell">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
-                        <td>{{pago.gasto.proyecto.nombre}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
-                        <td>{{pago.gasto.superintendente.staff.staff.first_name}} {{pago.gasto.superintendente.staff.staff.last_name}}</td>
-                        {% if pago.gasto.colaborador %}
-                            <td>{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}</td>
-                        {% else %}
-                            <td>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
-                        {% endif %}
-                        {% if pago.gasto.facturas_completas == True %}
-                            <td>Completas</td>
-                        {% else %}
-                            <td>Incompletas</td>
-                        {% endif %}
-                            <td>
-                                <ul class="nav nav-pills">
-                                    <li class="nav-item mx-1">
-                                        {% if pago.estado_facturas == "sin_facturas" %}
-                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                                <i class="fa-solid fa-file-circle-xmark"></i>
-                                            </a>
-                                        {% elif pago.estado_facturas == "todas_autorizadas" %}
-                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
-                                                <i class="fa-solid fa-file-circle-check"></i>
-                                            </a>
-                                        {% elif pago.estado_facturas == "pendientes" %}
-                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
-                                                <i class="fa-solid fa-file-circle-exclamation"></i>
-                                            </a>
-                                        {% endif %}
-                                    </li>
-                                </ul>
-                            </td>
-                    {% endif %}
+                <div class="sv-card-body">
+                    <form method="POST" id="documentDownloadForm">
+                        {% csrf_token %}
+                        <div class="sv-filter-grid sv-filter-grid-4">
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control">
+                                    <label for="fecha_inicio">Desde</label>
+                                </div>
+                            </div>
 
-                    {% if pago.viatico %}
-                        <td>V{{pago.viatico.folio}}</td>
-                        <td>{{pago.viatico.dsitrito.nombre}}</td>
-                        <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
-                        <td>{{pago.viatico.proyecto.nombre}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>
-                        <td>{{pago.viatico.superintendente.staff.staff.first_name}} {{pago.viatico.superintendente.staff.staff.last_name}}</td>
-                        {% if pago.viatico.colaborador %}
-                            <td>{{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}</td>
-                        {% else %}
-                            <td>{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
-                        {% endif %}
-                        {% if pago.viatico.facturas_completas == True %}
-                            <td>Completas</td>
-                        {% else %}
-                            <td>Incompletas</td>
-                        {% endif %}
-                            <td>
-                                <ul class="nav nav-pills">
-                                    <li class="nav-item mx-1">
-                                        {% if pago.estado_facturas == "sin_facturas" %}
-                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                                <i class="fa-solid fa-file-circle-xmark"></i>
-                                            </a>
-                                        {% elif pago.estado_facturas == "todas_autorizadas" %}
-                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
-                                                <i class="fa-solid fa-file-circle-check"></i>
-                                            </a>
-                                        {% elif pago.estado_facturas == "pendientes" %}
-                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
-                                                <i class="fa-solid fa-file-circle-exclamation"></i>
-                                            </a>
-                                        {% endif %}
-                                    </li>
-                                </ul>
-                            </td>
-                    {% endif %}
-                    <td>{{pago.monto|floatformat:2}}</td>
-                    <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
-                    <td>
-                        <ul class="nav nav-pills">
-                            {% if pago.oc %}
-                            <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' pago.oc.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="OC">
-                                <i class="fa-solid fa-file-pdf"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if pago.gasto %}
-                            <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'descargar-pdf-gasto' pago.gasto.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de gasto">
-                                    <i class="fa-solid fa-file-pdf"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if pago.viatico %}
-                            <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-viatico' pago.viatico.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de viático">
-                                    <i class="fa-solid fa-file-pdf"></i></a>
-                            </li>
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control">
+                                    <label for="fecha_fin">Hasta</label>
+                                </div>
+                            </div>
+
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <input id="folio" name="folio" class="form-control" placeholder="Folio">
+                                    <label for="folio">Folio</label>
+                                </div>
+                            </div>
+
+                            {% if usuario.distritos.nombre == "MATRIZ" %}
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <select id="distrito" name="distrito" class="form-select">
+                                        <option value="">Todos</option>
+                                        {% for distrito in distritos %}
+                                        <option value="{{ distrito.id|unlocalize }}">{{ distrito.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="distrito">Distrito</label>
+                                </div>
+                            </div>
+
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <select id="tesorero" name="tesorero" class="form-select">
+                                        <option value="">Todos</option>
+                                        {% for tesorero in tesoreros %}
+                                        <option value="{{ tesorero.id|unlocalize }}">{{ tesorero.staff.staff.first_name }} {{ tesorero.staff.staff.last_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="tesorero">Tesorero</label>
+                                </div>
+                            </div>
+
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <select id="empresa" name="empresa" class="form-select">
+                                        <option value="">Todas</option>
+                                        {% for empresa in empresas %}
+                                        <option value="{{ empresa.id|unlocalize }}">{{ empresa.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="empresa">Empresa</label>
+                                </div>
+                            </div>
+
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-building-columns"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <select id="cuenta_bancaria" name="cuenta_bancaria" class="form-select">
+                                        <option value="">Todas</option>
+                                        {% for cuenta in cuentas %}
+                                        <option value="{{ cuenta.id|unlocalize }}">{{ cuenta.cuenta }} | {{ cuenta.moneda }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="cuenta_bancaria">Cuenta bancaria</label>
+                                </div>
+                            </div>
                             {% endif %}
 
-                            {% if pago.comprobante_pago %}
+                            <div class="sv-input-group input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-folder-open"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <select id="tipo_documento" name="tipo_documento" class="form-select">
+                                        <option value="">Todos</option>
+                                        <option value="gastos">Gastos</option>
+                                        <option value="compras">Compras</option>
+                                        <option value="viaticos">Viáticos</option>
+                                    </select>
+                                    <label for="tipo_documento">Tipo de documento</label>
+                                </div>
+                            </div>
 
-                            <li class="nav-item mx-1">
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago"><i class="fa-solid fa-file-invoice-dollar"></i></a>
-                            </li>
-                            <!-- Modal con visor de PDF -->
-                            <!--<div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
-                                <div class="modal-dialog modal-xl">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <iframe src="{{ pago.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                        </div>
-                                    </div>
+                            <!--<div class="d-flex align-items-center">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="validacion" name="validacion">
+                                    <label class="form-check-label" for="validacion">
+                                        <i class="fa-solid fa-shield-halved text-success me-1"></i> Validar en SAT
+                                    </label>
                                 </div>
                             </div>-->
-                            {% endif %}
-                            {% if pago.oc %}
-                            {% endif %}
-                            <!--<li class="nav-item mx-1">
-                                {% if pago.oc %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
-                                <i class="fa-solid fa-file-pdf"></i></a>
-                                {% endif %}
-                                {% if pago.gasto %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                </a>
-                                {% endif %}
-                                {% if pago.viatico %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
-                                {% endif %}
-                            </li>-->
-                        </ul>
-                    </td>
-                    <td>
-                        {% if pago.exhibit %}
-                        <span class="badge bg-primary">{{pago.exhibit.folio}}</span> 
-                        {% elif pago.oc %}
-                        <input style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
-                        {% elif pago.gasto %}
-                        <input style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
-                        {% elif pago.viatico %}
-                         <input style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if pagos_list.has_previous %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
+                        </div>
 
-                {% for item in pagos_list.paginator.page_range %}
-                    {% if pagos_list.number == item %}
-                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > pagos_list.number|add:'-2' and item < pagos_list.number|add:'2' %}
-                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <button type="submit" name="btnDescargarFacturas" class="sv-btn sv-btn-primary">
+                                <i class="fa-solid fa-file-arrow-down"></i> Descargar facturas
+                            </button>
+                            <button name="btnReporteXML" type="submit" class="sv-btn sv-btn-success" value="Reporte Excel de XML">
+                                <i class="fa-solid fa-file-excel"></i> Reporte XML
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% if messages %}
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+
+    <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body d-flex align-items-center gap-3 p-4">
+                    {% if usuario.distritos.nombre == "Yerod" %}
+                    <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="72" height="72" class="rounded-circle">
+                    {% else %}
+                    <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="96" class="img-fluid rounded">
                     {% endif %}
-                {% endfor %}
-
-                {% if pagos_list.paginator.num_pages > pagos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{pagos_list.number|add:'2'}}">&hellip;</a></li>
-                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{pagos_list.paginator.num_pages}}</a></li>
-                {% endif %}
-
-                {% if pagos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
-    </form>
-
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
-<div class="modal fade" id="customAlert" tabindex="-1" aria-labelledby="customAlertLabel" aria-hidden="true">
-
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo de SAVIA" style="height: 40px; margin-right: 10px;" class="rounded-circle">            
-          <h5 class="modal-title" id="customAlertLabel">SAVIA 2.0</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div>
+                        <strong>Generando reporte</strong>
+                        <p class="sv-cell-subtitle mb-0">Por favor espera&hellip; <i class="fa-solid fa-mug-hot"></i></p>
+                    </div>
+                    <div class="spinner-border ms-auto" role="status" aria-label="Procesando"></div>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-          Por favor, seleccione tanto la fecha de inicio como la fecha final para generar el reporte.
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
-        </div>
-      </div>
     </div>
-  </div>
 
-</div>
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-table-list"></i> Pagos en Control de Documentos</h2>
+                <p class="sv-card-subtitle">Selecciona los movimientos que deseas asignar al mismo Exhibit.</p>
+            </div>
+
+            <div class="dropdown">
+                <button type="button" class="sv-btn sv-btn-outline dropdown-toggle"
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-boundary="viewport"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-table-columns"></i> Columnas
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-2 shadow sv-control-columns-menu">
+                    <div class="small fw-bold text-muted px-2 py-1">Mostrar columnas</div>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="id"> ID</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="distrito" checked> Distrito</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitado"> Solicitado por</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="subproyecto"> Subproyecto</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="autorizado"> Autorizado por</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="completas"> Facturas completas</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="fecha" checked> Fecha</label>
+                    <label class="dropdown-item d-flex align-items-center gap-2"><input class="form-check-input mt-0" type="checkbox" data-column-toggle="exhibit" checked> Exhibit</label>
+                    <div class="dropdown-divider"></div>
+                    <button type="button" class="dropdown-item text-center" id="resetControlColumns">
+                        <i class="fa-solid fa-arrow-rotate-left me-1"></i> Restablecer vista
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <form id="form_asignar_exhibit" method="POST" action="{% url 'control-documentos' %}">
+            {% csrf_token %}
+
+            <div class="sv-card-body border-bottom">
+                <div class="d-flex flex-wrap align-items-end gap-2">
+                    <span class="sv-badge sv-badge-primary align-self-center">
+                        <i class="fa-solid fa-list-check"></i> Seleccionados: <strong id="oc_count">0</strong>
+                    </span>
+                    <span class="sv-badge sv-badge-success align-self-center">
+                        <i class="fa-solid fa-dollar-sign"></i> Suma: <strong id="oc_sum">0.00</strong>
+                    </span>
+
+                    <div class="sv-input-group input-group ms-lg-auto sv-exhibit-selector">
+                        <span class="input-group-text"><i class="fa-solid fa-box-archive"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <select class="form-select" name="exhibit_id" id="exhibit_id" required>
+                                <option value="">Selecciona un Exhibit</option>
+                                {% for exhibit in exhibits %}
+                                <option value="{{ exhibit.id|unlocalize }}">Folio {{ exhibit.folio }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="exhibit_id">Exhibit destino</label>
+                        </div>
+                    </div>
+
+                    <button id="asignar_exhibit" name="asignar_exhibit" type="submit" class="sv-btn sv-btn-primary">
+                        <i class="fa-solid fa-link"></i> Asignar
+                    </button>
+                    <a href="{% url 'matriz-exhibit' %}" class="sv-btn sv-btn-outline">
+                        <i class="fa-solid fa-boxes-stacked"></i> Ver Exhibits
+                    </a>
+                </div>
+            </div>
+
+            <div class="sv-table-wrap">
+                <table class="sv-table sv-table-wide" id="controlDocumentsTable">
+                    <thead>
+                        <tr>
+                            <th class="sv-col-id d-none">ID</th>
+                            <th>Movimiento</th>
+                            <th class="sv-col-distrito">Distrito</th>
+                            <th class="sv-col-solicitado d-none">Solicitado por</th>
+                            <th>Proyecto</th>
+                            <th class="sv-col-subproyecto d-none">Subproyecto</th>
+                            <th class="sv-col-autorizado d-none">Autorizado por</th>
+                            <th>Proveedor / colaborador</th>
+                            <th class="sv-col-completas d-none">Facturas completas</th>
+                            <th>Facturas</th>
+                            <th class="text-end">Importe</th>
+                            <th class="sv-col-fecha">Fecha</th>
+                            <th>Documentos</th>
+                            <th class="sv-col-exhibit d-none">Exhibit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in pagos_list %}
+                        <tr>
+                            <td class="sv-col-id d-none"><span class="sv-badge sv-badge-neutral">{{ pago.id }}</span></td>
+
+                            {% if pago.oc %}
+                                <td>
+                                    <span class="sv-cell-title">OC {{ pago.oc.folio }}</span>
+                                    <span class="sv-cell-subtitle d-block">Compra</span>
+                                </td>
+                                <td class="sv-col-distrito">{{ pago.oc.req.orden.distrito.nombre }}</td>
+                                <td class="sv-col-solicitado d-none">{{ pago.oc.req.orden.staff.staff.staff.first_name }} {{ pago.oc.req.orden.staff.staff.staff.last_name }}</td>
+                                <td>{{ pago.oc.req.orden.proyecto.nombre }}</td>
+                                <td class="sv-col-subproyecto d-none">{{ pago.oc.req.orden.subproyecto.nombre }}</td>
+                                <td class="sv-col-autorizado d-none">{{ pago.oc.oc_autorizada_por2.staff.staff.first_name }} {{ pago.oc.oc_autorizada_por2.staff.staff.last_name }}</td>
+                                <td>{{ pago.oc.proveedor }}</td>
+                                <td class="sv-col-completas d-none">
+                                    {% if pago.oc.facturas_completas %}<span class="sv-badge sv-badge-success">Completas</span>{% else %}<span class="sv-badge sv-badge-warning">Incompletas</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if pago.estado_facturas == "sin_facturas" %}
+                                    <a class="sv-btn sv-btn-danger sv-btn-icon" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" title="No tiene facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                                    {% elif pago.estado_facturas == "todas_autorizadas" %}
+                                    <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" title="Todas las facturas validadas"><i class="fa-solid fa-file-circle-check"></i></a>
+                                    {% elif pago.estado_facturas == "pendientes" %}
+                                    <a class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" title="Facturas pendientes"><i class="fa-solid fa-file-circle-exclamation"></i></a>
+                                    {% endif %}
+                                </td>
+                            {% elif pago.gasto %}
+                                <td>
+                                    <span class="sv-cell-title">G{{ pago.gasto.folio }}</span>
+                                    <span class="sv-cell-subtitle d-block">Gasto</span>
+                                </td>
+                                <td class="sv-col-distrito">{{ pago.gasto.distrito.nombre }}</td>
+                                <td class="sv-col-solicitado d-none">{{ pago.gasto.staff.staff.staff.first_name }} {{ pago.gasto.staff.staff.staff.last_name }}</td>
+                                <td>{{ pago.gasto.proyecto.nombre }}</td>
+                                <td class="sv-col-subproyecto d-none">{{ pago.gasto.subproyecto.nombre }}</td>
+                                <td class="sv-col-autorizado d-none">{{ pago.gasto.superintendente.staff.staff.first_name }} {{ pago.gasto.superintendente.staff.staff.last_name }}</td>
+                                <td>
+                                    {% if pago.gasto.colaborador %}{{ pago.gasto.colaborador.staff.staff.first_name }} {{ pago.gasto.colaborador.staff.staff.last_name }}{% else %}{{ pago.gasto.staff.staff.staff.first_name }} {{ pago.gasto.staff.staff.staff.last_name }}{% endif %}
+                                </td>
+                                <td class="sv-col-completas d-none">
+                                    {% if pago.gasto.facturas_completas %}<span class="sv-badge sv-badge-success">Completas</span>{% else %}<span class="sv-badge sv-badge-warning">Incompletas</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if pago.estado_facturas == "sin_facturas" %}
+                                    <a class="sv-btn sv-btn-danger sv-btn-icon" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" title="No tiene facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                                    {% elif pago.estado_facturas == "todas_autorizadas" %}
+                                    <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" title="Todas las facturas autorizadas"><i class="fa-solid fa-file-circle-check"></i></a>
+                                    {% elif pago.estado_facturas == "pendientes" %}
+                                    <a class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" title="Facturas pendientes"><i class="fa-solid fa-file-circle-exclamation"></i></a>
+                                    {% endif %}
+                                </td>
+                            {% elif pago.viatico %}
+                                <td>
+                                    <span class="sv-cell-title">V{{ pago.viatico.folio }}</span>
+                                    <span class="sv-cell-subtitle d-block">Viático</span>
+                                </td>
+                                <td class="sv-col-distrito">{{ pago.viatico.distrito.nombre }}</td>
+                                <td class="sv-col-solicitado d-none">{{ pago.viatico.staff.staff.staff.first_name }} {{ pago.viatico.staff.staff.staff.last_name }}</td>
+                                <td>{{ pago.viatico.proyecto.nombre }}</td>
+                                <td class="sv-col-subproyecto d-none">{{ pago.viatico.subproyecto.nombre }}</td>
+                                <td class="sv-col-autorizado d-none">{{ pago.viatico.superintendente.staff.staff.first_name }} {{ pago.viatico.superintendente.staff.staff.last_name }}</td>
+                                <td>
+                                    {% if pago.viatico.colaborador %}{{ pago.viatico.colaborador.staff.staff.first_name }} {{ pago.viatico.colaborador.staff.staff.last_name }}{% else %}{{ pago.viatico.staff.staff.staff.first_name }} {{ pago.viatico.staff.staff.staff.last_name }}{% endif %}
+                                </td>
+                                <td class="sv-col-completas d-none">
+                                    {% if pago.viatico.facturas_completas %}<span class="sv-badge sv-badge-success">Completas</span>{% else %}<span class="sv-badge sv-badge-warning">Incompletas</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if pago.estado_facturas == "sin_facturas" %}
+                                    <a class="sv-btn sv-btn-danger sv-btn-icon" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" title="No tiene facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                                    {% elif pago.estado_facturas == "todas_autorizadas" %}
+                                    <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" title="Todas las facturas autorizadas"><i class="fa-solid fa-file-circle-check"></i></a>
+                                    {% elif pago.estado_facturas == "pendientes" %}
+                                    <a class="sv-btn sv-btn-warning sv-btn-icon" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" title="Facturas pendientes"><i class="fa-solid fa-file-circle-exclamation"></i></a>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+
+                            <td class="text-end"><span class="sv-cell-title">$ {{ pago.monto|floatformat:2 }}</span></td>
+                            <td class="sv-col-fecha">{{ pago.pagado_date|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="sv-actions">
+                                    {% if pago.oc %}
+                                    <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'oc-pdf' pago.oc.id %}" title="Orden de compra"><i class="fa-solid fa-file-pdf"></i></a>
+                                    {% elif pago.gasto %}
+                                    <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'descargar-pdf-gasto' pago.gasto.id %}" title="Comprobante de gasto"><i class="fa-solid fa-file-pdf"></i></a>
+                                    {% elif pago.viatico %}
+                                    <a class="sv-btn sv-btn-info sv-btn-icon" href="{% url 'render-pdf-viatico' pago.viatico.id %}" title="Comprobante de viático"><i class="fa-solid fa-file-pdf"></i></a>
+                                    {% endif %}
+
+                                    {% if pago.comprobante_pago %}
+                                    <a class="sv-btn sv-btn-outline sv-btn-icon" href="{{ pago.comprobante_pago.url }}" target="_blank" rel="noopener" title="Ver comprobante de pago"><i class="fa-solid fa-eye"></i></a>
+                                    <a class="sv-btn sv-btn-success sv-btn-icon" href="{{ pago.comprobante_pago.url }}" download title="Descargar comprobante"><i class="fa-solid fa-file-invoice-dollar"></i></a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="sv-col-exhibit d-none">
+                                {% if pago.exhibit %}
+                                <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-box-archive"></i> {{ pago.exhibit.folio }}</span>
+                                {% else %}
+                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar pago {{ pago.id|unlocalize }}">
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="14">
+                                <div class="sv-empty">
+                                    <div class="sv-empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+                                    <div class="sv-empty-title">No se encontraron pagos</div>
+                                    <div class="sv-empty-text">Ajusta los filtros para consultar otros movimientos.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="sv-pagination-wrap" aria-label="Paginación de pagos">
+                <ul class="pagination sv-pagination">
+                    {% if pagos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior"><i class="fa-solid fa-angle-left"></i></a></li>
+                    {% endif %}
+
+                    {% for item in pagos_list.paginator.page_range %}
+                        {% if pagos_list.number == item %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ item }}</span></li>
+                        {% elif item > pagos_list.number|add:'-2' and item < pagos_list.number|add:'2' %}
+                        <li class="page-item"><a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">{{ item }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagos_list.paginator.num_pages > pagos_list.number|add:'2' %}
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ pagos_list.paginator.num_pages }}</a></li>
+                    {% endif %}
+
+                    {% if pagos_list.has_next %}
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente"><i class="fa-solid fa-angle-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página"><i class="fa-solid fa-angles-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </form>
+    </section>
+
+    <div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
+    </div>
+
+    <div class="modal fade" id="customAlert" tabindex="-1" aria-labelledby="customAlertLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    {% if usuario.distritos.nombre == "Yerod" %}
+                    <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA Yerod" width="40" height="40" class="rounded-circle me-2">
+                    {% else %}
+                    <img src="{% static 'images/logo_vordcab.jpg' %}" alt="SAVIA Vordcab" width="48" class="rounded me-2">
+                    {% endif %}
+                    <h5 class="modal-title" id="customAlertLabel">Fechas requeridas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">Selecciona la fecha de inicio y la fecha final del filtro para generar el reporte.</div>
+                <div class="modal-footer">
+                    <button type="button" class="sv-btn sv-btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    .sv-control-columns-menu {
+        max-height: min(28rem, 70vh);
+        overflow-y: auto;
+        z-index: 1080;
+    }
+
+    .sv-exhibit-selector {
+        width: min(100%, 22rem);
+    }
+
+    #controlDocumentsTable .payment_checkbox {
+        width: 1.2rem;
+        height: 1.2rem;
+        cursor: pointer;
+    }
+</style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
-});
-/*var modal = document.getElementById('dialog')
-modal.on('hidden.bs.modal', function () {
-    location.reload();
-});*/
-
 function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+    const prefix = name + '=';
+    const cookies = document.cookie ? document.cookie.split(';') : [];
+    for (let i = 0; i < cookies.length; i += 1) {
+        const cookie = cookies[i].trim();
+        if (cookie.indexOf(prefix) === 0) {
+            return decodeURIComponent(cookie.substring(prefix.length));
         }
     }
-    return cookieValue;
+    return null;
+}
+
+function ocultarIndicadorCarga() {
+    const loadingElement = document.getElementById('loadingIndicator');
+    if (!loadingElement) return;
+    const modal = bootstrap.Modal.getInstance(loadingElement);
+    if (modal) modal.hide();
 }
 
 function mostrarIndicadorCarga() {
-    var btn = document.getElementById('btnExcel')
-    document.getElementById('loadingIndicator').style.display = 'block';
-    
+    const loadingElement = document.getElementById('loadingIndicator');
+    if (!loadingElement) return;
+    bootstrap.Modal.getOrCreateInstance(loadingElement).show();
     verificarDescargaIniciada();
-    btn.classList.add('d-none')
 }
 
-function verificarDescargaIniciada(){
-    const checkDescarga = setInterval(() => {
-        const descargaIniciada = getCookie('descarga_iniciada');
-        if (descargaIniciada === 'true') {
-            // Ocultar el indicador de carga
-            document.getElementById('loadingIndicator').style.display = 'none';
-            
-            // Opcional: Borrar la cookie si es necesario
-            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
-            
-            clearInterval(checkDescarga);
+function verificarDescargaIniciada() {
+    let intentos = 0;
+    const checkDescarga = window.setInterval(function () {
+        intentos += 1;
+        const iniciada = getCookie('iniciada') === 'true';
+        const descargaIniciada = getCookie('descarga_iniciada') === 'true';
 
+        if (iniciada || descargaIniciada) {
+            ocultarIndicadorCarga();
+            document.cookie = 'iniciada=; Max-Age=0; path=/';
+            document.cookie = 'descarga_iniciada=; Max-Age=0; path=/';
+            window.clearInterval(checkDescarga);
+        } else if (intentos >= 300) {
+            ocultarIndicadorCarga();
+            window.clearInterval(checkDescarga);
         }
-    }, 1000); // Revisar cada segundo
+    }, 1000);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    var reportForm = document.getElementById("reporteForm");
-    var startDateField = document.getElementById('id_start_date');
-    var endDateField = document.getElementById('id_end_date');
-    
-    const checkboxes = document.querySelectorAll('.payment_checkbox');
-    const ocCountElement = document.getElementById('oc_count');  // Ajusta el id si es necesario
-    const ocSumElement = document.getElementById('oc_sum');
-    const layoutPagosButton = document.getElementById('asignar_exhibit'); // Botón para enviar el formulario
-    const form = document.getElementById('form_asignar_exhibit');
+document.addEventListener('DOMContentLoaded', function () {
+    const reportForm = document.getElementById('reporteForm');
+    const startDateField = document.getElementById('id_start_date');
+    const endDateField = document.getElementById('id_end_date');
+    const documentDownloadForm = document.getElementById('documentDownloadForm');
 
-    // Inicializar o recuperar la lista de IDs seleccionados como strings
-    let selectedIds = JSON.parse(localStorage.getItem('selectedPayments')) || [];
-    selectedIds = selectedIds.map(id => id.toString().trim());
-
-    // Al cargar la página, marcar los checkboxes ya guardados
-    checkboxes.forEach(checkbox => {
-        const id = checkbox.getAttribute('data-id').toString().trim();
-        if (selectedIds.includes(id)) {
-            checkbox.checked = true;
-        }
-    });
-    // Actualizar conteo y suma al cargar
-    updateCountAndSum();
-
-    // Actualizar el contador al cargar la página
-    updateCount();
-
-    // Manejar selección/deselección
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const id = checkbox.getAttribute('data-id').toString().trim();
-
-            if (checkbox.checked) {
-                // Añadir el ID si no existe
-                if (!selectedIds.includes(id)) {
-                    selectedIds.push(id);
-                }
-            } else {
-                // Quitar el ID si ya no está seleccionado
-                selectedIds = selectedIds.filter(pid => pid !== id);
+    if (reportForm && startDateField && endDateField) {
+        reportForm.addEventListener('submit', function (event) {
+            if (!startDateField.value || !endDateField.value) {
+                event.preventDefault();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('customAlert')).show();
+                return;
             }
-
-            // Guardar en localStorage
-            localStorage.setItem('selectedPayments', JSON.stringify(selectedIds));
-
-            // Actualizar contador
-            updateCount();
-            updateCountAndSum();
-        });
-    });
-
-     function updateCountAndSum() {
-        let sum = 0;
-
-        checkboxes.forEach(checkbox => {
-            const id = checkbox.getAttribute('data-id').toString().trim();
-            const monto = parseFloat(checkbox.getAttribute('data-monto')) || 0;
-
-            if (checkbox.checked) {
-                sum += monto;
-            }
-        });
-
-        ocCountElement.textContent = selectedIds.length;
-        ocSumElement.textContent = sum.toFixed(2);
-    }
-
-    // Actualizar el contador en el template
-    function updateCount() {
-        ocCountElement.textContent = selectedIds.length;
-    }
-
-    // Al enviar el formulario
-    layoutPagosButton.addEventListener('click', function(event) {
-        // Evitar envío inmediato
-        event.preventDefault();
-
-        // Añadir inputs ocultos al form con los IDs seleccionados
-        selectedIds.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'compra_ids';  // Django espera una lista con este nombre
-            input.value = id;
-            form.appendChild(input);
-        });
-
-        // Limpiar el localStorage para el siguiente ciclo
-        localStorage.removeItem('selectedPayments');
-
-        // Enviar el formulario
-        form.submit();
-    });
-    
-
-
-
-    
-    reportForm.addEventListener('submit', function(event) {
-        var startDate = startDateField.value;
-        var endDate = endDateField.value;
-
-        if (!startDate || !endDate) {
-            event.preventDefault();  // Evita que el formulario se envíe
-            // Mostrar el modal personalizado
-            var customAlertModal = new bootstrap.Modal(document.getElementById('customAlert'), {});
-            customAlertModal.show();
-        } else {
-            // Si las fechas están presentes, muestra el indicador de carga
             mostrarIndicadorCarga();
+        });
+    }
+
+    if (documentDownloadForm) {
+        documentDownloadForm.addEventListener('submit', function () {
+            mostrarIndicadorCarga();
+        });
+    }
+
+    const form = document.getElementById('form_asignar_exhibit');
+    const assignButton = document.getElementById('asignar_exhibit');
+    const exhibitField = document.getElementById('exhibit_id');
+    const checkboxes = Array.from(document.querySelectorAll('.payment_checkbox'));
+    const countElement = document.getElementById('oc_count');
+    const sumElement = document.getElementById('oc_sum');
+    const selectionKey = 'selectedPaymentsControlDocuments';
+
+    function readSelection() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(selectionKey)) || [];
+            return stored.map(function (id) { return String(id).trim(); });
+        } catch (error) {
+            localStorage.removeItem(selectionKey);
+            return [];
         }
+    }
+
+    let selectedIds = readSelection();
+
+    checkboxes.forEach(function (checkbox) {
+        const id = String(checkbox.dataset.id).trim();
+        checkbox.checked = selectedIds.indexOf(id) !== -1;
+    });
+
+    function updateSummary() {
+        let visibleSum = 0;
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) visibleSum += Number.parseFloat(checkbox.dataset.monto) || 0;
+        });
+        if (countElement) countElement.textContent = selectedIds.length;
+        if (sumElement) {
+            sumElement.textContent = visibleSum.toLocaleString('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+    }
+
+    checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const id = String(checkbox.dataset.id).trim();
+            if (checkbox.checked && selectedIds.indexOf(id) === -1) {
+                selectedIds.push(id);
+            } else if (!checkbox.checked) {
+                selectedIds = selectedIds.filter(function (selectedId) { return selectedId !== id; });
+            }
+            localStorage.setItem(selectionKey, JSON.stringify(selectedIds));
+            updateSummary();
+        });
+    });
+
+    if (assignButton && form) {
+        assignButton.addEventListener('click', function (event) {
+            if (!selectedIds.length) {
+                event.preventDefault();
+                Swal.fire({ title: 'Sin pagos seleccionados', text: 'Selecciona al menos un pago para asignarlo.', icon: 'warning' });
+                return;
+            }
+
+            if (!exhibitField || !exhibitField.value) {
+                event.preventDefault();
+                if (exhibitField) exhibitField.focus();
+                Swal.fire({ title: 'Exhibit requerido', text: 'Selecciona el Exhibit al que se asignarán los pagos.', icon: 'warning' });
+                return;
+            }
+
+            form.querySelectorAll('.js-persisted-payment').forEach(function (field) { field.remove(); });
+            selectedIds.forEach(function (id) {
+                const existsOnPage = checkboxes.some(function (checkbox) {
+                    return checkbox.name === 'compra_ids' && checkbox.value === id && checkbox.checked;
+                });
+                if (!existsOnPage) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'compra_ids';
+                    input.value = id;
+                    input.className = 'js-persisted-payment';
+                    form.appendChild(input);
+                }
+            });
+
+            localStorage.removeItem(selectionKey);
+        });
+    }
+
+    updateSummary();
+
+    const columnDefaults = {
+        id: false,
+        distrito: true,
+        solicitado: false,
+        subproyecto: false,
+        autorizado: false,
+        completas: false,
+        fecha: true,
+        exhibit: false
+    };
+    const columnStorageKey = 'saviaControlDocumentosColumnas';
+    let columnPreferences = Object.assign({}, columnDefaults);
+
+    try {
+        const saved = JSON.parse(localStorage.getItem(columnStorageKey));
+        if (saved && typeof saved === 'object') {
+            Object.keys(columnDefaults).forEach(function (column) {
+                if (typeof saved[column] === 'boolean') columnPreferences[column] = saved[column];
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(columnStorageKey);
+    }
+
+    function updateColumn(column, visible) {
+        document.querySelectorAll('.sv-col-' + column).forEach(function (cell) {
+            cell.classList.toggle('d-none', !visible);
+        });
+    }
+
+    const columnToggles = Array.from(document.querySelectorAll('[data-column-toggle]'));
+
+    function applyColumnPreferences() {
+        columnToggles.forEach(function (checkbox) {
+            const column = checkbox.dataset.columnToggle;
+            checkbox.checked = columnPreferences[column] === true;
+            updateColumn(column, checkbox.checked);
+        });
+    }
+
+    columnToggles.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            columnPreferences[checkbox.dataset.columnToggle] = checkbox.checked;
+            updateColumn(checkbox.dataset.columnToggle, checkbox.checked);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+        });
+    });
+
+    const resetColumnsButton = document.getElementById('resetControlColumns');
+    if (resetColumnsButton) {
+        resetColumnsButton.addEventListener('click', function () {
+            columnPreferences = Object.assign({}, columnDefaults);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+            applyColumnPreferences();
+        });
+    }
+
+    applyColumnPreferences();
+
+    document.querySelectorAll('[title]').forEach(function (element) {
+        if (window.bootstrap && bootstrap.Tooltip) bootstrap.Tooltip.getOrCreateInstance(element);
     });
 });
-
-
 </script>
 {% endblock %}
-</body>
-</html>
