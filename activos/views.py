@@ -13,7 +13,7 @@ from django.utils.text import slugify
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
 from .forms import VehiculoActivoForm, UBMActivoForm, MotorUBMForm
-from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo, Motor_UBM
+from .models import Categoria_Activo, HistorialAsignacionActivo, Vehiculo_Activo, UBM_Activo, Motor_UBM
 from compras.models import Proveedor_direcciones
 from tesoreria.models import Facturas
 from .filters import ActivoFilter
@@ -47,8 +47,7 @@ from bs4 import BeautifulSoup
 from user.decorators import perfil_seleccionado_required
 
 # Create your views here.
-@login_required(login_url='user-login')
-@perfil_seleccionado_required
+
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def activos(request):
@@ -833,7 +832,14 @@ def edit_activo(request, pk):
         # -------------------------------------------
         else:
             print('Entrada al post')
+
+            # Debe obtenerse antes de ejecutar form.is_valid()
+            # porque el ModelForm puede modificar su instancia.
+            responsable_anterior = activo.responsable
+            responsable_anterior_id = activo.responsable_id
+
             form = Edit_Activo_Form(request.POST, instance = activo)
+
             if extension_form_class is not None:
                 ext_form = extension_form_class(request.POST, instance = extension_instance, prefix = extension_prefix,)
 
@@ -842,29 +848,51 @@ def edit_activo(request, pk):
             form_extension_valido = (ext_form is None or ext_form.is_valid())
 
             if form_activo_valido and form_extension_valido: 
-                #inventario = Inventario.objects.get(id = activo.activo.id)
-                #if inventario.cantidad >= 1:
-                #    inventario.cantidad -= 1
-                #    inventario.save()
-                activo = form.save(commit=False)
-                activo.completo = True
-                activo.modified_at = date.today()
-                activo.modified_by = perfil
-                campos_actualizados = list(form.changed_data)
-                campos_actualizados.extend(['completo','modified_at','modified_by',])
+                with transaction.atomic():
+                    # Bloquear el registro del activo para evitar condiciones de carrera
+                    activo_actualizado = form.save(commit=False)
+                    responsable_nuevo = activo_actualizado.responsable
+                    responsable_nuevo_id = (activo_actualizado.responsable_id)
+                    activo_actualizado.completo = True
+                    activo_actualizado.modified_at = date.today()
+                    activo_actualizado.modified_by = perfil
+                    campos_actualizados = list(form.changed_data)
+                    campos_actualizados.extend(['completo','modified_at','modified_by',])
 
-                # Evitar nombres repetidos
-                campos_actualizados = list(dict.fromkeys(campos_actualizados))
+                    # Evitar nombres repetidos
+                    campos_actualizados = list(dict.fromkeys(campos_actualizados))
 
-                activo.save(update_fields=campos_actualizados)
+                    activo_actualizado.save(update_fields=campos_actualizados)
+                    # ---------------------------------------
+                    # REGISTRAR CAMBIO DE RESPONSABLE
+                    # ---------------------------------------
+                    if responsable_anterior_id != responsable_nuevo_id:
 
-                if ext_form is not None:
-                    extension = ext_form.save(commit = False)
-                    extension.activo = activo
-                    extension.save()
+                        HistorialAsignacionActivo.objects.create(
+                            activo=activo_actualizado,
+                            eco_unidad=activo_actualizado.eco_unidad or '',
+                            responsable_anterior=responsable_anterior,
+                            responsable_nuevo=responsable_nuevo,
+                            tipo_movimiento=(
+                                HistorialAsignacionActivo
+                                .TipoMovimiento
+                                .REASIGNACION
+                            ),
+                            registrado_por=perfil,
+                            observacion=(
+                                request.POST
+                                .get('observacion_asignacion', '')
+                                .strip()
+                            ),
+                        )
 
-                messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
-                return redirect('activos')
+                    if ext_form is not None:
+                        extension = ext_form.save(commit = False)
+                        extension.activo = activo
+                        extension.save()
+
+                    messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
+                    return redirect('activos')
             for field, errors in form.errors.items():
                 error_messages[field] = errors.as_text()
 

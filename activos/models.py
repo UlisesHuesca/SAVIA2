@@ -172,7 +172,7 @@ class HistorialAsignacionActivo(models.Model):
     class TipoMovimiento(models.TextChoices):
         ASIGNACION = 'ASIGNACION', 'Asignación'
         REASIGNACION = 'REASIGNACION', 'Reasignación'
-        DESASIGNACION = 'DESASIGNACION', 'Desasignación'
+        
 
     activo = models.ForeignKey('dashboard.Activo', on_delete=models.PROTECT,related_name='historial_asignaciones',)
     responsable_anterior = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, blank=True, related_name='activos_asignacion_anterior',)
@@ -181,7 +181,7 @@ class HistorialAsignacionActivo(models.Model):
     tipo_movimiento = models.CharField(max_length=20,choices=TipoMovimiento.choices,)
     fecha = models.DateTimeField(auto_now_add=True,db_index=True,)
     observacion = models.CharField(max_length=255, blank=True,default='',)
-    #eco_unidad = models.CharField(max_length=50, blank=True, default='',)
+    eco_unidad = models.CharField(max_length=50, blank=True, default='',)
 
     class Meta:
         ordering = ['-fecha', '-id']
