@@ -2,349 +2,467 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Edición de Proyectos{% endblock %}
-</head>
-<body>
+
+{% block title %}{% if es_edicion %}Editar subproyecto{% else %}Agregar subproyecto{% endif %}{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <div class="sv-page-eyebrow">Configuración de proyectos</div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-folder-tree"></i>
+                </span>
+                {% if es_edicion %}Editar subproyecto{% else %}Agregar subproyecto{% endif %}
+            </h1>
+            <p class="sv-page-subtitle">
+                {% if es_edicion %}
+                    Actualiza la información y la programación presupuestal del subproyecto.
                 {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
+                    Registra la información y distribuye el presupuesto por periodos.
                 {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class="container">
-    <div class="row mt-5">
-        <div class="col-md-6 offset-md-3">
-            <div class="card">
-                <div class="card-header">
-                    <h3>
+            </p>
+        </div>
+
+        <a class="sv-btn sv-btn-outline" href="{% url 'subproyectos' proyecto.id %}">
+            <i class="fa-solid fa-arrow-left"></i>
+            Regresar
+        </a>
+    </header>
+
+    <form method="POST" id="form-subproyecto" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-3">
+            <div class="col-12 col-xl-4">
+                <section class="sv-card h-100">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-diagram-project"></i>
+                                Proyecto relacionado
+                            </h2>
+                            <p class="sv-card-subtitle">Proyecto al que pertenece este subproyecto.</p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        <div class="sv-project-summary">
+                            <span class="sv-project-summary-icon">
+                                <i class="fa-solid fa-building"></i>
+                            </span>
+                            <div>
+                                <span class="sv-cell-subtitle d-block">Proyecto</span>
+                                <strong class="sv-cell-title d-block">{{ proyecto.nombre }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="border-top mt-3 pt-3">
+                            <span class="sv-cell-subtitle d-block mb-1">Descripción</span>
+                            {% if proyecto.descripcion %}
+                            <p class="mb-0">{{ proyecto.descripcion }}</p>
+                            {% else %}
+                            <p class="sv-cell-subtitle mb-0">Sin descripción registrada.</p>
+                            {% endif %}
+                        </div>
+
                         {% if es_edicion %}
-                            Editar Subproyecto
-                        {% else %}
-                            Agregar Subproyecto
+                        <div class="sv-budget-summary mt-3">
+                            <span class="sv-budget-summary-icon">
+                                <i class="fa-solid fa-wallet"></i>
+                            </span>
+                            <div>
+                                <span class="d-block">Monto total programado</span>
+                                <strong>$ {{ subproyecto.presupuesto|floatformat:2 }}</strong>
+                            </div>
+                        </div>
                         {% endif %}
-                    </h3>
-                </div>
-                <div class="card-body">
-                <h6>Proyecto: {{proyecto.nombre}}</h6>
-                <h6>Descripción: {{proyecto.descripcion}}</h6>
-                <hr>
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="row my-3">
-                        <div class="col-lg-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.nombre|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
-                                    <label style="color: #121212;" for="id_cond_de_pago">Subproyecto*</label>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-8">
+                <section class="sv-card h-100">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                Información del subproyecto
+                            </h2>
+                            <p class="sv-card-subtitle">Captura los datos generales del registro.</p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-8">
+                                <div class="sv-input-group input-group{% if form.nombre.errors %} has-validation{% endif %}">
+                                    <span class="input-group-text"><i class="fa-solid fa-list"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre del subproyecto" }}
+                                        <label for="{{ form.nombre.id_for_label }}">Subproyecto *</label>
+                                    </div>
                                 </div>
+                                {% for error in form.nombre.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-12 col-lg-4">
+                                <div class="sv-input-group input-group{% if form.status.errors %} has-validation{% endif %}">
+                                    <span class="input-group-text"><i class="fa-solid fa-circle-check"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.status|add_class:"form-select"|append_attr:"placeholder=Estado" }}
+                                        <label for="{{ form.status.id_for_label }}">Estado *</label>
+                                    </div>
+                                </div>
+                                {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-12">
+                                <div class="sv-input-group input-group{% if form.descripcion.errors %} has-validation{% endif %}">
+                                    <span class="input-group-text align-items-start pt-3"><i class="fa-solid fa-align-left"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.descripcion|add_class:"form-control sv-subproject-description"|append_attr:"placeholder=Descripción" }}
+                                        <label for="{{ form.descripcion.id_for_label }}">Descripción *</label>
+                                    </div>
+                                </div>
+                                {% for error in form.descripcion.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                             </div>
                         </div>
                     </div>
-                    <div class="row my-3">
-                        <div class="col-lg-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
-                                    <label style="color: #121212;" for="id_cond_de_pago">Descripción*</label>
-                                </div>
+                </section>
+            </div>
+
+            <div class="col-12">
+                <section class="sv-card">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                Periodos del subproyecto
+                            </h2>
+                            <p class="sv-card-subtitle">Distribuye el presupuesto del subproyecto entre sus periodos.</p>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="sv-badge sv-badge-primary">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <span id="periodos-count">{{ periodos_formset|length }}</span>
+                                <span id="periodos-label">periodo{{ periodos_formset|length|pluralize }}</span>
+                            </span>
+
+                            <button type="button" id="agregar-periodo" class="sv-btn sv-btn-success">
+                                <i class="fa-solid fa-plus"></i>
+                                Agregar periodo
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        {{ periodos_formset.management_form }}
+
+                        {% if periodos_formset.non_form_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <div class="fw-semibold mb-1">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                Revisa la programación de periodos
                             </div>
-                        </div>
-                    </div>
-                    {% if es_edicion %}
-                        <div class="alert alert-info mt-3">
-                            <strong>Monto total programado:</strong>
-                            ${{ subproyecto.presupuesto|floatformat:2 }}
-                        </div>
-                    {% endif %}
-                   
-                    <div class="row my-3">
-                        <div class="col-lg-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.status|add_class:"form-control"|append_attr:"placeholder= Status"}}
-                                    <label style="color: #121212;" for="id_cond_de_pago">Status*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Periodos del subproyecto</h5>
-
-                        <button
-                            type="button"
-                            id="agregar-periodo"
-                            class="btn btn-outline-success btn-sm"
-                        >
-                            <i class="fa-solid fa-plus"></i>
-                            Agregar periodo
-                        </button>
-                    </div>
-
-                    {{ periodos_formset.management_form }}
-
-                    {% if periodos_formset.non_form_errors %}
-                        <div class="alert alert-danger">
                             {{ periodos_formset.non_form_errors }}
                         </div>
-                    {% endif %}
+                        {% endif %}
 
-                        <div id="contenedor-periodos">
+                        <div id="contenedor-periodos" class="sv-period-list">
                             {% for periodo_form in periodos_formset %}
-                                <div class="periodo-form card mb-3">
-                                    <div class="card-body">
+                            <div class="periodo-form sv-period-card">
+                                {% for hidden in periodo_form.hidden_fields %}{{ hidden }}{% endfor %}
 
-                                        {% for hidden in periodo_form.hidden_fields %}
-                                            {{ hidden }}
-                                        {% endfor %}
+                                {% if periodo_form.non_field_errors %}
+                                <div class="alert alert-danger mb-3" role="alert">
+                                    {{ periodo_form.non_field_errors }}
+                                </div>
+                                {% endif %}
 
-                                        {% if periodo_form.non_field_errors %}
-                                            <div class="alert alert-danger">
-                                                {{ periodo_form.non_field_errors }}
-                                            </div>
-                                        {% endif %}
-
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <label
-                                                    for="{{ periodo_form.periodo.id_for_label }}"
-                                                    class="form-label"
-                                                >
-                                                    Periodo
-                                                </label>
-
-                                                {{ periodo_form.periodo }}
-
-                                                {% for error in periodo_form.periodo.errors %}
-                                                    <div class="text-danger small">
-                                                        {{ error }}
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-md-5">
-                                                <label
-                                                    for="{{ periodo_form.monto.id_for_label }}"
-                                                    class="form-label"
-                                                >
-                                                    Monto
-                                                </label>
-
-                                                {{ periodo_form.monto }}
-
-                                                {% for error in periodo_form.monto.errors %}
-                                                    <div class="text-danger small">
-                                                        {{ error }}
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-md-2 d-flex align-items-end">
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-outline-danger eliminar-periodo"
-                                                >
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
+                                <div class="row g-3 align-items-start">
+                                    <div class="col-12 col-md-5">
+                                        <div class="sv-input-group input-group{% if periodo_form.periodo.errors %} has-validation{% endif %}">
+                                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">
+                                                {{ periodo_form.periodo|add_class:"form-control"|append_attr:"placeholder=Periodo" }}
+                                                <label for="{{ periodo_form.periodo.id_for_label }}">Periodo *</label>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    <template id="periodo-form-vacio">
-                        <div class="periodo-form card mb-3">
-                            <div class="card-body">
-
-                                {% for hidden in periodos_formset.empty_form.hidden_fields %}
-                                    {{ hidden }}
-                                {% endfor %}
-
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <label class="form-label">
-                                            Periodo
-                                        </label>
-
-                                        {{ periodos_formset.empty_form.periodo }}
+                                        {% for error in periodo_form.periodo.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                                     </div>
 
-                                    <div class="col-md-5">
-                                        <label class="form-label">
-                                            Monto
-                                        </label>
-
-                                        {{ periodos_formset.empty_form.monto }}
+                                    <div class="col-12 col-md-5">
+                                        <div class="sv-input-group input-group{% if periodo_form.monto.errors %} has-validation{% endif %}">
+                                            <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">
+                                                {{ periodo_form.monto|add_class:"form-control periodo-monto"|append_attr:"placeholder=Monto" }}
+                                                <label for="{{ periodo_form.monto.id_for_label }}">Monto *</label>
+                                            </div>
+                                        </div>
+                                        {% for error in periodo_form.monto.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                                     </div>
 
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button
-                                            type="button"
-                                            class="btn btn-outline-danger eliminar-periodo"
-                                        >
-                                            <i class="fa-solid fa-trash"></i>
+                                    <div class="col-12 col-md-2 d-flex justify-content-md-end">
+                                        <button type="button" class="sv-btn sv-btn-danger sv-btn-icon eliminar-periodo" title="Eliminar periodo" aria-label="Eliminar periodo">
+                                            <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
-                    </template>
 
-                    <hr>
+                        <template id="periodo-form-vacio">
+                            <div class="periodo-form sv-period-card">
+                                {% for hidden in periodos_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
 
-                    <a class="btn btn-outline-secondary" href="{% url 'subproyectos' proyecto.id %}">
-                        Cancelar
-                    </a>
+                                <div class="row g-3 align-items-start">
+                                    <div class="col-12 col-md-5">
+                                        <div class="sv-input-group input-group">
+                                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">
+                                                {{ periodos_formset.empty_form.periodo|add_class:"form-control"|append_attr:"placeholder=Periodo" }}
+                                                <label for="{{ periodos_formset.empty_form.periodo.id_for_label }}">Periodo *</label>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    <input class="btn btn-outline-info" type="submit" value="{% if es_edicion %}Actualizar{% else %}Agregar{% endif %}">
-                
-                </form>
+                                    <div class="col-12 col-md-5">
+                                        <div class="sv-input-group input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-dollar-sign"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">
+                                                {{ periodos_formset.empty_form.monto|add_class:"form-control periodo-monto"|append_attr:"placeholder=Monto" }}
+                                                <label for="{{ periodos_formset.empty_form.monto.id_for_label }}">Monto *</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-2 d-flex justify-content-md-end">
+                                        <button type="button" class="sv-btn sv-btn-danger sv-btn-icon eliminar-periodo" title="Eliminar periodo" aria-label="Eliminar periodo">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="sv-card-footer">
+                        <div class="sv-actions justify-content-end">
+                            <a class="sv-btn sv-btn-outline" href="{% url 'subproyectos' proyecto.id %}">
+                                <i class="fa-solid fa-xmark"></i>
+                                Cancelar
+                            </a>
+
+                            <button id="btn-guardar-subproyecto" class="sv-btn sv-btn-success" type="submit">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span class="sv-save-label">{% if es_edicion %}Guardar cambios{% else %}Agregar subproyecto{% endif %}</span>
+                                <span class="spinner-border spinner-border-sm d-none sv-save-spinner" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
+    </form>
+</main>
 
-    </div>
-</div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
-  
+<style>
+    .sv-project-summary {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+    }
+
+    .sv-project-summary-icon,
+    .sv-budget-summary-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 2.75rem;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: .75rem;
+        background: rgba(62, 146, 204, .12);
+        color: #3e92cc;
+    }
+
+    .sv-budget-summary {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: 1rem;
+        border: 1px solid rgba(25, 135, 84, .2);
+        border-radius: .85rem;
+        background: rgba(25, 135, 84, .06);
+    }
+
+    .sv-budget-summary-icon {
+        background: rgba(25, 135, 84, .12);
+        color: #198754;
+    }
+
+    .sv-subproject-description {
+        min-height: 7rem !important;
+        resize: vertical;
+    }
+
+    .sv-period-list {
+        display: grid;
+        gap: .85rem;
+    }
+
+    .sv-period-card {
+        padding: 1rem;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: .85rem;
+        background: var(--bs-body-bg, #fff);
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .sv-period-card:hover {
+        border-color: rgba(62, 146, 204, .45);
+        box-shadow: 0 .35rem 1rem rgba(15, 44, 68, .06);
+    }
+
+    @media (max-width: 767.98px) {
+        .sv-card-header {
+            align-items: flex-start;
+        }
+
+        .sv-card-header > .d-flex {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<script>
 document.addEventListener('DOMContentLoaded', function () {
     const contenedor = document.getElementById('contenedor-periodos');
     const botonAgregar = document.getElementById('agregar-periodo');
     const plantilla = document.getElementById('periodo-form-vacio');
+    const formulario = document.getElementById('form-subproyecto');
+    const botonGuardar = document.getElementById('btn-guardar-subproyecto');
+    const etiquetaGuardar = botonGuardar.querySelector('.sv-save-label');
+    const spinnerGuardar = botonGuardar.querySelector('.sv-save-spinner');
+    const contadorPeriodos = document.getElementById('periodos-count');
+    const etiquetaPeriodos = document.getElementById('periodos-label');
+    const totalForms = document.querySelector('input[name$="-TOTAL_FORMS"]');
 
-    // Busca automáticamente el management form
-    const totalForms = document.querySelector(
-        'input[name$="-TOTAL_FORMS"]'
-    );
+    let enviando = false;
+    const textoOriginal = etiquetaGuardar.textContent;
 
     if (!contenedor || !botonAgregar || !plantilla || !totalForms) {
-        console.error('No se pudo inicializar el formset', {
-            contenedor,
-            botonAgregar,
-            plantilla,
-            totalForms
-        });
-
+        console.error('No se pudo inicializar el formset de periodos.');
         return;
     }
 
-    // Obtiene el prefijo real, por ejemplo:
-    // periodos, periodosubproyecto_set, etc.
     const prefijo = totalForms.name.replace('-TOTAL_FORMS', '');
+    const expresionIndice = new RegExp(prefijo + '-\\d+-', 'g');
 
-    const expresionIndice = new RegExp(
-        `${prefijo}-\\d+-`,
-        'g'
-    );
+    function actualizarContador() {
+        const cantidad = contenedor.querySelectorAll('.periodo-form').length;
+        contadorPeriodos.textContent = cantidad;
+        etiquetaPeriodos.textContent = cantidad === 1 ? 'periodo' : 'periodos';
+    }
 
     function reindexarFormularios() {
         const formularios = contenedor.querySelectorAll('.periodo-form');
 
-        formularios.forEach(function (formulario, indice) {
-            const elementos = formulario.querySelectorAll(
-                '[name], [id], label[for]'
-            );
-
-            elementos.forEach(function (elemento) {
-                if (elemento.name) {
-                    elemento.name = elemento.name.replace(
-                        expresionIndice,
-                        `${prefijo}-${indice}-`
-                    );
-                }
-
-                if (elemento.id) {
-                    elemento.id = elemento.id.replace(
-                        expresionIndice,
-                        `${prefijo}-${indice}-`
-                    );
-                }
-
-                if (elemento.htmlFor) {
-                    elemento.htmlFor = elemento.htmlFor.replace(
-                        expresionIndice,
-                        `${prefijo}-${indice}-`
-                    );
-                }
+        formularios.forEach(function (periodoForm, indice) {
+            periodoForm.querySelectorAll('[name], [id], label[for]').forEach(function (elemento) {
+                if (elemento.name) elemento.name = elemento.name.replace(expresionIndice, prefijo + '-' + indice + '-');
+                if (elemento.id) elemento.id = elemento.id.replace(expresionIndice, prefijo + '-' + indice + '-');
+                if (elemento.htmlFor) elemento.htmlFor = elemento.htmlFor.replace(expresionIndice, prefijo + '-' + indice + '-');
             });
         });
 
         totalForms.value = formularios.length;
+        actualizarContador();
     }
 
     botonAgregar.addEventListener('click', function () {
-        const indice = parseInt(totalForms.value, 10);
+        const indice = Number.parseInt(totalForms.value, 10);
+        const nuevoFormulario = plantilla.innerHTML.replace(/__prefix__/g, indice);
 
-        const nuevoFormulario = plantilla.innerHTML.replace(
-            /__prefix__/g,
-            indice
-        );
-
-        contenedor.insertAdjacentHTML(
-            'beforeend',
-            nuevoFormulario
-        );
-
+        contenedor.insertAdjacentHTML('beforeend', nuevoFormulario);
         totalForms.value = indice + 1;
+        actualizarContador();
+
+        const ultimoFormulario = contenedor.lastElementChild;
+        const primerCampo = ultimoFormulario ? ultimoFormulario.querySelector('input, select, textarea') : null;
+        if (primerCampo) primerCampo.focus();
     });
 
     contenedor.addEventListener('click', function (event) {
-        const botonEliminar = event.target.closest(
-            '.eliminar-periodo'
-        );
-
-        if (!botonEliminar) {
-            return;
-        }
+        const botonEliminar = event.target.closest('.eliminar-periodo');
+        if (!botonEliminar) return;
 
         const formularios = contenedor.querySelectorAll('.periodo-form');
-
         if (formularios.length <= 1) {
             Swal.fire({
                 title: 'Atención',
                 text: 'El subproyecto debe tener al menos un periodo.',
                 icon: 'warning'
             });
-
             return;
         }
 
         botonEliminar.closest('.periodo-form').remove();
         reindexarFormularios();
     });
+
+    formulario.addEventListener('submit', function (event) {
+        if (enviando) {
+            event.preventDefault();
+            return;
+        }
+
+        if (!formulario.checkValidity()) {
+            event.preventDefault();
+            formulario.classList.add('was-validated');
+            formulario.reportValidity();
+            return;
+        }
+
+        enviando = true;
+        botonGuardar.disabled = true;
+        etiquetaGuardar.textContent = 'Guardando…';
+        spinnerGuardar.classList.remove('d-none');
+    });
+
+    window.addEventListener('pageshow', function () {
+        enviando = false;
+        botonGuardar.disabled = false;
+        etiquetaGuardar.textContent = textoOriginal;
+        spinnerGuardar.classList.add('d-none');
+    });
+
+    actualizarContador();
 });
 </script>
- 
 {% endblock %}
