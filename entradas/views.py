@@ -745,8 +745,8 @@ def articulos_entrada_activos(request, pk):
 
                     for eco_unidad in economicos:
                         Activo.objects.create(
-                            nombre=producto.nombre,
-                            descripcion=producto.nombre,
+                            nombre=producto.nombre[:20],
+                            descripcion=producto.nombre[:100],
                             activo = inv_de_producto,
                             eco_unidad = eco_unidad,
                             creado_por=usuario,
