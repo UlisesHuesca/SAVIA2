@@ -1,192 +1,397 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load l10n %}
 
-<html>
-<head>
-    {% block title %}Invitar provedores{% endblock %}
-</head>
-<body>
+{% block title %}Invitar proveedor{% endblock %}
+
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class="container d-flex justify-content-center align-items-center">
-    <div class="card" style="width: 100%; max-width: 600px;">
-        <div class ="card-header text-center">
-            <h2>Invitar Proveedor</h2>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <div class="sv-page-eyebrow">Proveedores</div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-user-plus"></i>
+                </span>
+                Invitar proveedor
+            </h1>
+            <p class="sv-page-subtitle">
+                Registra los datos del contacto y envía una invitación para completar su información.
+            </p>
         </div>
-        <div class="card-body">
-            <form method="post" class="mt-4" id="form-invite">
+    </header>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8 col-xxl-7">
+            <form method="POST" id="form-invite" novalidate>
                 {% csrf_token %}
 
-                <div class="form-group">
-                    <label for="rfc">RFC del proveedor</label>
-                    <input type="text" name="rfc" id="rfc" class="form-control" required maxlength="14">
-                </div>
-
-                <div class="form-group mt-3">
-                    <label for="email">Correo electrónico del contacto</label>
-                    <input type="email" name="email" id="email" class="form-control" required>
-                </div>
-                {% if es_gerente_compras %}
-                    <div class="mb-3">
-                        <label for="id_distrito" class="form-label">
-                            Distrito
-                        </label>
-
-                        <select name="distrito" id="id_distrito" class="form-select" required>
-                            <option value="">Selecciona un distrito</option>
-
-                            {% for distrito in distritos %}
-                                <option value="{{ distrito.id }}">
-                                    {{ distrito.nombre }}
-                                </option>
-                            {% endfor %}
-                        </select>
+                <section class="sv-card mb-3">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-address-card"></i>
+                                Datos de la invitación
+                            </h2>
+                            <p class="sv-card-subtitle">
+                                El RFC y el correo se verificarán antes de enviar la invitación.
+                            </p>
+                        </div>
                     </div>
-                {% endif %}
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="producto" name="producto">
-                    <label class="form-check-label" for="producto">Producto</label>
-                </div>
+                    <div class="sv-card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-id-card"></i>
+                                    </span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        <input
+                                            type="text"
+                                            name="rfc"
+                                            id="rfc"
+                                            class="form-control text-uppercase"
+                                            placeholder="RFC del proveedor"
+                                            required
+                                            minlength="12"
+                                            maxlength="14"
+                                            autocomplete="off"
+                                            spellcheck="false">
+                                        <label for="rfc">RFC del proveedor</label>
+                                    </div>
+                                </div>
+                                <div class="form-text">
+                                    Se convertirá automáticamente a mayúsculas.
+                                </div>
+                            </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="servicio" name="servicio">
-                    <label class="form-check-label" for="servicio">Servicio</label>
-                </div>
+                            <div class="col-12 col-md-6">
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            id="email"
+                                            class="form-control"
+                                            placeholder="Correo electrónico"
+                                            required
+                                            autocomplete="email">
+                                        <label for="email">Correo del contacto</label>
+                                    </div>
+                                </div>
+                                <div class="form-text">
+                                    Aquí se enviará el enlace para completar el registro.
+                                </div>
+                            </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="arrendamiento" name="arrendamiento">
-                    <label class="form-check-label" for="arrendamiento">Arrendamiento</label>
-                </div>
+                            {% if es_gerente_compras %}
+                            <div class="col-12">
+                                <div class="sv-input-group input-group">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                    </span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        <select name="distrito" id="id_distrito" class="form-select" required>
+                                            <option value="" selected>Selecciona un distrito</option>
+                                            {% for distrito in distritos %}
+                                            <option value="{{ distrito.id|unlocalize }}">{{ distrito.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="id_distrito">Distrito de la invitación</label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
 
-                {# Campo oculto para el flujo elegido #}
+                <section class="sv-card mb-3">
+                    <div class="sv-card-header">
+                        <div>
+                            <h2 class="sv-card-title">
+                                <i class="fa-solid fa-briefcase"></i>
+                                Tipo de proveedor
+                            </h2>
+                            <p class="sv-card-subtitle">
+                                Selecciona una o varias actividades comerciales.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label class="sv-invite-option" for="producto">
+                                    <input class="form-check-input" type="checkbox" id="producto" name="producto">
+                                    <span class="sv-invite-option-icon">
+                                        <i class="fa-solid fa-boxes-stacked"></i>
+                                    </span>
+                                    <span>
+                                        <strong class="d-block">Producto</strong>
+                                        <small>Venta y suministro de materiales.</small>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label class="sv-invite-option" for="servicio">
+                                    <input class="form-check-input" type="checkbox" id="servicio" name="servicio">
+                                    <span class="sv-invite-option-icon">
+                                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                                    </span>
+                                    <span>
+                                        <strong class="d-block">Servicio</strong>
+                                        <small>Prestación de servicios especializados.</small>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label class="sv-invite-option" for="arrendamiento">
+                                    <input class="form-check-input" type="checkbox" id="arrendamiento" name="arrendamiento">
+                                    <span class="sv-invite-option-icon">
+                                        <i class="fa-solid fa-file-contract"></i>
+                                    </span>
+                                    <span>
+                                        <strong class="d-block">Arrendamiento</strong>
+                                        <small>Renta de bienes, equipos o inmuebles.</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="sv-card">
+                    <div class="sv-card-body">
+                        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3">
+                            <div class="d-flex align-items-start gap-2 flex-grow-1">
+                                <i class="fa-solid fa-circle-info text-info mt-1"></i>
+                                <p class="sv-cell-subtitle mb-0">
+                                    Si el RFC o el correo ya existen, podrás crear únicamente una dirección o agregar también un nuevo usuario.
+                                </p>
+                            </div>
+
+                            <div class="sv-actions justify-content-end">
+                                <button type="button" id="btn-send" class="sv-btn sv-btn-primary">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span class="sv-button-label">Enviar invitación</span>
+                                    <span class="spinner-border spinner-border-sm d-none sv-button-spinner" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <input type="hidden" name="tipo" id="tipo" value="">
-
-                <button type="button" id="btn-send" class="btn btn-primary mt-4" onclick="precheckInvite()">
-                    Enviar invitación
-                </button>
             </form>
         </div>
     </div>
-</div>
+</main>
+
+<style>
+    .sv-invite-option {
+        display: flex;
+        align-items: flex-start;
+        gap: .85rem;
+        height: 100%;
+        padding: 1rem;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: .85rem;
+        background: var(--bs-body-bg, #fff);
+        color: inherit;
+        cursor: pointer;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+    .sv-invite-option:hover {
+        border-color: var(--bs-primary, #0d6efd);
+        box-shadow: 0 .35rem 1rem rgba(15, 44, 68, .08);
+        transform: translateY(-1px);
+    }
+
+    .sv-invite-option:has(.form-check-input:checked) {
+        border-color: var(--bs-primary, #0d6efd);
+        background: rgba(13, 110, 253, .06);
+        box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .1);
+    }
+
+    .sv-invite-option .form-check-input {
+        flex: 0 0 auto;
+        margin-top: .2rem;
+    }
+
+    .sv-invite-option-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 2.25rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: .65rem;
+        background: rgba(62, 146, 204, .12);
+        color: #3e92cc;
+    }
+
+    .sv-invite-option small {
+        color: var(--bs-secondary-color, #6c757d);
+        line-height: 1.35;
+    }
+</style>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
-  function disableBtn(disabled) {
-    const btn = document.getElementById('btn-send');
-    btn.disabled = disabled;
-  }
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-invite');
+    const sendButton = document.getElementById('btn-send');
+    const buttonLabel = sendButton.querySelector('.sv-button-label');
+    const buttonSpinner = sendButton.querySelector('.sv-button-spinner');
+    const rfcField = document.getElementById('rfc');
+    const emailField = document.getElementById('email');
+    const typeField = document.getElementById('tipo');
 
-  function precheckInvite() {
-    const rfcEl  = document.getElementById('rfc');
-    const emailEl = document.getElementById('email');
-    const tipoEl  = document.getElementById('tipo');
-    const form    = document.getElementById('form-invite');
-
-    // Normaliza RFC a mayúsculas
-    rfcEl.value   = (rfcEl.value || '').trim().toUpperCase();
-    emailEl.value = (emailEl.value || '').trim();
-
-    const rfc   = rfcEl.value;
-    const email = emailEl.value;
-
-    if (!rfc || !email) {
-      Swal.fire({
-        title: "Datos incompletos",
-        text: "RFC y correo son obligatorios.",
-        icon: "warning"
-      });
-      return;
+    function setLoading(loading) {
+        sendButton.disabled = loading;
+        buttonSpinner.classList.toggle('d-none', !loading);
+        buttonLabel.textContent = loading ? 'Verificando…' : 'Enviar invitación';
     }
 
-    disableBtn(true);
-
-    fetch("{% url 'check_proveedor_ajax' %}?rfc=" + encodeURIComponent(rfc) +
-        "&email=" + encodeURIComponent(email), {
-    credentials: 'same-origin'
-    })
-    .then(r => r.json())
-    .then(data => {
-    console.log('RESP JSON:', data);
-
-    // CASO FELIZ: NO existe RFC NI correo/invitación → nuevo proveedor normal
-    if (!data.exists_rfc && !data.exists_email_or_invite) {
-      tipoEl.value = 'NUEVO_PROVEEDOR';
-      form.submit();
-      return;
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = value == null ? '' : String(value);
+        return element.innerHTML;
     }
 
-    // Proveedor / correo ya existen → mostrar opciones
-    let extraInfo = '';
-    if (data.proveedor_razon) {
-      extraInfo += `<p><strong>Proveedor:</strong> ${data.proveedor_razon}</p>`;
-    }
-    if (data.direcciones && data.direcciones.length) {
-      extraInfo += '<ul>';
-      data.direcciones.forEach(d => {
-        extraInfo += `<li>${d.distrito} — ${d.estatus}</li>`;
-      });
-      extraInfo += '</ul>';
-    }
-
-    Swal.fire({
-      title: 'Proveedor existente',
-      html: 'El RFC o el correo ya existen.<br>' + extraInfo,
-      icon: 'question',
-      showCancelButton: true,
-      cancelButtonText: 'Cancelar',
-      showDenyButton: true,
-      denyButtonText: 'Solo nueva dirección',
-      confirmButtonText: 'Dirección + nuevo usuario'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        tipoEl.value = 'NUEVO_USUARIO';   // dirección + nuevo usuario
+    function submitInvite(type) {
+        typeField.value = type;
         form.submit();
-      } else if (result.isDenied) {
-        tipoEl.value = 'NUEVA_DIRECCION'; // solo nueva dirección
-        form.submit();
-      } else {
-        disableBtn(false);
-      }
-      });
-    })
-    .catch(err => {
-      console.error('Error en fetch check_proveedor_ajax:', err);
-      Swal.fire({
-        title: "Error",
-        text: "No se pudo verificar RFC/correo.",
-        icon: "error"
-      });
-      disableBtn(false);
+    }
+
+    async function precheckInvite() {
+        rfcField.value = (rfcField.value || '').trim().toUpperCase();
+        emailField.value = (emailField.value || '').trim();
+
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            form.reportValidity();
+            return;
+        }
+
+        setLoading(true);
+
+        const params = new URLSearchParams({
+            rfc: rfcField.value,
+            email: emailField.value
+        });
+
+        try {
+            const response = await fetch("{% url 'check_proveedor_ajax' %}?" + params.toString(), {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('No fue posible verificar los datos del proveedor.');
+            }
+
+            const data = await response.json();
+
+            if (!data.exists_rfc && !data.exists_email_or_invite) {
+                submitInvite('NUEVO_PROVEEDOR');
+                return;
+            }
+
+            let extraInfo = '';
+
+            if (data.proveedor_razon) {
+                extraInfo += '<div class="text-start mt-3">' +
+                    '<span class="text-muted d-block">Proveedor encontrado</span>' +
+                    '<strong>' + escapeHtml(data.proveedor_razon) + '</strong>' +
+                    '</div>';
+            }
+
+            if (Array.isArray(data.direcciones) && data.direcciones.length) {
+                extraInfo += '<div class="text-start mt-3">' +
+                    '<span class="text-muted d-block mb-2">Direcciones registradas</span>' +
+                    '<div class="list-group">';
+
+                data.direcciones.forEach(function (direccion) {
+                    extraInfo += '<div class="list-group-item d-flex justify-content-between gap-3">' +
+                        '<span>' + escapeHtml(direccion.distrito || 'Sin distrito') + '</span>' +
+                        '<span class="badge bg-light text-dark border">' + escapeHtml(direccion.estatus || 'Sin estatus') + '</span>' +
+                        '</div>';
+                });
+
+                extraInfo += '</div></div>';
+            }
+
+            const result = await Swal.fire({
+                title: 'Proveedor existente',
+                html: '<p class="mb-0">El RFC, el correo o una invitación previa ya se encuentran registrados.</p>' + extraInfo,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: '<i class="fa-solid fa-user-plus me-1"></i> Dirección + usuario',
+                denyButtonText: '<i class="fa-solid fa-location-dot me-1"></i> Solo dirección',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    denyButton: 'btn btn-outline-primary',
+                    cancelButton: 'btn btn-outline-secondary'
+                },
+                buttonsStyling: false
+            });
+
+            if (result.isConfirmed) {
+                submitInvite('NUEVO_USUARIO');
+            } else if (result.isDenied) {
+                submitInvite('NUEVA_DIRECCION');
+            } else {
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Error al verificar el proveedor:', error);
+            await Swal.fire({
+                title: 'Error',
+                text: error.message || 'No se pudo verificar el RFC o el correo.',
+                icon: 'error'
+            });
+            setLoading(false);
+        }
+    }
+
+    rfcField.addEventListener('input', function () {
+        rfcField.value = rfcField.value.toUpperCase().replace(/\s+/g, '');
     });
-  }
-</script>
 
+    sendButton.addEventListener('click', precheckInvite);
+
+    form.addEventListener('submit', function (event) {
+        if (!typeField.value) {
+            event.preventDefault();
+            precheckInvite();
+        }
+    });
+});
+</script>
 {% endblock %}
-</body>
-</html>
