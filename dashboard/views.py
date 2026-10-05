@@ -45,6 +45,7 @@ import io
 import os
 
 import xlsxwriter
+import fitz
 
 #import decimal
 from openpyxl import Workbook
@@ -3179,7 +3180,7 @@ def Add_Product_Critico(request):
 #    raise Http404("No tienes permiso para ver esta vista")
     
 
-import fitz
+
 
 def extraer_domicilio_fiscal(pdf_path: str) -> str:
     doc = fitz.open(pdf_path)

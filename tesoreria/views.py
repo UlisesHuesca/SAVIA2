@@ -1483,7 +1483,7 @@ def matriz_pagos(request):
 
     
     #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
-    distritos = Distrito.objects.filter(id__in=almacenes_distritos)
+    distritos = Distrito.objects.filter(id__in=almacenes_distritos).exclude(nombre__in = ["Yerod","BRASIL"])
     tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos" ], st_activo = True, distritos__in = almacenes_distritos)
     #Set up pagination
     p = Paginator(pagos, 50)

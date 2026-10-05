@@ -69,16 +69,18 @@
         <div class="sv-actions">
             <form method="POST" class="d-inline">
                 {% csrf_token %}
+                {% if usuario.tipo.proyectos %}
                 <button type="submit" class="sv-btn sv-btn-success" name="btnReporte" value="1">
                     <i class="fa-solid fa-file-excel"></i>
                     Exportar Excel
                 </button>
             </form>
-
+            
             <a class="sv-btn sv-btn-primary" href="{% url 'proyectos-add' %}">
                 <i class="fa-solid fa-plus"></i>
                 Agregar proyecto
             </a>
+            {% endif %}
         </div>
     </header>
 
