@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import render_to_string
+from django.urls import reverse
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from utils.email_theme import obtener_tema_correo
@@ -1369,10 +1370,32 @@ def matriz_reportes_calidad(request):
 def productos(request, pk):
     compra = Compra.objects.get(id=pk)
     articulos_comprados = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False)
+    origen = request.GET.get('origen', 'entrada')
+
+    # Se utiliza una lista controlada de rutas.
+    # No se redirige directamente a un valor recibido por GET.
+    rutas_regreso = {
+        'entrada': {
+            'url': reverse('pendientes_entrada'),
+            'texto': 'Regresar a entradas',
+        },
+        'servicio': {
+            'url': reverse('entrada-servicios'),
+            'texto': 'Regresar a servicios',
+        },
+    }
+
+    configuracion_regreso = rutas_regreso.get(
+        origen,
+        rutas_regreso['entrada'],
+    )
 
     context = {
         'compra': compra,
         'articulos_comprados': articulos_comprados,
+        'origen': origen,
+        'url_regreso': configuracion_regreso['url'],
+        'texto_regreso': configuracion_regreso['texto'],
     }
 
     return render(request, 'entradas/productos.html', context)

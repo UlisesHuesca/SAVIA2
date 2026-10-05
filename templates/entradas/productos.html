@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-{% block title %}Artículos comprados{% endblock %}
+{% block title %}{% if origen == "servicio" %}Servicios comprados{% else %}Artículos comprados{% endif %}{% endblock %}
 
 {% block content %}
 <main class="sv-page sv-page-with-navbar">
@@ -13,12 +13,22 @@
                 <span class="sv-page-title-icon">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </span>
-                Artículos comprados
+                {% if origen == "servicio" %}
+                    Servicios comprados
+                {% else %}
+                    Artículos comprados
+                {% endif %}
             </h1>
-
-            <p class="sv-page-subtitle">
-                Consulta los artículos pendientes de entrada y registra su revisión de calidad.
-            </p>
+            {% if origen == "servicio" %}
+                <p class="sv-page-subtitle">
+                    Consulta los servicios pendientes de entrada.
+                </p>
+            {% else %}
+                <p class="sv-page-subtitle">
+                    Consulta los artículos pendientes de entrada y registra su revisión de calidad.
+                </p>
+            {% endif %}
+           
         </div>
 
         <span class="sv-badge sv-badge-primary">
@@ -139,9 +149,9 @@
 
         <div class="sv-card-footer d-flex justify-content-end">
             <a class="sv-btn sv-btn-outline"
-               href="{% url 'pendientes_entrada' %}">
+               href="{{url_regreso}}">
                 <i class="fa-solid fa-arrow-left"></i>
-                Regresar
+                {{texto_regreso}}
             </a>
         </div>
     </section>

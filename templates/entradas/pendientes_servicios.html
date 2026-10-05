@@ -220,12 +220,11 @@
                                title="Registrar entrada" aria-label="Registrar entrada">
                                 <i class="fa-solid fa-box-archive"></i>
                             </a>
-                            <button type="button" class="sv-btn sv-btn-success sv-btn-icon"
-                               data-bs-toggle="modal" data-bs-target="#dialog"
-                               hx-target="#document" hx-get="{% url 'productos' compra.id %}"
+                            <a class="sv-btn sv-btn-success sv-btn-icon"
+                               href="{% url 'productos' compra.id %}?origen=servicio"
                                title="Ver productos" aria-label="Ver productos">
                                 <i class="fa-solid fa-box-open"></i>
-                            </button>
+                            </a>
                             <a class="sv-btn sv-btn-warning sv-btn-icon"
                                href="{% url 'no-conformidad' compra.id %}"
                                data-bs-toggle="tooltip" data-bs-placement="top"
