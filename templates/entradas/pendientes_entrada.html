@@ -228,6 +228,19 @@
                                title="Registrar entrada" aria-label="Registrar entrada">
                                 <i class="fa-solid fa-box-archive"></i>
                             </a>
+                                {% if compra.estado_facturas == "sin_facturas" %}
+                                    <a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" title="No tiene facturas">
+                                        <i class="fa-solid fa-file-circle-xmark"></i>
+                                    </a>
+                                    {% elif compra.estado_facturas == "todas_autorizadas" %}
+                                    <a class="sv-btn sv-btn-icon sv-btn-success" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" title="Todas las facturas validadas">
+                                        <i class="fa-solid fa-file-circle-check"></i>
+                                    </a>
+                                    {% elif compra.estado_facturas == "pendientes" %}
+                                    <a class="sv-btn sv-btn-icon sv-btn-warning" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" title="Facturas pendientes de validar">
+                                        <i class="fa-solid fa-file-circle-exclamation"></i>
+                                    </a>
+                                {% endif %}
                             {% else %}
                             <a class="sv-btn sv-btn-info sv-btn-icon"
                                href="{% url 'articulos-entrada' compra.id %}?origen=entrada"

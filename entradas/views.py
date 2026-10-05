@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, Max, OuterRef,Exists #Value, DecimalField , Subquery, Avg
+from django.db.models import Q, Sum, Max, Count, Case, When, Value
 from django.db.models.functions import Coalesce
 from django.db import IntegrityError, transaction
 from django.contrib import messages
@@ -167,13 +167,19 @@ def entrada_activos(request):
         ).distinct()
 
     if usuario.tipo.activos == True:
-        compras = compras_base.filter(id__in = entrada_productos.values('oc_id'))
+        compras = compras_base.filter(id__in = entrada_productos.values('oc_id')).annotate(
+            total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                        )
 
     elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
-        compras = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = entrada_productos.values('oc_id'))
+        compras = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = entrada_productos.values('oc_id')).annotate(
+            total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                        )
     else:
         #Este ciclo solo trae a la compras con servicios igual a false para utilizarla en el ciclo de abajo y ser marcadas como True en caso de que solo tengan servicios
-        compras = compras_base.filter( req__orden__staff = usuario)
+        compras = compras_base.filter( req__orden__staff = usuario).annotate(
+            total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                        )
         
 
     myfilter = CompraFilter(request.GET, queryset=compras)
@@ -190,6 +196,21 @@ def entrada_activos(request):
     p = Paginator(compras, 50)
     page = request.GET.get('page')
     compras_list = p.get_page(page)
+
+    for compra in compras_list:
+        if compra.total_facturas == 0:
+            compra.estado_facturas = 'sin_facturas'
+        elif compra.autorizadas == compra.total_facturas:
+            compra.estado_facturas = 'todas_autorizadas'
+        else:
+            compra.estado_facturas = 'pendientes'
+            
+        # Sumar totales de facturas relacionadas que cumplan con las condiciones
+        #compra.suma_total_facturas = sum(
+        #    decimal.Decimal(factura.emisor['total'])
+        #    for factura in compra.facturas.all()
+        #    if factura.factura_xml and factura.hecho and factura.autorizada and factura.emisor is not None
+        #)
 
     context = {
         'compras':compras,

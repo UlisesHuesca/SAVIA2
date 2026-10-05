@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
+from django.db import transaction
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField, OuterRef, Subquery, DateTimeField
 from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
@@ -2390,7 +2391,7 @@ def crear_comparativo(request):
     usuario = Profile.objects.get(id = pk_perfil)
     #usuario = colaborador_sel.get(id = pk_perfil)
     
-    comparativo, created = Comparativo.objects.get_or_create(completo= False, creada_por=usuario)
+    comparativo, created = (Comparativo.objects.filter(Q(nombre__isnull=True) | Q(nombre='')).get_or_create(completo= False, creada_por=usuario))
     productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
     error_messages = {}
     form_item = Item_ComparativoForm()
@@ -2546,22 +2547,22 @@ def editar_comparativo(request, pk):
 @perfil_seleccionado_required
 def clonar_comparativo(request, pk):
     usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
+    with transaction.atomic():
+        original = Comparativo.objects.get(id=pk)
 
-    original = Comparativo.objects.get(id=pk)
+        # 1. Crear nuevo comparativo basado en el original
+        nuevo = Comparativo.objects.get(pk=pk)
+        nuevo.pk = None  # esto crea un nuevo registro
+        nuevo.completo = False
+        nuevo.created_at = date.today()
+        nuevo.creada_por = usuario
+        nuevo.save()
 
-    # 1. Crear nuevo comparativo basado en el original
-    nuevo = Comparativo.objects.get(pk=pk)
-    nuevo.pk = None  # esto crea un nuevo registro
-    nuevo.completo = False
-    nuevo.created_at = date.today()
-    nuevo.creado_por = usuario
-    nuevo.save()
-
-    # 2. Copiar productos del original
-    productos_originales = Item_Comparativo.objects.filter(
-        comparativo=original,
-        completo=True
-    )
+        # 2. Copiar productos del original
+        productos_originales = Item_Comparativo.objects.filter(
+            comparativo=original,
+            completo=True
+        )
 
     for item in productos_originales:
         item.pk = None
