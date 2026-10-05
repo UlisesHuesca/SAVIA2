@@ -48,8 +48,8 @@
                     </div>
 
                     <div class="sv-card-body">
-                        <div class="sv-project-summary">
-                            <span class="sv-project-summary-icon">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="sv-page-title-icon flex-shrink-0">
                                 <i class="fa-solid fa-building"></i>
                             </span>
                             <div>
@@ -68,8 +68,8 @@
                         </div>
 
                         {% if es_edicion %}
-                        <div class="sv-budget-summary mt-3">
-                            <span class="sv-budget-summary-icon">
+                        <div class="alert alert-success d-flex align-items-center gap-3 mt-3 mb-0" role="status">
+                            <span class="sv-page-title-icon flex-shrink-0 text-success">
                                 <i class="fa-solid fa-wallet"></i>
                             </span>
                             <div>
@@ -128,7 +128,7 @@
                                 <div class="sv-input-group input-group{% if form.descripcion.errors %} has-validation{% endif %}">
                                     <span class="input-group-text align-items-start pt-3"><i class="fa-solid fa-align-left"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
-                                        {{ form.descripcion|add_class:"form-control sv-subproject-description"|append_attr:"placeholder=Descripción" }}
+                                        {{ form.descripcion|add_class:"form-control"|append_attr:"placeholder=Descripción"|append_attr:"rows=4" }}
                                         <label for="{{ form.descripcion.id_for_label }}">Descripción *</label>
                                     </div>
                                 </div>
@@ -141,7 +141,7 @@
 
             <div class="col-12">
                 <section class="sv-card">
-                    <div class="sv-card-header">
+                    <div class="sv-card-header d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
                         <div>
                             <h2 class="sv-card-title">
                                 <i class="fa-solid fa-calendar-days"></i>
@@ -150,7 +150,7 @@
                             <p class="sv-card-subtitle">Distribuye el presupuesto del subproyecto entre sus periodos.</p>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap ms-md-auto">
                             <span class="sv-badge sv-badge-primary">
                                 <i class="fa-solid fa-layer-group"></i>
                                 <span id="periodos-count">{{ periodos_formset|length }}</span>
@@ -177,9 +177,9 @@
                         </div>
                         {% endif %}
 
-                        <div id="contenedor-periodos" class="sv-period-list">
+                        <div id="contenedor-periodos" class="d-grid gap-3">
                             {% for periodo_form in periodos_formset %}
-                            <div class="periodo-form sv-period-card">
+                            <div class="periodo-form border rounded-3 p-3 bg-body">
                                 {% for hidden in periodo_form.hidden_fields %}{{ hidden }}{% endfor %}
 
                                 {% if periodo_form.non_field_errors %}
@@ -222,7 +222,7 @@
                         </div>
 
                         <template id="periodo-form-vacio">
-                            <div class="periodo-form sv-period-card">
+                            <div class="periodo-form border rounded-3 p-3 bg-body">
                                 {% for hidden in periodos_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
 
                                 <div class="row g-3 align-items-start">
@@ -275,76 +275,6 @@
         </div>
     </form>
 </main>
-
-<style>
-    .sv-project-summary {
-        display: flex;
-        align-items: center;
-        gap: .85rem;
-    }
-
-    .sv-project-summary-icon,
-    .sv-budget-summary-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 2.75rem;
-        width: 2.75rem;
-        height: 2.75rem;
-        border-radius: .75rem;
-        background: rgba(62, 146, 204, .12);
-        color: #3e92cc;
-    }
-
-    .sv-budget-summary {
-        display: flex;
-        align-items: center;
-        gap: .85rem;
-        padding: 1rem;
-        border: 1px solid rgba(25, 135, 84, .2);
-        border-radius: .85rem;
-        background: rgba(25, 135, 84, .06);
-    }
-
-    .sv-budget-summary-icon {
-        background: rgba(25, 135, 84, .12);
-        color: #198754;
-    }
-
-    .sv-subproject-description {
-        min-height: 7rem !important;
-        resize: vertical;
-    }
-
-    .sv-period-list {
-        display: grid;
-        gap: .85rem;
-    }
-
-    .sv-period-card {
-        padding: 1rem;
-        border: 1px solid var(--bs-border-color, #dee2e6);
-        border-radius: .85rem;
-        background: var(--bs-body-bg, #fff);
-        transition: border-color .2s ease, box-shadow .2s ease;
-    }
-
-    .sv-period-card:hover {
-        border-color: rgba(62, 146, 204, .45);
-        box-shadow: 0 .35rem 1rem rgba(15, 44, 68, .06);
-    }
-
-    @media (max-width: 767.98px) {
-        .sv-card-header {
-            align-items: flex-start;
-        }
-
-        .sv-card-header > .d-flex {
-            width: 100%;
-            flex-wrap: wrap;
-        }
-    }
-</style>
 
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

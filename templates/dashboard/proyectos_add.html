@@ -2,9 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-
-{% block title %}Edición de proyecto{% endblock %}
-
+{% block title %}Agregar proyecto{% endblock %}
 {% block content %}
 <main class="sv-page sv-page-with-navbar">
     <header class="sv-page-header">
@@ -14,24 +12,21 @@
                 <span class="sv-page-title-icon">
                     <i class="fa-solid fa-diagram-project"></i>
                 </span>
-                Editar proyecto
+                Agregar proyecto
             </h1>
             <p class="sv-page-subtitle">
-                Actualiza la información general, el contrato y la clasificación del proyecto.
+                Agrega un nuevo proyecto con su información general, contrato y clasificación.
             </p>
         </div>
-
         <a class="sv-btn sv-btn-outline" href="{% url 'configuracion-proyectos' %}">
             <i class="fa-solid fa-arrow-left"></i>
             Regresar
         </a>
     </header>
-
     <div class="row justify-content-center">
         <div class="col-12 col-xl-9 col-xxl-8">
             <form method="POST" id="idForm" novalidate>
                 {% csrf_token %}
-
                 <section class="sv-card">
                     <div class="sv-card-header">
                         <div>
@@ -40,24 +35,22 @@
                                 Información del proyecto
                             </h2>
                             <p class="sv-card-subtitle">
-                                Los cambios se aplicarán a las operaciones relacionadas con este proyecto.
+                                Ingresa la información general del proyecto.
                             </p>
                         </div>
                     </div>
-
                     <div class="sv-card-body">
                         {% if form.non_field_errors %}
                         <div class="alert alert-danger" role="alert">
                             <div class="fw-semibold mb-1">
                                 <i class="fa-solid fa-circle-exclamation me-1"></i>
-                                No fue posible actualizar el proyecto
+                                No fue posible agregar el proyecto
                             </div>
                             {% for error in form.non_field_errors %}
                             <div>{{ error }}</div>
                             {% endfor %}
                         </div>
                         {% endif %}
-
                         <div class="row g-3">
                             <div class="col-12 col-lg-7">
                                 <div class="sv-input-group input-group{% if form.nombre.errors %} has-validation{% endif %}">
@@ -73,7 +66,6 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
                             </div>
-
                             <div class="col-12 col-lg-5">
                                 <div class="sv-input-group input-group{% if form.status_de_entrega.errors %} has-validation{% endif %}">
                                     <span class="input-group-text">
@@ -88,14 +80,13 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
                             </div>
-
                             <div class="col-12">
                                 <div class="sv-input-group input-group{% if form.descripcion.errors %} has-validation{% endif %}">
                                     <span class="input-group-text align-items-start pt-3">
                                         <i class="fa-solid fa-align-left"></i>
                                     </span>
                                     <div class="form-floating form-floating-group flex-grow-1">
-                                        {{ form.descripcion|add_class:"form-control sv-project-description"|append_attr:"placeholder=Descripción del proyecto" }}
+                                {{ form.descripcion|add_class:"form-control"|append_attr:"placeholder=Descripción del proyecto"|append_attr:"rows=4" }}
                                         <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
                                     </div>
                                 </div>
@@ -103,13 +94,12 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
                             </div>
-
                             <div class="col-12 col-md-6">
-                                <div class="sv-input-group input-group{% if form.contrato.errors %} has-validation{% endif %}">
+                                <div class="sv-input-group input-group flex-nowrap{% if form.contrato.errors %} has-validation{% endif %}">
                                     <span class="input-group-text">
                                         <i class="fa-solid fa-file-contract"></i>
                                     </span>
-                                    <div class="sv-select2-expand flex-grow-1">
+                                    <div class="flex-grow-1 overflow-hidden">
                                         {{ form.contrato|add_class:"form-select" }}
                                     </div>
                                 </div>
@@ -117,7 +107,6 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
                             </div>
-
                             <div class="col-12 col-md-6">
                                 <div class="sv-input-group input-group{% if form.clase.errors %} has-validation{% endif %}">
                                     <span class="input-group-text">
@@ -134,17 +123,15 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="sv-card-footer">
                         <div class="sv-actions justify-content-end">
                             <a class="sv-btn sv-btn-outline" href="{% url 'configuracion-proyectos' %}">
                                 <i class="fa-solid fa-xmark"></i>
                                 Cancelar
                             </a>
-
                             <button id="submit-button" class="sv-btn sv-btn-success" type="submit">
                                 <i class="fa-solid fa-floppy-disk"></i>
-                                <span class="sv-submit-label">Guardar cambios</span>
+                                <span class="sv-submit-label">Guardar proyecto</span>
                                 <span class="spinner-border spinner-border-sm d-none sv-submit-spinner" role="status" aria-hidden="true"></span>
                             </button>
                         </div>
@@ -154,7 +141,6 @@
         </div>
     </div>
 </main>
-
 <div class="modal fade"
      id="loadingIndicator"
      data-bs-backdrop="static"
@@ -176,7 +162,6 @@
                      width="96"
                      class="img-fluid rounded">
                 {% endif %}
-
                 <div>
                     <strong>Guardando proyecto</strong>
                     <p class="sv-cell-subtitle mb-0">
@@ -184,84 +169,14 @@
                         <i class="fa-solid fa-mug-hot"></i>
                     </p>
                 </div>
-
                 <div class="spinner-border ms-auto" role="status" aria-label="Guardando"></div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .sv-project-description {
-        min-height: 7rem !important;
-        resize: vertical;
-    }
-
-    .sv-select2-expand {
-        min-width: 0;
-        min-height: 58px;
-        border: 1px solid var(--bs-border-color, #ced4da);
-        border-left: 0;
-        border-radius: 0 .75rem .75rem 0;
-        background-color: var(--bs-body-bg, #fff);
-        overflow: hidden;
-        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    }
-
-    .sv-input-group:has(.sv-select2-expand) {
-        flex-wrap: nowrap;
-    }
-
-    .sv-input-group:has(.sv-select2-expand) > .input-group-text {
-        border-radius: .75rem 0 0 .75rem;
-    }
-
-    .sv-select2-expand:focus-within {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
-    }
-
-    .sv-select2-expand .select2-container {
-        display: block;
-        width: 100% !important;
-        height: 100%;
-    }
-
-    .sv-input-group .sv-select2-expand .select2-selection--single {
-        min-height: 58px;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent;
-        display: flex;
-        align-items: center;
-    }
-
-    .sv-input-group .sv-select2-expand .select2-selection__rendered {
-        width: 100%;
-        padding: 0 2.75rem 0 1rem;
-        line-height: 1.25;
-    }
-
-    .sv-input-group .sv-select2-expand .select2-selection__arrow {
-        top: 50%;
-        right: .75rem;
-        transform: translateY(-50%);
-    }
-
-    .sv-input-group .sv-select2-expand .select2-selection__clear {
-        position: absolute;
-        top: 50%;
-        right: 2.3rem;
-        transform: translateY(-50%);
-        margin: 0;
-        z-index: 2;
-    }
-</style>
-
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 {% if messages %}
     {% for message in messages %}
     <script>
@@ -273,7 +188,6 @@
     </script>
     {% endfor %}
 {% endif %}
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('idForm');
@@ -282,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitSpinner = submitButton.querySelector('.sv-submit-spinner');
     const loadingElement = document.getElementById('loadingIndicator');
     let submitting = false;
-
     if (window.jQuery && jQuery.fn.select2) {
         jQuery('#{{ form.contrato.id_for_label }}').select2({
             width: '100%',
@@ -295,25 +208,19 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
     form.addEventListener('submit', function (event) {
         event.preventDefault();
-
         if (submitting) return;
-
         if (!form.checkValidity()) {
             form.classList.add('was-validated');
             form.reportValidity();
             return;
         }
-
         submitting = true;
         submitButton.disabled = true;
         submitLabel.textContent = 'Guardando…';
         submitSpinner.classList.remove('d-none');
-
         bootstrap.Modal.getOrCreateInstance(loadingElement).show();
-
         window.setTimeout(function () {
             form.submit();
         }, 75);
