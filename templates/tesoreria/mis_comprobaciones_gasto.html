@@ -1,15 +1,10 @@
 {% extends 'partials/base.html' %}
-
 {% load widget_tweaks %}
 {% load l10n %}
 {% load tt_extras %}
-
 {% block title %}Mis gastos anuales{% endblock %}
-
 {% block content %}
-
 <main class="sv-page sv-page-with-navbar">
-
     <!-- Encabezado -->
     <header class="sv-page-header">
         <div>
@@ -17,19 +12,15 @@
                 <span class="sv-page-title-icon">
                     <i class="fa-solid fa-receipt"></i>
                 </span>
-
                 Mis gastos
             </h1>
-
             <p class="sv-page-subtitle">
                 Consulta y administra tus comprobaciones de gastos correspondientes
                 a {{ año_anterior }} y {{ año_actual }}.
             </p>
         </div>
-
         <form method="POST">
             {% csrf_token %}
-
             <button
                 type="submit"
                 class="sv-btn sv-btn-success"
@@ -41,22 +32,18 @@
             </button>
         </form>
     </header>
-
     <!-- Navegación Gastos / Viáticos -->
     <section class="sv-card mb-4">
         <div class="sv-card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-
                 <div>
                     <span class="sv-cell-title">
                         Tipo de comprobación
                     </span>
-
                     <span class="sv-cell-subtitle">
                         Selecciona la información que deseas consultar.
                     </span>
                 </div>
-
                 <nav
                     class="d-flex flex-wrap gap-2"
                     aria-label="Tipo de comprobación"
@@ -65,7 +52,6 @@
                         <i class="fa-solid fa-receipt"></i>
                         Gastos
                     </span>
-
                     <a
                         href="{% url 'mis_comprobaciones_viaticos' %}"
                         class="sv-btn sv-btn-secondary"
@@ -74,85 +60,60 @@
                         Viáticos
                     </a>
                 </nav>
-
             </div>
         </div>
     </section>
-
     <!-- Filtros -->
     <section class="sv-card mb-4">
-
         <div class="sv-card-header">
             <div>
                 <h2 class="sv-card-title">
                     <i class="fa-solid fa-filter me-2"></i>
                     Filtros
                 </h2>
-
                 <p class="sv-card-subtitle">
                     Busca por folio o por intervalo de fechas.
                 </p>
             </div>
         </div>
-
         <div class="sv-card-body">
             <form method="GET">
-                <div class="row g-3 align-items-end">
-
-                    <div class="col-12 col-lg-4">
-                        <label
-                            class="sv-cell-title mb-2"
-                            for="{{ myfilter.form.folio.id_for_label }}"
-                        >
-                            Folio
-                        </label>
-
-                        <div class="input-group">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
                             <span class="input-group-text">
                                 <i class="fa-solid fa-hashtag"></i>
                             </span>
-
-                            {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">Folio</label>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <label
-                            class="sv-cell-title mb-2"
-                            for="{{ myfilter.form.start_date.id_for_label }}"
-                        >
-                            Desde
-                        </label>
-
-                        <div class="input-group">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
                             <span class="input-group-text">
                                 <i class="fa-regular fa-calendar"></i>
                             </span>
-
-                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field myfilter.form.start_date type="date" class="form-control" placeholder="Desde" %}
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">Desde</label>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <label
-                            class="sv-cell-title mb-2"
-                            for="{{ myfilter.form.end_date.id_for_label }}"
-                        >
-                            Hasta
-                        </label>
-
-                        <div class="input-group">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
                             <span class="input-group-text">
                                 <i class="fa-regular fa-calendar"></i>
                             </span>
-
-                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field myfilter.form.end_date type="date" class="form-control" placeholder="Hasta" %}
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">Hasta</label>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="col-12 col-lg-2">
-                        <div class="d-flex gap-2">
-
+                    <div class="col-12 col-md-6 col-xl-2 d-flex align-items-stretch">
+                        <div class="d-flex w-100 gap-2">
                             <button
                                 class="sv-btn sv-btn-primary flex-grow-1"
                                 type="submit"
@@ -160,7 +121,6 @@
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 Buscar
                             </button>
-
                             <a
                                 class="sv-btn sv-btn-secondary sv-btn-icon"
                                 href="{{ request.path }}"
@@ -169,74 +129,57 @@
                             >
                                 <i class="fa-solid fa-rotate-left"></i>
                             </a>
-
                         </div>
                     </div>
-
                 </div>
             </form>
         </div>
-
     </section>
-
     <form method="POST" id="formGastos">
         {% csrf_token %}
-
         <!-- Resumen -->
         <section class="sv-summary-grid mb-4">
-
             <article class="sv-summary-card">
                 <div class="sv-summary-icon">
                     <i class="fa-solid fa-wallet"></i>
                 </div>
-
                 <div>
                     <span class="sv-summary-label">
                         Total de gastos
                     </span>
-
                     <strong class="sv-summary-value">
                         ${{ total_monto_gastos|floatformat:2 }}
                     </strong>
                 </div>
             </article>
-
             <article class="sv-summary-card">
                 <div class="sv-summary-icon">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                 </div>
-
                 <div>
                     <span class="sv-summary-label">
                         Total de facturas
                     </span>
-
                     <strong class="sv-summary-value">
                         ${{ total_todas_facturas|floatformat:2 }}
                     </strong>
                 </div>
             </article>
-
         </section>
-
         <!-- Tabla -->
         <section class="sv-card">
-
             <div class="sv-card-header">
                 <div>
                     <h2 class="sv-card-title">
                         Comprobaciones de gastos
                     </h2>
-
                     <p class="sv-card-subtitle">
                         Periodo {{ año_anterior }} – {{ año_actual }}
                         · {{ gastos_list.paginator.count }}
                         registro{{ gastos_list.paginator.count|pluralize:"s" }}
                     </p>
                 </div>
-
                 <div class="d-flex flex-wrap align-items-center gap-2">
-
                     <button
                         type="submit"
                         class="sv-btn sv-btn-secondary"
@@ -247,7 +190,6 @@
                         <i class="fa-solid fa-print"></i>
                         Imprimir
                     </button>
-
                     <button
                         type="submit"
                         class="sv-btn sv-btn-primary"
@@ -258,24 +200,19 @@
                         <i class="fa-solid fa-envelope"></i>
                         Enviar
                     </button>
-
                 </div>
             </div>
-
             <!-- Destinatarios -->
             <div class="sv-selection-toolbar">
                 <div>
                     <span class="sv-cell-title">
                         Destinatarios del correo
                     </span>
-
                     <span class="sv-cell-subtitle">
                         Aplica únicamente al enviar los registros seleccionados.
                     </span>
                 </div>
-
                 <div class="d-flex flex-wrap gap-3">
-
                     <label
                         class="sv-check-option"
                         for="enviarContabilidad"
@@ -287,13 +224,11 @@
                             name="enviarContabilidad"
                             value="1"
                         >
-
                         <span>
                             <i class="fa-solid fa-building-columns"></i>
                             Tesorería
                         </span>
                     </label>
-
                     <label
                         class="sv-check-option"
                         for="enviarRH"
@@ -305,16 +240,13 @@
                             name="enviarRH"
                             value="1"
                         >
-
                         <span>
                             <i class="fa-solid fa-users"></i>
                             Recursos Humanos
                         </span>
                     </label>
-
                 </div>
             </div>
-
             <div class="sv-table-wrap">
                 <table class="sv-table">
                     <thead>
@@ -332,7 +264,6 @@
                             <th class="text-center">Seleccionar</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         {% for gasto in gastos_list %}
                         <tr>
@@ -341,13 +272,11 @@
                                     G-{{ gasto.folio }}
                                 </span>
                             </td>
-
                             <td>
                                 <span class="sv-cell-title">
                                     {{ gasto.tipo.tipo|default:"Sin tipo" }}
                                 </span>
                             </td>
-
                             <td>
                                 {% if gasto.comentario %}
                                     {{ gasto.comentario }}
@@ -362,44 +291,38 @@
                                     {% endfor %}
                                 {% endif %}
                             </td>
-
                             <td>
                                 <span class="sv-cell-title">
                                     {{ gasto.created_at|date:"d/m/Y" }}
                                 </span>
                             </td>
-
                             <td class="d-none d-lg-table-cell">
                                 <div class="sv-user">
                                     <span class="sv-user-avatar">
                                         {{ gasto.staff.staff.staff.first_name|first }}
                                         {{ gasto.staff.staff.staff.last_name|first }}
                                     </span>
-
                                     <span class="sv-cell-title">
                                         {{ gasto.staff.staff.staff.first_name }}
                                         {{ gasto.staff.staff.staff.last_name }}
                                     </span>
                                 </div>
                             </td>
-
                             <td class="text-end">
                                 <strong>
                                     ${{ gasto.get_total_solicitud|floatformat:2 }}
                                 </strong>
                             </td>
-
                             <td class="text-end">
                                 <strong>
                                     ${{ gasto.suma_total_facturas|floatformat:2 }}
                                 </strong>
                             </td>
-
                             <td class="text-center">
                                 {% if gasto.facturas.exists %}
                                     <a
                                         class="sv-btn sv-btn-success sv-btn-icon"
-                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}"
+                                        href="{% url 'matriz-facturas-gasto' gasto.id|unlocalize %}?next={{ request.path }}"
                                         data-bs-toggle="tooltip"
                                         data-bs-placement="top"
                                         title="Consultar facturas"
@@ -410,7 +333,7 @@
                                 {% else %}
                                     <a
                                         class="sv-btn sv-btn-danger sv-btn-icon"
-                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}"
+                                        href="{% url 'matriz-facturas-gasto' gasto.id|unlocalize %}?next={{ request.path }}"
                                         data-bs-toggle="tooltip"
                                         data-bs-placement="top"
                                         title="No tiene facturas"
@@ -420,7 +343,6 @@
                                     </a>
                                 {% endif %}
                             </td>
-
                             <td class="text-center">
                                 <input
                                     class="form-check-input"
@@ -431,17 +353,14 @@
                                 >
                             </td>
                         </tr>
-
                         {% empty %}
                         <tr>
                             <td colspan="9">
                                 <div class="sv-empty-state">
                                     <i class="fa-solid fa-receipt"></i>
-
                                     <strong>
                                         No hay gastos registrados
                                     </strong>
-
                                     <span>
                                         No se encontraron comprobaciones con los filtros seleccionados.
                                     </span>
@@ -452,81 +371,76 @@
                     </tbody>
                 </table>
             </div>
+            {% if gastos_list.paginator.num_pages > 1 %}
+            <div class="sv-card-footer">
+                <nav aria-label="Paginación de gastos">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if gastos_list.has_previous %}
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="{% my_url 1 'page' request.GET.urlencode %}"
+                                aria-label="Primera página"
+                            >
+                                <i class="fa-solid fa-angles-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="{% my_url gastos_list.previous_page_number 'page' request.GET.urlencode %}"
+                                aria-label="Página anterior"
+                            >
+                                <i class="fa-solid fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
 
+                        {% for item in gastos_list.paginator.page_range %}
+                            {% if gastos_list.number == item %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link">{{ item }}</span>
+                            </li>
+                            {% elif item > gastos_list.number|add:'-2' and item < gastos_list.number|add:'2' %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="{% my_url item 'page' request.GET.urlencode %}"
+                                >
+                                    {{ item }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if gastos_list.has_next %}
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}"
+                                aria-label="Página siguiente"
+                            >
+                                <i class="fa-solid fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a
+                                class="page-link"
+                                href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                                aria-label="Última página"
+                            >
+                                <i class="fa-solid fa-angles-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
         </section>
     </form>
-
-    <!-- Paginación -->
-    {% if gastos_list.paginator.num_pages > 1 %}
-    <nav
-        class="sv-pagination"
-        aria-label="Paginación de gastos"
-    >
-        {% if gastos_list.has_previous %}
-            <a
-                class="sv-page-link"
-                href="{% my_url 1 'page' request.GET.urlencode %}"
-                title="Primera página"
-                aria-label="Primera página"
-            >
-                <i class="fa-solid fa-angles-left"></i>
-            </a>
-
-            <a
-                class="sv-page-link"
-                href="{% my_url gastos_list.previous_page_number 'page' request.GET.urlencode %}"
-                title="Página anterior"
-                aria-label="Página anterior"
-            >
-                <i class="fa-solid fa-angle-left"></i>
-            </a>
-        {% endif %}
-
-        {% for item in gastos_list.paginator.page_range %}
-            {% if gastos_list.number == item %}
-                <span
-                    class="sv-page-link sv-page-link-active"
-                    aria-current="page"
-                >
-                    {{ item }}
-                </span>
-
-            {% elif item > gastos_list.number|add:"-3" and item < gastos_list.number|add:"3" %}
-                <a
-                    class="sv-page-link"
-                    href="{% my_url item 'page' request.GET.urlencode %}"
-                >
-                    {{ item }}
-                </a>
-            {% endif %}
-        {% endfor %}
-
-        {% if gastos_list.has_next %}
-            <a
-                class="sv-page-link"
-                href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}"
-                title="Página siguiente"
-                aria-label="Página siguiente"
-            >
-                <i class="fa-solid fa-angle-right"></i>
-            </a>
-
-            <a
-                class="sv-page-link"
-                href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}"
-                title="Última página"
-                aria-label="Última página"
-            >
-                <i class="fa-solid fa-angles-right"></i>
-            </a>
-        {% endif %}
-    </nav>
-    {% endif %}
-
 </main>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 {% if messages %}
     {% for message in messages %}
     <script>
@@ -538,18 +452,14 @@
     </script>
     {% endfor %}
 {% endif %}
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("formGastos");
-
     if (!form) {
         return;
     }
-
     form.addEventListener("submit", function (event) {
         const submitter = event.submitter;
-
         if (submitter && submitter.id === "btnImprimir") {
             form.setAttribute("target", "_blank");
         } else {
@@ -558,5 +468,4 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
-
 {% endblock %}
