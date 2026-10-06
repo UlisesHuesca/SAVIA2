@@ -704,7 +704,7 @@ button.sv-navbar-icon-link {
                              {% if conteo_calidad > 0 %}
                                 <span class="badge bg-danger">({{conteo_calidad}})</span>
                             {% endif %}</a>
-                            {% if usuario.tipo.nombre == "Coordinador_Calidad" %}
+                            {% if usuario.tipo.nombre == "Coordinador_Calidad" or usuario.tipo.nombre == "Calidad" %}
                             <a class="dropdown-item" href="{% url 'product_calidad' %}">Productos Críticos</a>    
                             
                             <a class="dropdown-item" href="{% url 'matriz-nc' %}">Matriz NC's</a>
