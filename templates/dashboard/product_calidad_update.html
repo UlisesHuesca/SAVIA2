@@ -1,186 +1,358 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Producto Critico Update{% endblock %}
-</head>
-<body>
+{% load l10n %}
+
+{% block title %}Actualizar producto crítico{% endblock %}
+
 {% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <div class="sv-page-eyebrow">Control de calidad</div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                Actualizar producto crítico
+            </h1>
+            <p class="sv-page-subtitle">
+                Administra los requerimientos utilizados durante la revisión de calidad del producto.
+            </p>
+        </div>
 
-<hr>
-<hr>
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header ">
-                    <h3 class="mb-0">Actualizar Producto Crítico</h3>
+        <a class="sv-btn sv-btn-outline" href="{% url 'product_calidad' %}">
+            <i class="fa-solid fa-arrow-left"></i>
+            Regresar
+        </a>
+    </header>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-4">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-box"></i>
+                            Información del producto
+                        </h2>
+                        <p class="sv-card-subtitle">Datos generales del producto seleccionado.</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Información del producto -->
-                    <div class="row my-2">
-                        <div id="etiqueta_domicilio" class="col-12">
-                            <div class="alert alert-secondary" role="alert">
-                                <h6>Código:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.codigo}}</h6>   
-                            </div>
+
+                <div class="sv-card-body">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="sv-page-title-icon flex-shrink-0">
+                            <i class="fa-solid fa-barcode"></i>
+                        </span>
+                        <div>
+                            <span class="sv-cell-subtitle d-block">Código</span>
+                            <strong class="sv-cell-title d-block">{{ item.codigo }}</strong>
                         </div>
                     </div>
-                    <div class="row my-2">
-                        <div id="etiqueta_domicilio" class="col-12">
-                            <div class="alert alert-secondary" role="alert">
-                                <h6>Producto:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.nombre}}</h6>   
-                            </div>
-                        </div>
+
+                    <div class="border-top pt-3 mb-3">
+                        <span class="sv-cell-subtitle d-block mb-1">Producto</span>
+                        <strong class="sv-cell-title d-block">{{ item.nombre }}</strong>
                     </div>
-                    <div class="row my-2">
-                        <div id="etiqueta_domicilio" class="col-12">
-                            <div class="alert alert-secondary" role="alert">
-                                <h6>Última actualización:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.updated_at}}</h6>   
-                            </div>
-                        </div>
+
+                    <div class="border-top pt-3">
+                        <span class="sv-cell-subtitle d-block mb-1">Última actualización</span>
+                        <span class="sv-cell-title d-block">
+                            {% if item.updated_at %}
+                                {{ item.updated_at|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Sin fecha registrada
+                            {% endif %}
+                        </span>
                     </div>
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{req_form.requerimiento|add_class:"form-control"|append_attr:"placeholder= Requerimiento"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Requerimiento*</label>
-                            </div>
-                            </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <section class="sv-card h-100">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            Nuevo requerimiento
+                        </h2>
+                        <p class="sv-card-subtitle">Define una condición que deberá verificarse durante la recepción.</p>
+                    </div>
+                </div>
+
+                <form method="POST" id="requirementForm">
+                    {% csrf_token %}
+
+                    <div class="sv-card-body">
+                        {% if req_form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in req_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
                         </div>
-                        <div class="col-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{req_form.comentarios|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Descripción*</label>
-                            </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary" name="requirement">
-                            <i class="fa fa-plus me-1"></i> Añadir Requerimiento de Calidad
-                        </button>
-                    </form>
-                        <!-- Tabla de Requerimientos de Calidad -->
-                    <h5 class="mt-5">Requerimientos de Calidad:</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped mt-3">
-                            <thead class="text-black" style="background-color: #F5F5F5;">
-                                <tr>
-                                    <th scope="col">Nombre del Requerimiento</th>
-                                    <th>Comentario</th>
-                                    <th scope="col">Fecha</th>
-                                   
-                                    <th scope="col">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="requerimientos-list">
-                                {% for requerimiento in producto_calidad.requerimientos_calidad.all %}
-                                    <tr id="requerimiento-{{ requerimiento.id }}">
-                                        <td>{{ requerimiento.requerimiento }}</td>
-                                        <td>{{ requerimiento.comentarios}}</td>
-                                        <td>{{ requerimiento.fecha }}</td>
-                                        <td>
-                                            <form method="post"
-                                                action="{% url 'eliminar_requerimiento_calidad' requerimiento.id %}"
-                                                class="d-inline">
-                                            {% csrf_token %}
-                                            <!-- opcional, para volver a la misma página -->
-                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <button type="submit" class="btn btn-danger btn-sm"
-                                                    onclick="return confirm('¿Seguro que deseas eliminar este requerimiento?')">
-                                                Eliminar
-                                            </button>
-                                            </form>
-                                        </td>
-                                    </tr>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="visually-hidden" for="{{ req_form.requerimiento.id_for_label }}">Requerimiento</label>
+                                <div class="sv-input-group input-group flex-nowrap{% if req_form.requerimiento.errors %} has-validation{% endif %}">
+                                    <span class="input-group-text"><i class="fa-solid fa-list-check"></i></span>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        {{ req_form.requerimiento|add_class:"form-select" }}
+                                    </div>
+                                </div>
+                                {% for error in req_form.requerimiento.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <hr>
-                    <!-- Formulario principal -->
-                    <form method="POST" id="ProductForm">
-                        {% csrf_token %}
-                        <!-- Campo de descripción editable -->
-                        <div class="d-flex justify-content-end mt-4">
-                            <a class="btn btn-outline-secondary me-2" href="{% url 'product_calidad' %}">Cancelar</a>
-                            <input type="submit" id="submit-button" name="action" value="Actualizar" class="btn btn-outline-info" >
-                        </div>
-                    </form>
-                
+                            </div>
 
-                
+                            <div class="col-12">
+                                <div class="sv-input-group input-group{% if req_form.comentarios.errors %} has-validation{% endif %}">
+                                    <span class="input-group-text align-items-start pt-3"><i class="fa-solid fa-align-left"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ req_form.comentarios|add_class:"form-control"|append_attr:"placeholder=Descripción"|append_attr:"rows=3" }}
+                                        <label for="{{ req_form.comentarios.id_for_label }}">Descripción *</label>
+                                    </div>
+                                </div>
+                                {% for error in req_form.comentarios.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sv-card-footer">
+                        <div class="sv-actions justify-content-end">
+                            <button type="submit" class="sv-btn sv-btn-primary" name="requirement" value="1">
+                                <i class="fa-solid fa-plus"></i>
+                                Añadir requerimiento
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Requerimientos de calidad
+                </h2>
+                <p class="sv-card-subtitle">Condiciones actualmente asociadas con este producto.</p>
+            </div>
+
+            <span class="sv-badge sv-badge-primary">
+                {{ producto_calidad.requerimientos_calidad.count }} requerimiento{{ producto_calidad.requerimientos_calidad.count|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Requerimiento</th>
+                        <th scope="col">Comentario</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col" class="text-center">Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="requerimientos-list">
+                    {% for requerimiento in producto_calidad.requerimientos_calidad.all %}
+                    <tr id="requerimiento-{{ requerimiento.id|unlocalize }}">
+                        <td><span class="sv-cell-title">{{ requerimiento.requerimiento }}</span></td>
+                        <td>
+                            {% if requerimiento.comentarios %}
+                                {{ requerimiento.comentarios }}
+                            {% else %}
+                                <span class="sv-cell-subtitle">Sin comentario</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="sv-cell-title d-block">{{ requerimiento.fecha|date:"d/m/Y" }}</span>
+                            {% if requerimiento.fecha|date:"H:i" != "00:00" %}
+                            <span class="sv-cell-subtitle d-block">{{ requerimiento.fecha|date:"H:i" }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <form method="POST"
+                                  action="{% url 'eliminar_requerimiento_calidad' requerimiento.id|unlocalize %}"
+                                  class="d-inline js-delete-requirement"
+                                  data-requirement="{{ requerimiento.requerimiento|escape }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit"
+                                        class="sv-btn sv-btn-danger sv-btn-icon"
+                                        title="Eliminar requerimiento"
+                                        aria-label="Eliminar requerimiento {{ requerimiento.requerimiento }}">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-clipboard"></i>
+                                <h3>Sin requerimientos</h3>
+                                <p>Este producto todavía no tiene requerimientos de calidad registrados.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sv-card-footer">
+            <form method="POST" id="ProductForm">
+                {% csrf_token %}
+                <div class="sv-actions justify-content-end">
+                    <a class="sv-btn sv-btn-outline" href="{% url 'product_calidad' %}">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancelar
+                    </a>
+
+                    <button type="submit"
+                            id="submit-button"
+                            name="action"
+                            value="Actualizar"
+                            class="sv-btn sv-btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span class="sv-submit-label">Actualizar producto</span>
+                        <span class="spinner-border spinner-border-sm d-none sv-submit-spinner" role="status" aria-hidden="true"></span>
+                    </button>
                 </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<div class="modal fade"
+     id="loadingIndicator"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body d-flex align-items-center gap-3 p-4">
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Yerod"
+                     width="72"
+                     height="72"
+                     class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="SAVIA Vordcab"
+                     width="96"
+                     class="img-fluid rounded">
+                {% endif %}
+
+                <div>
+                    <strong>Actualizando producto crítico</strong>
+                    <p class="sv-cell-subtitle mb-0">
+                        Por favor espera… <i class="fa-solid fa-mug-hot"></i>
+                    </p>
+                </div>
+
+                <div class="spinner-border ms-auto" role="status" aria-label="Actualizando"></div>
             </div>
         </div>
     </div>
 </div>
 
-
-
-
-<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
-    </div>
-</div>
-</body>
-</html>
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
 <script>
-// Función para mostrar el indicador de carga y evitar el doble clic
-document.getElementById('ProductForm').addEventListener('submit', function() {
-    // Mostrar el indicador de carga
-    document.getElementById('loadingIndicator').style.display = 'block';
+document.addEventListener('DOMContentLoaded', function () {
+    const productForm = document.getElementById('ProductForm');
+    const submitButton = document.getElementById('submit-button');
+    const submitLabel = submitButton.querySelector('.sv-submit-label');
+    const submitSpinner = submitButton.querySelector('.sv-submit-spinner');
+    const loadingElement = document.getElementById('loadingIndicator');
+    const requirementElement = document.getElementById('{{ req_form.requerimiento.id_for_label|escapejs }}');
+    let submitting = false;
 
-    // Inyectar hidden con el name="actualizar"
-    let hidden = document.createElement("input");
-    hidden.type = "hidden";
-    hidden.name = "actualizar";
-    hidden.value = "1"; // o "Actualizar"
-    this.appendChild(hidden);
+    if (requirementElement && requirementElement.tagName === 'SELECT') {
+        $(requirementElement).select2({
+            placeholder: 'Selecciona un requerimiento',
+            allowClear: true,
+            width: '100%',
+            language: {
+                noResults: function () {
+                    return 'No se encontraron requerimientos';
+                },
+                searching: function () {
+                    return 'Buscando…';
+                }
+            }
+        });
+    }
 
-    // Desactivar y ocultar el botón
-    var btn = document.getElementById('submit-button');
-    btn.disabled = true;
-    btn.classList.add('d-none');
+    document.querySelectorAll('.js-delete-requirement').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const requirement = form.dataset.requirement || 'este requerimiento';
+
+            Swal.fire({
+                title: '¿Eliminar requerimiento?',
+                text: `Se eliminará “${requirement}”. Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            }).then(function (result) {
+                if (result.isConfirmed) form.submit();
+            });
+        });
+    });
+
+    productForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        if (submitting) return;
+        submitting = true;
+
+        if (!productForm.querySelector('input[name="actualizar"]')) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'actualizar';
+            hidden.value = '1';
+            productForm.appendChild(hidden);
+        }
+
+        submitButton.disabled = true;
+        submitLabel.textContent = 'Actualizando…';
+        submitSpinner.classList.remove('d-none');
+        bootstrap.Modal.getOrCreateInstance(loadingElement).show();
+
+        window.setTimeout(function () {
+            productForm.submit();
+        }, 75);
+    });
 });
-
-
 </script>
 {% endblock %}

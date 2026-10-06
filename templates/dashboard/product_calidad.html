@@ -1,219 +1,276 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Productos Criticos{% endblock %}
-</head>
-<body>
+{% load l10n %}
+
+{% block title %}Productos críticos{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <div class="sv-page-eyebrow">Control de calidad</div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                Productos críticos
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta y administra los productos que requieren revisión de calidad durante su recepción.
+            </p>
+        </div>
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<div class = "col">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtro de Productos Criticos</h5>
+        <a class="sv-btn sv-btn-success" href="{% url 'product_calidad_add' %}">
+            <i class="fa-solid fa-plus"></i>
+            Agregar producto
+        </a>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros
+                </h2>
+                <p class="sv-card-subtitle">Refina la consulta por producto, clasificación o autorización.</p>
             </div>
-            <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-md-12 col-lg-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
-                            <label style="color: #121212;" for="id_codigo">Código</label>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-barcode"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código" }}
+                                <label for="{{ myfilter.form.codigo.id_for_label }}">Código</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-12 col-lg-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                            <label style="color: #121212;" for="id_producto">Producto</label>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-box-open"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                                <label for="{{ myfilter.form.nombre.id_for_label }}">Producto</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
-                            <label style="color: #121212;" for="id_familia">Familia</label>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.familia|add_class:"form-select"|append_attr:"placeholder=Familia" }}
+                                <label for="{{ myfilter.form.familia.id_for_label }}">Familia</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                            <label style="color: #121212;" for="id_familia">Subfamilia</label>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-sitemap"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.subfamilia|add_class:"form-select"|append_attr:"placeholder=Subfamilia" }}
+                                <label for="{{ myfilter.form.subfamilia.id_for_label }}">Subfamilia</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-check"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.rev_calidad|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                            <label style="color: #121212;" for="id_familia">Autorizada</label>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-clipboard-check"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.rev_calidad|add_class:"form-select"|append_attr:"placeholder=Autorización" }}
+                                <label for="{{ myfilter.form.rev_calidad.id_for_label }}">Autorizado</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+                    <div class="col-12 col-md-6 col-xl-1">
+                        <div class="sv-actions">
+                            <button class="sv-btn sv-btn-primary sv-btn-icon" type="submit" title="Aplicar filtros" aria-label="Aplicar filtros">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                            <a class="sv-btn sv-btn-outline sv-btn-icon" href="{% url 'product_calidad' %}" title="Limpiar filtros" aria-label="Limpiar filtros">
+                                <i class="fa-solid fa-eraser"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <hr>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Productos registrados
+                </h2>
+                <p class="sv-card-subtitle">Resultados encontrados de acuerdo con los filtros seleccionados.</p>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="sv-badge sv-badge-primary">
+                    {{ items_list.paginator.count }} registro{{ items_list.paginator.count|pluralize }}
+                </span>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="sv-btn sv-btn-success" name="btnReporte" title="Exportar reporte a Excel">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Excel
+                    </button>
                 </form>
-                <div class = "row mt-2 bg-white">
-                    <form method=POST>
-                        {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <!--<li class="nav-item mx-2">
-                            <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                        </li> -->
-                        <li class="nav-item mx-2">
-                            <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                        </li>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                        </li>-->
-                        <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" href="{% url 'product_calidad_add' %}"><i class="fa-solid fa-plus"></i>Agregar Productos</a>
-                        </li>
-                    </ul>
-                    </form>
-                </div>
             </div>
         </div>
-</div>
 
-<div class="col-lg-8  offset-md-2">
-    <div class = "card">
-    <div class ="table-responsive-sm">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Código</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Familia</th>
-                    <th scope="col">Unidad</th>
-                    <th scope="col">Activo</th>
-                    <th scope="col">Servicio</th>
-                    <th scope="col">Autorizado</th>
-                    <th scope="col">Editar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items_list %}
-                <tr>
-                    <th scope="row">{{item.codigo}}</th>
-                    <td>{{item.nombre}}</td>
-                    <td>{{item.familia}}</td>
-                    <td>{{item.unidad}}</td>
-                    {% if item.activo %}
-                        <td>Si</td>
-                    {% else %}
-                        <td>No</td>
-                    {% endif %}
-                    {% if item.servicio %}
-                        <td>Si</td>
-                    {% else %}
-                        <td>No</td>
-                    {% endif %}
-                    {% if item.rev_calidad %}
-                        <td>Si</td>
-                    {% else %}
-                        <td>No</td>
-                    {% endif %}
-                    <td>
-                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'product_calidad_update' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
-                    </td>
-                    
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
-</div>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center">
-            {% if items_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-            {% endif %}
-            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
-
-            {% for item in items_list.paginator.page_range %}
-                {% if items_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > items_list.number|add:'-2' and item < items_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-                {% endif %}
-            {% endfor %}
-
-            {% if items_list.paginator.num_pages > items_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{items_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}">{{items_list.paginator.num_pages}}</a></li>
-            {% endif %}
-
-            {% if items_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
-        </ul>
-    </nav>
-<!--Este es el modal-->
-        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-            </div>
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Familia</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col" class="text-center">Activo</th>
+                        <th scope="col" class="text-center">Servicio</th>
+                        <th scope="col" class="text-center">Autorizado</th>
+                        <th scope="col" class="text-center">Editar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_list %}
+                    <tr>
+                        <td><span class="sv-cell-title">{{ item.codigo }}</span></td>
+                        <td>
+                            <span class="sv-cell-title d-block">{{ item.nombre }}</span>
+                            {% if item.subfamilia %}
+                            <span class="sv-cell-subtitle d-block">{{ item.subfamilia }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.familia|default:"—" }}</td>
+                        <td>{{ item.unidad|default:"—" }}</td>
+                        <td class="text-center">
+                            {% if item.activo %}
+                            <span class="sv-badge sv-badge-success"><i class="fa-solid fa-check"></i> Sí</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral"><i class="fa-solid fa-minus"></i> No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.servicio %}
+                            <span class="sv-badge sv-badge-success"><i class="fa-solid fa-check"></i> Sí</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral"><i class="fa-solid fa-minus"></i> No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.rev_calidad %}
+                            <span class="sv-badge sv-badge-success"><i class="fa-solid fa-circle-check"></i> Sí</span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning"><i class="fa-solid fa-clock"></i> No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a class="sv-btn sv-btn-outline sv-btn-icon"
+                               href="{% url 'product_calidad_update' item.id|unlocalize %}"
+                               title="Editar producto"
+                               aria-label="Editar producto {{ item.codigo }}">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-box-open"></i>
+                                <h3>No hay productos</h3>
+                                <p>No se encontraron productos críticos con los filtros seleccionados.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
 
-  </script>
+        {% if items_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación de productos críticos">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if items_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url 1 'page' request.GET.urlencode %}" aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url items_list.previous_page_number 'page' request.GET.urlencode %}" aria-label="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page_number in items_list.paginator.page_range %}
+                        {% if items_list.number == page_number %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ page_number }}</span>
+                        </li>
+                        {% elif page_number > items_list.number|add:'-3' and page_number < items_list.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% my_url page_number 'page' request.GET.urlencode %}">{{ page_number }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if items_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url items_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}" aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<div class="modal fade"
+     id="dialog"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" hx-target="this"></div>
+</div>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 {% endblock %}
-
-<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
-<!--style="background-color: #515151; color:white;"-->
-<!--style="background-color: #711F1B; color:white;"-->
