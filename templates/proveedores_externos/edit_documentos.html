@@ -1,65 +1,104 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load widget_tweaks %}
 {% load static %}
-<html>
-<head>
-{% block title %}{{tipo_documento}}{% endblock %}
-</head>
-<body>
-{% block content %}
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
 
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">{{tipo_documento}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+{% block title %}{{ tipo_documento }}{% endblock %}
+
+{% block content %}
+<div class="modal-content sv-modal">
+    <div class="modal-header">
+        <div>
+            <span class="sv-page-eyebrow">Documentación del proveedor</span>
+            <h2 class="modal-title sv-card-title">
+                <i class="fa-solid fa-file-arrow-up text-primary"></i>
+                {{ tipo_documento }}
+            </h2>
+            <p class="sv-card-subtitle mb-0">
+                Selecciona el archivo que deseas registrar o reemplazar.
+            </p>
         </div>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar">
+        </button>
+    </div>
+
+    <form method="POST"
+          hx-post="{{ request.path }}"
+          hx-encoding="multipart/form-data"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+
         <div class="modal-body">
-            <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
-                {% csrf_token %}
-                <div class="row my-2">
-                    <div class="col-12">
-                        {{form.archivo|add_class:"form-control"|append_attr:"placeholder= Documento"}}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="sv-card">
+                <div class="sv-card-header">
+                    <div>
+                        <h3 class="sv-card-title">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            Archivo del documento
+                        </h3>
+                        <p class="sv-card-subtitle">
+                            Adjunta el archivo correspondiente a {{ tipo_documento|lower }}.
+                        </p>
                     </div>
                 </div>
-                <div class="container-fluid text-end">
-                        <button type="submit" name="btn_registrar" class="btn btn-light" style="background-color:#980f0f" data-bs-dismiss="modal"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                   
-                        <button type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-dismiss="modal">Cerrar</button>
-                    
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
+                <div class="sv-card-body">
+                    <label for="{{ form.archivo.id_for_label }}"
+                           class="form-label fw-semibold">
+                        Seleccionar archivo
+                    </label>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </span>
+                        {{ form.archivo|add_class:"form-control" }}
+                    </div>
+
+                    {% if form.archivo.help_text %}
+                    <div class="form-text">
+                        {{ form.archivo.help_text }}
+                    </div>
+                    {% endif %}
+
+                    {% for error in form.archivo.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div class="sv-actions">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cerrar
+                </button>
+
+                <button type="submit"
+                        name="btn_registrar"
+                        value="1"
+                        class="sv-btn sv-btn-success">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Guardar documento
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}
-</body>
-</html>
