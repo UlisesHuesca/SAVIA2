@@ -117,38 +117,99 @@
             <h2 class="sv-card-title">
                 <i class="fa-solid fa-list-check"></i>Gastos registrados
             </h2>
-            <span class="sv-badge sv-badge-dark">
-                Página {{ gastos_list.number }} de {{ gastos_list.paginator.num_pages }}
-            </span>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="dropdown">
+                    <button
+                        type="button"
+                        class="sv-btn sv-btn-outline dropdown-toggle"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside"
+                        data-bs-boundary="viewport"
+                        aria-expanded="false"
+                    >
+                        <i class="fa-solid fa-table-columns"></i>Columnas
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-2 shadow sv-control-columns-menu">
+                        <div class="small fw-bold text-muted px-2 py-1">Mostrar columnas</div>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitado" checked>
+                            Solicitado por
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="comentario">
+                            Comentario
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="autorizacion" checked>
+                            Autorización
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="colaborador">
+                            Colaborador
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="pagado" checked>
+                            Pagado
+                        </label>
+                        {% if not usuario.distritos.nombre == "MATRIZ" %}
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="gerencia" checked>
+                            Gerencia
+                        </label>
+                        {% endif %}
+                        {% if usuario_view %}
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="vale-rosa">
+                            Vale rosa
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="vale-azul">
+                            Vale azul
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="pago" checked>
+                            Pago
+                        </label>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <button type="button" class="dropdown-item text-center" id="resetExpenseColumns">
+                            <i class="fa-solid fa-arrow-rotate-left me-1"></i>Restablecer vista compacta
+                        </button>
+                    </div>
+                </div>
+                <span class="sv-badge sv-badge-dark">
+                    Página {{ gastos_list.number }} de {{ gastos_list.paginator.num_pages }}
+                </span>
+            </div>
         </div>
         <div class="sv-table-wrap">
-            <table class="sv-table sv-table-xwide">
+            <table class="sv-table sv-table-wide" id="expensesTable">
                 <thead>
                     <tr>
                         <th>Gasto</th>
-                        <th>Solicitado por</th>
-                        <th>Comentario</th>
+                        <th class="sv-col-solicitado">Solicitado por</th>
+                        <th class="sv-col-comentario d-none">Comentario</th>
                         <th>Tipo</th>
-                        <th>Autorización</th>
-                        <th>Colaborador</th>
+                        <th class="sv-col-autorizacion">Autorización</th>
+                        <th class="sv-col-colaborador d-none">Colaborador</th>
                         <th>Importe</th>
-                        <th>Pagado</th>
-                        {% if not usuario.distritos.nombre == "MATRIZ" %}<th>Gerencia</th>{% endif %}
+                        <th class="sv-col-pagado">Pagado</th>
+                        {% if not usuario.distritos.nombre == "MATRIZ" %}<th class="sv-col-gerencia">Gerencia</th>{% endif %}
                         <th>Detalles</th>
                         <th>Facturas</th>
                         {% if usuario_view %}
-                        <th>Vale rosa</th>
-                        <th>Vale azul</th>
+                        <th class="sv-col-vale-rosa d-none">Vale rosa</th>
+                        <th class="sv-col-vale-azul d-none">Vale azul</th>
                         {% endif %}
                         <th>Registro</th>
-                        {% if usuario_view %}<th>Pago</th>{% endif %}
+                        {% if usuario_view %}<th class="sv-col-pago">Pago</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for gasto in gastos_list %}
                     <tr>
                         <td><span class="sv-folio">{{ gasto.folio }}</span></td>
-                        <td>
+                        <td class="sv-col-solicitado">
                             <div class="sv-user">
                                 <span class="sv-user-avatar">
                                     {{ gasto.staff.staff.staff.first_name|first }}{{ gasto.staff.staff.staff.last_name|first }}
@@ -158,7 +219,7 @@
                                 </span>
                             </div>
                         </td>
-                        <td>
+                        <td class="sv-col-comentario d-none">
                             {% if gasto.comentario %}
                                 <span class="sv-cell-title">{{ gasto.comentario }}</span>
                             {% else %}
@@ -170,7 +231,7 @@
                             {% endif %}
                         </td>
                         <td><span class="sv-badge sv-badge-dark">{{ gasto.tipo.tipo }}</span></td>
-                        <td>
+                        <td class="sv-col-autorizacion">
                             {% if gasto.get_validado %}
                                 <span class="sv-cell-title">
                                     {{ gasto.superintendente.staff.staff.first_name }}
@@ -187,7 +248,7 @@
                                 <span class="sv-badge sv-badge-warning">Llevar material a almacén</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="sv-col-colaborador d-none">
                             {% if gasto.tipo.tipo == "NOMINA" %}
                                 <span class="sv-badge sv-badge-primary">NÓMINA</span>
                             {% elif gasto.tipo.tipo == "IMPUESTOS" %}
@@ -199,9 +260,9 @@
                             {% endif %}
                         </td>
                         <td><strong>${{ gasto.get_total_solicitud|floatformat:2 }}</strong></td>
-                        <td><strong>${{ gasto.monto_pagado|floatformat:2 }}</strong></td>
+                        <td class="sv-col-pagado"><strong>${{ gasto.monto_pagado|floatformat:2 }}</strong></td>
                         {% if not usuario.distritos.nombre == "MATRIZ" %}
-                        <td>
+                        <td class="sv-col-gerencia">
                             {% if gasto.autorizar2 %}
                             <span class="sv-badge sv-badge-success">Autorizado</span>
                             {% elif gasto.autorizar2 == False %}
@@ -237,7 +298,7 @@
                             {% endif %}
                         </td>
                         {% if usuario_view %}
-                        <td>
+                        <td class="sv-col-vale-rosa d-none">
                             {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
                             <a class="sv-btn sv-btn-danger sv-btn-icon"
                                href="{% url 'agregar-vale-rosa' gasto.id|unlocalize %}?tipo=gasto&color=rosa&next={{ request.path }}"
@@ -248,7 +309,7 @@
                             <span class="sv-cell-subtitle">—</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="sv-col-vale-azul d-none">
                             <a class="sv-btn sv-btn-info sv-btn-icon"
                                href="{% url 'agregar-vale-rosa' gasto.id|unlocalize %}?tipo=gasto&color=azul&next={{ request.path }}"
                                data-bs-toggle="tooltip" title="Vale azul" aria-label="Vale azul">
@@ -266,7 +327,7 @@
                             </button>
                         </td>
                         {% if usuario_view %}
-                        <td>
+                        <td class="sv-col-pago">
                             <div class="d-flex flex-wrap gap-1">
                                 {% for pago in gasto.pagosg.all %}
                                     {% if pago.comprobante_pago %}
@@ -317,7 +378,6 @@
                         </a>
                     </li>
                     {% endif %}
-
                     {% for item in gastos_list.paginator.page_range %}
                         {% if gastos_list.number == item %}
                         <li class="page-item active" aria-current="page">
@@ -331,7 +391,6 @@
                         </li>
                         {% endif %}
                     {% endfor %}
-
                     {% if gastos_list.has_next %}
                     <li class="page-item">
                         <a class="page-link"
@@ -409,6 +468,70 @@
 {% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const columnDefaults = {
+        solicitado: true,
+        comentario: false,
+        autorizacion: true,
+        colaborador: false,
+        pagado: true,
+        gerencia: true,
+        'vale-rosa': false,
+        'vale-azul': false,
+        pago: true
+    };
+    const columnStorageKey = '{% if usuario_view %}saviaMisGastosColumnas{% else %}saviaMatrizGastosColumnas{% endif %}';
+    let columnPreferences = Object.assign({}, columnDefaults);
+
+    try {
+        const savedPreferences = JSON.parse(localStorage.getItem(columnStorageKey));
+        if (savedPreferences && typeof savedPreferences === 'object') {
+            Object.keys(columnDefaults).forEach(function(column) {
+                if (typeof savedPreferences[column] === 'boolean') {
+                    columnPreferences[column] = savedPreferences[column];
+                }
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(columnStorageKey);
+    }
+
+    function updateExpenseColumn(column, visible) {
+        document.querySelectorAll('.sv-col-' + column).forEach(function(cell) {
+            cell.classList.toggle('d-none', !visible);
+        });
+    }
+
+    const columnToggles = Array.from(document.querySelectorAll('[data-column-toggle]'));
+
+    function applyColumnPreferences() {
+        columnToggles.forEach(function(checkbox) {
+            const column = checkbox.dataset.columnToggle;
+            const visible = columnPreferences[column] === true;
+            checkbox.checked = visible;
+            updateExpenseColumn(column, visible);
+        });
+    }
+
+    columnToggles.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const column = checkbox.dataset.columnToggle;
+            columnPreferences[column] = checkbox.checked;
+            updateExpenseColumn(column, checkbox.checked);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+        });
+    });
+
+    const resetColumnsButton = document.getElementById('resetExpenseColumns');
+    if (resetColumnsButton) {
+        resetColumnsButton.addEventListener('click', function() {
+            columnPreferences = Object.assign({}, columnDefaults);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+            applyColumnPreferences();
+        });
+    }
+
+    applyColumnPreferences();
+
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(element) {
         bootstrap.Tooltip.getOrCreateInstance(element);
     });
