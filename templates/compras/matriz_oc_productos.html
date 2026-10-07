@@ -4,9 +4,7 @@
 {% load widget_tweaks %}
 {% load tt_extras %}
 {% load l10n %}
-
 {% block title %}Productos de compras{% endblock %}
-
 {% block content %}
 <main class="sv-page">
     <header class="sv-page-header">
@@ -25,7 +23,6 @@
             {{ articulos_list.paginator.count }} registros
         </span>
     </header>
-
     <section class="sv-card" id="response-div">
         <div class="sv-card-header">
             <div>
@@ -36,7 +33,6 @@
                 </h2>
             </div>
         </div>
-
         <div class="sv-card-body">
             <form method="GET">
                 <div class="row g-3">
@@ -49,7 +45,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-md-6 col-xl-4">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-solid fa-box"></i></span>
@@ -59,7 +54,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-md-6 col-xl-4">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
@@ -69,7 +63,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-md-6 col-xl-4">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
@@ -79,7 +72,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-sm-6 col-xl-3" id="fecha-desde">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
@@ -89,7 +81,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-sm-6 col-xl-3" id="fecha-hasta">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
@@ -99,7 +90,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-12 col-xl-2 d-flex justify-content-end align-items-stretch gap-2">
                         <a class="sv-btn sv-btn-outline flex-grow-1" href="{% url 'matriz-oc-productos' %}">
                             <i class="fa-solid fa-eraser"></i>
@@ -114,9 +104,8 @@
                 </div>
             </form>
         </div>
-
         <div class="sv-card-footer d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-            <form method="POST" onsubmit="mostrarIndicadorCarga()" class="d-flex flex-wrap align-items-center gap-2">
+            <form method="POST" id="reportForm" class="d-flex flex-wrap align-items-center gap-2">
                 {% csrf_token %}
                 <button type="submit" id="reporte_compras" class="sv-btn sv-btn-success d-none" value="Reporte Excel">
                     <i class="fa-solid fa-file-excel"></i>
@@ -135,7 +124,6 @@
                     Descargar reporte
                 </a>
             </form>
-
             <nav class="d-flex flex-wrap gap-2" aria-label="Vistas de compras">
                 <a class="sv-btn sv-btn-outline" href="{% url 'requisicion-autorizada' %}">Requisiciones</a>
                 <a class="sv-btn sv-btn-outline" href="{% url 'matriz-compras' %}">Matriz</a>
@@ -143,7 +131,6 @@
             </nav>
         </div>
     </section>
-
     <section class="sv-card mt-4">
         <div class="sv-card-header">
             <div>
@@ -164,7 +151,6 @@
                     <div class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="productColumnsButton"
                          style="min-width: 250px;">
                         <p class="sv-cell-title mb-2">Mostrar columnas</p>
-
                         <div class="form-check mb-2">
                             <input class="form-check-input js-product-column" type="checkbox" id="col-rq"
                                    data-column="rq" data-default="true" checked>
@@ -210,20 +196,17 @@
                                    data-column="cantidad" data-default="true" checked>
                             <label class="form-check-label" for="col-cantidad">Cantidad</label>
                         </div>
-
                         <button type="button" class="sv-btn sv-btn-outline w-100" id="resetProductColumns">
                             <i class="fa-solid fa-arrow-rotate-left"></i>
                             Vista compacta
                         </button>
                     </div>
                 </div>
-
                 <span class="sv-badge sv-badge-neutral">
                     Página {{ articulos_list.number }} de {{ articulos_list.paginator.num_pages }}
                 </span>
             </div>
         </div>
-
         <div class="sv-table-wrap">
             <table class="sv-table" id="productPurchasesTable">
                 <thead>
@@ -277,7 +260,6 @@
             </table>
         </div>
     </section>
-
     {% if articulos_list.paginator.num_pages > 1 %}
     <nav class="mt-4" aria-label="Paginación de productos">
         <ul class="pagination justify-content-center">
@@ -293,7 +275,6 @@
                     </a>
                 </li>
             {% endif %}
-
             {% for page_number in articulos_list.paginator.page_range %}
                 {% if articulos_list.number == page_number %}
                     <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
@@ -301,12 +282,10 @@
                     <li class="page-item"><a class="page-link" href="{% my_url page_number 'page' request.GET.urlencode %}">{{ page_number }}</a></li>
                 {% endif %}
             {% endfor %}
-
             {% if articulos_list.paginator.num_pages > articulos_list.number|add:'2' %}
                 <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
                 <li class="page-item"><a class="page-link" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ articulos_list.paginator.num_pages }}</a></li>
             {% endif %}
-
             {% if articulos_list.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="{% my_url articulos_list.next_page_number 'page' request.GET.urlencode %}" aria-label="Página siguiente">
@@ -323,23 +302,39 @@
     </nav>
     {% endif %}
 </main>
-
-<div id="loadingIndicator"
-     class="d-none d-flex position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center bg-dark bg-opacity-50"
-     style="z-index: 1080" role="status" aria-live="polite">
-    <div class="sv-card d-flex flex-row align-items-center p-4">
-        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="" width="72" height="72" class="rounded-circle me-3">
-        <div>
-            <strong>Generando reporte</strong>
-            <p class="mb-0">Por favor espera… <i class="fa-solid fa-mug-hot"></i></p>
+<div class="modal fade" id="loadingIndicator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loadingIndicatorTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body d-flex align-items-center gap-3">
+                {% if usuario.distritos.nombre == "Yerod" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}"
+                     alt="SAVIA Yerod"
+                     width="72"
+                     height="72"
+                     class="rounded-circle">
+                {% else %}
+                <img src="{% static 'images/logo_vordcab.jpg' %}"
+                     alt="SAVIA Vordcab"
+                     width="96"
+                     class="img-fluid rounded">
+                {% endif %}
+                <div>
+                    <strong id="loadingIndicatorTitle">
+                        Generando reporte
+                    </strong>
+                    <p class="sv-cell-subtitle mb-0" role="status">
+                        Por favor espera…
+                        <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+                    </p>
+                </div>
+                <div class="spinner-border ms-auto" role="status" aria-label="Generando reporte"></div>
+            </div>
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this"></div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% if messages %}
     {% for message in messages %}
@@ -352,12 +347,11 @@
     </script>
     {% endfor %}
 {% endif %}
-
 <script>
 (function () {
     'use strict';
-
     const loadingIndicator = document.getElementById('loadingIndicator');
+    const reportForm = document.getElementById('reportForm');
     const btnExcel = document.getElementById('btnExcel');
     const downloadButton = document.getElementById('downloadButton');
     const reportButton = document.getElementById('reporte_compras');
@@ -365,14 +359,12 @@
     const columnToggles = Array.from(document.querySelectorAll('.js-product-column'));
     const resetColumnsButton = document.getElementById('resetProductColumns');
     const columnStorageKey = 'saviaMatrizProductosComprasColumnas';
-
     function defaultColumnState() {
         return columnToggles.reduce(function (state, toggle) {
             state[toggle.dataset.column] = toggle.dataset.default === 'true';
             return state;
         }, {});
     }
-
     function savedColumnState() {
         try {
             const saved = JSON.parse(localStorage.getItem(columnStorageKey));
@@ -384,7 +376,6 @@
             return defaultColumnState();
         }
     }
-
     function applyColumnState(state, save) {
         columnToggles.forEach(function (toggle) {
             const column = toggle.dataset.column;
@@ -394,23 +385,18 @@
                 cell.hidden = !visible;
             });
         });
-
         if (save) localStorage.setItem(columnStorageKey, JSON.stringify(state));
     }
-
     function initializeColumnSelector() {
         if (!columnToggles.length) return;
-
         let state = savedColumnState();
         applyColumnState(state, false);
-
         columnToggles.forEach(function (toggle) {
             toggle.addEventListener('change', function () {
                 state[toggle.dataset.column] = toggle.checked;
                 applyColumnState(state, true);
             });
         });
-
         if (resetColumnsButton) {
             resetColumnsButton.addEventListener('click', function () {
                 state = defaultColumnState();
@@ -418,7 +404,6 @@
             });
         }
     }
-
     function getCookie(name) {
         const prefix = name + '=';
         const cookies = document.cookie ? document.cookie.split(';') : [];
@@ -428,33 +413,44 @@
         }
         return null;
     }
+    let loadingModal = null;
+
+    function getLoadingModal() {
+        if (!loadingIndicator || !window.bootstrap || !bootstrap.Modal) return null;
+
+        if (!loadingModal) {
+            loadingModal = bootstrap.Modal.getOrCreateInstance(loadingIndicator);
+        }
+
+        return loadingModal;
+    }
 
     window.mostrarIndicadorCarga = function () {
-        if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+        const modal = getLoadingModal();
+
+        if (modal) modal.show();
         if (btnExcel) btnExcel.classList.add('d-none');
         verificarDescargaIniciada();
     };
-
     function verificarDescargaIniciada() {
         const checkDescarga = window.setInterval(function () {
             if (getCookie('descarga_iniciada') === 'true') {
-                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                const modal = getLoadingModal();
+
+                if (modal) modal.hide();
                 document.cookie = 'descarga_iniciada=; Max-Age=0; path=/';
                 window.clearInterval(checkDescarga);
             }
         }, 1000);
     }
-
     window.guardar_variable = function () {
         localStorage.setItem('mostrarBotonExcel', 'true');
     };
-
     window.downloadLimpiar = function () {
         limpiarBack();
         localStorage.removeItem('fileDownloadUrl_productos');
         if (downloadButton) downloadButton.classList.add('d-none');
     };
-
     function limpiarBack() {
         localStorage.removeItem('task_id_producto');
         fetch('/compras/clear_task_id_producto/', {
@@ -465,11 +461,9 @@
             console.error('Error al borrar task_id:', error);
         });
     }
-
     function intentos(cantidad) {
         let maxIntentos;
         let intervalo;
-
         if (cantidad >= 20000) {
             maxIntentos = 150;
             intervalo = 10000;
@@ -486,16 +480,13 @@
             maxIntentos = 50;
             intervalo = 2500;
         }
-
         esperarYVerificar(intervalo, maxIntentos, 0, '/compras/verificar_estado_producto/');
     }
-
     function esperarYVerificar(intervalo, maxIntentos, intentoActual, statusEndpoint) {
         window.setTimeout(async function () {
             try {
                 const response = await fetch(statusEndpoint);
                 if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
-
                 const data = await response.json();
                 if (data.status === 'SUCCESS') {
                     const url = data.result.file_url_productos;
@@ -520,23 +511,49 @@
             }
         }, intervalo);
     }
-
     document.addEventListener('DOMContentLoaded', function () {
         initializeColumnSelector();
 
+        if (reportForm) {
+            let reportSubmitting = false;
+
+            reportForm.addEventListener('submit', function (event) {
+                if (reportSubmitting) return;
+
+                event.preventDefault();
+
+                const submitter = event.submitter;
+
+                if (submitter && submitter.name) {
+                    const submitValue = document.createElement('input');
+                    submitValue.type = 'hidden';
+                    submitValue.name = submitter.name;
+                    submitValue.value = submitter.value || '1';
+                    reportForm.appendChild(submitValue);
+                }
+
+                window.mostrarIndicadorCarga();
+                reportSubmitting = true;
+
+                if (submitter) submitter.disabled = true;
+
+                window.requestAnimationFrame(function () {
+                    window.setTimeout(function () {
+                        reportForm.submit();
+                    }, 75);
+                });
+            });
+        }
         if (localStorage.getItem('mostrarBotonExcel') === 'true' && btnExcel) {
             btnExcel.classList.remove('d-none');
             localStorage.removeItem('mostrarBotonExcel');
         }
-
         const taskId = '{{ task_id_producto|escapejs }}';
         const cantidad = Number('{{ cantidad|unlocalize|default:"0" }}');
         if (taskId) localStorage.setItem('task_id_producto', taskId);
-
         const storedTask = localStorage.getItem('task_id_producto');
         const storedReport = localStorage.getItem('reporte_compras');
         const storedUrl = localStorage.getItem('fileDownloadUrl_productos');
-
         if (storedTask) {
             intentos(cantidad);
             localStorage.removeItem('reporte_compras');
@@ -544,12 +561,10 @@
         } else if (storedReport && reportButton) {
             reportButton.classList.remove('d-none');
         }
-
         if (storedUrl && downloadButton) {
             downloadButton.href = storedUrl;
             downloadButton.classList.remove('d-none');
         }
-
         const dialog = document.getElementById('dialog');
         if (dialog && window.bootstrap) {
             const modal = bootstrap.Modal.getOrCreateInstance(dialog);

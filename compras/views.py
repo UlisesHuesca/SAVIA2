@@ -5259,6 +5259,15 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
                 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Comentario','Tipo de Contratación','Visita']
     data = [columns]
 
+    pagos_tc = {
+        pago['oc_id']: pago['tc_promedio']
+        for pago in Pago.objects.filter(
+            oc_id__in=productos.values_list('oc_id', flat=True)
+        )
+        .values('oc_id')
+        .annotate(tc_promedio=Avg('tipo_de_cambio'))
+    }
+
     for articulo in productos:
         compra_id = articulo.oc.id
         moneda_nombre = articulo.oc.moneda.nombre
@@ -5275,9 +5284,13 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             status = 'Autorizado Superintendente' if articulo.oc.autorizado1 else 'Cancelada'
         else:
             status = 'Sin autorizaciones aún'
-        pagos = Pago.objects.filter(oc_id=compra_id)
-        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
-        tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
+        #pagos = Pago.objects.filter(oc_id=compra_id)
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+        #tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
+        tipo_de_cambio = (
+            pagos_tc.get(compra_id)
+            or articulo.oc.tipo_de_cambio
+        )
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
         if articulo.oc.proveedor.nombre.visita == True:
