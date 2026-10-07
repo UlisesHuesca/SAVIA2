@@ -2458,7 +2458,7 @@ def carga_proveedor(request):
     usuario = colaborador_sel.get(id = pk_perfil)
     term = request.GET.get('term')
     proveedores = Proveedor_direcciones.objects.filter(
-         Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO"),
+         Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO") | Q(estatus__nombre="PREAPROBAD"),
          distrito = usuario.distritos, 
          nombre__razon_social__icontains = term
     ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda__nombre', 'banco__nombre',)
