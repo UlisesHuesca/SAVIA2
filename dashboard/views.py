@@ -2136,7 +2136,7 @@ def documentacion_proveedores(request, pk):
     if request.method == 'GET':
         request.session['next_url'] = next_url
 
-    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"])
+    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"]).exclude(distrito__nombre__in=["VH SECTOR 6","ALTAMIRA ALTERNATIVO","MATRIZ ALTERNATIVO","Yerod","BRASIL"])
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
     tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
     tiene_producto = proveedor.direcciones.filter(producto=True).exists()
