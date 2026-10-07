@@ -5251,8 +5251,23 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
     return response
 
 def convert_excel_solicitud_matriz_productos_prov2(productos):
-    start_time = time.time()  # Marca el tiempo de inicio
+    #start_time = time.time()  # Marca el tiempo de inicio
     print('Aqui comienza',productos.count())
+    start_time = time.perf_counter()
+
+    productos = productos.select_related(
+        'oc__moneda',
+        'oc__req__orden__distrito',
+        'oc__req__orden__proyecto',
+        'oc__req__orden__subproyecto',
+        'oc__proveedor__nombre',
+        'oc__proveedor__estatus',
+        'oc__proveedor__estado',
+        'producto__producto__articulos__producto__producto__unidad',
+        'producto__producto__articulos__producto__producto__familia',
+        'producto__producto__articulos__producto__producto__subfamilia',
+    )
+
 
     columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC',
                 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Estado','Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 
@@ -5333,6 +5348,12 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             visita,
         ]
         data.append(row)
+
+    print(
+        f"Tiempo construcción de datos: "
+        f"{time.perf_counter() - start_time:.2f} segundos",
+        flush=True
+    )
 
     # Crear el archivo Excel usando pyexcelerate
     wb = Workbook()
