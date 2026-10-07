@@ -143,13 +143,13 @@ def contadores_processor(request):
                         gasto__isnull=False,
                         gasto__complete=True,
                         gasto__autorizar2=True,
-                        gasto__autorizado_por2__staff = usuario.staff
+                        gasto__autorizado_por2__tipo__nombre='GERENCIA'
                     ) |
                     Q(
                         viatico__isnull=False,
                         viatico__complete=True,
                         viatico__autorizar2=True,
-                        viatico__gerente__staff = usuario.staff
+                        viatico__gerente__tipo__nombre='GERENCIA'
                     )
                 ).order_by('-gasto__folio', '-viatico__folio')
             conteo_oc = oc.count()

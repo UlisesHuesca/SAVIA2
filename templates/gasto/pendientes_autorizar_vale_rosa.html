@@ -1,168 +1,483 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
-{% load widget_tweaks %}
 {% load static %}
+{% load l10n %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Solicitudes | Vista: Por orden{% endblock %}
-</head>
-<body>
+
+{% block title %}Autorización de vales{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                </span>
+                Autorización de vales
+            </h1>
+            <p class="sv-page-subtitle">
+                Revisa los vales asociados a solicitudes de gasto o viáticos y registra su resolución.
+            </p>
+        </div>
 
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list-check"></i>
+            {{ vales_rosa|length }} pendiente{{ vales_rosa|length|pluralize }}
+        </span>
+    </header>
 
-<div class="row my-4">
-    <div class="col-md-4">
-        {% for message in messages %}
-            {% if message %}
-            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-            <script>
-                var m = "{{ message }}";
-                swal("Excelente !", m, "success")
-            </script>
-            {% endif %}
-        {% endfor %}
-    </div>
-</div>
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr style="background-color: #f8d7da;">
-                    <th>Tipo</th>
-                    <th scope="col">Folio</th>
-                    <th scope="col">Solicitado por</th>
-                    <th>Solicitado para:</th>
-                    <th scope="col">Autorización</th>
-                    <th scope="col">Creado</th>
-                    <th>Comentarios Gasto/</th>
-                    <th>Motivo Vale</th>
-                    <th scope="col">Total Gasto</th>
-                    <th>Monto Vale</th>
-                    <th scope="col">Acción</th>
-                   
-                </tr>
-            </thead>
-            <tbody>
-                
-                {% for vale in vales_rosa %}
-                <tr>
-                    <th>{% if vale.gasto %} Gasto {% elif vale.viatico %} Viático {% endif %}</th>
-                    <th scope="row">{% if vale.gasto %}{{vale.gasto.folio}} {% elif vale.viatico %}{{vale.viatico.folio}} {% endif %}</th>
-                    <td>
-                        {% if vale.gasto %}{{vale.gasto.staff.staff.staff.first_name}} {{vale.gasto.staff.staff.staff.last_name}}
-                        {% elif vale.viatico %}{{vale.viatico.staff.staff.staff.first_name}} {{vale.viatico.staff.staff.staff.last_name}}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if vale.gasto %}
-                            {% if vale.gasto.colaborador %}{{vale.gasto.colaborador.staff.staff.first_name}} {{vale.gasto.colaborador.staff.staff.last_name}}
-                            {% elif vale.gasto.proveedor %} {{vale.gasto.proveedor}} 
-                            {% endif %}
-                        {% elif vale.viatico %}
-                            {% if vale.viatico.colaborador %}{{vale.viatico.colaborador.staff.staff.first_name}} {{vale.viatico.colaborador.staff.staff.last_name}}
-                            {% endif %}
-                        {% endif %}
-                    
-                    </td>
-                    <td> {% if vale.aprobado_por %} {{vale.aprobado_por.staff.staff.first_name}} {{vale.aprobado_por.staff.staff.last_name}}
-                        {% endif %}
-                    </td>
-                   
-                    <td>{% if vale.gasto %}{{vale.gasto.created_at}} 
-                        {% elif vale.viatico %}{{vale.viatico.created_at}} 
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if vale.gasto %}
-                            {% if vale.gasto.comentario %}
-                            {{vale.gasto.comentario}}
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-table-list"></i>
+                    Vales pendientes
+                </h2>
+                <p class="sv-card-subtitle">
+                    Información de la solicitud, motivo del vale y montos relacionados.
+                </p>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="dropdown">
+                    <button
+                        type="button"
+                        class="sv-btn sv-btn-outline dropdown-toggle"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside"
+                        data-bs-boundary="viewport"
+                        aria-expanded="false"
+                    >
+                        <i class="fa-solid fa-table-columns"></i>
+                        Columnas
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end p-2 shadow sv-control-columns-menu">
+                        <div class="small fw-bold text-muted px-2 py-1">Mostrar columnas</div>
+
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="solicitante" checked>
+                            Solicitado por
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="autorizacion">
+                            Autorización
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="creado">
+                            Fecha de creación
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="comentario">
+                            Comentario
+                        </label>
+                        <label class="dropdown-item d-flex align-items-center gap-2">
+                            <input class="form-check-input mt-0" type="checkbox" data-column-toggle="motivo" checked>
+                            Motivo del vale
+                        </label>
+
+                        <div class="dropdown-divider"></div>
+                        <button type="button" class="dropdown-item text-center" id="resetVoucherColumns">
+                            <i class="fa-solid fa-arrow-rotate-left me-1"></i>
+                            Restablecer vista compacta
+                        </button>
+                    </div>
+                </div>
+
+                {% if ordenes_list.paginator.num_pages > 1 %}
+                <span class="sv-badge sv-badge-dark">
+                    Página {{ ordenes_list.number }} de {{ ordenes_list.paginator.num_pages }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table sv-table-wide" id="voucherApprovalTable">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Folio</th>
+                        <th class="sv-col-solicitante">Solicitado por</th>
+                        <th>Solicitado para</th>
+                        <th class="sv-col-autorizacion d-none">Autorización</th>
+                        <th class="sv-col-creado d-none">Creado</th>
+                        <th class="sv-col-comentario d-none">Comentario</th>
+                        <th class="sv-col-motivo">Motivo del vale</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Monto del vale</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for vale in vales_rosa %}
+                    <tr>
+                        <td>
+                            {% if vale.gasto %}
+                            <span class="sv-badge sv-badge-primary">Gasto</span>
+                            {% elif vale.viatico %}
+                            <span class="sv-badge sv-badge-info">Viático</span>
                             {% else %}
-                                {% for articulo in vale.gasto.articulos.all %}
-                                    {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
-                                {% empty %}
-                                No hay comentarios disponibles
-                                {% endfor %}
+                            <span class="sv-badge sv-badge-neutral">Sin tipo</span>
                             {% endif %}
-                        {% elif vale.viatico %}
-                            {% if vale.viatico.comentario_general %}
-                            {{vale.viatico.comentario_general}}
+                        </td>
+
+                        <td>
+                            <span class="sv-folio">
+                                {% if vale.gasto %}
+                                    {{ vale.gasto.folio }}
+                                {% elif vale.viatico %}
+                                    {{ vale.viatico.folio }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </span>
+                        </td>
+
+                        <td class="sv-col-solicitante">
+                            <div class="sv-user">
+                                <span class="sv-user-avatar">
+                                    {% if vale.gasto %}
+                                        {{ vale.gasto.staff.staff.staff.first_name|first }}{{ vale.gasto.staff.staff.staff.last_name|first }}
+                                    {% elif vale.viatico %}
+                                        {{ vale.viatico.staff.staff.staff.first_name|first }}{{ vale.viatico.staff.staff.staff.last_name|first }}
+                                    {% endif %}
+                                </span>
+                                <span class="sv-user-name">
+                                    {% if vale.gasto %}
+                                        {{ vale.gasto.staff.staff.staff.first_name }} {{ vale.gasto.staff.staff.staff.last_name }}
+                                    {% elif vale.viatico %}
+                                        {{ vale.viatico.staff.staff.staff.first_name }} {{ vale.viatico.staff.staff.staff.last_name }}
+                                    {% else %}
+                                        Sin solicitante
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if vale.gasto %}
+                                {% if vale.gasto.colaborador %}
+                                    <span class="sv-cell-title">
+                                        {{ vale.gasto.colaborador.staff.staff.first_name }} {{ vale.gasto.colaborador.staff.staff.last_name }}
+                                    </span>
+                                {% elif vale.gasto.proveedor %}
+                                    <span class="sv-cell-title">{{ vale.gasto.proveedor }}</span>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">Sin asignar</span>
+                                {% endif %}
+                            {% elif vale.viatico and vale.viatico.colaborador %}
+                                <span class="sv-cell-title">
+                                    {{ vale.viatico.colaborador.staff.staff.first_name }} {{ vale.viatico.colaborador.staff.staff.last_name }}
+                                </span>
                             {% else %}
-                                {% for articulo in vale.viatico.articulos.all %}
-                                    {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
-                                {% empty %}
-                                No hay comentarios disponibles
-                                {% endfor %}
+                                <span class="sv-cell-subtitle">Sin asignar</span>
                             {% endif %}
-                        {% endif %}
-                    </td>
-                    <td>{{vale.motivo}}</td>
-                    <td> {% if vale.gasto %}${{vale.gasto.get_total_solicitud}}
-                         {% elif vale.viatico %}${{vale.viatico.get_total|floatformat:2}}
-                        {% endif %}
+                        </td>
 
-                    <td>${{vale.monto}}</td>
-                    <td>
-                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-vale-rosa' vale.id %}" ><i class="fa-solid fa-check fa-xl"></i></a>
-                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-vale-rosa' vale.id %}"><i class="fa-solid fa-xmark fa-xl"></i></a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if ordenes_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-                {% endif %}
-                {% for page in ordenes_list.paginator  %}
-                {% if ordenes_list.number == page.number %}
-                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
-                {% else %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
-                {% endif %}
-                {% endfor %}
-                {% if ordenes_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
+                        <td class="sv-col-autorizacion d-none">
+                            {% if vale.aprobado_por %}
+                                <span class="sv-cell-title">
+                                    {{ vale.aprobado_por.staff.staff.first_name }} {{ vale.aprobado_por.staff.staff.last_name }}
+                                </span>
+                            {% else %}
+                                <span class="sv-badge sv-badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="sv-col-creado d-none">
+                            {% if vale.gasto %}
+                                <span class="sv-cell-title d-block">{{ vale.gasto.created_at|date:"d/m/Y" }}</span>
+                                <span class="sv-cell-subtitle">{{ vale.gasto.created_at|date:"H:i" }}</span>
+                            {% elif vale.viatico %}
+                                <span class="sv-cell-title d-block">{{ vale.viatico.created_at|date:"d/m/Y" }}</span>
+                                <span class="sv-cell-subtitle">{{ vale.viatico.created_at|date:"H:i" }}</span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td class="sv-col-comentario d-none">
+                            {% if vale.gasto %}
+                                {% if vale.gasto.comentario %}
+                                    {{ vale.gasto.comentario }}
+                                {% else %}
+                                    {% for articulo in vale.gasto.articulos.all %}
+                                        {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        <span class="sv-cell-subtitle">Sin comentarios</span>
+                                    {% endfor %}
+                                {% endif %}
+                            {% elif vale.viatico %}
+                                {% if vale.viatico.comentario_general %}
+                                    {{ vale.viatico.comentario_general }}
+                                {% else %}
+                                    {% for articulo in vale.viatico.articulos.all %}
+                                        {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        <span class="sv-cell-subtitle">Sin comentarios</span>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
+                        </td>
+
+                        <td class="sv-col-motivo">
+                            {% if vale.motivo %}
+                                {{ vale.motivo }}
+                            {% else %}
+                                <span class="sv-cell-subtitle">Sin motivo registrado</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <strong>
+                                {% if vale.gasto %}
+                                    ${{ vale.gasto.get_total_solicitud|floatformat:2 }}
+                                {% elif vale.viatico %}
+                                    ${{ vale.viatico.get_total|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </strong>
+                        </td>
+
+                        <td class="text-end">
+                            <strong>${{ vale.monto|floatformat:2 }}</strong>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="sv-actions justify-content-center">
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-success sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#dialog"
+                                    hx-target="#document"
+                                    hx-get="{% url 'autorizar-vale-rosa' vale.id|unlocalize %}"
+                                    title="Autorizar vale"
+                                    aria-label="Autorizar vale {{ vale.id|unlocalize }}"
+                                >
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="sv-btn sv-btn-danger sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#dialog"
+                                    hx-target="#document"
+                                    hx-get="{% url 'cancelar-vale-rosa' vale.id|unlocalize %}"
+                                    title="Cancelar vale"
+                                    aria-label="Cancelar vale {{ vale.id|unlocalize }}"
+                                >
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="sv-empty">
+                            <span class="sv-empty-icon">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </span>
+                            <span class="sv-empty-title">No hay vales pendientes</span>
+                            <span class="sv-empty-text">Las solicitudes por autorizar aparecerán en esta sección.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if ordenes_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación de vales">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if ordenes_list.has_previous %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="{% my_url 1 'page' request.GET.urlencode %}"
+                            aria-label="Primera página"
+                        >
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"
+                            aria-label="Página anterior"
+                        >
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for item in ordenes_list.paginator.page_range %}
+                        {% if ordenes_list.number == item %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ item }}</span>
+                        </li>
+                        {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% my_url item 'page' request.GET.urlencode %}">
+                                {{ item }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if ordenes_list.has_next %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"
+                            aria-label="Página siguiente"
+                        >
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                            aria-label="Última página"
+                        >
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<div
+    class="modal fade"
+    id="dialog"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-lg modal-dialog-centered"
+        id="document"
+        role="document"
+        hx-target="this"
+    ></div>
 </div>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    </div>
-</div>
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
 
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+document.addEventListener('DOMContentLoaded', function () {
+    const columnDefaults = {
+        solicitante: true,
+        autorizacion: false,
+        creado: false,
+        comentario: false,
+        motivo: true
+    };
+    const columnStorageKey = 'saviaAutorizacionValesColumnas';
+    let columnPreferences = Object.assign({}, columnDefaults);
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
+    try {
+        const savedPreferences = JSON.parse(localStorage.getItem(columnStorageKey));
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
+        if (savedPreferences && typeof savedPreferences === 'object') {
+            Object.keys(columnDefaults).forEach(function (column) {
+                if (typeof savedPreferences[column] === 'boolean') {
+                    columnPreferences[column] = savedPreferences[column];
+                }
+            });
+        }
+    } catch (error) {
+        localStorage.removeItem(columnStorageKey);
+    }
 
+    function updateVoucherColumn(column, visible) {
+        document.querySelectorAll('.sv-col-' + column).forEach(function (cell) {
+            cell.classList.toggle('d-none', !visible);
+        });
+    }
 
+    const columnToggles = Array.from(document.querySelectorAll('[data-column-toggle]'));
 
+    function applyColumnPreferences() {
+        columnToggles.forEach(function (checkbox) {
+            const column = checkbox.dataset.columnToggle;
+            const visible = columnPreferences[column] === true;
+
+            checkbox.checked = visible;
+            updateVoucherColumn(column, visible);
+        });
+    }
+
+    columnToggles.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const column = checkbox.dataset.columnToggle;
+
+            columnPreferences[column] = checkbox.checked;
+            updateVoucherColumn(column, checkbox.checked);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+        });
+    });
+
+    const resetColumnsButton = document.getElementById('resetVoucherColumns');
+
+    if (resetColumnsButton) {
+        resetColumnsButton.addEventListener('click', function () {
+            columnPreferences = Object.assign({}, columnDefaults);
+            localStorage.setItem(columnStorageKey, JSON.stringify(columnPreferences));
+            applyColumnPreferences();
+        });
+    }
+
+    applyColumnPreferences();
+
+    document.querySelectorAll('[title]').forEach(function (element) {
+        if (window.bootstrap && bootstrap.Tooltip) {
+            bootstrap.Tooltip.getOrCreateInstance(element);
+        }
+    });
+
+    const dialogElement = document.getElementById('dialog');
+
+    if (!dialogElement || !window.bootstrap) {
+        return;
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance(dialogElement);
+
+    if (window.htmx) {
+        htmx.on('htmx:beforeSwap', function (event) {
+            if (event.detail.target.id === 'document' && !event.detail.xhr.response) {
+                modal.hide();
+            }
+        });
+    }
+
+    dialogElement.addEventListener('hidden.bs.modal', function () {
+        window.location.reload();
+    });
+});
 </script>
 {% endblock %}
-</body>
-</html>
