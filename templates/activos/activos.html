@@ -426,9 +426,13 @@
                         <i class="fa-solid fa-file-pdf"></i> Responsiva gerente
                     </a>
                     {% if usuario.tipo.activos == True %}
-                    <!--<a class="sv-btn sv-btn-outline" href="{% url 'gestionar_tipo_activo' %}">
-                        <i class="fa-solid fa-plus"></i> Tipo de activo
-                    </a>-->
+                    <a href="{% url 'conciliacion-padme' %}"
+                        class="sv-btn sv-btn-primary d-inline-flex align-items-center gap-2"
+                        title="Conciliar activos UBM con PADME">
+
+                        <i class="fa-solid fa-code-compare"></i>
+                        <span>Conciliación PADME</span>
+                    </a>
                     <a class="sv-btn sv-btn-outline" href="{% url 'gestionar_marca' %}">
                         <i class="fa-solid fa-plus"></i> Marca
                     </a>

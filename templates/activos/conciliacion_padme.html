@@ -1,0 +1,385 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Conciliación PADME | SAVIA{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Activos / Integraciones</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-code-compare"></i>
+                </span>
+                Conciliación de activos
+            </h1>
+            <p class="sv-page-subtitle">
+                Comparación de equipos UBM entre SAVIA 2.1 y PADME mediante número económico.
+            </p>
+        </div>
+
+        <div class="sv-actions">
+            <span class="sv-badge sv-badge-dark">
+                <i class="fa-solid fa-database"></i>
+                SAVIA ↔ PADME
+            </span>
+
+            <button type="button" class="sv-btn sv-btn-outline" id="btnActualizarPadme">
+                <i class="fa-solid fa-rotate"></i>
+                Actualizar
+            </button>
+
+            <a href="{% url 'exportar-conciliacion-padme' %}"
+               id="btnExportarPadme"
+               class="sv-btn sv-btn-success">
+                <i class="fa-solid fa-file-excel"></i>
+                Exportar Excel
+            </a>
+        </div>
+    </header>
+
+    {% if error %}
+    <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div>{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <section class="row g-3 mb-4" aria-label="Resumen de conciliación">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl">
+            <article class="sv-card h-100">
+                <div class="sv-card-body d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="sv-page-eyebrow">Coincidencias</span>
+                        <h2 class="sv-card-title mb-1">{{ total_match|default:0 }}</h2>
+                        <p class="sv-card-subtitle mb-0">Presentes en ambos sistemas</p>
+                    </div>
+                    <span class="sv-page-title-icon text-success">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4 col-xl">
+            <article class="sv-card h-100">
+                <div class="sv-card-body d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="sv-page-eyebrow">Solo SAVIA</span>
+                        <h2 class="sv-card-title mb-1">{{ total_savia|default:0 }}</h2>
+                        <p class="sv-card-subtitle mb-0">Sin coincidencia en PADME</p>
+                    </div>
+                    <span class="sv-page-title-icon text-warning">
+                        <i class="fa-solid fa-database"></i>
+                    </span>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4 col-xl">
+            <article class="sv-card h-100">
+                <div class="sv-card-body d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="sv-page-eyebrow">Solo PADME</span>
+                        <h2 class="sv-card-title mb-1">{{ total_padme|default:0 }}</h2>
+                        <p class="sv-card-subtitle mb-0">Sin coincidencia en SAVIA</p>
+                    </div>
+                    <span class="sv-page-title-icon text-primary">
+                        <i class="fa-solid fa-server"></i>
+                    </span>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4 col-xl">
+            <article class="sv-card h-100">
+                <div class="sv-card-body d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="sv-page-eyebrow">Bajas SAVIA</span>
+                        <h2 class="sv-card-title mb-1">{{ total_bajas_savia|default:0 }}</h2>
+                        <p class="sv-card-subtitle mb-0">Sin registro en PADME</p>
+                    </div>
+                    <span class="sv-page-title-icon text-secondary">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </span>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4 col-xl">
+            <article class="sv-card h-100">
+                <div class="sv-card-body d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="sv-page-eyebrow">Duplicados</span>
+                        <h2 class="sv-card-title mb-1">{{ total_duplicados|default:0 }}</h2>
+                        <p class="sv-card-subtitle mb-0">Económicos por revisar</p>
+                    </div>
+                    <span class="sv-page-title-icon text-danger">
+                        <i class="fa-solid fa-copy"></i>
+                    </span>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Resultados de conciliación
+                </h2>
+                <p class="sv-card-subtitle">Consulta y filtra las diferencias entre ambos sistemas.</p>
+            </div>
+
+            <span class="sv-badge sv-badge-dark">
+                {{ resultados|length }} económico{{ resultados|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-card-body border-bottom">
+            <div class="row g-3 align-items-stretch">
+                <div class="col-12 col-lg-6">
+                    <div class="sv-input-group input-group h-100">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <input type="search"
+                                   id="buscarConciliacion"
+                                   class="form-control"
+                                   placeholder="Buscar económico, modelo o distrito"
+                                   autocomplete="off">
+                            <label for="buscarConciliacion">Buscar económico, modelo o distrito</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-7 col-lg-4">
+                    <div class="sv-input-group input-group h-100">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-filter"></i>
+                        </span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <select id="filtroConciliacion" class="form-select" aria-label="Resultado de conciliación">
+                                <option value="" selected>Todos los resultados</option>
+                                <option value="MATCH">MATCH</option>
+                                <option value="SOLO SAVIA">Solo SAVIA</option>
+                                <option value="SOLO PADME">Solo PADME</option>
+                                <option value="DUPLICADO">Duplicados</option>
+                                <option value="BAJA SAVIA">Bajas SAVIA</option>
+                            </select>
+                            <label for="filtroConciliacion">Resultado de conciliación</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-5 col-lg-2 d-grid">
+                    <button type="button" class="sv-btn sv-btn-outline" id="limpiarFiltros">
+                        <i class="fa-solid fa-filter-circle-xmark"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table" id="tablaConciliacion">
+                <thead>
+                    <tr>
+                        <th>Económico</th>
+                        <th>SAVIA</th>
+                        <th>PADME</th>
+                        <th>Distrito SAVIA</th>
+                        <th>Distrito PADME</th>
+                        <th>Modelo</th>
+                        <th>Estatus SAVIA</th>
+                        <th>Estatus PADME</th>
+                        <th>Conciliación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in resultados %}
+                    <tr data-estado="{{ item.estado }}">
+                        <td>
+                            <span class="sv-cell-title">{{ item.eco }}</span>
+                        </td>
+                        <td>
+                            {% if item.savia_id %}
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">{{ item.savia_eco }}</span>
+                                <span class="sv-cell-subtitle">ID: {{ item.savia_id }}</span>
+                            </div>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.padme_serial %}
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">{{ item.padme_serial }}</span>
+                                <span class="sv-cell-subtitle">{{ item.padme_tipo|default:"Sin tipo" }}</span>
+                            </div>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.savia_distrito %}
+                            <span class="sv-cell-title">{{ item.savia_distrito }}</span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.padme_distrito|default:"—" }}</td>
+                        <td>{{ item.padme_modelo|default:"—" }}</td>
+                        <td>
+                            {% if item.savia_estatus == "BAJA" %}
+                            <span class="sv-badge sv-badge-danger">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                                BAJA
+                            </span>
+                            {% elif item.savia_estatus %}
+                            <span class="sv-cell-title">{{ item.savia_estatus }}</span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.padme_estatus %}
+                            <span class="sv-cell-title">{{ item.padme_estatus }}</span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.estado == "MATCH" %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                MATCH
+                            </span>
+                            {% elif item.estado == "BAJA SAVIA" %}
+                            <span class="sv-badge sv-badge-neutral">
+                                <i class="fa-solid fa-box-archive"></i>
+                                BAJA SAVIA
+                            </span>
+                            {% elif item.estado == "SOLO SAVIA" %}
+                            <span class="sv-badge sv-badge-warning">
+                                <i class="fa-solid fa-database"></i>
+                                SOLO SAVIA
+                            </span>
+                            {% elif item.estado == "SOLO PADME" %}
+                            <span class="sv-badge sv-badge-info">
+                                <i class="fa-solid fa-server"></i>
+                                SOLO PADME
+                            </span>
+                            {% elif item.estado == "DUPLICADO" %}
+                            <div class="sv-cell-stack">
+                                <span class="sv-badge sv-badge-danger">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    DUPLICADO
+                                </span>
+                                <span class="sv-cell-subtitle">
+                                    SAVIA: {{ item.cantidad_savia }} / PADME: {{ item.cantidad_padme }}
+                                </span>
+                            </div>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">{{ item.estado|default:"Sin estado" }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="sv-empty-state">
+                                <i class="fa-solid fa-folder-open"></i>
+                                <h3>No hay resultados de conciliación</h3>
+                                <p>No se encontraron registros para mostrar.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sv-card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span id="contadorResultados" class="sv-cell-subtitle">
+                Mostrando {{ resultados|length }} registros
+            </span>
+            <span class="sv-cell-subtitle">
+                <i class="fa-solid fa-shield-halved"></i>
+                Consulta de solo lectura
+            </span>
+        </div>
+    </section>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const buscar = document.getElementById('buscarConciliacion');
+    const filtro = document.getElementById('filtroConciliacion');
+    const limpiar = document.getElementById('limpiarFiltros');
+    const actualizar = document.getElementById('btnActualizarPadme');
+    const contador = document.getElementById('contadorResultados');
+    const filas = Array.from(
+        document.querySelectorAll('#tablaConciliacion tbody tr[data-estado]')
+    );
+
+    function normalizarTexto(texto) {
+        return (texto || '')
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toUpperCase()
+            .trim();
+    }
+
+    function aplicarFiltros() {
+        const texto = normalizarTexto(buscar.value);
+        const estado = filtro.value;
+        let visibles = 0;
+
+        filas.forEach(function (fila) {
+            const contenido = normalizarTexto(fila.textContent);
+            const coincideTexto = contenido.includes(texto);
+            const coincideEstado = !estado || fila.dataset.estado === estado;
+            const mostrar = coincideTexto && coincideEstado;
+
+            fila.classList.toggle('d-none', !mostrar);
+
+            if (mostrar) {
+                visibles += 1;
+            }
+        });
+
+        contador.textContent = `Mostrando ${visibles} de ${filas.length} registros`;
+    }
+
+    buscar.addEventListener('input', aplicarFiltros);
+    filtro.addEventListener('change', aplicarFiltros);
+
+    limpiar.addEventListener('click', function () {
+        buscar.value = '';
+        filtro.value = '';
+        aplicarFiltros();
+        buscar.focus();
+    });
+
+    actualizar.addEventListener('click', function () {
+        actualizar.disabled = true;
+        actualizar.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Consultando PADME...
+        `;
+
+        window.setTimeout(function () {
+            window.location.reload();
+        }, 50);
+    });
+
+    aplicarFiltros();
+});
+</script>
+{% endblock %}

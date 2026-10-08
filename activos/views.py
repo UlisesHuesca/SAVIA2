@@ -20,9 +20,11 @@ from .filters import ActivoFilter
 from dashboard.models import Inventario, Profile, Marca, Activo, Marca, Tipo_Activo, Distrito, Estatus_Activo
 from solicitudes.filters import InventarioFilter
 
-
+from collections import Counter
+from .services.padme import conciliar_activos_padme
 
 #Todo para construir el código QR
+import requests
 import qrcode
 import io
 from io import BytesIO
@@ -45,6 +47,13 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
 from user.decorators import perfil_seleccionado_required
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 # Create your views here.
 
@@ -2258,3 +2267,219 @@ def carga_proveedor_activo(request):
     ]
 
     return JsonResponse({ 'results': resultados,'pagination': {'more': hay_mas,},})
+
+
+
+@login_required(login_url="user-login")
+@perfil_seleccionado_required
+def conciliacion_padme(request):
+
+    resultados = []
+    error = None
+
+    try:
+        resultados = conciliar_activos_padme()
+
+    except (requests.RequestException, ValueError) as exc:
+        error = "No fue posible consultar los activos de PADME."
+        # Registrar el detalle técnico en el logger del servidor.
+
+    conteos = Counter(
+        item["estado"] for item in resultados
+    )
+
+    context = {
+        "resultados": resultados,
+        "total_match": conteos["MATCH"],
+        "total_savia": conteos["SOLO SAVIA"],
+        "total_padme": conteos["SOLO PADME"],
+        "total_duplicados": conteos["DUPLICADO"],
+        "total_bajas_savia": conteos["BAJA SAVIA"],
+        "error": error,
+    }
+
+    return render(request,"activos/conciliacion_padme.html",context,)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def exportar_conciliacion_padme(request):
+
+    # Filtros recibidos desde el template
+    estado = request.GET.get('estado', '').strip().upper()
+    busqueda = request.GET.get('buscar', '').strip()
+
+    # Obtener la conciliación actualizada
+    resultados = conciliar_activos_padme()
+
+    # Aplicar filtro por estado
+    estados_validos = {
+        'MATCH',
+        'SOLO SAVIA',
+        'SOLO PADME',
+        'DUPLICADO',
+    }
+
+    if estado in estados_validos:
+        resultados = [
+            item for item in resultados
+            if item['estado'] == estado
+        ]
+
+    # Aplicar búsqueda general
+    if busqueda:
+
+        import unicodedata
+
+        def normalizar_busqueda(valor):
+            texto = str(valor or '')
+            texto = unicodedata.normalize('NFD', texto)
+            return ''.join(
+                c for c in texto
+                if unicodedata.category(c) != 'Mn'
+            ).upper().strip()
+
+        texto = normalizar_busqueda(busqueda)
+
+        campos_busqueda = [
+            'eco',
+            'savia_eco',
+            'padme_serial',
+            'savia_distrito',
+            'padme_distrito',
+            'padme_modelo',
+            'padme_estatus',
+            'estado',
+            'padme_tipo',
+            'savia_id',
+            'cantidad_savia',
+            'cantidad_padme',
+        ]
+
+        resultados = [
+            item for item in resultados
+            if any(
+                texto in normalizar_busqueda(item.get(campo))
+                for campo in campos_busqueda
+            )
+        ]
+
+    # Crear archivo Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Conciliación PADME'
+
+    columnas = [
+        'Económico',
+        'SAVIA',
+        'PADME',
+        'Distrito SAVIA',
+        'Distrito PADME',
+        'Modelo',
+        'Estatus SAVIA',
+        'Estatus PADME',
+        'Conciliación',
+    ]
+
+    ws.append(columnas)
+
+    # Estilo del encabezado
+    color_encabezado = '17365D'
+
+    for celda in ws[1]:
+        celda.fill = PatternFill(
+            start_color=color_encabezado,
+            end_color=color_encabezado,
+            fill_type='solid',
+        )
+        celda.font = Font(
+            bold=True,
+            color='FFFFFF',
+        )
+        celda.alignment = Alignment(
+            horizontal='center',
+            vertical='center',
+        )
+
+    ws.row_dimensions[1].height = 28
+
+    colores_estado = {
+        'MATCH': ('DCFCE7', '166534'),
+        'SOLO SAVIA': ('FEF3C7', '92400E'),
+        'SOLO PADME': ('DBEAFE', '1E40AF'),
+        'DUPLICADO': ('FEE2E2', '991B1B'),
+        'BAJA SAVIA': ('E2E8F0', '475569'),
+    }
+
+    for item in resultados:
+
+        ws.append([
+            item.get('eco') or '',
+            item.get('savia_eco') or '',
+            item.get('padme_serial') or '',
+            item.get('savia_distrito') or '',
+            item.get('padme_distrito') or '',
+            item.get('padme_modelo') or '',
+            item.get('savia_estatus') or '',
+            item.get('padme_estatus') or '',
+            item.get('estado') or '',
+        ])
+
+        fila = ws.max_row
+
+        # Resaltar clasificación
+        estado_actual = item.get('estado')
+
+        if estado_actual in colores_estado:
+            fondo, fuente = colores_estado[estado_actual]
+
+            celda = ws.cell(row=fila, column=8)
+
+            celda.fill = PatternFill(
+                start_color=fondo,
+                end_color=fondo,
+                fill_type='solid',
+            )
+
+            celda.font = Font(
+                color=fuente,
+                bold=True,
+            )
+
+        # Alternar fondo de filas
+        if fila % 2 == 0:
+            for columna in range(1, 8):
+                ws.cell(
+                    row=fila,
+                    column=columna
+                ).fill = PatternFill(
+                    start_color='F8FAFC',
+                    end_color='F8FAFC',
+                    fill_type='solid',
+                )
+
+    # Ancho de columnas
+    anchos = [18, 22, 25, 25, 25, 28, 22, 20]
+
+    for indice, ancho in enumerate(anchos, start=1):
+        ws.column_dimensions[
+            get_column_letter(indice)
+        ].width = ancho
+
+    # Congelar encabezado
+    ws.freeze_panes = 'A2'
+
+    # Autofiltro de Excel
+    ws.auto_filter.ref = ws.dimensions
+
+    # Generar archivo en memoria
+    archivo = BytesIO()
+    wb.save(archivo)
+    archivo.seek(0)
+
+    nombre_archivo = (f'Conciliacion_PADME_{date.today()}.xlsx')
+
+    response = HttpResponse(archivo.getvalue(), content_type=('application/vnd.openxmlformats-officedocument.''spreadsheetml.sheet'),)
+
+    response['Content-Disposition'] = (f'attachment; filename="{nombre_archivo}"')
+
+    return response
