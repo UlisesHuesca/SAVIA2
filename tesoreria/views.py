@@ -5839,7 +5839,7 @@ def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
 
     columns = ['Año','Prioridad','Folio OC','Fecha Creación','Fecha Autorización OC','Proyecto','Subproyecto','Distrito',
                'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Convenio','Referencia','Moneda','Tipo de cambio','Importe','Total en Pesos','Importe Pagado',
-               'Importe Restante','C. Pago', 'Días de Crédito','Recibida','Fecha Entrada','Factura','Folio UUID', 'Fecha Timbrado']
+               'Importe Restante','C. Pago', 'Días de Crédito','Recibida','Fecha Entrada','Factura','Folio UUID', 'Fecha Timbrado','Tipo Item']
 
     if incluir_monto_sia:
         columns.insert(18, 'Monto autorizado por SIA')
@@ -5855,7 +5855,7 @@ def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
     columna_max = len(columns)+2
 
     # Agregar los mensajes
-    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.1}').style = messages_style
     ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 30
 
@@ -5866,7 +5866,7 @@ def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(V:V)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(U:U)").style = money_resumen_style
   
     
    
@@ -5913,6 +5913,18 @@ def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
             uuid_string = ''  # O None, según lo que necesites
             fecha_timbrado_string = ''
 
+         
+        # Determinar el tipo de producto para la columna de tipo_producto
+        todos_servicios = all(articulo.producto.producto.articulos.producto.producto.servicio for articulo in productos)
+        ningun_servicio = all(not articulo.producto.producto.articulos.producto.producto.servicio for articulo in productos)
+        
+        if todos_servicios:
+            tipo_producto = "SERVICIOS"
+        elif ningun_servicio:
+            tipo_producto = "PRODUCTOS"
+        else:
+            tipo_producto = "PRODUCTO/SERVICIOS"
+
         recibida = "Recibida" if compra.entrada_completa else "No Recibida"
         if incluir_monto_sia:
             formula_restante = f'=T{row_num}-U{row_num}'
@@ -5951,7 +5963,7 @@ def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
             tiene_facturas,
             uuid_string,
             fecha_timbrado_string,
-            
+            tipo_producto,
         ]
         if incluir_monto_sia:
             row.insert(18,compra.parcial or 0)
