@@ -63,6 +63,6 @@ urlpatterns = [
     path("compras/catalogo/<int:producto_id>/precios/", views.producto_precios_detalle, name="producto-precios-detalle"),
     ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_URL)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_URL)
+#if settings.DEBUG:
+#    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_URL)
+#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_URL)

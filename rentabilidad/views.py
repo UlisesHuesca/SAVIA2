@@ -20,7 +20,7 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import re
 import unicodedata
-
+from decimal import Decimal
 
 from decimal import Decimal, InvalidOperation
 
@@ -389,6 +389,8 @@ def delete_costos(request, tipo, origen):
 
     return redirect('add-costo', tipo=tipo)
 
+
+@perfil_seleccionado_required
 def reporte_costos(request):
     tipo_id = request.GET.get("tipo_id")  # <- capturamos el valor del select
     distrito_id = request.GET.get("distrito_id", 1)  # puedes hacerlo dinámico también
@@ -429,7 +431,7 @@ def reporte_costos(request):
     return render(request, "rentabilidad/reportes_costos.html", context)
 
 
-
+@perfil_seleccionado_required
 def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fin=None):
     costos = Costos.objects.all()
     print('tipo_id',tipo_id)
@@ -554,6 +556,8 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
 
     return tabla, meses
 
+
+
 def generar_costos_excel(tabla, meses, distrito_id=None, tipo_id=None, fecha_inicio=None, fecha_fin=None):
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -661,7 +665,7 @@ def ingresos(request):
 
     return render(request,'rentabilidad/ingresos.html', context)
 
-
+@perfil_seleccionado_required
 def resumen_ingresos_mes_contrato(request):
     qs = (
         Ingresos.objects
@@ -854,6 +858,8 @@ def delete_ingreso(request, pk, editar):
     else:
         return redirect('add-ingreso')
 
+
+@perfil_seleccionado_required
 def get_tabla_ingresos_distrito(distrito_id, fecha_inicio=None, fecha_fin=None):
     ingresos = Ingresos.objects.filter(solicitud__complete=True, solicitud__distrito_id=distrito_id)
 
@@ -908,8 +914,9 @@ def get_tabla_ingresos_distrito(distrito_id, fecha_inicio=None, fecha_fin=None):
 
     return tabla, meses, participacion
 
-from decimal import Decimal
 
+
+@perfil_seleccionado_required
 def get_tabla_ingresos_contrato(fecha_inicio=None, fecha_fin=None, distrito_id=None):
     ingresos = Ingresos.objects.filter(solicitud__complete=True)
     print(distrito_id)

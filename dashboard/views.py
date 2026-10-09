@@ -156,7 +156,7 @@ def select_profile(request):
     user = request.user.id
     empresa_host = obtener_empresa_por_host(request)
 
-    profiles = Profile.objects.filter( Q(staff__staff__id=user) & Q(sustituto__isnull = True) & Q(st_activo = True)| Q(sustituto__staff__id=user))
+    profiles = Profile.objects.filter( (Q(staff__staff__id=user) & Q(sustituto__isnull = True))| Q(sustituto__staff__id=user), st_activo = True).distinct()
 
       # -------------------------------------------------------
     # FILTRAR PERFILES SEGÚN EL DOMINIO
@@ -170,10 +170,6 @@ def select_profile(request):
         profiles = profiles.exclude(
             distritos__nombre__iexact='YEROD'
         )
-
-    if request.method == 'POST':
-        profile_id = request.POST.get('profile')
-
     
     if request.method == 'POST':
         profile_id = request.POST.get('profile')
@@ -4486,7 +4482,7 @@ def _vencimiento_excel(doc):
     return None
 
 
-
+@perfil_seleccionado_required
 def reporte_vencimientos_excel(request):
     output = io.BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})

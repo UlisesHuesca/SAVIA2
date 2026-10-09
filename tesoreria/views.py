@@ -6234,7 +6234,7 @@ def mass_payment_view(request):
         request.session['compras_ids'] = request.POST.getlist('compra_id')
         return redirect('layout_pagos')  # No pasamos 'ids' porque usaremos la sesión
 
-# Si necesitas pasar las IDs como parte del contexto a un nuevo template puedes hacerlo así:
+@perfil_seleccionado_required
 def layout_pagos(request):
     compras_ids = request.session.get('compras_ids', [])
     compras_ids = [int(id) for id in compras_ids if str(id).isdigit()]

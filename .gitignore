@@ -13,3 +13,11 @@ savia2_antesdeborrarfacturas
 *.pyc
 __pycache__/
 savia2_service_log.txt
+
+# ==========================================
+# SAVIA - Auditorías locales de seguridad
+# ==========================================
+
+auditoria_rutas_savia.py
+auditoria_rutas_savia.csv
+auditoria_rutas_savia_v2.csv
