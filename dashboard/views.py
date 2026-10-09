@@ -2165,6 +2165,8 @@ def documentacion_proveedores(request, pk):
         'busqueda_mediatica',
         'repse',
         'cumplimiento_imss',
+        'ema',
+        'eba',
     ]
 
     documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -2203,7 +2205,7 @@ def documentacion_proveedores(request, pk):
                     #print('No paso')
                     documento.validada = False
                 documento.save()
-            
+            return redirect(request.path)
         if "btn_eliminar_docto" in request.POST:
             for documento in documentos:
                 eliminar_checkbox_name = f'eliminar_documento_{documento.id}'
@@ -2217,6 +2219,7 @@ def documentacion_proveedores(request, pk):
                         documento.delete()  # Eliminar el registro de la base de datos
                         #documento.save()
             messages.success(request, f"Documentos eliminados correctamente.")
+            return redirect(request.path)
         if "btn_obsoleto_docto" in request.POST:
             for documento in documentos:
                 obsoleto_checkbox_name = f'obsoleto_documento_{documento.id}'

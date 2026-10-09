@@ -536,7 +536,61 @@ def edit_repse(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Búsqueda mediática subida exitosamente')
+            messages.success(request, 'REPSE subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+@perfil_seleccionado_required
+def edit_ema(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'ema'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'EMA subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+@perfil_seleccionado_required
+def edit_eba(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'eba'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'EBA subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -563,7 +617,7 @@ def edit_cumplimiento_imss(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Opinión de cumplimiento subida exitosamente')
+            messages.success(request, 'Cumplimiento IMSS subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  

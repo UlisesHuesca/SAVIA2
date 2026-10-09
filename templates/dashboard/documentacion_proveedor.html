@@ -590,9 +590,10 @@
                                         {% if documento.validada  %}
                                             
                                             {# Fecha adicional (editable) #}
-                                            <span id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
                                                 {% if documento.fecha_adicional %}
-                                                    {{ documento.fecha_adicional }}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
                                                 {% else %}
                                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                                 {% endif %}
@@ -620,6 +621,7 @@
                                                     onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
+                                            </div>
 
                                         {% elif not documento.obsoleto %}
                                             {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
@@ -1392,70 +1394,61 @@
                         </tr>
                         <tr>
                             <td>Búsqueda Mediática</td>
-                            <td>
-                             
-                                        {% if documentos_count.busqueda_mediatica == 0 and usuario.tipo.proveedores_edicion %}   
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Búsqueda Mediática" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
-                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
-                                            </a>
-                                        {% else %}
-                                            {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "busqueda_mediatica" and not documento.obsoleto %}
-                                                    {% if documento.validada  %}
-                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
-                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
-                                                        </button>
-                                                    {% else %}
-                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
-                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
-                                                        </button>
-                                                    {% endif %}
+                            <td>        
+                                {% if documentos_count.busqueda_mediatica == 0 and usuario.tipo.proveedores_edicion %}   
+                                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Búsqueda Mediática" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
+                                        <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                    </a>
+                                {% else %}
+                                    {% for documento in documentos %}
+                                        {% if documento.tipo_documento == "busqueda_mediatica" and not documento.obsoleto %}
+                                            {% if documento.validada  %}
+                                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% endif %}
 
                                 
-                                                    <!-- Modal con visor de PDF -->
-                                                    <div class="modal fade" id="pdfBusqueda{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfBusquedaLabel{{documento.id|unlocalize }}" aria-hidden="true">
-                                                        <div class="modal-dialog modal-xl">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="pdfBusquedaLabel{{documento.id|unlocalize }}">Búsqueda Medíatica</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                                                </div>
-                                                            </div>
+                                            <!-- Modal con visor de PDF -->
+                                            <div class="modal fade" id="pdfBusqueda{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfBusquedaLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="pdfBusquedaLabel{{documento.id|unlocalize }}">Búsqueda Medíatica</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
                                                    
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if documentos_count.busqueda_mediatica > documentos_validados_count.busqueda_mediatica and  usuario.tipo.proveedores_edicion %}
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documentos de Calidad" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
-                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
-                                            </a>
-                                            {% endif %}
                                         {% endif %}
+                                    {% endfor %}
+                                    {% if documentos_count.busqueda_mediatica > documentos_validados_count.busqueda_mediatica and  usuario.tipo.proveedores_edicion %}
+                                        <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documentos de Calidad" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
+                                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
                                    
                             </td>
                             <td>
                             
                             </td>
-                            <!-- <td class="" id="comentario_14_{{proveedor.id|unlocalize}}" tipo ="busqueda_mediatica" >{% if proveedor.comentario_busqueda %} {{proveedor.comentario_busqueda}} {% endif %}</td>
-                            <td class="d-none" id="form_comentario_14_{{proveedor.id|unlocalize}}">
-                                <input type="textarea" class="form-control" id="comentario-input_14_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                        
+                            <td>
+
                             </td>
                             <td>
-                                <a id="modificar_comentario_14_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 14)">
-                                    <i class="fa-regular fa-comment"></i>
-                                </a>
-                                <button type="button" id="save_comment_14_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 14)"    class="btn btn-outline-primary d-none">
-                                    <i class="fa-regular fa-circle-check"></i>
-                                </button>
-                                <button id="cancel_edit_14_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 14)" style="color:ghostwhite; background-color:#980F0F ;">
-                                    <i class="fa-solid fa-circle-xmark"></i>
-                                </button>
-                                
+
                             </td>
+                        
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
@@ -1476,19 +1469,11 @@
                                     {% endif %}
                                 {% endfor %}
 
-                            </td>-->
-                            <td>
-
                             </td>
-                            <td>
-
-                            </td>
-                            <td>
-
-                            </td>
-                            <td>
-
-                            </td>
+                          
+                        
+                           
+                          
                             <td>
                                 {% for documento in documentos  %}
                                     {% if documento.tipo_documento == "busqueda_mediatica" and not documento.obsoleto and documento.validada %}
@@ -1506,34 +1491,46 @@
 </div>
 
 {% if tiene_servicio %}
-    <div class="col-lg-12">
-        <div class ="card mt-2 bg-white">
-            <div class ="card-header">
-                <h5>Complementaria Proveedor de Servicios</h5>
+    <div class="col-12">
+        <section class="sv-card mb-4">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                        Documentación complementaria de servicios
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Documentos requeridos para proveedores con alcance de servicios.
+                    </p>
+                </div>
             </div>
-            <div class ="card-body">
-                <table class="table table-striped">
+            <div class="sv-table-wrap">
+                <table class="sv-table sv-document-table">
                     <thead>
                         <tr>
                             <th>Nombre del Documento</th>
                             <th>Documento</th>
                             <th>Comentarios</th>
-                            <th>Fecha</th>
                             {% if usuario.tipo.proveedores_edicion %}
-                            <th>Edit</th>
+                            <th>Editar comentario</th>
+                             {% endif %}
+                            <th>Fecha</th>
+                           
+                            {% if usuario.tipo.proveedores_edicion %}
+                            
                             <th class="text-success">
-                                <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
+                                <button type="submit" name="btn_validacion" class="sv-btn sv-btn-success sv-btn-icon" title="Guardar validación" aria-label="Guardar validación">
                                 <i class="fa-duotone fa-solid fa-square-check fa-xl"></i>
                                 </button>
                             </th>
                            
                             <th class="text-danger" title="Eliminar documento">
-                                <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
+                                <button type="submit" name="btn_eliminar_docto" class="sv-btn sv-btn-danger sv-btn-icon" title="Confirmar eliminación" aria-label="Confirmar eliminación">
                                     <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
                                 </button>
                             </th>
                             <th class="" title="Marcar como obsoleto">
-                                <button type="submit" name="btn_obsoleto_docto" class="btn btn-outline-info" title="Enviar a obsoletos">
+                                <button type="submit" name="btn_obsoleto_docto" class="sv-btn sv-btn-info sv-btn-icon" title="Enviar a obsoletos" aria-label="Enviar a obsoletos">
                                     <i class="fa-duotone fa-solid fa-cabinet-filing"></i>
                                 </button>
                             </th>
@@ -1592,6 +1589,7 @@
                             <td class="d-none" id="form_comentario_7_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_7_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
+                           
                             <td>
                                 <a id="modificar_comentario_7_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 7)">
                                     <i class="fa-regular fa-comment"></i>
@@ -1603,15 +1601,17 @@
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </button>
                             </td> 
-                              <td>
+                            
+                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
                                         {% if documento.validada  %}
                                             
                                             {# Fecha adicional (editable) #}
-                                            <span id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
                                                 {% if documento.fecha_adicional %}
-                                                    {{ documento.fecha_adicional }}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
                                                 {% else %}
                                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                                 {% endif %}
@@ -1639,6 +1639,7 @@
                                                     onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
+                                            </div>
 
                                         {% elif not documento.obsoleto %}
                                             {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
@@ -1647,6 +1648,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
+                        
 
                             <td>
                             {% for documento in proveedor.documentos.all %}
@@ -1723,7 +1725,9 @@
                                         {% endif %}
                                    
                             </td> 
-                            <td class="" id="comentario_5_{{proveedor.id|unlocalize}}" tipo ="cv" >{% if proveedor.comentario_curriculum %} {{proveedor.comentario_curriculum}} {% endif %}</td>
+                            <td class="" id="comentario_5_{{proveedor.id|unlocalize}}" tipo ="cv" >
+                                {% if proveedor.comentario_curriculum %} {{proveedor.comentario_curriculum}} {% endif %}
+                            </td>
                             {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_5_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_5_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
@@ -1740,9 +1744,7 @@
                                 </button>
                                 
                             </td> 
-                            <td>
-
-                            </td>
+                         
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "curriculum" and not documento.obsoleto %}
@@ -1916,6 +1918,7 @@
                             <td class="" id="comentario_15_{{proveedor.id|unlocalize}}" tipo ="cumplimiento_imss" >
                                 {% if proveedor.comentario_cumplimiento_imss %} {{proveedor.comentario_cumplimiento_imss}} {% endif %}
                             </td>
+                            
                             {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_15_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_15_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
@@ -1931,6 +1934,54 @@
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </button>
                             </td> 
+                             <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto %}
+                                        {% if documento.validada  %}
+                                            
+                                            {# Fecha adicional (editable) #}
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                                {% if documento.fecha_adicional %}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                                {% endif %}
+                                            </span>
+
+                                            <input type="date" class="form-control d-none"
+                                                id="fecha_adic_input_{{ documento.id|unlocalize }}"
+                                                value="{{ documento.fecha_adicional|date:'Y-m-d' }}">
+
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    id="fecha_adic_btn_edit_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_edit({{ documento.id|unlocalize }})"
+                                                    title="Editar Fecha">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-success d-none"
+                                                    id="fecha_adic_btn_save_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_save({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-secondary d-none"
+                                                    id="fecha_adic_btn_cancel_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                            </div>
+
+                                        {% elif not documento.obsoleto %}
+                                            {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            
+                        
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto %}
@@ -1938,9 +1989,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
-                            <td>
-
-                            </td>
+                           
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto %}
@@ -1964,7 +2013,7 @@
 
                            {% endif %}
                         </tr>
-                           <tr>
+                        <tr>
                             <td>Repse</td>
                             <td>
                               
@@ -2012,6 +2061,7 @@
                             <td class="" id="comentario_16_{{proveedor.id|unlocalize}}" tipo ="repse" >
                                 {% if proveedor.comentario_repse %} {{proveedor.comentario_repse}} {% endif %}
                             </td>
+
                             {% if usuario.tipo.proveedores_edicion %}
                             <td class="d-none" id="form_comentario_16_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_16_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
@@ -2027,9 +2077,54 @@
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </button>
                             </td> 
-                            <td>
-                                
+                             <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "repse" and not documento.obsoleto %}
+                                        {% if documento.validada  %}
+                                            
+                                            {# Fecha adicional (editable) #}
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                                {% if documento.fecha_adicional %}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                                {% endif %}
+                                            </span>
+
+                                            <input type="date" class="form-control d-none"
+                                                id="fecha_adic_input_{{ documento.id|unlocalize }}"
+                                                value="{{ documento.fecha_adicional|date:'Y-m-d' }}">
+
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    id="fecha_adic_btn_edit_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_edit({{ documento.id|unlocalize }})"
+                                                    title="Editar Fecha">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-success d-none"
+                                                    id="fecha_adic_btn_save_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_save({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-secondary d-none"
+                                                    id="fecha_adic_btn_cancel_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                            </div>
+
+                                        {% elif not documento.obsoleto %}
+                                            {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                             </td>
+                          
+                           
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "repse" and not documento.obsoleto %}
@@ -2057,11 +2152,288 @@
                             </td>                           
                         {% endif %}
                         </tr>
+                        <tr>
+                            <td>EMA</td>
+                            <td>
+                              
+                                {% if documentos_count.ema == 0 and usuario.tipo.proveedores_edicion %} 
+                                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar EMA" hx-target="#document" hx-get="{% url 'edit-ema' proveedor.id %}">
+                                        <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                    </a>
+                                {% else %}
+                                    {% for documento in documentos %}
+                                        {% if documento.tipo_documento == "ema" and not documento.obsoleto %}
+                                            {% if documento.validada %}
+                                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfEma{{documento.id|unlocalize }}" title="Ver EMA">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfEma{{documento.id|unlocalize }}" title="Ver EMA">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% endif %}
+                                            <!-- Modal con visor de PDF -->
+                                            <div class="modal fade" id="pdfEma{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfEmaLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="pdfEmaLabel{{documento.id|unlocalize }}">EMA</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if documentos_count.ema > documentos_validados_count.ema %}
+                                        <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar EMA" hx-target="#document" hx-get="{% url 'edit-ema' proveedor.id %}">
+                                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                                   
+                            </td>
+                          
+                            <td class="" id="comentario_16_{{proveedor.id|unlocalize}}" tipo ="ema" >
+                                {% if proveedor.comentario_ema %} {{proveedor.comentario_ema}} {% endif %}
+                            </td>
 
+                            {% if usuario.tipo.proveedores_edicion %}
+                            <td class="d-none" id="form_comentario_16_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_16_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            </td>
+                            <td>
+                                <a id="modificar_comentario_16_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 16)">
+                                    <i class="fa-regular fa-comment"></i>
+                                </a>
+                                <button type="button" id="save_comment_16_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 16)"    class="btn btn-outline-primary d-none">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button id="cancel_edit_16_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 16)" style="color:ghostwhite; background-color:#980F0F ;">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </td> 
+                             <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "ema" and not documento.obsoleto %}
+                                        {% if documento.validada  %}
+                                            
+                                            {# Fecha adicional (editable) #}
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                                {% if documento.fecha_adicional %}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                                {% endif %}
+                                            </span>
+
+                                            <input type="date" class="form-control d-none"
+                                                id="fecha_adic_input_{{ documento.id|unlocalize }}"
+                                                value="{{ documento.fecha_adicional|date:'Y-m-d' }}">
+
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    id="fecha_adic_btn_edit_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_edit({{ documento.id|unlocalize }})"
+                                                    title="Editar Fecha">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-success d-none"
+                                                    id="fecha_adic_btn_save_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_save({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-secondary d-none"
+                                                    id="fecha_adic_btn_cancel_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                            </div>
+
+                                        {% elif not documento.obsoleto %}
+                                            {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                          
+                           
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "ema" and not documento.obsoleto %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "ema" and not documento.obsoleto %}
+                                        {% if documento.validada %}
+                                            <i class="fa-regular fa-check"></i>
+                                        {% else %}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "ema" and not documento.obsoleto and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>                           
+                        {% endif %}
+                        </tr>
+                           <tr>
+                            <td>EBA</td>
+                            <td>
+                              
+                                {% if documentos_count.eba == 0 and usuario.tipo.proveedores_edicion %} 
+                                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar EBA" hx-target="#document" hx-get="{% url 'edit-eba' proveedor.id %}">
+                                        <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                    </a>
+                                {% else %}
+                                    {% for documento in documentos %}
+                                        {% if documento.tipo_documento == "eba" and not documento.obsoleto %}
+                                            {% if documento.validada %}
+                                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfEba{{documento.id|unlocalize }}" title="Ver EBA">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfEba{{documento.id|unlocalize }}" title="Ver EBA">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% endif %}
+                                            <!-- Modal con visor de PDF -->
+                                            <div class="modal fade" id="pdfEba{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfEbaLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="pdfEbaLabel{{documento.id|unlocalize }}">EBA</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if documentos_count.eba > documentos_validados_count.eba %}
+                                        <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar EBA" hx-target="#document" hx-get="{% url 'edit-eba' proveedor.id %}">
+                                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                                   
+                            </td>
+                          
+                            <td class="" id="comentario_16_{{proveedor.id|unlocalize}}" tipo ="eba" >
+                                {% if proveedor.comentario_eba %} {{proveedor.comentario_eba}} {% endif %}
+                            </td>
+
+                            {% if usuario.tipo.proveedores_edicion %}
+                            <td class="d-none" id="form_comentario_16_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_16_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            </td>
+                            <td>
+                                <a id="modificar_comentario_16_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 16)">
+                                    <i class="fa-regular fa-comment"></i>
+                                </a>
+                                <button type="button" id="save_comment_16_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 16)"    class="btn btn-outline-primary d-none">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button id="cancel_edit_16_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 16)" style="color:ghostwhite; background-color:#980F0F ;">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </td> 
+                             <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "eba" and not documento.obsoleto %}
+                                        {% if documento.validada  %}
+                                            
+                                            {# Fecha adicional (editable) #}
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                                {% if documento.fecha_adicional %}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                                {% endif %}
+                                            </span>
+
+                                            <input type="date" class="form-control d-none"
+                                                id="fecha_adic_input_{{ documento.id|unlocalize }}"
+                                                value="{{ documento.fecha_adicional|date:'Y-m-d' }}">
+
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    id="fecha_adic_btn_edit_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_edit({{ documento.id|unlocalize }})"
+                                                    title="Editar Fecha">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-success d-none"
+                                                    id="fecha_adic_btn_save_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_save({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-secondary d-none"
+                                                    id="fecha_adic_btn_cancel_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                            </div>
+
+                                        {% elif not documento.obsoleto %}
+                                            {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                          
+                           
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "eba" and not documento.obsoleto %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "eba" and not documento.obsoleto %}
+                                        {% if documento.validada %}
+                                            <i class="fa-regular fa-check"></i>
+                                        {% else %}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "eba" and not documento.obsoleto and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>                           
+                        {% endif %}
+                        </tr>
                     </tbody> 
                 </table>
             </div>
-        </div>
+        </section>
     </div>
     {% endif %}
     <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
@@ -2071,35 +2443,43 @@
         </div>
     </div>
     {% if tiene_arrendamiento %}
-    <div class="col-md-12">
-        <div class ="card mt-2 bg-white">
-            <div class ="card-header">
-                <h5>Complementaria proveedor Arrendamiento</h5>
+    <div class="col-12">
+        <section class="sv-card mb-4">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-file-contract"></i>
+                        Documentación complementaria de arrendamiento
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Documentos requeridos para proveedores con alcance de arrendamiento.
+                    </p>
+                </div>
             </div>
-            <div class ="card-body">
-                <table class="table table-striped">
+            <div class="sv-table-wrap">
+                <table class="sv-table sv-document-table">
                     <thead>
                         <tr>
                             <th>Nombre del Documento</th>
                             <th>Documento</th>
                             <th>Comentarios</th>
                             {% if usuario.tipo.proveedores_edicion %}
-                            <th>Edit</th>
+                            <th>Editar comentario</th>
                             <th>Fecha</th>
                             
                             <th class="text-success">
-                                <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
+                                <button type="submit" name="btn_validacion" class="sv-btn sv-btn-success sv-btn-icon" title="Guardar validación" aria-label="Guardar validación">
                                 <i class="fa-duotone fa-solid fa-square-check fa-xl"></i>
                                 </button>
                             </th>
                            
                             <th class="text-danger" title="Eliminar documento">
-                                <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
+                                <button type="submit" name="btn_eliminar_docto" class="sv-btn sv-btn-danger sv-btn-icon" title="Confirmar eliminación" aria-label="Confirmar eliminación">
                                     <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
                                 </button>
                             </th>
                             <th class="" title="Marcar como obsoleto">
-                                <button type="submit" name="btn_obsoleto_docto" class="btn btn-outline-info" title="Enviar a obsoletos">
+                                <button type="submit" name="btn_obsoleto_docto" class="sv-btn sv-btn-info sv-btn-icon" title="Enviar a obsoletos" aria-label="Enviar a obsoletos">
                                     <i class="fa-duotone fa-solid fa-cabinet-filing"></i>
                                 </button>
                             </th>
@@ -2176,9 +2556,10 @@
                                         {% if documento.validada  %}
                                             
                                             {# Fecha adicional (editable) #}
-                                            <span id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                            <div class="d-inline-flex align-items-center gap-2 flex-nowrap">
+                                            <span class="text-nowrap flex-shrink-0" id="fecha_adic_view_{{ documento.id|unlocalize }}">
                                                 {% if documento.fecha_adicional %}
-                                                    {{ documento.fecha_adicional }}
+                                                    {{ documento.fecha_adicional|date:"d/m/Y" }}
                                                 {% else %}
                                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                                 {% endif %}
@@ -2206,6 +2587,7 @@
                                                     onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
+                                            </div>
 
                                         {% elif not documento.obsoleto %}
                                             {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
@@ -2339,7 +2721,7 @@
                 </table>
                 
             </div>
-        </div>
+        </section>
     </div> 
     {% endif %}
 </form>
@@ -2866,7 +3248,10 @@ function fechaAdic_save(id) {
         if (data.ok) {
             // Actualizar texto visible (puedes usar data.fecha_formateada si la mandas desde Django)
             const view = document.getElementById(`fecha_adic_view_${id}`);
-            view.textContent = valor;
+            const partesFecha = valor ? valor.split('-') : [];
+            view.textContent = partesFecha.length === 3
+                ? `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`
+                : valor;
 
             // Salir del modo edición
             fechaAdic_cancel(id);

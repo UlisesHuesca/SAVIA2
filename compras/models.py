@@ -102,6 +102,8 @@ class DocumentosProveedor(models.Model):
             ('busqueda_mediatica', 'Búsqueda Mediática'),
             ('cumplimiento_imss', 'Cumplimiento IMSS'),
             ('repse', 'REPSE'), 
+            ('ema', 'EMA'),
+            ('eba', 'EBA'),
             ('otros','Otros'),
         ]
     )
