@@ -588,8 +588,9 @@ def checkout(request):
     return render(request, 'solicitud/checkout.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def select_product_quality(request, pk):
-    producto = Product.objects.get(id = pk)
+    producto = get_object_or_404(Product, pk=pk)
     calidad_producto = Producto_Calidad.objects.get(producto = producto)
     requerimientos = calidad_producto.requerimientos_calidad.all()
 
