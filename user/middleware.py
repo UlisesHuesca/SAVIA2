@@ -2,15 +2,22 @@
 
 from django.utils.deprecation import MiddlewareMixin
 import logging
+import uuid
 
 from django.http import HttpResponseNotFound
 from django.template.loader import render_to_string
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from .utils import obtener_empresa_por_host
 from user.models import Profile
 
+from django.db import IntegrityError
+from django.shortcuts import render
+from django.utils import timezone
+from user.error_translator import traducir_error
+
 logger = logging.getLogger(__name__)
+error_logger = logging.getLogger('savia.errors')
 
 class LogUserAccessMiddleware(MiddlewareMixin):
     def process_request(self, request):
@@ -140,3 +147,79 @@ class EmpresaPerfilMiddleware:
             return redirect('select-profile')
 
         return self.get_response(request)
+
+
+
+
+
+
+
+class SaviaErrorMiddleware:
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
+    def process_exception(self, request, exception):
+
+        error_id = f"SV-{uuid.uuid4().hex[:8].upper()}"
+
+        fecha = timezone.localtime().strftime(
+            "%d/%m/%Y %H:%M:%S"
+        )
+
+        usuario = (f"{request.user.id} - {request.user.first_name} {request.user.last_name}" if request.user.is_authenticated else "Anónimo")
+
+        url_name = (request.resolver_match.url_name if request.resolver_match else None)
+
+        view_name = (request.resolver_match.view_name if request.resolver_match else None)
+
+        tipo_error = type(exception).__name__
+
+        # Clasificación controlada, sin exponer mensajes SQL
+        if isinstance(exception, IntegrityError):
+            diagnostico = traducir_error(exception, request)
+        else:
+            diagnostico = {
+                "modulo": "SAVIA",
+                "tipo": "Error interno",
+                "detalle": (
+                    "Se presentó un problema inesperado "
+                    "al procesar la operación."
+                )
+            }
+
+        contexto = {
+            "error_id": error_id,
+            "fecha": fecha,
+            "usuario": usuario,
+            "metodo": request.method,
+            "ruta": request.path,
+            "vista": view_name or "No identificada",
+            "operacion": url_name or "No identificada",
+            "codigo_http": 500,
+            "referencia": diagnostico["referencia"],
+            "tipo_error": diagnostico["tipo"],
+            "detalle_error": diagnostico["detalle"],
+        }
+
+        error_logger.error(
+            "Incidente=%s | Usuario=%s | "
+            "Método=%s | Ruta=%s | Vista=%s | "
+            "Error=%s",
+            error_id,
+            usuario,
+            request.method,
+            request.path,
+            view_name,
+            tipo_error,
+            exc_info=(
+                type(exception),
+                exception,
+                exception.__traceback__,
+            ),
+        )
+
+        return render(request,"partials/500.html",contexto,status=500,)

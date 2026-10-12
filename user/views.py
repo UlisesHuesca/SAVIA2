@@ -10,6 +10,7 @@ from .forms import CustomUser_Form
 from requisiciones.views import get_image_base64
 from .forms import UserForm
 import os
+from django.db import IntegrityError
 
 class SaviaLoginView(auth_views.LoginView):
 
@@ -94,3 +95,10 @@ class CustomPasswordResetView(PasswordResetView):
         context['logo_v_base64'] = logo_v_base64
         context['image_base64'] = image_base64
         return context
+
+#def prueba_error_500(request):
+#    raise IntegrityError(
+#        1062,
+#        "Duplicate entry 'SOL-7259' "
+#        "for key 'dashboard_order.folio'"
+#    )

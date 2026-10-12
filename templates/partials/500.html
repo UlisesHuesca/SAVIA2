@@ -1,0 +1,199 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error 500 | SAVIA</title>
+
+    <style>
+        :root {
+            --sv-primary: #173a56;
+            --sv-background: #f3f6fa;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: var(--sv-background);
+            color: #253548;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .sv-error-card {
+            width: min(90%, 560px);
+            padding: 36px;
+            background: #fff;
+            border: 1px solid #e4eaf0;
+            border-radius: 16px;
+            box-shadow: 0 12px 35px rgba(20, 45, 70, .08);
+            box-sizing: border-box;
+        }
+
+        .sv-error-title {
+            margin: 0 0 12px;
+            font-size: 26px;
+            color: var(--sv-primary);
+        }
+
+        .sv-error-message {
+            color: #66758a;
+            line-height: 1.6;
+        }
+
+        .sv-error-details {
+            margin: 24px 0;
+            padding: 18px;
+            border-radius: 10px;
+            background: #f5f7fa;
+            border: 1px solid #e1e7ee;
+        }
+
+        .sv-error-details pre {
+            margin: 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .sv-error-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .sv-error-btn {
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--sv-primary);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .sv-error-btn-primary {
+            background: var(--sv-primary);
+            color: #fff;
+        }
+
+        .sv-error-btn-secondary {
+            background: #fff;
+            color: var(--sv-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="sv-error-card"  id="reporteError">
+        <h1 class="sv-error-title">
+            Ocurrió un error en SAVIA
+        </h1>
+
+        <p class="sv-error-message">
+            No fue posible completar la operación.
+            El incidente ha sido registrado.
+            Copia el diagnóstico y compártelo con soporte.
+        </p>
+
+        <div class="sv-error-details">
+            <pre id="detalleError">SAVIA - Reporte de incidente
+
+                Incidente: {{ error_id }}
+                Fecha: {{ fecha }}
+                Usuario: {{ usuario }}
+                Operación: {{ operacion }}
+                Método: {{ metodo }}
+                Ruta: {{ ruta }}
+
+                Error: {{ tipo_error }}
+                Referencia: {{ referencia }}
+                Descripción: {{ detalle_error }}
+                HTTP: {{ codigo_http }}
+            </pre>
+
+        </div>
+
+        <div class="sv-error-actions">
+            <button
+                type="button"
+                class="sv-error-btn sv-error-btn-primary"
+                id="btnCopiarImagen">
+                Copiar reporte como imagen
+            </button>
+
+            <a href="/"
+               class="sv-error-btn sv-error-btn-secondary">
+                Volver a SAVIA
+            </a>
+        </div>
+    </main>
+<script src="{% static 'js/html2canvas.min.js' %}"></script>
+    <script>
+        const boton = document.getElementById("btnCopiarImagen");
+const tarjeta = document.getElementById("reporteError");
+
+let imagenPreparada = null;
+
+async function prepararImagen() {
+    if (typeof html2canvas !== "function") {
+        throw new Error("No se cargó html2canvas");
+    }
+
+    const canvas = await html2canvas(tarjeta, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true
+    });
+
+    const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+            resultado => resultado
+                ? resolve(resultado)
+                : reject(new Error("No se generó el PNG")),
+            "image/png"
+        );
+    });
+
+    return blob;
+}
+
+// Preparar la imagen al cargar la página
+prepararImagen()
+    .then(blob => {
+        imagenPreparada = blob;
+    })
+    .catch(error => {
+        console.error("Error preparando imagen:", error);
+    });
+
+boton.addEventListener("click", async function () {
+    try {
+        if (!imagenPreparada) {
+            throw new Error("La imagen todavía no está preparada");
+        }
+
+        if (!navigator.clipboard?.write || !window.ClipboardItem) {
+            throw new Error("El navegador no admite copiar imágenes");
+        }
+
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                "image/png": imagenPreparada
+            })
+        ]);
+
+        boton.textContent = "Imagen copiada";
+
+    } catch (error) {
+        console.error("Error copiando imagen:", error);
+        boton.textContent = "No fue posible copiar";
+    }
+});
+    </script>
+</body>
+</html>

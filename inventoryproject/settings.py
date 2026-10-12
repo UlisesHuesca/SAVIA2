@@ -32,7 +32,7 @@ CURRENCIES =('USD','MXN')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['grupovordcab.cloud','www.grupovordcab.cloud','localhost', '127.0.0.1','yerod.cloud','www.yerod.cloud', 'vordcab.local','yerod.local',]
 
@@ -95,6 +95,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'user.middleware.SaviaErrorMiddleware',  # Diagnóstico de excepciones HTTP 500
+    # Middlewares propios de SAVIA
     'user.middleware.LogUserAccessMiddleware',
     'user.middleware.EmpresaPerfilMiddleware',
     'user.middleware.Handle404Middleware',
@@ -181,6 +183,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'user.validators.SpecialCharacterValidator'},
 ]
 
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 LOGGING = {
     "version": 1,
@@ -209,6 +213,15 @@ LOGGING = {
             "filename": "correccion_salidas.log",
             "formatter": "standard",
         },
+        "file_savia_errors": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOG_DIR/"savia_errors.log"),
+            "formatter": "standard",
+            "maxBytes": 1024*1024*10, # 10 MB
+            "backupCount": 5,
+            "encoding": "utf8",
+        },
     },
     "loggers": {
         "django": {
@@ -224,6 +237,11 @@ LOGGING = {
         "dashboard": {
             "handlers": ["file_dashboard"],
             "level": "INFO",
+            "propagate": False,
+        },
+        "savia.errors": {
+            "handlers": ["file_savia_errors"],
+            "level": "ERROR",
             "propagate": False,
         },
     },
@@ -373,3 +391,10 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 4000
 
 PADME_API_URL = os.environ.get("PADME_API_URL", "")
 PADME_API_TOKEN = os.environ.get("PADME_API_TOKEN", "")
+
+
+if not DEBUG:
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index('user.middleware.LogUserAccessMiddleware'),
+        'user.middleware.SaviaErrorMiddleware'
+    )
