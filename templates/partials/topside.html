@@ -726,7 +726,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         modal.hide();
     });
 
-
   btnSiguiente.addEventListener('click', function () {
   indiceActual++;
 
@@ -775,6 +774,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   let politicas = [];
   let indiceActual = 0;
 
+  
   function cargarPoliticasYMostrar(forzarMostrarAunqueAceptadas = false) {
     return fetch("{% url 'politicas-pendientes' %}")
       .then(r => r.json())
@@ -859,6 +859,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       cargarPoliticasYMostrar(true);
     });
   }
+ 
+  
 });
 
 

@@ -200,7 +200,7 @@ class SaviaErrorMiddleware:
             "vista": view_name or "No identificada",
             "operacion": url_name or "No identificada",
             "codigo_http": 500,
-            "referencia": diagnostico["referencia"],
+            "referencia": diagnostico.get("referencia", "No disponible"),
             "tipo_error": diagnostico["tipo"],
             "detalle_error": diagnostico["detalle"],
         }

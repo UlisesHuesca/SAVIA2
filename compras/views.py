@@ -6624,10 +6624,18 @@ def ver_codigo_etica(request):
 
 
 @login_required
+@perfil_seleccionado_required
 def politicas_pendientes(request):
     perfil_id = request.session.get('selected_profile_id')
-    perfil = Profile.objects.get(id=perfil_id)
-    proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
+    perfil = get_object_or_404(Profile.objects.select_related('tipo', 'proveedor'),id=perfil_id,)
+
+    # Solo aplica a proveedores externos
+    if not perfil.tipo or not perfil.tipo.proveedor_externo:
+        return JsonResponse([], safe=False)
+      # Perfil externo sin proveedor asociado
+    if perfil.proveedor_id is None:
+        return JsonResponse([], safe=False)
+    proveedor = perfil.proveedor
     politicas = [
         {"nombre": "Política Antisoborno", "url": reverse('ver-politica-pdf'), "clave": "antisoborno",
          "aceptada": bool(proveedor.acepto_politica)},
