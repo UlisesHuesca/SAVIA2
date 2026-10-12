@@ -196,7 +196,7 @@ LOGGING = {
     },
     "handlers": {
         "file_debug": {
-            "level": "DEBUG",
+            "level": "WARNING",
             "class": "logging.FileHandler",
             "filename": "debug.log",
             "formatter": "standard",
@@ -226,7 +226,7 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["file_debug"],
-            "level": "DEBUG",
+            "level": "WARNING",
             "propagate": True,
         },
         "user.middleware": {
