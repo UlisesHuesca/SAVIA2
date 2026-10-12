@@ -350,9 +350,23 @@ EMAIL_USE_TLS = True
 USE_THOUSAND_SEPARATOR = True
 CELERY_BROKER_URL = 'amqp://localhost'
 CELERY_RESULT_BACKEND = 'rpc://'
-#USE_X_FORWARDED_HOST = True
-#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Seguridad HTTPS
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO","https",)
+
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False").lower() == "true"
+
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true"
+
+CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False").lower() == "true"
+
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+
+# HSTS: lo activaremos después de validar HTTPS
+SECURE_HSTS_SECONDS = 0
+
 
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25MB, ajusta el valor según lo que necesites
