@@ -4502,14 +4502,22 @@ def factura_compra_edicion(request, pk):
 def factura_eliminar(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
-    factura = Facturas.objects.get(id = pk)
+    factura = Facturas.objects.filter(id=pk).first()
     compra = factura.oc
     comentario = request.POST.get('comentario')
     # Obtener el parámetro `next` de la URL
     next_url = request.GET.get('next', None)
-
+    
     # Construir la URL de la matriz de facturas de viáticos
     matriz_url = reverse('matriz-facturas-nomodal', args=[compra.id])
+    if factura is None:
+        messages.warning(
+            request,
+            "La factura ya fue eliminada o no se encuentra disponible."
+        )
+        return redirect('matriz_url')
+   
+   
 
     static_path = settings.STATIC_ROOT
     img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
@@ -4568,7 +4576,7 @@ def factura_eliminar(request, pk):
             to=[compra.creada_por.staff.staff.email],
             headers={'Content-Type': 'text/html'}
             )
-        email.content_subtype = "html " # Importante para que se interprete como HTML
+        email.content_subtype = "html" # Importante para que se interprete como HTML
         if factura.factura_pdf:
             pdf_path = factura.factura_pdf.path
             if os.path.exists(pdf_path):  # Verificar si el archivo realmente existe

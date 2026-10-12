@@ -16,6 +16,7 @@ savia2_service_log.txt
 nginx.conf
 *.csv
 temp_qr.png
+
 # ==========================================
 # SAVIA - Auditorías locales de seguridad
 # ==========================================
