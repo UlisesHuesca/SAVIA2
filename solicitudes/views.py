@@ -590,9 +590,17 @@ def checkout(request):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def select_product_quality(request, pk):
+    print("Seleccionando producto de calidad")
+    #pk = request.session.get('selected_profile_id')
+    #usuario = Profile.objects.get(id = pk)
+    
     producto = get_object_or_404(Product, pk=pk)
-    calidad_producto = Producto_Calidad.objects.get(producto = producto)
-    requerimientos = calidad_producto.requerimientos_calidad.all()
+    calidad_producto = Producto_Calidad.objects.filter(producto=producto).first()
+    requerimientos = (
+        calidad_producto.requerimientos_calidad.all()
+        if calidad_producto
+        else []
+    )
 
     context = {
         'calidad_producto': calidad_producto,

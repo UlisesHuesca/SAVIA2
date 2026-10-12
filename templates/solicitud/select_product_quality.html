@@ -1,84 +1,179 @@
 {% extends 'partials/base_w_nav.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
-<html>
-<head>
-{% block title %}Autorización Devolucion{% endblock %}
-</head>
-<body>
+
+{% block title %}Requerimientos de calidad{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+            confirmButtonText: "Entendido"
+        });
+    </script>
+    {% endfor %}
+{% endif %}
+
+<div class="modal-content sv-modal">
+    <div class="modal-header">
+        <div>
+            <span class="sv-page-eyebrow">Control de calidad</span>
+
+            <h2 class="modal-title sv-card-title" id="qualityModalTitle">
+                <i class="fa-solid fa-clipboard-check"></i>
+                Requerimientos del producto
+            </h2>
+
+            <p class="sv-card-subtitle mb-0">
+                {% if calidad_producto %}
+                    {% if calidad_producto.producto.codigo %}
+                        <strong>{{ calidad_producto.producto.codigo }}</strong> ·
+                    {% endif %}
+                    {{ calidad_producto.producto }}
                 {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
+                    Configuración de calidad no definida
                 {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="compra" value={{compra.id}}>Calidad| Producto: {{calidad_producto.producto}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+            </p>
         </div>
 
-        <div class="modal-body">
-            <h5 class="mt-4">Requerimientos de Calidad</h5>
-            <div class="table-responsive">
-            <table class="table table-dark table-striped text-white">
-                <thead class="text-white" style="background-color: #F5F5F5;">
-                <tr>
-                    <th>Tipo de Requerimiento</th>
-                    <th>Comentarios</th>
-                    <th>Fecha</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for r in requerimientos %}
-                    <tr>
-                    <td>{{ r.requerimiento.nombre }}</td>  <!-- si quieres mostrar el nombre del tipo -->
-                    <td>{{ r.comentarios }}</td>
-                    <td>{{ r.fecha|date:"d/m/Y H:i" }}</td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                    <td colspan="3" class="text-center text-muted">
-                        No hay requerimientos registrados para este producto.
-                    </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Cerrar">
+        </button>
+    </div>
+
+    <div class="modal-body">
+        {% if calidad_producto %}
+        <section class="sv-card">
+            <div class="sv-card-header">
+                <div>
+                    <h3 class="sv-card-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        Requerimientos de calidad
+                    </h3>
+
+                    <p class="sv-card-subtitle">
+                        Condiciones que deben verificarse durante la recepción del producto.
+                    </p>
+                </div>
+
+                <span class="sv-badge sv-badge-dark">
+                    {{ requerimientos|length }}
+                    requerimiento{{ requerimientos|length|pluralize }}
+                </span>
+            </div>
+
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <colgroup>
+                        <col style="width: 32%;">
+                        <col style="width: 43%;">
+                        <col style="width: 25%;">
+                    </colgroup>
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Tipo de requerimiento</th>
+                            <th scope="col">Comentarios</th>
+                            <th scope="col">Fecha</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for r in requerimientos %}
+                        <tr>
+                            <td>
+                                <div class="sv-cell-stack">
+                                    <span class="sv-cell-title">
+                                        {{ r.requerimiento.nombre|default:"Sin nombre" }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if r.comentarios %}
+                                    <span>{{ r.comentarios }}</span>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">
+                                        Sin comentarios
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if r.fecha %}
+                                <div class="sv-cell-stack">
+                                    <span class="sv-cell-title text-nowrap">
+                                        <i class="fa-regular fa-calendar me-1"></i>
+                                        {{ r.fecha|date:"d/m/Y" }}
+                                    </span>
+
+                                    <span class="sv-cell-subtitle text-nowrap">
+                                        <i class="fa-regular fa-clock me-1"></i>
+                                        {{ r.fecha|date:"H:i" }}
+                                    </span>
+                                </div>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">Sin fecha</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">
+                                <div class="sv-empty-state">
+                                    <i class="fa-solid fa-clipboard-question"></i>
+                                    <h3>Sin requerimientos registrados</h3>
+                                    <p>
+                                        El área de calidad todavía no ha definido requerimientos
+                                        para este producto.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {% else %}
+        <div class="alert alert-warning mb-0" role="alert">
+            <div class="d-flex align-items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation fa-lg mt-1"></i>
+
+                <div>
+                    <strong>Requerimientos no definidos</strong>
+                    <p class="mb-0 mt-1">
+                        El área de calidad todavía no ha configurado los requerimientos
+                        para este producto.
+                    </p>
+                </div>
             </div>
         </div>
-
-        <div class="modal-footer">
-            
-        </div>
+        {% endif %}
     </div>
 
-
-</script>
+    <div class="modal-footer">
+        <div class="sv-actions">
+            <button
+                type="button"
+                class="sv-btn sv-btn-outline"
+                data-bs-dismiss="modal">
+                <i class="fa-solid fa-xmark"></i>
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
-
-</body>
-</html>
