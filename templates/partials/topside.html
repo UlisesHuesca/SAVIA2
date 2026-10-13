@@ -525,6 +525,7 @@
                                     </div>
                                 </a>
                             </div>
+                            {% if usuario.distritos.nombre != "Yerod" %}
                             <div class="sv-dashboard-slot">
                                 <a class="sv-dashboard-link"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
                                     <div class="sv-dashboard-action">
@@ -553,6 +554,7 @@
                                     </div>
                                 </a>
                             </div>
+                            {% endif %}
                             {% if invitaciones_direccion %}
                                 <div class="sv-dashboard-slot">
                                     <a class="sv-dashboard-link" href="{% url 'registro-solo-direccion' usuario.proveedor.id %}">
@@ -623,6 +625,7 @@
                 </div>
             </div>
             {% if usuario.tipo.proveedor_externo %}
+                {% if  usuario.distritos.nombre != "Yerod" %}
             <div class="modal fade" id="modalInicial" tabindex="-1" aria-labelledby="modalInicialLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -646,6 +649,7 @@
                     </div>
                 </div>
             </div>
+                {% endif %}
             {% endif %}
         </div>
 
