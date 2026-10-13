@@ -1,137 +1,326 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 {% load l10n %}
 {% load i18n %}
-<html>
-<head>
-{% block title %}{% trans "Históricos de precios" %}{% endblock %}
-</head>
-<body>
-    {% block content %}
-    <hr>
-    <hr>
-    <h6>&nbsp;</h6>
-    <h6>&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <h6 class="d-md-none">&nbsp;</h6>
-    <div class="row">
-        <div class="col-12">
-        <!-- Aqui es el encabezado de los filtros -->
-        <div class ="card bg-white">
-            
-               <div class="card-header">
-                    <h5>{% trans "Filtro de producto - precio" %}</h5>
-                </div>
-                <div class="card-body">
-                    {% csrf_token %}
-                    <form class="row g-3" method="GET">
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Código" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Producto" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Familia" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                                    <label style="color: #121212;" for="id_codigo">{% trans "Subfamilia" %}</label>
-                                </div>
-                            </div>
-                        </div>
-                       
-                        <div class="col-2 mt-3">
-                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </div>
-                    </form>
-                </div>
+
+{% block title %}{% trans "Histórico de precios" %}{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">
+                {% trans "Compras e inventario" %}
+            </span>
+
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </span>
+                {% trans "Histórico de precios" %}
+            </h1>
+
+            <p class="sv-page-subtitle">
+                {% trans "Consulta la evolución de los precios registrados para cada producto." %}
+            </p>
+        </div>
+
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            {{ productos_list.paginator.count }}
+            {% trans "productos" %}
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    {% trans "Filtros de productos" %}
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    {% trans "Busca productos por código, nombre, familia o subfamilia." %}
+                </p>
             </div>
         </div>
-        <!-- Aquí terminan el encabezado de los filtros -->
 
-        <div class="row">
-            {% for producto in productos_list %}
-            <div class='select-product col-md-3 col-sm-12 my-2'>
-                <img class="thumbnail" src="{{producto.producto.imageURL}}">
-                <div class='box-element product'>
-                    <h6><strong>{{producto.producto}}</strong></h6>
-                    <hr>
-                    <a type = "button" class="btn btn-outline-primary" href="{% url 'producto-precios-detalle' producto.id %}">
-                        {% trans "Ver precios" %}
-                    </a>
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-barcode"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código" }}
+                                <label for="{{ myfilter.form.codigo.id_for_label }}">
+                                    {% trans "Código" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-box"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto" }}
+                                <label for="{{ myfilter.form.producto.id_for_label }}">
+                                    {% trans "Producto" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder=Familia" }}
+                                <label for="{{ myfilter.form.familia.id_for_label }}">
+                                    {% trans "Familia" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-sitemap"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder=Subfamilia" }}
+                                <label for="{{ myfilter.form.subfamilia.id_for_label }}">
+                                    {% trans "Subfamilia" %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="sv-actions justify-content-end">
+                            {% if request.GET %}
+                            <a href="{{ request.path }}" class="sv-btn sv-btn-outline">
+                                <i class="fa-solid fa-eraser"></i>
+                                {% trans "Limpiar" %}
+                            </a>
+                            {% endif %}
+
+                            <button type="submit" class="sv-btn sv-btn-primary">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                {% trans "Buscar" %}
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    {% trans "Productos encontrados" %}
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    {% trans "Selecciona un producto para consultar sus precios registrados." %}
+                </p>
             </div>
-            {% endfor %}
+
+            <span class="sv-badge sv-badge-dark">
+                {% trans "Página" %}
+                {{ productos_list.number }}
+                {% trans "de" %}
+                {{ productos_list.paginator.num_pages }}
+            </span>
         </div>
-    </div>
-    <!--Este es el modal-->
-    <div class="modal" id ="dialog" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" id="document" role="document">
 
+        <div class="sv-card-body">
+            <div class="row g-4">
+
+                {% for producto in productos_list %}
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                    <article class="sv-card h-100">
+
+                        <div class="text-center border-bottom">
+                            <img
+                                class="thumbnail img-fluid"
+                                src="{{ producto.producto.imageURL }}"
+                                alt=""
+                                loading="lazy"
+                                onerror="this.classList.add('d-none')">
+                        </div>
+
+                        <div class="sv-card-body">
+                            <div class="sv-cell-stack">
+                                {% if producto.producto.codigo %}
+                                <span class="sv-badge sv-badge-primary align-self-start">
+                                    <i class="fa-solid fa-barcode"></i>
+                                    {{ producto.producto.codigo }}
+                                </span>
+                                {% endif %}
+
+                                <h3 class="sv-card-title">
+                                    {{ producto.producto }}
+                                </h3>
+
+                                {% if producto.producto.familia %}
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-layer-group me-1"></i>
+                                    {{ producto.producto.familia }}
+                                </span>
+                                {% endif %}
+
+                                {% if producto.producto.subfamilia %}
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-sitemap me-1"></i>
+                                    {{ producto.producto.subfamilia }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="sv-card-footer">
+                            <a class="sv-btn sv-btn-primary w-100"
+                               href="{% url 'producto-precios-detalle' producto.id|unlocalize %}">
+                                <i class="fa-solid fa-chart-line"></i>
+                                {% trans "Ver precios" %}
+                            </a>
+                        </div>
+
+                    </article>
+                </div>
+
+                {% empty %}
+                <div class="col-12">
+                    <div class="sv-empty-state">
+                        <span class="sv-empty-icon">
+                            <i class="fa-solid fa-box-open"></i>
+                        </span>
+
+                        <h3 class="sv-empty-title">
+                            {% trans "No se encontraron productos" %}
+                        </h3>
+
+                        <p class="sv-empty-text">
+                            {% trans "No existen productos que coincidan con los filtros seleccionados." %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
         </div>
+
+        {% if productos_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="{% trans 'Paginación de productos' %}">
+                <ul class="pagination justify-content-center mb-0">
+
+                    {% if productos_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url 1 'page' request.GET.urlencode %}"
+                           aria-label="{% trans 'Primera página' %}">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url productos_list.previous_page_number 'page' request.GET.urlencode %}"
+                           aria-label="{% trans 'Página anterior' %}">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for pagina in productos_list.paginator.page_range %}
+                        {% if productos_list.number == pagina %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ pagina }}</span>
+                        </li>
+
+                        {% elif pagina > productos_list.number|add:'-2' and pagina < productos_list.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{% my_url pagina 'page' request.GET.urlencode %}">
+                                {{ pagina }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if productos_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url productos_list.next_page_number 'page' request.GET.urlencode %}"
+                           aria-label="{% trans 'Página siguiente' %}">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                           aria-label="{% trans 'Última página' %}">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<div class="modal fade"
+     id="dialog"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+         id="document"
+         role="document"
+         hx-target="this">
     </div>
-    <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-            {% if productos_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
-            {% endif %}
-            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
+</div>
 
-            {% for item in productos_list.paginator.page_range %}
-                {% if productos_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > productos_list.number|add:'-2' and item < productos_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
-                {% endif %}
-            {% endfor %}
-
-            {% if productos_list.paginator.num_pages > productos_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ productos_list.paginator.num_pages}}">{{productos_list.paginator.num_pages}}</a></li>
-            {% endif %}
-
-            {% if productos_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
-            </ul>
-        </nav>
-<!--AJAX CALL-->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
 <script>
-
-
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: {% if message.tags == "error" %}'{% trans "Error" %}'{% elif message.tags == "warning" %}'{% trans "Atención" %}'{% else %}'{% trans "Excelente" %}'{% endif %},
+        text: '{{ message|escapejs }}',
+        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
+    });
+    {% endfor %}
+});
 </script>
-    {% endblock %}
-</body>
-</html>
+{% endif %}
+{% endblock %}

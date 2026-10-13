@@ -87,7 +87,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
 from bs4 import BeautifulSoup
-from user.decorators import perfil_seleccionado_required
+from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 import subprocess
 import paramiko
 import logging
@@ -108,6 +108,7 @@ logging.basicConfig(
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def compras_por_pagar(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -260,6 +261,7 @@ def actualizar_prioridad(request):
 
 # Create your views here.
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def compras_autorizadas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -693,10 +695,20 @@ def prellenar_formulario(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def compras_pagos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     compra = Compra.objects.get(id=pk)
+
+    if compra.pagada:
+        messages.error(
+            request,
+            "Esta orden de compra ya está pagada. No es posible registrar nuevos pagos."
+        )
+        return redirect('compras-autorizadas')  # Ajustar al nombre real de tu URL
+
+
     productos = ArticuloComprado.objects.filter(oc=pk)
     productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
     pagos = Pago.objects.filter(oc=compra.id, hecho=True, spei_devuelto = False) #.aggregate(Sum('monto'))
@@ -1150,6 +1162,7 @@ def saldo_a_favor(request, pk):
 
 # Create your views here.
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def matriz_pagos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)

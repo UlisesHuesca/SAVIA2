@@ -1026,6 +1026,8 @@ def matriz_oc_productos(request):
         
     return render(request, 'compras/matriz_oc_productos.html',context)
 
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def catalogo_precios(request):
     pk = request.session.get("selected_profile_id")
     usuario = Profile.objects.get(id=pk)
@@ -1048,6 +1050,8 @@ def catalogo_precios(request):
     }
     return render(request, "compras/catalogo_precios.html", context)
 
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def producto_precios_detalle(request, producto_id):
     pk = request.session.get("selected_profile_id")
     usuario = Profile.objects.get(id=pk)
@@ -2698,10 +2702,12 @@ def attach_politica_proveedor(request):
 
     return buf.getvalue()
 
+@perfil_seleccionado_required
 def descargar_antisoborno_pdf(request):
     buf = generar_politica_antisoborno()
     return FileResponse(buf, as_attachment=True, filename='Política_Antisoborno' +'.pdf')
 
+@perfil_seleccionado_required
 def descargar_proveedores_pdf(request):
     buf = generar_politica_proveedores()
     return FileResponse(buf, as_attachment=True, filename='Política_Proveedores' +'.pdf')
@@ -2710,6 +2716,7 @@ def attach_antisoborno_pdf(request):
     buf = generar_politica_antisoborno()
     return buf.getvalue()
 
+@perfil_seleccionado_required
 def descargar_codigo_etica_pdf(request):
     buf = generar_codigo_etica()
     return FileResponse(buf, as_attachment=True, filename='Código_ética' +'.pdf')
@@ -2718,6 +2725,7 @@ def attach_codigo_etica_pdf(request):
     buf = generar_codigo_etica()
     return buf.getvalue()
 
+@perfil_seleccionado_required
 def descargar_aviso_privacidad_pdf(request):
     buf = generar_aviso_privacidad()
     return FileResponse(buf, as_attachment=True, filename='Aviso_de_Privacidad' +'.pdf')
