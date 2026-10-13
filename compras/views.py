@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+#from django.contrib.auth.decorators import login_required
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
@@ -95,7 +95,7 @@ logger = get_custom_logger(__name__)
 
 # Create your views here.
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def requisiciones_autorizadas(request):
     pk = request.session.get('selected_profile_id')
@@ -152,7 +152,7 @@ def requis_devolver(request, pk):
     return render(request, 'compras/requis_devolver.html',context)
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def productos_pendientes(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -181,7 +181,7 @@ def productos_pendientes(request):
     return render(request, 'compras/productos_pendientes.html',context)
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def eliminar_articulos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -6623,7 +6623,7 @@ def ver_codigo_etica(request):
     return JsonResponse({'url': url})
 
 
-@login_required
+
 @perfil_seleccionado_required
 def politicas_pendientes(request):
     perfil_id = request.session.get('selected_profile_id')
@@ -6886,7 +6886,7 @@ def generar_politica_proveedores():
     buf.seek(0)
     return buf 
 
-@login_required
+
 def debida_diligencia_create(request):
     if request.method == 'POST':
         form = DebidaDiligenciaForm(request.POST)
