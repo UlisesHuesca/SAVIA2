@@ -1,29 +1,113 @@
 {% extends 'partials/base.html' %}
-<html>
-<head>
-{% block title %}Acceso Denegado{% endblock %}
-</head>
-<body>
+
+{% block title %}Página no encontrada{% endblock %}
+
 {% block content %}
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6>>&nbsp;</h6>
-<h6>>&nbsp;</h6>
-<h6>>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-6 col-md-12 offset-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h3 style="color: #990f0f"><i class="fa-solid fa-skull-crossbones"></i>Acceso Denegado</h3>
-            </div>
-            <div class="card-body">
-                <p><h3>404!:{{request.user.first_name}} {{request.user.last_name}}</h3></p>
-                <strong>La página a la que estás intentando acceder es probable no exista o No tienes permiso para acceder a ella, favor de reportarlo a sistemas.matriz@grupovordcab.com</strong>
-            </div>
-        </div>  
+<main class="sv-page sv-page-with-navbar">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+            <section class="sv-card">
+                <div class="sv-card-header">
+                    <div>
+                        <span class="sv-page-eyebrow">Navegación</span>
+
+                        <h1 class="sv-card-title text-danger">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            Página no encontrada
+                        </h1>
+
+                        <p class="sv-card-subtitle">
+                            No fue posible localizar la página solicitada.
+                        </p>
+                    </div>
+
+                    <span class="sv-badge sv-badge-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Error 404
+                    </span>
+                </div>
+
+                <div class="sv-card-body">
+                    <div class="sv-empty-state">
+                        <i class="fa-solid fa-file-circle-question"></i>
+
+                        <h2>Parece que esta página no existe</h2>
+
+                        <p>
+                            Es posible que la dirección sea incorrecta, que el contenido
+                            haya cambiado de ubicación o que el enlace utilizado ya no
+                            esté disponible.
+                        </p>
+                    </div>
+
+                    {% if request.user.is_authenticated %}
+                    <div class="sv-card mt-4">
+                        <div class="sv-card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="sv-page-title-icon">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+
+                                <div>
+                                    <span class="sv-cell-subtitle d-block">
+                                        Usuario identificado
+                                    </span>
+
+                                    <span class="sv-cell-title">
+                                        {% if request.user.get_full_name %}
+                                            {{ request.user.get_full_name }}
+                                        {% else %}
+                                            {{ request.user.username }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-info mt-4 mb-0" role="alert">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="fa-solid fa-circle-info fa-lg mt-1"></i>
+
+                            <div>
+                                <strong>¿Consideras que se trata de un error?</strong>
+
+                                <p class="mb-0 mt-1">
+                                    Repórtalo al equipo de Sistemas indicando la página
+                                    que intentabas consultar.
+                                </p>
+
+                                <a
+                                    href="mailto:sistemas.matriz@grupovordcab.com"
+                                    class="alert-link">
+                                    sistemas.matriz@grupovordcab.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sv-card-footer">
+                    <div class="sv-actions justify-content-end">
+                        <button
+                            type="button"
+                            class="sv-btn sv-btn-outline"
+                            onclick="window.history.back()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Regresar
+                        </button>
+
+                        <a
+                            class="sv-btn sv-btn-primary"
+                            href="{% url 'dashboard-index' %}">
+                            <i class="fa-solid fa-house"></i>
+                            Ir al inicio
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
-</div>
+</main>
 {% endblock %}
-</body>
-</html>

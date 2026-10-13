@@ -1,30 +1,99 @@
 {% extends 'partials/base.html' %}
-<html>
-<head>
-{% block title %}Acceso Denegado{% endblock %}
-</head>
-<body>
-{% block content %}
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6 class="d-lg-none">&nbsp;</h6>
-<h6>>&nbsp;</h6>
-<h6>>&nbsp;</h6>
-<h6>>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-6 col-md-12 offset-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h3 style="color: #990f0f"><i class="fa-solid fa-skull-crossbones"></i>Acceso Denegado</h3>
-            </div>
-            <div class="card-body" style="color: #990f0f">
-                <p><h3>Usuario Detectado: {{request.user.first_name}} {{request.user.last_name}}</h3></p>
-                <strong>No tienes permiso para acceder a está página, tu actividad está siendo monitoreada</strong>
-            </div>
-        </div>  
-    </div>
-</div>
-{% endblock %}
-</body>
-</html>
 
+{% block title %}Acceso denegado{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+            <section class="sv-card">
+                <div class="sv-card-header">
+                    <div>
+                        <span class="sv-page-eyebrow">Seguridad y permisos</span>
+
+                        <h1 class="sv-card-title text-danger">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Acceso denegado
+                        </h1>
+
+                        <p class="sv-card-subtitle">
+                            No cuentas con los permisos necesarios para consultar esta sección.
+                        </p>
+                    </div>
+
+                    <span class="sv-badge sv-badge-danger">
+                        <i class="fa-solid fa-lock"></i>
+                        Error 403
+                    </span>
+                </div>
+
+                <div class="sv-card-body">
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="fa-solid fa-circle-exclamation fa-xl mt-1"></i>
+
+                            <div>
+                                <strong>Acceso restringido</strong>
+
+                                <p class="mb-0 mt-1">
+                                    Tu perfil actual no está autorizado para acceder a esta página.
+                                    El intento de acceso puede quedar registrado por motivos de
+                                    seguridad.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sv-card">
+                        <div class="sv-card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="sv-page-title-icon">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                </span>
+
+                                <div>
+                                    <span class="sv-cell-subtitle d-block">
+                                        Usuario identificado
+                                    </span>
+
+                                    <span class="sv-cell-title">
+                                        {% if request.user.get_full_name %}
+                                            {{ request.user.get_full_name }}
+                                        {% else %}
+                                            {{ request.user.username }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="sv-cell-subtitle mt-3 mb-0">
+                        Si consideras que deberías tener acceso, comunícate con el
+                        administrador de SAVIA para revisar los permisos de tu perfil.
+                    </p>
+                </div>
+
+                <div class="sv-card-footer">
+                    <div class="sv-actions justify-content-end">
+                        <button
+                            type="button"
+                            class="sv-btn sv-btn-outline"
+                            onclick="window.history.back()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Regresar
+                        </button>
+
+                        <a
+                            class="sv-btn sv-btn-primary"
+                            href="{% url 'dashboard-index' %}">
+                            <i class="fa-solid fa-house"></i>
+                            Ir al inicio
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -128,6 +128,7 @@ def requisiciones_autorizadas(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def requis_devolver(request, pk):
     requis = get_object_or_404(Requis, pk=pk)
     form = RequisDevolucionForm(request.POST, instance=requis)
@@ -586,6 +587,7 @@ def update_oc(request):
 
 #@cache_page(60 * 60)  # Cache la vista durante 1 hora
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def oc_modal(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -789,6 +791,7 @@ def mostrar_comparativo(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
@@ -1170,7 +1173,7 @@ def upload_xml(request, pk):
     return render(request, 'compras/upload_xml.html', context)
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('oc_superintendencia')
+@tipo_usuario_requerido('oc_superintendencia','oc_gerencia')
 def autorizacion_oc1(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1210,6 +1213,7 @@ def autorizacion_oc1(request):
     return render(request, 'compras/autorizacion_oc1.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('oc_superintendencia','oc_gerencia')
 def cancelar_oc1(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1557,6 +1561,7 @@ def cancelar_oc2(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('oc_superintendencia', 'oc_gerencia')
 def back_oc(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1634,6 +1639,7 @@ def back_oc(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('oc_superintendencia','oc_gerencia')
 def autorizar_oc1(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1919,6 +1925,7 @@ def autorizacion_oc2(request):
     return render(request, 'compras/autorizacion_oc2.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('oc_gerencia')
 def autorizar_oc2(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -2490,6 +2497,7 @@ def carga_productos(request):
     return JsonResponse(data, safe=False)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def editar_comparativo(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
    
@@ -2633,7 +2641,8 @@ def historico_compras(request):
         }
     return render(request,'compras/historico_compras.html',context)
 
-
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras', 'oc_gerencia', 'almacen', 'tesoreria','oc_superintendencia')
 def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
     if compra.req.orden.distrito.nombre != "BRASIL":
@@ -4534,6 +4543,8 @@ def draw_table_pages(c, data, col_widths, style_first, style_other,
         t.wrapOn(c, c._pagesize[0], c._pagesize[1])
         t.drawOn(c, x, y_other)
 
+@perfil_seleccionado_required
+@tipo_usuario_requerido('proveedores')
 def generar_pdf_proveedor(request, pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
