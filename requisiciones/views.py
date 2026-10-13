@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+#from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -262,7 +262,7 @@ def solicitudes_autorizadas_pendientes(request):
         }
     return render(request, 'requisiciones/solicitudes_autorizadas_no_surtidas.html',context)
 
-
+@perfil_seleccionado_required
 def update_devolucion(request):
     data= json.loads(request.body)
     action = data["action"]

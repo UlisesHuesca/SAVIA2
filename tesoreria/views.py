@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField
 from django.db.models.functions import Concat, Coalesce
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+#from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date, parse_datetime
@@ -7643,7 +7643,7 @@ def subir_estado_cuenta(request, pk):
 
     return render(request, "tesoreria/subir_estado_cuenta.html", context)
 
-@login_required(login_url="user-login")
+@perfil_seleccionado_required
 def estados_cuenta(request, cuenta_id):
     cuenta = get_object_or_404(Cuenta, pk=cuenta_id)
     estados = EstadoCuenta.objects.filter(cuenta=cuenta).select_related("cuenta").order_by("-periodo", "-id")
@@ -7663,7 +7663,7 @@ def estados_cuenta(request, cuenta_id):
     }
     return render(request, "tesoreria/estados_cuenta.html", context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 @require_POST
 def marcar_spei_devuelto(request, pk):
