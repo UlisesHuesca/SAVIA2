@@ -1,75 +1,230 @@
 {% extends 'partials/base_w_nav.html' %}
-{% load widget_tweaks %}
 {% load static %}
-<html>
-<head>
-{% block title %}Complementos{% endblock %}
-</head>
-<body>
+
+{% block title %}Complementos de pago{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title": "Error",
-                    "text": "{{ message }}",
-                    "icon": "error",
-                })
-                </script>
-                {% elif message.tags == "warning" %}
-                <script>
-                Swal.fire({
-                    "title": "Facturas repetidas",
-                    "text": "{{ message }}",
-                    "icon": "warning",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title": "Excelente",
-                    "text": "{{ message }}",
-                    "icon": "success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
+<div class="modal-content sv-modal">
+
+    <div class="modal-header">
+        <div>
+            <span class="sv-page-eyebrow">
+                Documentación de pago
+            </span>
+
+            <h2 class="modal-title sv-card-title">
+                <i class="fa-solid fa-file-invoice-dollar text-primary"></i>
+                Cargar complementos de pago
+            </h2>
+
+            <p class="sv-card-subtitle mb-0">
+                Selecciona los archivos PDF y XML de los complementos.
+            </p>
+        </div>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar">
+        </button>
     </div>
+
+    <form method="POST"
+          enctype="multipart/form-data"
+          hx-post="{{ request.path }}"
+          hx-target="#document"
+          hx-encoding="multipart/form-data"
+          id="complementosForm">
+
+        {% csrf_token %}
+
+        <div class="modal-body">
+            <div class="row g-3">
+
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+                            <label for="complemento_pdf"
+                                   class="form-label fw-semibold">
+                                <i class="fa-solid fa-file-pdf text-danger me-1"></i>
+                                Complementos PDF
+                            </label>
+
+                            <input type="file"
+                                   id="complemento_pdf"
+                                   name="complemento_pdf"
+                                   class="form-control"
+                                   accept=".pdf,application/pdf"
+                                   multiple>
+
+                            <span class="sv-cell-subtitle d-block mt-2">
+                                Puedes seleccionar varios documentos PDF al mismo tiempo.
+                            </span>
+
+                            <div id="pdfSeleccionados"
+                                 class="sv-cell-subtitle mt-2 d-none">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+                            <label for="complemento_xml"
+                                   class="form-label fw-semibold">
+                                <i class="fa-solid fa-file-code text-primary me-1"></i>
+                                Complementos XML
+                            </label>
+
+                            <input type="file"
+                                   id="complemento_xml"
+                                   name="complemento_xml"
+                                   class="form-control"
+                                   accept=".xml,application/xml,text/xml"
+                                   multiple>
+
+                            <span class="sv-cell-subtitle d-block mt-2">
+                                Selecciona los archivos XML correspondientes a los PDF.
+                            </span>
+
+                            <div id="xmlSeleccionados"
+                                 class="sv-cell-subtitle mt-2 d-none">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text">
+                            <i class="fa-regular fa-comment"></i>
+                        </span>
+
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <textarea name="comentario"
+                                      id="comentario"
+                                      class="form-control"
+                                      maxlength="100"
+                                      placeholder="Comentario"
+                                      rows="3"></textarea>
+
+                            <label for="comentario">
+                                Comentario
+                            </label>
+                        </div>
+                    </div>
+
+                    <span class="sv-cell-subtitle d-block mt-2">
+                        Comentario opcional, máximo 100 caracteres.
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0" role="note">
+                <i class="fa-solid fa-circle-info me-2"></i>
+                Verifica que cada complemento tenga su archivo PDF y XML correspondiente.
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div class="sv-actions">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cerrar
+                </button>
+
+                <button type="submit"
+                        name="btn_registrar"
+                        value="1"
+                        id="btnRegistrarComplementos"
+                        class="sv-btn sv-btn-success">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Cargar complementos
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Folio</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
-                {% csrf_token %}
-                <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>Complemento PDF:</strong></label>
-                <input type="file" name="complemento_pdf" class="form-control" multiple>
-                <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>Complemento XML:</strong></label>
-                <input type="file" name="complemento_xml" class="form-control" multiple>
-                <label for="comentario" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
-                <textarea name="comentario" class="form-control" maxlength="100" placeholder="Escribe tu comentario (máx. 100 caracteres)"></textarea>
-                <div class="row">
-                    <div class="col-auto my-2">
-                        <button type="submit" name="btn_registrar" class="btn btn-outline-success"><i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i></button>
-                    </div>
-                    <div class="col-auto my-2">
-                        <button type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: {% if message.tags == "error" %}'Error'{% elif message.tags == "warning" %}'Complementos repetidos'{% else %}'Excelente'{% endif %},
+        text: '{{ message|escapejs }}',
+        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
+    });
+    {% endfor %}
+});
+</script>
+{% endif %}
+
+<script>
+(function () {
+    const pdfInput = document.getElementById('complemento_pdf');
+    const xmlInput = document.getElementById('complemento_xml');
+    const pdfOutput = document.getElementById('pdfSeleccionados');
+    const xmlOutput = document.getElementById('xmlSeleccionados');
+    const form = document.getElementById('complementosForm');
+    const submitButton = document.getElementById('btnRegistrarComplementos');
+
+    function mostrarArchivos(input, output, etiqueta) {
+        if (!input || !output) {
+            return;
+        }
+
+        const archivos = Array.from(input.files || []);
+
+        if (!archivos.length) {
+            output.textContent = '';
+            output.classList.add('d-none');
+            return;
+        }
+
+        output.textContent =
+            etiqueta + ': ' +
+            archivos.map(function (archivo) {
+                return archivo.name;
+            }).join(', ');
+
+        output.classList.remove('d-none');
+    }
+
+    pdfInput?.addEventListener('change', function () {
+        mostrarArchivos(pdfInput, pdfOutput, 'PDF seleccionados');
+    });
+
+    xmlInput?.addEventListener('change', function () {
+        mostrarArchivos(xmlInput, xmlOutput, 'XML seleccionados');
+    });
+
+    form?.addEventListener('submit', function (event) {
+        const totalPdf = pdfInput?.files.length || 0;
+        const totalXml = xmlInput?.files.length || 0;
+
+        if (!totalPdf && !totalXml) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Archivos requeridos',
+                text: 'Debes seleccionar al menos un complemento PDF o XML.',
+                icon: 'warning'
+            });
+
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.innerHTML =
+            '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Cargando…';
+    });
+})();
+</script>
 {% endblock %}
-</body>
-</html>

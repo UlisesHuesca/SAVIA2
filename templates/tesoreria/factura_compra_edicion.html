@@ -1,66 +1,212 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load widget_tweaks %}
 {% load static %}
-<html>
-<head>
-{% block title %}Facturas{% endblock %}
-</head>
-<body>
+
+{% block title %}Factura del artículo{% endblock %}
+
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
+<div class="modal-content sv-modal">
+
+    <div class="modal-header">
+        <div>
+            <span class="sv-page-eyebrow">
+                Documentación del artículo
+            </span>
+
+            <h2 class="modal-title sv-card-title">
+                <i class="fa-solid fa-file-invoice text-danger"></i>
+                Factura del artículo
+            </h2>
+
+            <p class="sv-card-subtitle mb-0">
+                Sube o reemplaza los archivos PDF y XML asociados al artículo.
+            </p>
+        </div>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar">
+        </button>
     </div>
+
+    <form method="POST"
+          enctype="multipart/form-data"
+          hx-post="{{ request.path }}"
+          hx-target="#document"
+          hx-encoding="multipart/form-data">
+
+        {% csrf_token %}
+
+        <div class="modal-body">
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                <div class="fw-semibold mb-1">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                    No fue posible guardar la factura
+                </div>
+
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                                <div class="flex-grow-1">
+                                    <label for="{{ form.factura_pdf.id_for_label }}"
+                                           class="form-label fw-semibold">
+                                        <i class="fa-solid fa-file-pdf text-danger me-1"></i>
+                                        Factura PDF
+                                    </label>
+
+                                    {{ form.factura_pdf|add_class:"form-control"|append_attr:"accept=.pdf,application/pdf" }}
+
+                                    <span class="sv-cell-subtitle d-block mt-2">
+                                        Selecciona el comprobante visual en formato PDF.
+                                    </span>
+
+                                    {% for error in form.factura_pdf.errors %}
+                                    <div class="text-danger mt-2">
+                                        <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                {% if form.instance.factura_pdf %}
+                                <div class="align-self-md-center">
+                                    <a href="{{ form.instance.factura_pdf.url }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="sv-btn sv-btn-danger">
+                                        <i class="fa-solid fa-eye"></i>
+                                        Ver PDF actual
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                                <div class="flex-grow-1">
+                                    <label for="{{ form.factura_xml.id_for_label }}"
+                                           class="form-label fw-semibold">
+                                        <i class="fa-solid fa-file-code text-primary me-1"></i>
+                                        Factura XML
+                                    </label>
+
+                                    {{ form.factura_xml|add_class:"form-control"|append_attr:"accept=.xml,application/xml,text/xml" }}
+
+                                    <span class="sv-cell-subtitle d-block mt-2">
+                                        Selecciona el comprobante fiscal en formato XML.
+                                    </span>
+
+                                    {% for error in form.factura_xml.errors %}
+                                    <div class="text-danger mt-2">
+                                        <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                {% if form.instance.factura_xml %}
+                                <div class="align-self-md-center">
+                                    <a href="{{ form.instance.factura_xml.url }}"
+                                       download
+                                       class="sv-btn sv-btn-info">
+                                        <i class="fa-solid fa-download"></i>
+                                        Descargar XML actual
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <label for="{{ form.comentario.id_for_label }}"
+                           class="form-label fw-semibold">
+                        <i class="fa-solid fa-comment me-1"></i>
+                        Comentario
+                    </label>
+
+                    <div class="sv-input-group input-group">
+                        <span class="input-group-text">
+                            <i class="fa-regular fa-message"></i>
+                        </span>
+
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ form.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario de la factura" }}
+
+                            <label for="{{ form.comentario.id_for_label }}">
+                                Comentario de la factura
+                            </label>
+                        </div>
+                    </div>
+
+                    {% for error in form.comentario.errors %}
+                    <div class="text-danger mt-2">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0" role="note">
+                <i class="fa-solid fa-circle-info me-2"></i>
+                Al seleccionar un archivo nuevo, el documento anterior será reemplazado.
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div class="sv-actions">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cerrar
+                </button>
+
+                <button type="submit"
+                        name="btn_edicion"
+                        value="1"
+                        class="sv-btn sv-btn-success">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Guardar factura
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
-<div class="modal-dialog-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Folio Articulo</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
-                {% csrf_token %}
-                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
-                {{form.factura_pdf|add_class:'form-control'}}         
-                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
-                 {{form.factura_xml|add_class:'form-control'}}
-                 {{form.comentario}}
-                <div class="row">
-                    <div class="col-auto my-2">
-                        <button type="submit" name="btn_edicion" class="btn btn-light" style="background-color:#980f0f" data-bs-dismiss="modal"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                    </div>
-                    <div class="col-auto my-2">
-                        <button type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: {% if message.tags == "error" %}'Error'{% elif message.tags == "warning" %}'Atención'{% else %}'Excelente'{% endif %},
+        text: '{{ message|escapejs }}',
+        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
+    });
+    {% endfor %}
+});
+</script>
+{% endif %}
 {% endblock %}
-</body>
-</html>

@@ -447,6 +447,7 @@ def tiempo_proceso_autorizacion(request):
     return render(request, 'tesoreria/tiempos_proceso.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def transferencia_cuentas(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -522,6 +523,7 @@ def transferencia_cuentas(request, pk):
     return render(request, 'tesoreria/transferencia_cuentas.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def cargo_abono(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -559,6 +561,7 @@ def cargo_abono(request, pk):
     return render(request, 'tesoreria/cargo_abono.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def cargo_abono_documento(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -598,6 +601,7 @@ def cargo_abono_documento(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('finanzas','tesoreria')
 def saldo_inicial(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -3387,6 +3391,7 @@ def agregar_vales_rosa_generados(zip_file, carpeta, gasto=None, viatico=None):
         zip_file.writestr(os.path.join(carpeta, "VALES", nombre_pdf), pdf_buf.getvalue())
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def control_cuentas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -3525,6 +3530,7 @@ def descargar_movimientos_manuales(pagos):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def control_bancos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -4006,6 +4012,7 @@ def generar_archivo_zip(facturas, compra):
     return in_memory_zip, zip_filename
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras','proveedor_externo')
 def matriz_facturas_nomodal(request, pk):
     #print('estoy en matriz_facturas_nomodal')
     pk_perfil = request.session.get('selected_profile_id')
@@ -4025,8 +4032,11 @@ def matriz_facturas_nomodal(request, pk):
                 base_url = next_url
 
     except Http404:
-        messages.error(request, "No tienes acceso a esta orden de compra.")
-
+        messages.error(request,"No tienes acceso a esta orden de compra.")
+        if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
+            return redirect('matriz-oc-proveedores')
+        else:
+            return redirect('matriz-compras')
         #return redirect(next_url)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
@@ -4098,6 +4108,7 @@ def matriz_facturas_nomodal(request, pk):
     return render(request, 'tesoreria/matriz_factura_no_modal.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras','proveedor_externo')
 def matriz_complementos(request, pk):
     print('estoy en matriz_complementos')
     pk_perfil = request.session.get('selected_profile_id')
@@ -4171,10 +4182,30 @@ def guardar_factura(factura, archivo_procesado, nombre_archivo,  uuid_extraido, 
     factura.save()
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras','proveedor_externo')
 def factura_nueva(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    compra = Compra.objects.get(id = pk)
+    try:
+        if usuario.tipo.nombre == "PROVEEDOR_EXTERNO":
+            base_url = reverse('matriz-oc-proveedores')
+            compra = get_object_or_404(Compra, id=pk, proveedor__nombre = usuario.proveedor)
+                
+        else:
+            compra = get_object_or_404(Compra, id=pk)
+            next_url = request.GET.get('next', 'matriz-compras')
+            try:
+                base_url = reverse(next_url)
+            except NoReverseMatch:
+                base_url = next_url
+    
+    except Http404:
+        messages.error(request,"No tienes acceso a esta orden de compra.")
+        if usuario.tipo.nombre == "PROVEEDOR_EXTERNO":
+            return redirect('matriz-oc-proveedores')
+        else:
+            return redirect('matriz-compras')
+    #compra = Compra.objects.get(id = pk)
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
 
     form = UploadFileForm()
@@ -4328,11 +4359,22 @@ def factura_nueva(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras','proveedor_externo')
 def complemento_nuevo(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    #factura = Facturas.objects.get(id = pk)
-    #facturas = Facturas.objects.filter(pago = pago, hecho=True)
+    try:
+        if usuario.tipo.nombre == "PROVEEDOR_EXTERNO":
+            next_url = 'matriz-oc-proveedores'
+            print(next_url)
+            complemento = get_object_or_404(Complemento_Pago, id=pk, facturas__oc__proveedor__nombre = usuario.proveedor)
+        else:
+            #
+            complemento = get_object_or_404(Complemento_Pago, id=pk)
+            next_url = request.GET.get('next','matriz-compras')
+    except Http404:
+        messages.error(request, "No tienes acceso a esta orden de compra.")
+        return redirect(next_url)
 
     form = UploadComplementoForm()
 
@@ -4523,6 +4565,7 @@ def complemento_nuevo(request, pk):
     return render(request, 'tesoreria/registrar_nuevo_complemento.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def factura_compra_edicion(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -4552,10 +4595,31 @@ def factura_compra_edicion(request, pk):
     return render(request, 'tesoreria/factura_compra_edicion.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras','proveedor_externo')
 def factura_eliminar(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
-    factura = Facturas.objects.filter(id=pk).first()
+
+    try:
+        if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
+            base_url = reverse('matriz-oc-proveedores')
+            factura = get_object_or_404(Facturas, id=pk, oc__proveedor__nombre = perfil.proveedor)
+                    
+        else:
+            compra = get_object_or_404(Facturas, id=pk)
+            next_url = request.GET.get('next', 'matriz-compras')
+            try:
+                base_url = reverse(next_url)
+            except NoReverseMatch:
+                base_url = next_url
+    except Http404:
+        messages.error(request,"No tienes acceso a esta orden de compra.")
+        if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
+            return redirect('matriz-oc-proveedores')
+        else:
+            return redirect('matriz-compras')
+
+
     compra = factura.oc
     comentario = request.POST.get('comentario')
     # Obtener el parámetro `next` de la URL
@@ -4661,9 +4725,23 @@ def factura_eliminar(request, pk):
     
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras','proveedor_externo')
 def complemento_eliminar(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
+    try:
+        if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
+            next_url = 'matriz-oc-proveedores'
+            print(next_url)
+            complemento = get_object_or_404(Complemento_Pago, id=pk, facturas__oc__proveedor__nombre = perfil.proveedor)
+        else:
+            #
+            complemento = get_object_or_404(Complemento_Pago, id=pk)
+            next_url = request.GET.get('next','matriz-compras')
+    except Http404:
+        messages.error(request, "No tienes acceso a esta orden de compra.")
+        return redirect(next_url)
+
     complemento = Complemento_Pago.objects.get(id = pk)
     factura = complemento.facturas.first()
     comentario = request.POST.get('comentario')
