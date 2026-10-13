@@ -1,141 +1,444 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Histórico Salidas{% endblock %}
-</head>
-<body>
+{% load l10n %}
+
+{% block title %}Histórico de salidas{% endblock %}
 
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-        {% for message in messages %}
-            {% if message %}
-            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-            <script>
-                var m = "{{ message }}";
-                swal("Excelente!",m, "success")
-            </script>
-            {% endif %}
-        {% endfor %}
-    </div>
-</div>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="card my-2 mx-1">
-    <div class="card card-body">
-        <h5>Filtro Inventario</h5>
-        <hr>
-        {% csrf_token %}
-        <form method="GET">
-        <div class="row g-12">
-            <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>ID:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_id|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Usuario:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_user|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.producto|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>OC:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.oc|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Tipo:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_type|add_class:'form-control'}}
-            </div>
-            <div class="col-auto my-2">
-                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-            </div>
-            <div class="col-auto my-2">
-                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-            </div>
-            <div class="col-2">
-                <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+<main class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Trazabilidad de inventario</span>
+
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </span>
+                Histórico de salidas
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta los movimientos y modificaciones realizados sobre las salidas de inventario.
+            </p>
+        </div>
+
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list"></i>
+            {{ registros_list.paginator.count }}
+            registro{{ registros_list.paginator.count|pluralize }}
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros del histórico
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Busca movimientos por identificador, usuario, producto, compra, tipo o periodo.
+                </p>
             </div>
         </div>
-        <hr>
-        </form>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-hashtag"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.history_id|add_class:"form-control"|append_attr:"placeholder=ID del histórico" }}
+                                <label for="{{ myfilter.form.history_id.id_for_label }}">
+                                    ID del histórico
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.history_user|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.history_user.id_for_label }}">
+                                    Usuario
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-box"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.producto|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.producto.id_for_label }}">
+                                    Producto
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.oc|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.oc.id_for_label }}">
+                                    Orden de compra
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-code-compare"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.history_type|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.history_type.id_for_label }}">
+                                    Tipo de movimiento
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">
+                                    Desde
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar-check"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">
+                                    Hasta
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-actions h-100 align-items-center justify-content-end">
+                            {% if request.GET %}
+                            <a href="{{ request.path }}"
+                               class="sv-btn sv-btn-outline"
+                               title="Limpiar filtros">
+                                <i class="fa-solid fa-eraser"></i>
+                                Limpiar
+                            </a>
+                            {% endif %}
+
+                            <button type="submit"
+                                    class="sv-btn sv-btn-primary"
+                                    title="Buscar movimientos">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Movimientos registrados
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Historial de creación, modificación y eliminación de las salidas.
+                </p>
+            </div>
+
+            <span class="sv-badge sv-badge-dark">
+                Página {{ registros_list.number }}
+                de {{ registros_list.paginator.num_pages }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Registro</th>
+                        <th scope="col">Motivo</th>
+                        <th scope="col">Movimiento</th>
+                        <th scope="col">OC</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cambio de cantidad</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for registro in registros_list %}
+                    <tr>
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">
+                                    {% if registro.history_user %}
+                                        {{ registro.history_user.first_name }}
+                                        {{ registro.history_user.last_name }}
+                                    {% else %}
+                                        Sistema
+                                    {% endif %}
+                                </span>
+
+                                <span class="sv-cell-subtitle text-nowrap">
+                                    <i class="fa-regular fa-calendar me-1"></i>
+                                    {{ registro.history_date|date:"d/m/Y H:i" }}
+                                </span>
+
+                                <span class="sv-cell-subtitle">
+                                    Histórico #{{ registro.history_id|unlocalize }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if registro.history_change_reason %}
+                                {{ registro.history_change_reason }}
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin motivo registrado
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if registro.history_type == "+" %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-plus"></i>
+                                Creación
+                            </span>
+                            {% elif registro.history_type == "~" %}
+                            <span class="sv-badge sv-badge-warning">
+                                <i class="fa-solid fa-pen"></i>
+                                Modificación
+                            </span>
+                            {% elif registro.history_type == "-" %}
+                            <span class="sv-badge sv-badge-danger">
+                                <i class="fa-solid fa-trash-can"></i>
+                                Eliminación
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">
+                                {{ registro.history_type|default:"Sin identificar" }}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if registro.oc %}
+                            <span class="sv-folio">
+                                {{ registro.oc.id|unlocalize }}
+                            </span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin OC
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if registro.producto %}
+                            <span class="sv-cell-title">
+                                {{ registro.producto.producto.articulos.producto }}
+                            </span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin producto
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <div class="sv-cell-stack">
+                                    <span class="sv-cell-subtitle">
+                                        Anterior
+                                    </span>
+
+                                    {% if registro.prev_record %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        {{ registro.prev_record.cantidad|floatformat:2 }}
+                                    </span>
+                                    {% else %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        —
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                                <div class="sv-cell-stack">
+                                    <span class="sv-cell-subtitle">
+                                        Actual
+                                    </span>
+
+                                    <span class="sv-badge sv-badge-primary">
+                                        {{ registro.cantidad|floatformat:2 }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="sv-empty-state">
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </span>
+
+                                <h3 class="sv-empty-title">
+                                    No hay movimientos registrados
+                                </h3>
+
+                                <p class="sv-empty-text">
+                                    No se encontraron registros históricos que coincidan con los filtros seleccionados.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if registros_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación del histórico de salidas">
+                <ul class="pagination justify-content-center mb-0">
+
+                    {% if registros_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url 1 'page' request.GET.urlencode %}"
+                           aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url registros_list.previous_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for pagina in registros_list.paginator.page_range %}
+                        {% if registros_list.number == pagina %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ pagina }}</span>
+                        </li>
+                        {% elif pagina > registros_list.number|add:'-2' and pagina < registros_list.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{% my_url pagina 'page' request.GET.urlencode %}">
+                                {{ pagina }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if registros_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url registros_list.next_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                           aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<!-- Modal HTMX -->
+<div class="modal fade"
+     id="dialog"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+         id="document"
+         role="document"
+         hx-target="this">
     </div>
 </div>
-<!-- Aquí empieza la generación de la tabla -->
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table table-striped table-hover bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Usuario</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Razón del cambio</th>
-                    <th scope="col">Tipo de cambio</th>
-                    <th scope="col">OC</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Cantidad Actual</th>
-                    <th scope="col">Cantidad Anterior</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for registro in registros_list %}
-                <tr>
-                    <th scope="row">{{registro.history_user.first_name}} {{registro.history_user.last_name}}</th>
-                    <td>{{registro.history_date}}</td>
-                    <td>{{registro.history_change_reason}}</td>
-                    <td>{{registro.history_type}}</td>
-                    <td>{{registro.oc.id}}</td>
-                    <td>{{registro.producto.producto.articulos.producto}}</td>
-                    <td>{{registro.cantidad}}</td>
-                    <td>{{registro.prev_record.cantidad}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-<nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-center">
-        {% if registros_list.has_previous %}
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-        {% endif %}
 
-        {% for item in registros_list.paginator.page_range %}
-            {% if registros_list.number == item %}
-                <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-            {% elif item > registros_list.number|add:'-2' and item < registros_list.number|add:'2' %}
-                <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-            {% endif %}
-        {% endfor %}
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        {% if registros_list.paginator.num_pages > registros_list.number|add:'2' %}
-        <li><a class="page-link" style="color:#3E92CC" href="?page={{registros_list.number|add:'2'}}">&hellip;</a></li>
-        <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-        <li><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}">{{registros_list.paginator.num_pages}}</a></li>
-        {% endif %}
-
-        {% if registros_list.has_next %}
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-        {% endif %}
-    </ul>
-</nav>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
-
-    </div>
-</div>
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: {% if message.tags == "error" %}'Error'{% elif message.tags == "warning" %}'Atención'{% else %}'Excelente'{% endif %},
+        text: '{{ message|escapejs }}',
+        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
+    });
+    {% endfor %}
+});
+</script>
+{% endif %}
 {% endblock %}
-
-</body>
-</html>

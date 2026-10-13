@@ -1,93 +1,324 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load l10n %}
 
-<html>
-<head>
-{% block title %}Artículos Requisitados{% endblock %}
-</head>
+{% block title %}Artículos requisitados{% endblock %}
 
-<body>
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="row">
-    <div class="col-lg-10 offset-md-1">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="modal-title">Requisicion: {{requis.folio}}</h5>
+<main class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Detalle de requisición</span>
+
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+                Artículos requisitados
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta los productos, servicios y requerimientos asociados a la requisición.
+            </p>
+        </div>
+
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-file-lines"></i>
+            Requisición {{ requis.folio }}
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Partidas requisitadas
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Cantidades pendientes, información del artículo y acciones disponibles.
+                </p>
             </div>
 
-            <div class="card-body">
-                <div class ="table-responsive-sm">
-                    <table class="table table-ligth table-striped mx-1">
-                        <thead>
-                            <tr>
-                                <th scope="col">Cantidad Restante</th>
-                                <th scope="col">Código</th>
-                                <th scope="col">Artículo</th>
-                                <th>Producto/Serivicio</th>
-                                <th scope="col">Unidad</th>
-                                <th>Comentario Usuario</th>
-                                <th>Criticidad</th>
-                               
-                                <th>
-                                    Calidad
-                                </th>
-                                <th>
-                                    Precio
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="mytbl">
-                            {% for producto in productos %}
-                            <tr>
-                                <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
-                                <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
-                                <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
-                                <td scope="col">{% if producto.producto.articulos.producto.producto.servicio %} Servicio {% else %} Producto {% endif %}</td>
-                                <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
-                                <td>{% if producto.producto.articulos.comentario %}{{producto.producto.articulos.comentario}}{% else %} NR {% endif %}</td>
-                                <td>{% if producto.producto.articulos.producto.producto.critico %}{{producto.producto.articulos.producto.producto.critico}} {% else %} NE {% endif %}</td>
-                                {% if producto.producto.articulos.producto.producto.critico %}
-                                <td>
-                                    <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' producto.producto.articulos.producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
-                                </td>
-                                {% else %}
-                                <td></td>
-                                {% endif %}
-                                <td>
-                                    <a type = "button" class="btn btn-outline-primary" href="{% url 'producto-precios-detalle' producto.producto.articulos.producto.id %}">
-                                        <i class="fa-duotone fa-solid fa-chart-line"></i>  
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            
-                <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
-                <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
-                <h6>Comentario Usuario: {%if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentario {% endif %}</h6>
-                <h6>Soporte:{% if requis.orden.soporte %}<a href="{{requis.orden.soporte.url}}" download class="btn btn-outline-info"><i class="fa-solid fa-file-invoice-dollar"></i></a></h6>{%else%}NR{% endif %}
-            </div>
-            
-            <div class="card-footer">
-                <div class="container-fluid text-end">
-                    <a id="myBtn" type="button" class="btn btn-lg btn-outline-info col-lg-3 col-md-12 col-sm-12 col-xs-12" href="{{ url_origen }}">Cerrar</a>
-                </div>
+            <span class="sv-badge sv-badge-dark">
+                {{ productos|length }}
+                partida{{ productos|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Artículo</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col" class="text-center">Pendiente</th>
+                        <th scope="col">Comentario</th>
+                        <th scope="col" class="text-center">Criticidad</th>
+                        <th scope="col" class="text-center">Calidad</th>
+                        <th scope="col" class="text-center">Precios</th>
+                    </tr>
+                </thead>
+
+                <tbody id="mytbl">
+                    {% for producto in productos %}
+                    <tr>
+                        <td>
+                            <span class="sv-cell-title text-nowrap">
+                                {{ producto.producto.articulos.producto.producto.codigo }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ producto.producto.articulos.producto.producto.nombre }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if producto.producto.articulos.producto.producto.servicio %}
+                            <span class="sv-badge sv-badge-info">
+                                <i class="fa-solid fa-screwdriver-wrench"></i>
+                                Servicio
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-primary">
+                                <i class="fa-solid fa-box"></i>
+                                Producto
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ producto.producto.articulos.producto.producto.unidad }}
+                        </td>
+
+                        <td class="text-center">
+                            <span class="sv-badge sv-badge-dark quantity">
+                                {{ producto.cantidad }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if producto.producto.articulos.comentario %}
+                                {{ producto.producto.articulos.comentario }}
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin comentario
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if producto.producto.articulos.producto.producto.critico %}
+                            <span class="sv-badge sv-badge-danger">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                Crítico
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">
+                                No crítico
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if producto.producto.articulos.producto.producto.critico %}
+                            <button
+                                type="button"
+                                class="sv-btn sv-btn-danger sv-btn-icon"
+                                data-bs-toggle="modal"
+                                data-bs-target="#dialog"
+                                hx-target="#document"
+                                hx-get="{% url 'select-product-quality' producto.producto.articulos.producto.producto.id|unlocalize %}"
+                                title="Consultar requerimientos de calidad"
+                                aria-label="Consultar requerimientos de calidad de {{ producto.producto.articulos.producto.producto.nombre }}">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                            </button>
+                            {% else %}
+                            <span class="sv-cell-subtitle">No aplica</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <a
+                                class="sv-btn sv-btn-primary sv-btn-icon"
+                                href="{% url 'producto-precios-detalle' producto.producto.articulos.producto.id|unlocalize %}"
+                                title="Consultar historial de precios"
+                                aria-label="Consultar precios de {{ producto.producto.articulos.producto.producto.nombre }}">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="sv-empty-state">
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-box-open"></i>
+                                </span>
+
+                                <h3 class="sv-empty-title">
+                                    No hay partidas registradas
+                                </h3>
+
+                                <p class="sv-empty-text">
+                                    Esta requisición no contiene productos o servicios disponibles.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-comments"></i>
+                    Comentarios y soporte
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Observaciones registradas durante el proceso de la requisición.
+                </p>
             </div>
         </div>
+
+        <div class="sv-card-body">
+            <div class="row g-3">
+
+                <div class="col-12 col-lg-4">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body">
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-user-tie me-1"></i>
+                                    Comentario del superintendente
+                                </span>
+
+                                <span class="sv-cell-title">
+                                    {% if requis.comentario_super %}
+                                        {{ requis.comentario_super }}
+                                    {% else %}
+                                        Sin comentario
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body">
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-warehouse me-1"></i>
+                                    Comentario de almacén
+                                </span>
+
+                                <span class="sv-cell-title">
+                                    {% if requis.comentario_compras %}
+                                        {{ requis.comentario_compras }}
+                                    {% else %}
+                                        Sin comentario
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body">
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-user me-1"></i>
+                                    Comentario del usuario
+                                </span>
+
+                                <span class="sv-cell-title">
+                                    {% if requis.orden.comentario %}
+                                        {{ requis.orden.comentario }}
+                                    {% else %}
+                                        Sin comentario
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                        <div>
+                            <span class="sv-cell-title d-block">
+                                <i class="fa-solid fa-paperclip me-1"></i>
+                                Documento de soporte
+                            </span>
+
+                            <span class="sv-cell-subtitle">
+                                Archivo adjunto proporcionado en la solicitud.
+                            </span>
+                        </div>
+
+                        {% if requis.orden.soporte %}
+                        <a
+                            href="{{ requis.orden.soporte.url }}"
+                            download
+                            class="sv-btn sv-btn-info">
+                            <i class="fa-solid fa-file-arrow-down"></i>
+                            Descargar soporte
+                        </a>
+                        {% else %}
+                        <span class="sv-badge sv-badge-neutral">
+                            <i class="fa-solid fa-file-circle-xmark"></i>
+                            Sin soporte
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="sv-card-footer">
+            <div class="sv-actions justify-content-end">
+                <a class="sv-btn sv-btn-outline" href="{{ url_origen }}">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Regresar
+                </a>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Modal de requerimientos de calidad -->
+<div
+    class="modal fade"
+    id="dialog"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    tabindex="-1"
+    aria-labelledby="qualityModalTitle"
+    aria-hidden="true">
+
+    <div
+        class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+        id="document"
+        role="document"
+        hx-target="this">
     </div>
 </div>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
 {% endblock %}
-</body>
-</html>

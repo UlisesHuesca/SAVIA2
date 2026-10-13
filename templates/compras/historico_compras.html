@@ -1,152 +1,542 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Histórico Salidas{% endblock %}
-</head>
-<body>
+{% load l10n %}
+
+{% block title %}Histórico de compras{% endblock %}
 
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-        {% for message in messages %}
-            {% if message %}
-            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-            <script>
-                var m = "{{ message }}";
-                swal("Excelente!",m, "success")
-            </script>
-            {% endif %}
-        {% endfor %}
-    </div>
-</div>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="card my-2 mx-1">
-    <div class="card card-body">
-        <h5>Filtro Inventario</h5>
-        <hr>
-        {% csrf_token %}
-        <form method="GET">
-        <div class="row g-12">
-            <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>ID:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_id|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Usuario:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_user|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>OC:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.folio|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Autorizado Gerente:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.autorizado2|add_class:'form-control'}}
-            </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Tipo:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_type|add_class:'form-control'}}
-            </div>
-            <div class="col-auto my-2">
-                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-            </div>
-            <div class="col-auto my-2">
-                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-            </div>
-            <div class="col-2">
-                <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+<main class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Auditoría de compras</span>
+
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </span>
+                Histórico de órdenes de compra
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta los cambios realizados en autorizaciones, pagos y devoluciones de las órdenes de compra.
+            </p>
+        </div>
+
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-list"></i>
+            {{ registros_list.paginator.count }}
+            registro{{ registros_list.paginator.count|pluralize }}
+        </span>
+    </header>
+
+    <section class="sv-card mb-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros del histórico
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Busca movimientos por identificador, usuario, orden de compra, autorización o periodo.
+                </p>
             </div>
         </div>
-        <hr>
-        </form>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-hashtag"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.history_id|add_class:"form-control"|append_attr:"placeholder=ID del histórico" }}
+                                <label for="{{ myfilter.form.history_id.id_for_label }}">
+                                    ID del histórico
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.history_user|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.history_user.id_for_label }}">
+                                    Usuario
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio de OC" }}
+                                <label for="{{ myfilter.form.folio.id_for_label }}">
+                                    Folio de OC
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-user-check"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.autorizado2|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.autorizado2.id_for_label }}">
+                                    Autorización de gerente
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-code-compare"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.history_type|add_class:"form-select" }}
+                                <label for="{{ myfilter.form.history_type.id_for_label }}">
+                                    Tipo de movimiento
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.start_date.id_for_label }}">
+                                    Desde
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar-check"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                                <label for="{{ myfilter.form.end_date.id_for_label }}">
+                                    Hasta
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="sv-actions h-100 align-items-center justify-content-end">
+                            {% if request.GET %}
+                            <a href="{{ request.path }}" class="sv-btn sv-btn-outline">
+                                <i class="fa-solid fa-eraser"></i>
+                                Limpiar
+                            </a>
+                            {% endif %}
+
+                            <button type="submit" class="sv-btn sv-btn-primary">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    Movimientos de las órdenes de compra
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Comparativo entre el estado anterior y el estado resultante de cada movimiento.
+                </p>
+            </div>
+
+            <span class="sv-badge sv-badge-dark">
+                Página {{ registros_list.number }}
+                de {{ registros_list.paginator.num_pages }}
+            </span>
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Registro</th>
+                        <th scope="col">Movimiento</th>
+                        <th scope="col">OC</th>
+                        <th scope="col">Superintendente</th>
+                        <th scope="col">Gerente</th>
+                        <th scope="col">Pago</th>
+                        <th scope="col">Devolución</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for registro in registros_list %}
+                    <tr>
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">
+                                    {% if registro.history_user %}
+                                        {{ registro.history_user.first_name }}
+                                        {{ registro.history_user.last_name }}
+                                    {% else %}
+                                        Sistema
+                                    {% endif %}
+                                </span>
+
+                                <span class="sv-cell-subtitle text-nowrap">
+                                    <i class="fa-regular fa-calendar me-1"></i>
+                                    {{ registro.history_date|date:"d/m/Y H:i" }}
+                                </span>
+
+                                <span class="sv-cell-subtitle">
+                                    Histórico #{{ registro.history_id|unlocalize }}
+                                </span>
+
+                                {% if registro.history_change_reason %}
+                                <span class="sv-cell-subtitle">
+                                    {{ registro.history_change_reason }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if registro.history_type == "+" %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-plus"></i>
+                                Creación
+                            </span>
+                            {% elif registro.history_type == "~" %}
+                            <span class="sv-badge sv-badge-warning">
+                                <i class="fa-solid fa-pen"></i>
+                                Modificación
+                            </span>
+                            {% elif registro.history_type == "-" %}
+                            <span class="sv-badge sv-badge-danger">
+                                <i class="fa-solid fa-trash-can"></i>
+                                Eliminación
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-neutral">
+                                {{ registro.history_type|default:"Sin identificar" }}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="sv-folio">
+                                {{ registro.folio }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-subtitle">Anterior</span>
+
+                                {% if registro.prev_record %}
+                                    {% if registro.prev_record.autorizado1 == True %}
+                                    <span class="sv-badge sv-badge-success">
+                                        Autorizada
+                                    </span>
+                                    {% elif registro.prev_record.autorizado1 == False %}
+                                    <span class="sv-badge sv-badge-danger">
+                                        Rechazada
+                                    </span>
+                                    {% else %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        Pendiente
+                                    </span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="sv-badge sv-badge-neutral">—</span>
+                                {% endif %}
+
+                                <i class="fa-solid fa-arrow-down text-muted"></i>
+
+                                <span class="sv-cell-subtitle">Actual</span>
+
+                                {% if registro.autorizado1 == True %}
+                                <span class="sv-badge sv-badge-success">
+                                    <i class="fa-solid fa-check"></i>
+                                    Autorizada
+                                </span>
+                                {% elif registro.autorizado1 == False %}
+                                <span class="sv-badge sv-badge-danger">
+                                    <i class="fa-solid fa-xmark"></i>
+                                    Rechazada
+                                </span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-neutral">
+                                    Pendiente
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-subtitle">Anterior</span>
+
+                                {% if registro.prev_record %}
+                                    {% if registro.prev_record.autorizado2 == True %}
+                                    <span class="sv-badge sv-badge-success">
+                                        Autorizada
+                                    </span>
+                                    {% elif registro.prev_record.autorizado2 == False %}
+                                    <span class="sv-badge sv-badge-danger">
+                                        Rechazada
+                                    </span>
+                                    {% else %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        Pendiente
+                                    </span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="sv-badge sv-badge-neutral">—</span>
+                                {% endif %}
+
+                                <i class="fa-solid fa-arrow-down text-muted"></i>
+
+                                <span class="sv-cell-subtitle">Actual</span>
+
+                                {% if registro.autorizado2 == True %}
+                                <span class="sv-badge sv-badge-success">
+                                    <i class="fa-solid fa-check"></i>
+                                    Autorizada
+                                </span>
+                                {% elif registro.autorizado2 == False %}
+                                <span class="sv-badge sv-badge-danger">
+                                    <i class="fa-solid fa-xmark"></i>
+                                    Rechazada
+                                </span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-neutral">
+                                    Pendiente
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="sv-cell-stack">
+                                {% if registro.pagada %}
+                                <span class="sv-badge sv-badge-success">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    Pagada
+                                </span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-warning">
+                                    <i class="fa-solid fa-clock"></i>
+                                    No pagada
+                                </span>
+                                {% endif %}
+
+                                <span class="sv-cell-subtitle">
+                                    Monto de la OC
+                                </span>
+
+                                <span class="sv-cell-title text-nowrap">
+                                    ${{ registro.costo_oc|floatformat:2 }}
+                                </span>
+
+                                <span class="sv-cell-subtitle">
+                                    Monto pagado
+                                </span>
+
+                                <span class="sv-cell-title text-nowrap">
+                                    ${{ registro.monto_pagado|floatformat:2 }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-subtitle">Anterior</span>
+
+                                {% if registro.prev_record %}
+                                    {% if registro.prev_record.regresar_oc %}
+                                    <span class="sv-badge sv-badge-danger">
+                                        Devuelta
+                                    </span>
+                                    {% else %}
+                                    <span class="sv-badge sv-badge-neutral">
+                                        Sin devolución
+                                    </span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="sv-badge sv-badge-neutral">—</span>
+                                {% endif %}
+
+                                <i class="fa-solid fa-arrow-down text-muted"></i>
+
+                                <span class="sv-cell-subtitle">Actual</span>
+
+                                {% if registro.regresar_oc %}
+                                <span class="sv-badge sv-badge-danger">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    Devuelta
+                                </span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-success">
+                                    <i class="fa-solid fa-check"></i>
+                                    Sin devolución
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="sv-empty-state">
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </span>
+
+                                <h3 class="sv-empty-title">
+                                    No hay movimientos registrados
+                                </h3>
+
+                                <p class="sv-empty-text">
+                                    No se encontraron movimientos de compras con los filtros seleccionados.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if registros_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación del histórico de compras">
+                <ul class="pagination justify-content-center mb-0">
+
+                    {% if registros_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url 1 'page' request.GET.urlencode %}"
+                           aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url registros_list.previous_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for pagina in registros_list.paginator.page_range %}
+                        {% if registros_list.number == pagina %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ pagina }}</span>
+                        </li>
+                        {% elif pagina > registros_list.number|add:'-2' and pagina < registros_list.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{% my_url pagina 'page' request.GET.urlencode %}">
+                                {{ pagina }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if registros_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url registros_list.next_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                           aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<div class="modal fade"
+     id="dialog"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+         id="document"
+         role="document"
+         hx-target="this">
     </div>
 </div>
-<!-- Aquí empieza la generación de la tabla -->
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table table-striped table-hover bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Usuario</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Tipo de cambio</th>
-                    <th scope="col">OC</th>
-                    <th scope="col">Autorizado Sppte</th>
-                    <th scope="col">Autorizado Gerente</th>
-                    <th>Pagada</th>
-                    <th>Monto OC</th>
-                    <th>Monto Pagado</th>
-                    <th scope="col">Devolucion OC</th>
 
-                    <th scope="col">Status Previo |Autorizado Sppte</th>
-                    <th scope="col">Status Previo |Autorizado Gerente</th>
-                    <th scope="col">Status Previo |Devolucion OC</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for registro in registros_list %}
-                <tr>
-                    <th scope="row">{{registro.history_user.first_name}} {{registro.history_user.last_name}}</th>
-                    <td>{{registro.history_date}}</td>
-                    <td>{{registro.history_type}}</td>
-                    <td>{{registro.folio}}</td>
-                    <td>{{registro.autorizado1}}</td>
-                    <td>{{registro.autorizado2}}</td>
-                    <td>{{registro.pagada}}</td>
-                    <td>${{registro.costo_oc|floatformat:2}}</td>
-                    <td>${{registro.monto_pagado|floatformat:2}}</td>
-                    <td>{{registro.regresar_oc}}</td>
-                    <td>{{registro.prev_record.autorizado1}}</td>
-                    <td>{{registro.prev_record.autorizado2}}</td>
-                    <td>{{registro.prev_record.regresar_oc}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-<nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-center">
-        {% if registros_list.has_previous %}
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
-        {% endif %}
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        {% for item in registros_list.paginator.page_range %}
-            {% if registros_list.number == item %}
-                <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-            {% elif item > registros_list.number|add:'-2' and item < registros_list.number|add:'2' %}
-                <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
-            {% endif %}
-        {% endfor %}
-
-        {% if registros_list.paginator.num_pages > registros_list.number|add:'2' %}
-        <li><a class="page-link" style="color:#3E92CC" href="?page={{registros_list.number|add:'2'}}">&hellip;</a></li>
-        <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-        <li><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}">{{registros_list.paginator.num_pages}}</a></li>
-        {% endif %}
-
-        {% if registros_list.has_next %}
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-            <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-        {% endif %}
-    </ul>
-</nav>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
-
-    </div>
-</div>
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: {% if message.tags == "error" %}'Error'{% elif message.tags == "warning" %}'Atención'{% else %}'Excelente'{% endif %},
+        text: '{{ message|escapejs }}',
+        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
+    });
+    {% endfor %}
+});
+</script>
+{% endif %}
 {% endblock %}
-
-</body>
-</html>

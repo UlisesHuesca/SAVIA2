@@ -155,6 +155,7 @@ def requis_devolver(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def productos_pendientes(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -184,6 +185,7 @@ def productos_pendientes(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def eliminar_articulos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id=pk_perfil)
@@ -279,6 +281,7 @@ def eliminar_articulos(request, pk):
     return render(request,'compras/eliminar_articulos.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def articulos_restantes(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     #productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
@@ -350,6 +353,7 @@ def oc(request, pk):
     return render(request, 'compras/oc.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def compras_devueltas(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -372,6 +376,7 @@ def compras_devueltas(request):
     return render(request, 'compras/compras_devueltas.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def compra_edicion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -964,6 +969,7 @@ def clear_task_id(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def matriz_oc_productos(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
@@ -1097,6 +1103,7 @@ def producto_precios_detalle(request, producto_id):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def productos_oc(request, pk):
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=compra)
@@ -1110,6 +1117,7 @@ def productos_oc(request, pk):
     return render(request,'compras/oc_producto.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def productos_oc_precio(request, pk):
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=compra)
@@ -2337,6 +2345,7 @@ def handle_uploaded_file(file, model_instance, field_name):
     model_instance.save()
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('comprador')
 def comparativos(request):
     #creada_por 
     pk_perfil = request.session.get('selected_profile_id') 
@@ -2392,6 +2401,7 @@ def comparativos(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('comprador')
 def crear_comparativo(request):
     #start_time = time.time()  # Tiempo de inicio
     pk_perfil = request.session.get('selected_profile_id')
@@ -2553,6 +2563,7 @@ def editar_comparativo(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def clonar_comparativo(request, pk):
     usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
     with transaction.atomic():
@@ -2587,6 +2598,7 @@ def clonar_comparativo(request, pk):
     return redirect('editar-comparativo', pk=nuevo.id)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def articulos_comparativo(request, pk):
     articulos = Item_Comparativo.objects.filter(comparativo__id = pk , completo = True)
 
@@ -2595,6 +2607,9 @@ def articulos_comparativo(request, pk):
     }
     return render(request, 'compras/articulos_comparativo.html', context)
 
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def articulo_comparativo_delete(request, pk):
    
     articulo = Item_Comparativo.objects.get(id=pk)
@@ -2606,6 +2621,7 @@ def articulo_comparativo_delete(request, pk):
     return redirect('crear_comparativo')
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def historico_articulos_compras(request):
     registros = ArticuloComprado.history.all()
 
@@ -2626,6 +2642,7 @@ def historico_articulos_compras(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
 def historico_compras(request):
     registros = Compra.history.all()
     myfilter = HistoricalCompraFilter(request.GET, queryset=registros)
