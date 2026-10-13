@@ -65,6 +65,7 @@ import xml.etree.ElementTree as ET
 
 
 
+
 #Excel stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -3726,17 +3727,17 @@ def eliminar_caracteres_invalidos(archivo_xml):
 
 def extraer_datos_del_xml(archivo_xml):
     try:
-        # Parsear el archivo XML
         archivo_xml.seek(0)
         tree = ET.parse(archivo_xml)
         root = tree.getroot()
-    except (ET.ParseError, FileNotFoundError) as e:
+    except (ET.ParseError, OSError) as e:
         print(f"Error al parsear el archivo XML: {e}")
-        return None, None  # Si ocurre un error, devuelve None
-    
-    # Identificar la versión del XML y el espacio de nombres
+        return None, None, None, None, None
+
+    # Identificar versión CFDI
     version = root.tag
     ns = {}
+
     if 'http://www.sat.gob.mx/cfd/3' in version:
         ns = {
             'cfdi': 'http://www.sat.gob.mx/cfd/3',
@@ -3750,33 +3751,41 @@ def extraer_datos_del_xml(archivo_xml):
             'if': 'https://www.interfactura.com/Schemas/Documentos',
         }
     else:
-        print(f"Versión del documento XML no reconocida")
-        return None, None
-    
+        print("Versión del documento XML no reconocida")
+        return None, None, None, None, None
 
-    rfc_receptor = None
+    # Tipo de comprobante
+    tipo_comprobante = root.get('TipoDeComprobante')
+
+    # RFC emisor
+    emisor = root.find('cfdi:Emisor', ns)
+    rfc_emisor = emisor.get('Rfc') if emisor is not None else None
+
+    # RFC receptor
     receptor = root.find('cfdi:Receptor', ns)
-    if receptor is not None:
-        rfc_receptor = receptor.get('Rfc')
-    else:
-        print("Receptor no encontrado")
-    # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
+    rfc_receptor = receptor.get('Rfc') if receptor is not None else None
+
+    # UUID y fecha de timbrado
     complemento = root.find('cfdi:Complemento', ns)
+
     if complemento is not None:
         timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+
         if timbre_fiscal is not None:
             uuid = timbre_fiscal.get('UUID')
             fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
         else:
             print("Timbre Fiscal Digital no encontrado")
-            return None, None, None
+            return None, None, None, None, None
     else:
         print("Complemento no encontrado")
-        return None, None, None
+        return None, None, None, None, None
+
+    archivo_xml.seek(0)
+
+    return uuid, fecha_timbrado, rfc_receptor, rfc_emisor, tipo_comprobante
     
-    return uuid, fecha_timbrado, rfc_receptor
-    
-import xml.etree.ElementTree as ET
+
 
 def extraer_datos_del_complemento(ruta_xml):
     try:
@@ -4192,7 +4201,38 @@ def factura_nueva(request, pk):
                         #factura_temp = Factura(archivo_xml=archivo_xml)
                         #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
                         RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
-                        uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
+                        (uuid_extraido, fecha_timbrado_extraida, rfc_receptor, rfc_emisor, tipo_comprobante) = extraer_datos_del_xml(archivo_procesado)
+                        # Validar XML
+                        if not uuid_extraido or not fecha_timbrado_extraida:
+                            messages.error(request, f"XML inválido: {archivo_xml.name}")
+                            continue
+
+                        # Validar complemento de pago
+                        if tipo_comprobante == "P":
+                            messages.error(
+                                request,
+                                f"El archivo {archivo_xml.name} es un complemento de pago. "
+                                "No se permite cargar en esta sección."
+                            )
+                            continue
+                        
+                        # Validar RFC emisor contra proveedor de OC
+                        rfc_proveedor = (compra.proveedor.nombre.rfc or "").strip().upper()
+                        
+                        rfc_emisor = (rfc_emisor or "").strip().upper()
+                        print(f"RFC emisor extraído: {rfc_emisor}, RFC proveedor de OC: {rfc_proveedor}")
+
+                        if not rfc_emisor or rfc_emisor != rfc_proveedor:
+                            messages.error(
+                                request,
+                                f"El RFC emisor ({rfc_emisor or 'NO IDENTIFICADO'}) "
+                                f"no coincide con el RFC del proveedor de la OC "
+                                f"({rfc_proveedor or 'NO REGISTRADO'}). "
+                                f"Archivo: {archivo_xml.name}"
+                            )
+                            continue
+                        
+                        
                         if rfc_receptor and rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
                             messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba uno de los siguientes: {', '.join(RFC_RECEPTORES_ESPERADOS)}.")
                             break # Saltar al siguiente archivo si el RFC no coincide
