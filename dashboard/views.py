@@ -70,7 +70,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from bs4 import BeautifulSoup
 
 # Create your views here.
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def index(request):
     pk = request.session.get('selected_profile_id')
@@ -821,7 +820,7 @@ def proyectos_contrato(request, pk):
 
     return render(request,'dashboard/proyectos.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_contratos(request):
     #usuario = Profile.objects.get(staff=request.user
@@ -862,7 +861,7 @@ def asignar_totales(proyectos_queryset, dict_compras, dict_pagos, dict_gastos, d
         proyecto.total_salidas = dict_salidas.get(proyecto.id, 0)
     return proyectos_queryset
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def subproyectos(request, pk):
     proyecto = Proyecto.objects.get(id=pk)
@@ -887,7 +886,7 @@ def subproyectos(request, pk):
 
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def proyectos_edit(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -915,7 +914,7 @@ def proyectos_edit(request, pk):
         }
     return render(request,'dashboard/proyectos_edit.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def proveedor_direcciones(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -942,7 +941,7 @@ def proveedor_direcciones(request, pk):
         }
     return render(request,'dashboard/direcciones_proveedor.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def proyectos_add(request):
     print('Entrando a proyectos_add')
@@ -980,7 +979,7 @@ def proyectos_add(request):
 
     return render(request,'dashboard/proyectos_add.html',context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def subproyectos_add(request, pk):
     proyecto = Proyecto.objects.get(id=pk)
@@ -1015,7 +1014,7 @@ def subproyectos_add(request, pk):
 
     return render(request,'dashboard/subproyectos_add.html',context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def subproyectos_edit(request, pk):
     subproyecto = Subproyecto.objects.get(id=pk)
@@ -1104,7 +1103,7 @@ def lista_pozos(request):
     return render(request,"dashboard/lista_pozos.html",context)
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def staff(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1130,7 +1129,7 @@ def staff(request):
         }
     return render(request,'dashboard/staff.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def product(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1455,7 +1454,7 @@ def cancelar_alta_proveedor(request, pk):
     return render(request,'dashboard/cancelar_alta_proveedor.html', context)
     
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def matriz_revision_proveedor(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1484,7 +1483,7 @@ def matriz_revision_proveedor(request):
     return render(request,'dashboard/matriz_revision_proveedor.html', context)
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def proveedores_update(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1524,7 +1523,7 @@ def proveedores_update(request, pk):
 
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_proveedores_old(request):
     usuario = Profile.objects.get(staff=request.user)
@@ -1552,7 +1551,7 @@ def add_proveedores_old(request):
         }
     return render(request,'dashboard/add_proveedores.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_proveedor_direccion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1589,7 +1588,7 @@ def add_proveedor_direccion(request, pk):
         }
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_proveedores2(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1675,7 +1674,7 @@ def add_proveedores2(request, pk=None):
     }
     return render(request, 'dashboard/add_proveedores_&_direccion.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_proveedores_comparativo(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1726,7 +1725,7 @@ def add_proveedores_comparativo(request, pk=None):
     }
     return render(request, 'dashboard/add_proveedor_direccion_cotizacion.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_proveedores(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1765,7 +1764,7 @@ def add_proveedores(request, pk=None):
     }
     return render(request, 'dashboard/proveedor_exist_&_direccion.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def edit_proveedores(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1880,7 +1879,7 @@ def edit_proveedores(request, pk):
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def edit_proveedor_direccion(request, pk):
 
@@ -2059,7 +2058,7 @@ def upload_batch_proveedores(request):
 
     return render(request,'dashboard/upload_batch_proveedor.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def upload_batch_proveedores_direcciones(request):
 
@@ -2448,7 +2447,7 @@ def guardar_fecha_adicional(request, documento_id):
 
         return JsonResponse({"ok": True})
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def upload_batch_products(request):
     form = Products_BatchForm(request.POST or None, request.FILES or None)
@@ -2535,7 +2534,7 @@ def upload_batch_products(request):
     return render(request, 'dashboard/upload_batch_products.html', context)
 
 
-#@login_required(login_url='user-login')
+#
 #def product_delete(request, pk):
 #    item = Product.objects.get(id=pk)
 #    if request.method == 'POST':
@@ -2545,7 +2544,7 @@ def upload_batch_products(request):
 #    return render(request,'dashboard/product_delete.html')
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def add_product(request):
     item, created = Product.objects.get_or_create(completado=False)
@@ -2569,7 +2568,7 @@ def add_product(request):
         }
     return render(request,'dashboard/add_product.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def product_update(request, pk):
 
@@ -2595,7 +2594,7 @@ def product_update(request, pk):
     return render(request,'dashboard/product_update.html', context)
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def precio_referencia(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -2641,7 +2640,7 @@ def precio_referencia(request, pk):
     return render(request, 'dashboard/precio_referencia.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def price_ref_pending(request):
     """Vista principal para listar y filtrar solicitudes pendientes"""
     cambios = PriceRefChange.objects.filter(autorizado__isnull=True).select_related('product', 'solicitado_por')
@@ -2654,7 +2653,7 @@ def price_ref_pending(request):
     }
     return render(request, 'dashboard/price_ref_pending.html', context)
 
-@login_required(login_url='user-login')
+
 def price_ref_authorize(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -2701,7 +2700,7 @@ def price_ref_reject(request, pk):
     messages.success(request, "La solicitud fue cancelada correctamente.")
     return redirect('price_ref_pending')
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def price_ref_history(request):
     # Solo historial: ya procesadas (no pendientes)
     # Si usas Django < 5: usa autorizado__isnull=False
@@ -2726,7 +2725,7 @@ def load_subfamilias(request):
     return render(request, 'dashboard/subfamilia_dropdown_list_options.html',{'subfamilias': subfamilias})
 
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def staff_detail(request, pk):
     worker = User.objects.get(id=pk)
@@ -2993,7 +2992,7 @@ def convert_excel_proveedores_altas(proveedores_qs):
     wb.save(response)
     return response
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def product_calidad(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -3048,7 +3047,7 @@ def eliminar_requerimiento_calidad(request, pk):
     except Requerimiento_Calidad.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Requerimiento no encontrado'})
     
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def product_calidad_update(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
