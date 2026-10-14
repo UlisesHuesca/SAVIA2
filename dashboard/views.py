@@ -92,58 +92,11 @@ def index(request):
         if proveedor.direcciones.filter(estatus__nombre = "PREALTA").exists():
             prealta = True
 
-    #print(prealta)
-    # Obtener los proyectos y calcular el total
-    #proyectos_total = [(proyecto, proyecto.get_projects_gastado) for proyecto in proyectos]
-
-    # Obtener los inventarios y calcular el costo de salidas
-    #inventarios_costo_salidas = [(inventario, inventario.costo_salidas) for inventario in inventarios]
-
-    # Ordenar los inventarios por el costo de salidas en orden descendente
-    #inventarios_costo_salidas_sorted = sorted(inventarios_costo_salidas, key=lambda x: x[1], reverse=True)
-    # Ordenar los proyectos por el total en orden descendente
-    #proyectos_total_sorted = sorted(proyectos_total, key=lambda x: x[1], reverse=True)
-
-    # Tomar solo los primeros 50 inventarios ordenados
-    #inventarios_top_50 = inventarios_costo_salidas_sorted[:50]
-
-
-    # Preparar los datos para el gráfico
-    #x = [proyecto.nombre for proyecto, _ in proyectos_total_sorted]
-    #y = [total for _, total in proyectos_total_sorted]
-    #x2 = [inventario.producto.nombre[:15] + '...' if len(inventario.producto.nombre) > 10 else inventario.producto.nombre for inventario,_ in inventarios_top_50]
-    #y2 = [costo_salidas for _, costo_salidas in inventarios_top_50]
-
-   # Crear el gráfico de barras
-    #fig = make_subplots()
-    #fig.add_trace(go.Bar(x=x, y=y, marker=dict(color='#3E92CC')),1,1)
-    # Crear el gráfico de barras
-    #fig2 = make_subplots()
-    #fig2.add_trace(go.Bar(x=x2, y=y2, marker=dict(color='#3E92CC')),1,1)
-
-    #fig.update_layout(
-    #    plot_bgcolor='#9a9b9d',
-    #    paper_bgcolor='white',
-    #    font_color= '#3E92CC',
-    #    )
-
-    #fig2.update_layout(
-    #    plot_bgcolor='#9a9b9d',
-    #    paper_bgcolor='white',
-    #    font_color= '#3E92CC',
-    #    )
-
-    #Convertir el gráfico en HTML para pasar a la plantilla
-    #graph_proyectos = fig.to_html(full_html=False)
-    #graph_inventarios = fig2.to_html(full_html=False)
 
     context = {
         'mostrar_modal': mostrar_modal,
         'prealta': prealta,
         'invitaciones_direccion': invitaciones_direccion,
-        #'select_profile':selected_profil
-        #'graph_proyectos': graph_proyectos,
-        #'graph_inventarios':graph_inventarios,
         }
     
     return render(request,'dashboard/index.html',context)
@@ -539,6 +492,7 @@ def obtener_totales_pozos_proyecto(proyecto_id, pozos_ids):
     return dict_salidas, dict_compras_servicios
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('proyectos')
 def desglose_pozos_proyecto(request, proyecto_id):
 
     
@@ -756,6 +710,7 @@ def proyectos_anterior(request):
     return render(request,'dashboard/proyectos.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('configuracion')
 def contratos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)

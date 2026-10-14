@@ -4873,7 +4873,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
 
     columns = ['Compra', 'Requisición', 'Solicitud','Distrito', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
                'Status Proveedor','Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
-               'Tipo de cambio', 'Entregada','Tiene Facturas', 'Activo Fijo','Tipo de Contratación','Comentarios','Comentarios Usuarios', 'Total en pesos']
+               'Tipo de cambio', 'Entregada','Tiene Facturas', 'Activo Fijo','Tipo de Contratación','Comentarios','Comentarios Usuarios','Productos', 'Total en pesos']
 
     columna_max = len(columns)+2
 
@@ -4904,9 +4904,9 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(5, columna_max, num_approved_requis, body_style)
     worksheet.write(6, columna_max, num_requis_atendidas, body_style)
     worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
-    worksheet.write_formula(8, columna_max, '=COUNTIFS(P:P, "Pagada", W:W, "Entregada", S:S, "PRODUCTOS")', body_style)
+    worksheet.write_formula(8, columna_max, '=COUNTIFS(Q:Q, "Pagada", X:X, "Entregada", T:T, "PRODUCTOS")', body_style)
     # Escribir otra fórmula COUNTIF, también con el estilo corporal
-    worksheet.write_formula(9, columna_max, '=COUNTIFS(P:P, "Pagada", S:S, "PRODUCTOS")', body_style)
+    worksheet.write_formula(9, columna_max, '=COUNTIFS(Q:Q, "Pagada", T:T, "PRODUCTOS")', body_style)
     worksheet.write_formula(10, columna_max, formula, percent_style)
 
     for i, column in enumerate(columns):
@@ -4935,15 +4935,36 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
         articulos = compra_list.articulocomprado_set.all()
          # Determinar el tipo de producto para la columna de tipo_producto
-        todos_servicios = all(articulo.producto.producto.articulos.producto.producto.servicio for articulo in articulos)
-        ningun_servicio = all(not articulo.producto.producto.articulos.producto.producto.servicio for articulo in articulos)
+        hay_servicios = False
+        hay_productos = False
+        productos_detalle = []
 
-        if todos_servicios:
-            tipo_producto = "SERVICIOS"
-        elif ningun_servicio:
-            tipo_producto = "PRODUCTOS"
+        for articulo in articulos:
+            producto_obj = (articulo.producto.producto.articulos.producto.producto)
+
+            if producto_obj.servicio:
+                hay_servicios = True
+            else:
+                hay_productos = True
+
+            #codigo = producto_obj.codigo or 'Sin código'
+            nombre = producto_obj.nombre or 'Sin nombre'
+            #cantidad = articulo.cantidad
+
+            productos_detalle.append(f'{nombre},'
+               # f'{codigo} - {nombre} | Cantidad: {cantidad}'
+            )
+
+        if hay_servicios and hay_productos:
+            tipo_producto = 'PRODUCTO/SERVICIOS'
+        elif hay_servicios:
+            tipo_producto = 'SERVICIOS'
+        elif hay_productos:
+            tipo_producto = 'PRODUCTOS'
         else:
-            tipo_producto = "PRODUCTO/SERVICIOS"
+            tipo_producto = 'SIN ARTÍCULOS'
+
+        productos_celda = '\n'.join(productos_detalle)
     
 
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
@@ -4987,6 +5008,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             compra_list.tipo_contratacion.nombre if compra_list.tipo_contratacion else '',
             compra_list.comentarios,
             compra_list.req.orden.comentario,
+            productos_celda,
         ]
         
         for col_num, cell_value in enumerate(row):
@@ -5005,7 +5027,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 29, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 30, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
     
    
     workbook.close()
