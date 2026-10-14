@@ -1,153 +1,281 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
-{% load widget_tweaks %}
-<html>
-<head>
-{% block title %}Matriz Producto NC{% endblock %}
-</head>
-<body>
+{% load l10n %}
+
+{% block title %}Matriz de no conformidades{% endblock %}
+
 {% block content %}
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class = "row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                <h5>Matriz Producto NC</h5>
-                </div>
-                <div class="card-body">
-                {% csrf_token %}
-                    <form method="GET">
-                    <div class="row g-12">
-                    </div>
-                    </form>
-                    <form method=POST>
-                        {% csrf_token %}
-                        <!--<ul class="nav nav-pills">
-                            <li class="nav-item mx-2">
-                                <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                                    <i class="fa-solid fa-file-excel fa-2xl"></i>
-                                </button>
-                            </li>
-                        </ul>-->
-                    </form>
-                </div>
+<main class="sv-page sv-page-with-navbar">
+
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">
+                Control de calidad
+            </span>
+
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                Matriz de no conformidades
+            </h1>
+
+            <p class="sv-page-subtitle">
+                Consulta las no conformidades registradas, sus productos involucrados y el estado de su cierre.
+            </p>
+        </div>
+
+        <span class="sv-badge sv-badge-primary">
+            <i class="fa-solid fa-clipboard-list"></i>
+            {{ ncs|length }}
+            registro{{ ncs|length|pluralize }}
+        </span>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    No conformidades registradas
+                </h2>
+
+                <p class="sv-card-subtitle">
+                    Detalle de la compra, proveedor, responsable y situación actual.
+                </p>
             </div>
         </div>
-</div>
-    <!-- Aquí terminan el encabezado de los filtros -->
 
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th scope="col">No conformidad</th>
+                        <th scope="col">Proveedor</th>
+                        <th scope="col">Clasificación</th>
+                        <th scope="col">Generada por</th>
+                        <th scope="col">Comentario</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col" class="text-center">Productos</th>
+                        <th scope="col" class="text-center">Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for nc in ncs %}
+                    <tr>
+                        <td>
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">
+                                    NC #{{ nc.id|unlocalize }}
+                                </span>
+
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-cart-shopping me-1"></i>
+                                    OC {{ nc.oc.folio }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if nc.oc.proveedor %}
+                            <span class="sv-cell-title">
+                                {{ nc.oc.proveedor }}
+                            </span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin proveedor
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="sv-cell-stack">
+                                {% if nc.tipo_nc %}
+                                <span class="sv-badge sv-badge-warning">
+                                    <i class="fa-solid fa-tag"></i>
+                                    {{ nc.tipo_nc.nombre }}
+                                </span>
+                                {% else %}
+                                <span class="sv-badge sv-badge-neutral">
+                                    Sin clasificación
+                                </span>
+                                {% endif %}
+
+                                {% if perfil.tipo.nombre == "VIS_ADQ" %}
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-location-dot me-1"></i>
+                                    {{ nc.oc.req.orden.distrito.nombre }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if nc.almacenista %}
+                            <div class="sv-cell-stack">
+                                <span class="sv-cell-title">
+                                    {{ nc.almacenista.staff.staff.first_name }}
+                                    {{ nc.almacenista.staff.staff.last_name }}
+                                </span>
+
+                                <span class="sv-cell-subtitle">
+                                    <i class="fa-solid fa-warehouse me-1"></i>
+                                    Almacén
+                                </span>
+                            </div>
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin responsable
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if nc.comentario %}
+                                {{ nc.comentario }}
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin comentario
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if nc.nc_date %}
+                            <span class="sv-cell-title text-nowrap">
+                                <i class="fa-regular fa-calendar me-1"></i>
+                                {{ nc.nc_date|date:"d/m/Y" }}
+                            </span>
+
+                            {% if nc.nc_date|date:"H:i" != "00:00" %}
+                            <span class="sv-cell-subtitle d-block text-nowrap">
+                                {{ nc.nc_date|date:"H:i" }}
+                            </span>
+                            {% endif %}
+                            {% else %}
+                            <span class="sv-cell-subtitle">
+                                Sin fecha
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button"
+                                    class="sv-btn sv-btn-info sv-btn-icon"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#dialog"
+                                    hx-target="#document"
+                                    hx-get="{% url 'productos-nc' nc.id|unlocalize %}"
+                                    title="Consultar productos"
+                                    aria-label="Consultar productos de la no conformidad {{ nc.id|unlocalize }}">
+                                <i class="fa-solid fa-list-ul"></i>
+                            </button>
+                        </td>
+
+                        <td class="text-center">
+                            {% if nc.cierre != None %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-lock"></i>
+                                Cerrada
+                            </span>
+
+                            {% elif usuario.tipo.comprador == True %}
+                            <a class="sv-btn sv-btn-warning"
+                               href="{% url 'cierre-nc' nc.id|unlocalize %}"
+                               title="Gestionar cierre de la no conformidad">
+                                <i class="fa-solid fa-lock-open"></i>
+                                Cerrar NC
+                            </a>
+
+                            {% else %}
+                            <span class="sv-badge sv-badge-warning">
+                                <i class="fa-solid fa-clock"></i>
+                                Pendiente
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="sv-empty-state">
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-clipboard-check"></i>
+                                </span>
+
+                                <h3 class="sv-empty-title">
+                                    No hay no conformidades
+                                </h3>
+
+                                <p class="sv-empty-text">
+                                    No existen no conformidades registradas para mostrar.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Modal de productos -->
+<div class="modal fade"
+     id="dialog"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+         id="document"
+         role="document"
+         hx-target="this">
     </div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th>ID</th>
-                    <th scope="col">Compra</th>
-                    <th scope="col">Proveedor</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Generada por:</th>
-                    {% if perfil.tipo.nombre == "VIS_ADQ" %}
-                    <th>Distrito</th>
-                    {% endif %}
-                    <th scope="col">Comentario</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Productos</th>
-                    <th>Cierre</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for nc in ncs %}
-                <tr>
-                    <td>{{nc.id}}</td>
-                    <td scope="col">{{nc.oc.folio}}</th>
-                    <td scope="col">{{nc.oc.proveedor}}</td>
-                    <td scope="col">{{nc.tipo_nc.nombre}}</td>
-                    
-                    <td>{{nc.almacenista.staff.staff.first_name}} {{nc.almacenista.staff.staff.last_name}}</td>
-                    {% if perfil.tipo.nombre == "VIS_ADQ" %}
-                    <td>{{nc.oc.req.orden.distrito.nombre}}</td>
-                    {% endif %}
-                    <td>{{nc.comentario}}</td>
-                    <td>{{nc.nc_date}} </td>
-                    <td>
-                        <a class="btn btn-outline-info btn-block mx-auto" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'productos-nc' nc.id %}"><i class="fa-solid fa-list-ul"></i></a>
-                    </td>
-                    <td>
-                        {% if nc.cierre != None %}
-                        <a class="btn btn-outline-info btn-block mx-auto" type="button"><i class="fa-solid fa-lock"></i></a>
-                        {% elif usuario.tipo.comprador == True %}
-                        <a class="btn btn-outline-warning btn-block mx-auto" type="button" href="{% url 'cierre-nc' nc.id %}"><i class="fa-solid fa-lock-open"></i></a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% if messages %}
 <script>
-var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
-dataSpyList.forEach(function (dataSpyEl) {
-  bootstrap.ScrollSpy.getInstance(dataSpyEl)
-    .refresh()
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: {% if message.tags == "error" %}'Error'{% elif message.tags == "warning" %}'Atención'{% else %}'Excelente'{% endif %},
+        text: '{{ message|escapejs }}',
+        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
+    });
+    {% endfor %}
 });
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+</script>
+{% endif %}
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
-var myModal = document.getElementById('dialog')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dialogElement = document.getElementById('dialog');
+    const documentContainer = document.getElementById('document');
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
+    if (!dialogElement || !documentContainer) {
+        return;
+    }
 
+    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
+
+    if (typeof htmx !== 'undefined') {
+        htmx.on('htmx:beforeSwap', function (event) {
+            if (
+                event.detail.target.id === 'document' &&
+                !event.detail.xhr.response
+            ) {
+                dialog.hide();
+            }
+        });
+    }
+
+    dialogElement.addEventListener('hidden.bs.modal', function () {
+        documentContainer.innerHTML = '';
+    });
+});
 </script>
 {% endblock %}
-</body>
-</html>

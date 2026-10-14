@@ -1293,9 +1293,9 @@ def matriz_nc(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
     if perfil.tipo.nombre == "VIS_ADQ":
-        ncs= No_Conformidad.objects.filter(completo = True)
+        ncs= No_Conformidad.objects.filter(completo = True).order_by('-id')
     else:
-        ncs= No_Conformidad.objects.filter(completo = True, oc__req__orden__distrito = perfil.distritos)
+        ncs= No_Conformidad.objects.filter(completo = True, oc__req__orden__distrito = perfil.distritos).order_by('-id')
     
 
     context = {
