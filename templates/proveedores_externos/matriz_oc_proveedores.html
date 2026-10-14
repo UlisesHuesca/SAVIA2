@@ -306,12 +306,13 @@
                                 </a>
                                 {% endif %}
 
-                                <a class="sv-btn sv-btn-info sv-btn-icon"
-                                   href="{% url 'oc-pdf' compra.id %}"
-                                   data-bs-toggle="tooltip" title="Orden de compra"
-                                   aria-label="Orden de compra">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
+                                <button type="button" class="sv-btn sv-btn-icon sv-btn-primary js-document-preview" data-bs-toggle="modal"
+                                    data-bs-target="#documentPreviewModal"
+                                    data-document-url="{% url 'ver_oc_pdf' compra.id %}"
+                                    data-document-title="Orden de compra {{ compra.folio }}"
+                                    title="Vista previa de la orden">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </div>
                         </td>
 
@@ -384,6 +385,25 @@
     <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
          role="document" hx-target="this"></div>
 </div>
+
+
+ <div class="modal fade" id="documentPreviewModal" tabindex="-1" aria-labelledby="documentPreviewTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentPreviewTitle">Orden de compra</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body sv-document-viewer">
+                    <div class="sv-document-loading" id="documentPreviewLoading">
+                        <div class="spinner-border" role="status" aria-hidden="true"></div>
+                        <span>Cargando documento…</span>
+                    </div>
+                    <iframe class="sv-document-frame d-none" id="documentPreviewFrame" title="Vista previa de la orden de compra"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <div class="modal fade" id="loadingIndicator" data-bs-backdrop="static"
      data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
@@ -578,5 +598,55 @@ function esperarYVerificar(intervalo, maxIntentos, intentoActual, statusEndpoint
         }
     }, intervalo);
 }
+
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const modal = document.getElementById('documentPreviewModal');
+    const frame = document.getElementById('documentPreviewFrame');
+    const loading = document.getElementById('documentPreviewLoading');
+    const title = document.getElementById('documentPreviewTitle');
+
+    if (!modal || !frame) return;
+
+    // Al abrir el modal
+    modal.addEventListener('show.bs.modal', function (event) {
+
+        const button = event.relatedTarget;
+
+        if (!button) return;
+
+        const url = button.dataset.documentUrl;
+        const documentTitle = button.dataset.documentTitle;
+
+        title.textContent = documentTitle || 'Vista previa';
+
+        // Mostrar indicador de carga
+        loading.classList.remove('d-none');
+        frame.classList.add('d-none');
+
+        // Cargar PDF
+        frame.src = url;
+    });
+
+    // Cuando termina de cargar el iframe
+    frame.addEventListener('load', function () {
+
+        loading.classList.add('d-none');
+        frame.classList.remove('d-none');
+
+    });
+
+    // Al cerrar el modal
+    modal.addEventListener('hidden.bs.modal', function () {
+
+        frame.src = 'about:blank';
+        frame.classList.add('d-none');
+        loading.classList.add('d-none');
+
+    });
+
+});
+
 </script>
 {% endblock %}

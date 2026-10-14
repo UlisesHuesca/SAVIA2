@@ -2663,7 +2663,6 @@ def historico_compras(request):
     return render(request,'compras/historico_compras.html',context)
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('compras', 'oc_gerencia', 'almacen', 'tesoreria','oc_superintendencia')
 def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
     if compra.req.orden.distrito.nombre != "BRASIL":
