@@ -85,7 +85,7 @@ def requisiciones_status(request):
         requis = Requis.objects.filter(complete = True, orden__distrito__id__in=almacenes_distritos).order_by('-folio')
     elif perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ" or perfil.tipo.nombre == "Gerente_compras":  #Estos a diferencia del perfil de control tienen acceso a todas las requisiciones completas, sin importar el distrito, por ello no se les hace el filtro por distrito
         requis = Requis.objects.filter(complete = True).order_by('-folio')
-    elif perfil.tipo.comprador == True and perfil.distritos.nombre == "BRASIL": #Se pidió específicamente que el distrito de Brasil no viera las requisiciones rechazadas o pendientes de autorización, por ello se hace esta condición específica
+    elif perfil.tipo.comprador == True or perfil.distritos.nombre == "BRASIL": #Se pidió específicamente que el distrito de Brasil no viera las requisiciones rechazadas o pendientes de autorización, por ello se hace esta condición específica
         requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True,).filter(
             Q(autorizar=False)|Q(autorizar__isnull=True)).order_by('-folio')
     else:
