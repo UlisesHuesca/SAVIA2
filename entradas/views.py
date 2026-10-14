@@ -1442,15 +1442,25 @@ def no_conformidad(request, pk):
         for producto in articulos
     ]
 
-    # GET: no crear NC
-    no_conformidad = None
-    articulos_nc = NC_Articulo.objects.none()
+    no_conformidad = No_Conformidad.objects.filter(
+        oc=compra,
+        almacenista=perfil,
+        completo=False
+    ).first()
+
+    articulos_nc = (
+        NC_Articulo.objects.filter(nc=no_conformidad)
+        if no_conformidad
+        else NC_Articulo.objects.none()
+    )
 
     form = NC_ArticuloForm()
     form2 = NoConformidadForm()
     # Si el método de la petición es POST, procesar el formulario
     if request.method == "POST":
-        no_conformidad, created = No_Conformidad.objects.get_or_create(oc=compra,almacenista=perfil,completo=False,)
+        if no_conformidad is None:
+            messages.error(request, "Debes agregar al menos un artículo a la No Conformidad.")
+            return redirect('no-conformidad', pk=compra.id)
         articulos_nc = NC_Articulo.objects.filter(nc=no_conformidad)
         form2 = NoConformidadForm(request.POST, instance = no_conformidad)
 
@@ -1543,51 +1553,48 @@ def update_no_conformidad(request):
     cantidad = decimal.Decimal(data["cantidad_ingresada"])
     action = data["action"]
     producto_id = int(data["producto"])
-    pk = int(data["nc_id"])
-    #referencia = data["referencia"]
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id=pk_perfil)
+
+    
     producto_comprado = ArticuloComprado.objects.get(id = producto_id)
-    nc = No_Conformidad.objects.get(id = pk, completo = False)
-    nc_producto = NC_Articulo.objects.filter(articulo_comprado = producto_comprado, nc__oc = producto_comprado.oc, nc__completo = True).aggregate(Sum('cantidad'))
-    entradas_producto = EntradaArticulo.objects.filter(articulo_comprado = producto_comprado, entrada__oc = producto_comprado.oc, entrada__completo = True).aggregate(Sum('cantidad'))
-    suma_entradas = entradas_producto['cantidad__sum']
-    suma_nc_producto = nc_producto['cantidad__sum']
-    entradas_producto = EntradaArticulo.objects.filter(articulo_comprado = producto_comprado, entrada__oc = producto_comprado.oc, entrada__completo = True).aggregate(Sum('cantidad_por_surtir'))
-    pendientes_surtir = entradas_producto['cantidad_por_surtir__sum']
-    if pendientes_surtir == None:   #Esto sucede cuando no hay ningún producto en esos articulos
-        pendientes_surtir = 0
-    if suma_nc_producto == None:
-        suma_nc_producto = 0
-    if suma_entradas == None:
-        suma_entradas = 0
+    nc,created = No_Conformidad.objects.get_or_create(oc=producto_comprado.oc, almacenista=perfil, completo = False)
+    
+    nc_producto = NC_Articulo.objects.filter(articulo_comprado=producto_comprado,nc__oc=producto_comprado.oc,nc__completo=True
+                                             ).aggregate(total=Sum('cantidad'))
 
-
-    nc_item, created = NC_Articulo.objects.get_or_create(nc = nc, articulo_comprado = producto_comprado)
-    nc_item.cantidad = cantidad
+    entradas_producto = EntradaArticulo.objects.filter(articulo_comprado = producto_comprado, entrada__oc = producto_comprado.oc, entrada__completo = True
+                                                       ).aggregate(suma_entradas=Sum('cantidad'),pendientes_surtir=Sum('cantidad_por_surtir'))
+    
+    suma_nc_producto = nc_producto['total'] or 0
+    suma_entradas = entradas_producto['suma_entradas'] or 0
+    pendientes_surtir = entradas_producto['pendientes_surtir'] or 0
 
     if action == "add":
-        print(pendientes_surtir)
-        print(suma_nc_producto)
-        print(nc_item.cantidad)
-        total_entradas_nc = pendientes_surtir + suma_nc_producto + nc_item.cantidad
+        total_entradas = pendientes_surtir + suma_nc_producto + cantidad
 
-        if total_entradas_nc > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
-            messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {total_entradas_nc} > {cantidad}')
+        if total_entradas > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
+            messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {total_entradas} > {cantidad}')
         else:
-            #producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas_nc
+            nc_item, created = NC_Articulo.objects.get_or_create(nc=nc, articulo_comprado = producto_comprado)
+            nc_item.cantidad = cantidad
+            nc_item.save()
             #Cree una variable booleana temporal para quitarlo del seleccionable
             producto_comprado.seleccionado = True
-            messages.success(request,f'Has agregado el artículo con éxito {total_entradas_nc}')
-            producto_comprado.save()
-            nc_item.save()
+            producto_comprado.save(update_fields=['seleccionado'])
+            messages.success(request,f'Has agregado el artículo con éxito {total_entradas}')
+            
     elif action == "remove":
-        producto_comprado.seleccionado = False
+        nc_item = NC_Articulo.objects.filter(nc=nc, articulo_comprado = producto_comprado).first()
+        if nc_item:
+            nc_item.delete()
+            producto_comprado.seleccionado = False
+            #Se borra el elemento de las entradas
+            #Guardado de bases de datos
         
-        #Se borra el elemento de las entradas
-        #Guardado de bases de datos
-        nc_item.delete()
-        producto_comprado.save()
-        messages.success(request,'Has eliminado el artículo con éxito')
-    return JsonResponse('Item was '+action, safe=False)
+            producto_comprado.save(update_fields=['seleccionado'])
+            messages.success(request,'Has eliminado el artículo con éxito')
+    return JsonResponse({'success': True, 'action':action, 'nc_id':nc.id})
 
 
 def convert_excel_matriz_compras_pendientes(articulos_comprados):
