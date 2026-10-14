@@ -592,7 +592,7 @@ def update_oc(request):
 
 #@cache_page(60 * 60)  # Cache la vista durante 1 hora
 @perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
+@tipo_usuario_requerido('comprador')
 def oc_modal(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
