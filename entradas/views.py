@@ -1461,7 +1461,7 @@ def no_conformidad(request, pk):
         if no_conformidad is None:
             messages.error(request, "Debes agregar al menos un artículo a la No Conformidad.")
             return redirect('no-conformidad', pk=compra.id)
-        articulos_nc = NC_Articulo.objects.filter(nc=no_conformidad)
+       
         form2 = NoConformidadForm(request.POST, instance = no_conformidad)
 
         if form2.is_valid():
