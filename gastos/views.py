@@ -868,8 +868,8 @@ def eliminar_factura_gasto(request, pk):
     comentario = request.POST.get('comentario')
     # Obtener el parámetro `next` de la URL
     next_url = request.GET.get('next', None)
-    print('URLLLLLLLLLLLLLLLLLLL2')
-    print(next_url)
+    #print('URLLLLLLLLLLLLLLLLLLL2')
+    #print(next_url)
     # Construir la URL usando reverse
     matriz_url = reverse('matriz-facturas-gasto', args=[gasto.id])
     static_path = settings.STATIC_ROOT
