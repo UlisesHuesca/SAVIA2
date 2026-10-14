@@ -201,19 +201,25 @@ def select_profile(request):
     return render(request, 'dashboard/select_profile.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('proyectos')
 def proyectos(request):
     pk_profile = request.session.get("selected_profile_id")
 
-    usuario = Profile.objects.select_related("distritos").get(id=pk_profile)
-
-    if usuario.tipo.proyectos:
-        if usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
-            proyectos = Proyecto.objects.filter(distrito=usuario.distritos, contrato__tiene_pozos=True)
-        else:
-            proyectos = Proyecto.objects.filter(distrito=usuario.distritos)
-    else:
-        proyectos = Proyecto.objects.none()
-
+    usuario = Profile.objects.select_related("distritos","tipo").get(id=pk_profile)
+    proyectos = Proyecto.objects.filter(distrito=usuario.distritos).annotate(
+        presupuesto_total=Coalesce(
+            Sum('subproyecto__presupuesto'),
+            Value(
+                Decimal('0.00'),
+                output_field=DecimalField(max_digits=18, decimal_places=2)
+            ),
+            output_field=DecimalField(max_digits=18, decimal_places=2)
+        )
+    )
+    
+    if usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+        proyectos = proyectos.filter(contrato__tiene_pozos=True)
+    
 
     myfilter = ProyectoFilter(
         request.GET,
@@ -446,11 +452,18 @@ def asignar_totales_proyecto(
             cero,
         )
 
+        # Total de movimientos
         proyecto.total_ejercido = (
             proyecto.total_salidas
             + proyecto.total_gastos
             + proyecto.total_viaticos
             + proyecto.total_compras_servicios
+        )
+
+        # Saldo prepsupuestal
+        proyecto.saldo_disponible = (
+            proyecto.presupuesto_total
+            - proyecto.total_ejercido
         )
 
     return proyectos
@@ -862,7 +875,200 @@ def asignar_totales(proyectos_queryset, dict_compras, dict_pagos, dict_gastos, d
     return proyectos_queryset
 
 
+def obtener_totales_subproyectos(subproyectos_ids):
+    if not subproyectos_ids:
+        return {}, {}, {}, {}
+
+    # -----------------------------------------
+    # 1. SALIDAS DE ALMACÉN
+    # -----------------------------------------
+    salidas = (
+        Salidas.objects
+        .filter(
+            producto__articulos__orden__subproyecto_id__in=subproyectos_ids,
+            complete=True,
+            cancelada=False,
+        )
+        .values(
+            subproyecto_id=F(
+                "producto__articulos__orden__subproyecto_id"
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F("cantidad") * F("precio"),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    # -----------------------------------------
+    # 2. ENTRADAS DE SERVICIOS
+    # -----------------------------------------
+    compras_servicios = (
+        EntradaArticulo.objects
+        .filter(
+            entrada__oc__req__orden__subproyecto_id__in=subproyectos_ids,
+            entrada__oc__solo_servicios=True,
+            entrada__completo=True,
+            entrada__cancelada=False,
+        )
+        .values(
+            subproyecto_id=F(
+                "entrada__oc__req__orden__subproyecto_id"
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F("cantidad")
+                        * F("articulo_comprado__precio_unitario"),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    # -----------------------------------------
+    # 3. GASTOS
+    # -----------------------------------------
+    gastos = (
+        Articulo_Gasto.objects
+        .filter(
+            subproyecto_id__in=subproyectos_ids
+        )
+        .values("subproyecto_id")
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        (
+                            F("cantidad")
+                            * F("precio_unitario")
+                            * Value(Decimal("1.16"))
+                        )
+                        + Coalesce(
+                            F("otros_impuestos"),
+                            Value(Decimal("0.00")),
+                        )
+                        - Coalesce(
+                            F("impuestos_retenidos"),
+                            Value(Decimal("0.00")),
+                        ),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    # -----------------------------------------
+    # 4. VIÁTICOS
+    # -----------------------------------------
+    viaticos = (
+        Concepto_Viatico.objects
+        .filter(
+            viatico__subproyecto_id__in=subproyectos_ids,
+            completo=True,
+        )
+        .values(
+            subproyecto_id=F(
+                "viatico__subproyecto_id"
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F("cantidad") * F("precio"),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    # -----------------------------------------
+    # CONVERTIR RESULTADOS A DICCIONARIOS
+    # -----------------------------------------
+    dict_salidas = {
+        registro["subproyecto_id"]: registro["total"]
+        for registro in salidas
+    }
+
+    dict_gastos = {
+        registro["subproyecto_id"]: registro["total"]
+        for registro in gastos
+    }
+
+    dict_viaticos = {
+        registro["subproyecto_id"]: registro["total"]
+        for registro in viaticos
+    }
+
+    dict_compras_servicios = {
+        registro["subproyecto_id"]: registro["total"]
+        for registro in compras_servicios
+    }
+
+    return (
+        dict_salidas,
+        dict_gastos,
+        dict_viaticos,
+        dict_compras_servicios,
+    )
+
+
+
+def asignar_totales_subproyecto(
+    subproyectos,
+    dict_salidas,
+    dict_gastos,
+    dict_viaticos,
+    dict_compras_servicios,
+):
+    cero = Decimal("0.00")
+
+    for subproyecto in subproyectos:
+        subproyecto.total_salidas = dict_salidas.get(
+            subproyecto.id, cero
+        )
+        subproyecto.total_gastos = dict_gastos.get(
+            subproyecto.id, cero
+        )
+        subproyecto.total_viaticos = dict_viaticos.get(
+            subproyecto.id, cero
+        )
+        subproyecto.total_compras_servicios = dict_compras_servicios.get(
+            subproyecto.id, cero
+        )
+
+        subproyecto.total_ejercido = (
+            subproyecto.total_salidas
+            + subproyecto.total_gastos
+            + subproyecto.total_viaticos
+            + subproyecto.total_compras_servicios
+        )
+
+        subproyecto.saldo_disponible = (
+            (subproyecto.presupuesto or cero)
+            - subproyecto.total_ejercido
+        )
+
+    return subproyectos
+
 @perfil_seleccionado_required
+@tipo_usuario_requerido('proyectos')
 def subproyectos(request, pk):
     proyecto = Proyecto.objects.get(id=pk)
     subproyectos = Subproyecto.objects.filter(proyecto=proyecto)
@@ -874,6 +1080,30 @@ def subproyectos(request, pk):
     p = Paginator(subproyectos, 50)
     page = request.GET.get('page')
     subproyectos_list = p.get_page(page)
+
+    # IDs únicamente de los subproyectos visibles
+    subproyectos_ids = [
+        subproyecto.id
+        for subproyecto in subproyectos_list.object_list
+    ]
+
+    (
+        dict_salidas,
+        dict_gastos,
+        dict_viaticos,
+        dict_compras_servicios
+    ) = obtener_totales_subproyectos(
+        subproyectos_ids
+    )
+
+     # Asignar movimientos y calcular saldo
+    asignar_totales_subproyecto(
+        subproyectos_list.object_list,
+        dict_salidas,
+        dict_gastos,
+        dict_viaticos,
+        dict_compras_servicios
+    )
 
     context = {
         'proyecto':proyecto,
@@ -943,6 +1173,7 @@ def proveedor_direcciones(request, pk):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('proyectos')
 def proyectos_add(request):
     print('Entrando a proyectos_add')
     #usuario = Profile.objects.get(staff=request.user

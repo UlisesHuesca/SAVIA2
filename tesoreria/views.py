@@ -1019,6 +1019,7 @@ def compras_pagos(request, pk):
     return render(request, 'tesoreria/compras_pagos.html',context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria','finanzas')
 def edit_pago(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)

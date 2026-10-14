@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
+{% load humanize %}
 
 {% block title %}Subproyectos{% endblock %}
 
@@ -126,6 +127,7 @@
                         <th scope="col">Subproyecto</th>
                         <th scope="col">Estado</th>
                         <th scope="col" class="text-end">Presupuesto</th>
+                        <th scope="col">Movimientos</th>
                         <th scope="col">Fecha de creación</th>
                         <th scope="col" class="text-end">Acciones</th>
                     </tr>
@@ -156,8 +158,64 @@
 
                         <td class="text-end text-nowrap">
                             <span class="sv-cell-title">
-                                $ {{ subproyecto.presupuesto|default:0|floatformat:2 }}
+                                $ {{ subproyecto.presupuesto|default:0|floatformat:2| intcomma }}
                             </span>
+                            <div class="sv-cell-subtitle mt-2">
+                                Saldo disponible
+                            </div>
+                             <strong class="{% if subproyecto.saldo_disponible < 0 %}text-danger{% else %}text-success{% endif %}">
+                                $ {{ subproyecto.saldo_disponible|default:0|floatformat:2|intcomma }}
+                            </strong>
+                        </td>
+                        <td>
+                            <div class="sv-project-finance">
+
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">
+                                        Salidas de almacén
+                                    </span>
+                                    <strong>
+                                        $ {{ subproyecto.total_salidas|default:0|floatformat:2|intcomma }}
+                                    </strong>
+                                </div>
+
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">
+                                        Entradas de servicios
+                                    </span>
+                                    <strong>
+                                        $ {{ subproyecto.total_compras_servicios|default:0|floatformat:2|intcomma }}
+                                    </strong>
+                                </div>
+
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">
+                                        Pagos de gastos
+                                    </span>
+                                    <strong>
+                                        $ {{ subproyecto.total_gastos|default:0|floatformat:2|intcomma }}
+                                    </strong>
+                                </div>
+
+                                <div class="sv-project-finance-item">
+                                    <span class="sv-cell-subtitle">
+                                        Pagos de viáticos
+                                    </span>
+                                    <strong>
+                                        $ {{ subproyecto.total_viaticos|default:0|floatformat:2|intcomma }}
+                                    </strong>
+                                </div>
+
+                                <div class="sv-project-finance-item border-top pt-2 mt-2">
+                                    <span class="sv-cell-subtitle fw-semibold">
+                                        Total ejercido
+                                    </span>
+                                    <strong>
+                                        $ {{ subproyecto.total_ejercido|default:0|floatformat:2|intcomma }}
+                                    </strong>
+                                </div>
+
+                            </div>
                         </td>
 
                         <td class="text-nowrap">

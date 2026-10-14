@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
+{% load humanize %}
 
 {% block title %}Proyectos{% endblock %}
 
@@ -224,8 +225,16 @@
 
                         <td class="text-end text-nowrap">
                             <span class="sv-cell-title">
-                                $ {{ proyecto.get_projects_total|default:0|floatformat:2 }}
+                                $ {{ proyecto.presupuesto_total|floatformat:2|intcomma }}
                             </span>
+
+                            <div class="sv-cell-subtitle mt-2">
+                                Saldo disponible
+                            </div>
+
+                            <strong class="{% if proyecto.saldo_disponible < 0 %}text-danger{% else %}text-success{% endif %}">
+                                $ {{ proyecto.saldo_disponible|floatformat:2|intcomma }}
+                            </strong>
                         </td>
 
                         <td>
