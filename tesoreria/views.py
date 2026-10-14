@@ -1167,7 +1167,7 @@ def saldo_a_favor(request, pk):
 
 # Create your views here.
 @perfil_seleccionado_required
-@tipo_usuario_requerido('tesoreria','finanzas')
+@tipo_usuario_requerido('tesoreria','finanzas','compras')
 def matriz_pagos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
