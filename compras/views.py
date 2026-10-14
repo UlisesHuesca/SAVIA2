@@ -1573,7 +1573,7 @@ def cancelar_oc2(request, pk):
 
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('oc_superintendencia', 'oc_gerencia')
+@tipo_usuario_requerido('oc_superintendencia', 'oc_gerencia','comprador')
 def back_oc(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)

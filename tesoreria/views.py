@@ -4364,18 +4364,18 @@ def factura_nueva(request, pk):
 def complemento_nuevo(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    try:
-        if usuario.tipo.nombre == "PROVEEDOR_EXTERNO":
-            next_url = 'matriz-oc-proveedores'
-            print(next_url)
-            complemento = get_object_or_404(Complemento_Pago, id=pk, facturas__oc__proveedor__nombre = usuario.proveedor)
-        else:
+    #try:
+    #    if usuario.tipo.nombre == "PROVEEDOR_EXTERNO":
+    #        next_url = 'matriz-oc-proveedores'
+    #        print(next_url)
+    #        complemento = get_object_or_404(Complemento_Pago, id=pk, facturas__oc__proveedor__nombre = usuario.proveedor)
+    #    else:
             #
-            complemento = get_object_or_404(Complemento_Pago, id=pk)
-            next_url = request.GET.get('next','matriz-compras')
-    except Http404:
-        messages.error(request, "No tienes acceso a esta orden de compra.")
-        return redirect(next_url)
+   #         complemento = get_object_or_404(Complemento_Pago, id=pk)
+   #         next_url = request.GET.get('next','matriz-compras')
+    #except Http404:
+    #    messages.error(request, "No tienes acceso a esta orden de compra.")
+    #    return redirect(next_url)
 
     form = UploadComplementoForm()
 
