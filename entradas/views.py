@@ -1535,6 +1535,8 @@ def no_conformidad(request, pk):
 
     return render(request, 'entradas/no_conformidad.html', context)
 
+@perfil_seleccionado_required
+@transaction.atomic
 def update_no_conformidad(request):
     #Solo se evaluan las cantidades pero no se afectan
     data = json.loads(request.body)

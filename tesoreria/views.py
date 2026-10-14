@@ -4607,7 +4607,7 @@ def factura_eliminar(request, pk):
             factura = get_object_or_404(Facturas, id=pk, oc__proveedor__nombre = perfil.proveedor)
                     
         else:
-            compra = get_object_or_404(Facturas, id=pk)
+            factura = get_object_or_404(Facturas, id=pk)
             next_url = request.GET.get('next', 'matriz-compras')
             try:
                 base_url = reverse(next_url)
@@ -4628,12 +4628,7 @@ def factura_eliminar(request, pk):
     
     # Construir la URL de la matriz de facturas de viáticos
     matriz_url = reverse('matriz-facturas-nomodal', args=[compra.id])
-    if factura is None:
-        messages.warning(
-            request,
-            "La factura ya fue eliminada o no se encuentra disponible."
-        )
-        return redirect('matriz_url')
+  
    
    
 
