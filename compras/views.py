@@ -4877,7 +4877,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
 
     columna_max = len(columns)+2
 
-    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA.', messages_style)
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.1', messages_style)
     if not es_yerod:
         worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
