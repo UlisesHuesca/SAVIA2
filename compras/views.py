@@ -1107,7 +1107,7 @@ def producto_precios_detalle(request, producto_id):
 
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
+@tipo_usuario_requerido('compras','proveedor_externo')
 def productos_oc(request, pk):
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=compra)
