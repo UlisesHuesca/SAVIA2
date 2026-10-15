@@ -230,81 +230,41 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
+
 (function () {
-    const modalElement = document.getElementById('dialog');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const modal = bootstrap.Modal.getOrCreateInstance(
+        document.getElementById('dialog')
+    );
 
-    // Carga exitosa: cerrar modal
-    document.addEventListener('htmx:afterRequest', function (event) {
+    htmx.on('htmx:beforeSwap', function (e) {
+        if (e.detail.target.id !== 'document') return;
 
-        if (
-            event.detail.elt.id === 'complementosForm' &&
-            event.detail.successful &&
-            event.detail.xhr.status === 204
-        ) {
+        // Cerrar cuando la carga fue exitosa
+        if (e.detail.xhr.status === 204) {
             modal.hide();
         }
     });
 
-    // Respuesta con mensajes de Django
-    document.addEventListener('htmx:afterSwap', async function (event) {
+    htmx.on('htmx:afterSwap', function (e) {
+        if (e.detail.target.id !== 'document') return;
 
-        if (event.detail.target.id !== 'document') {
-            return;
-        }
-
-        const contenedor = event.detail.target;
-
-        const mensajes = contenedor.querySelectorAll(
+        const mensajes = e.detail.target.querySelectorAll(
             '.js-complemento-mensaje'
         );
 
-        if (!mensajes.length) {
-            return;
-        }
+        mensajes.forEach(function (mensaje) {
+            const tipo = mensaje.dataset.tipo;
 
-        // Procesar mensajes antes de mostrarlos
-        const listaMensajes = Array.from(mensajes).map(function (mensaje) {
-
-            const tipo = mensaje.dataset.tipo || '';
-
-            return {
-                tipo: tipo.includes('error')
-                    ? 'error'
-                    : tipo.includes('warning')
-                        ? 'warning'
-                        : 'success',
-                texto: mensaje.dataset.texto || ''
-            };
-        });
-
-        // Evitar mostrar los mismos mensajes dos veces
-        contenedor.querySelector('#complementosMensajes')?.remove();
-
-        // Mostrar cada mensaje
-        for (const mensaje of listaMensajes) {
-
-            await Swal.fire({
-                title: mensaje.tipo === 'error'
-                    ? 'Error al registrar complemento'
-                    : mensaje.tipo === 'warning'
-                        ? 'Advertencia'
-                        : 'Complemento registrado',
-
-                text: mensaje.texto,
-                icon: mensaje.tipo,
+            Swal.fire({
+                title: tipo.includes('error') ? 'Error' : 'Advertencia',
+                text: mensaje.dataset.texto,
+                icon: tipo.includes('error') ? 'error' : 'warning',
                 confirmButtonText: 'Entendido',
-                allowOutsideClick: false,
-
-                didOpen: function () {
-                    const swalContainer = Swal.getContainer();
-
-                    if (swalContainer) {
-                        swalContainer.style.zIndex = '2000';
-                    }
+                didOpen: () => {
+                    Swal.getContainer().style.zIndex = '2000';
                 }
             });
-        }
+        });
     });
 })();
 

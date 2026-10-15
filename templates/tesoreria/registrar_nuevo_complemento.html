@@ -40,14 +40,12 @@
 
         <div class="modal-body">
            {% if messages %}
-            <div id="complementosMensajes" class="d-none">
                 {% for message in messages %}
-                    <div class="js-complemento-mensaje"
+                    <div class="js-complemento-mensaje d-none"
                         data-tipo="{{ message.tags }}"
                         data-texto="{{ message }}">
                     </div>
                 {% endfor %}
-            </div>
             {% endif %}
             <div class="row g-3">
                 
