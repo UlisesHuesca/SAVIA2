@@ -376,7 +376,7 @@ def compras_devueltas(request):
     return render(request, 'compras/compras_devueltas.html',context)
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
+@tipo_usuario_requerido('comprador')
 def compra_edicion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()

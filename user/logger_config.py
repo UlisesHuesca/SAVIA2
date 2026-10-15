@@ -1,21 +1,37 @@
 import os
 import logging
 
+
 def get_custom_logger(name):
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BASE_DIR = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )
+
     logger = logging.getLogger(name)
-    logger.setLevel(logging.WARNING)  # Solo loguear warnings y errores
+    logger.setLevel(logging.WARNING)
 
-    # Crear un handler de archivo
-    file_handler = logging.FileHandler(os.path.join(BASE_DIR, 'django.log'))
-    file_handler.setLevel(logging.WARNING)
+    log_path = os.path.join(BASE_DIR, 'django.log')
 
-    # Crear y establecer el formatter
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s: %(message)s')
-    file_handler.setFormatter(formatter)
+    # Evitar agregar varias veces el mismo FileHandler
+    if not any(
+        isinstance(handler, logging.FileHandler)
+        and handler.baseFilename == os.path.abspath(log_path)
+        for handler in logger.handlers
+    ):
+        file_handler = logging.FileHandler(
+            log_path,
+            encoding='utf-8'
+        )
 
-    # Añadir el handler al logger
-    logger.addHandler(file_handler)
-    logger.propagate = False  # Importante para evitar la propagación a loggers de nivel superior
+        file_handler.setLevel(logging.WARNING)
+
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(name)s: %(message)s'
+        )
+
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+    logger.propagate = False
 
     return logger
