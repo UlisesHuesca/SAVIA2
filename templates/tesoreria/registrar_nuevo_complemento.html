@@ -39,7 +39,35 @@
         {% csrf_token %}
 
         <div class="modal-body">
+            {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                    <div class="alert
+                        {% if 'error' in message.tags %}
+                            alert-danger
+                        {% elif 'warning' in message.tags %}
+                            alert-warning
+                        {% else %}
+                            alert-success
+                        {% endif %}
+                        alert-dismissible fade show"
+                        role="alert">
+
+                        <i class="fa-solid fa-circle-exclamation me-2"></i>
+
+                        {{ message }}
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Cerrar">
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             <div class="row g-3">
+                
 
                 <div class="col-12">
                     <section class="sv-card">
@@ -152,19 +180,8 @@
 
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-{% if messages %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    {% for message in messages %}
-    Swal.fire({
-        title: {% if message.tags == "error" %}'Error'{% elif message.tags == "warning" %}'Complementos repetidos'{% else %}'Excelente'{% endif %},
-        text: '{{ message|escapejs }}',
-        icon: {% if message.tags == "error" %}'error'{% elif message.tags == "warning" %}'warning'{% else %}'success'{% endif %}
-    });
-    {% endfor %}
-});
-</script>
-{% endif %}
+
+
 
 <script>
 (function () {

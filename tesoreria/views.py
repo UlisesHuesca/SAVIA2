@@ -4401,8 +4401,9 @@ def factura_nueva(request, pk):
 
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('compras','proveedor_externo')
+@tipo_usuario_requerido('compras','proveedor_externo','tesoreria')
 def complemento_nuevo(request, pk):
+    print('complementos vverga')
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     #try:
@@ -4421,7 +4422,9 @@ def complemento_nuevo(request, pk):
     form = UploadComplementoForm()
 
     if request.method == 'POST' and 'btn_registrar' in request.POST:
+        
         form = UploadComplementoForm(request.POST, request.FILES or None)
+        
         if form.is_valid():
             archivos_pdf = request.FILES.getlist('complemento_pdf')
             archivos_xml = request.FILES.getlist('complemento_xml')
@@ -4509,6 +4512,31 @@ def complemento_nuevo(request, pk):
                                 flat=True
                             )
                         )
+
+                        print("========== VALIDACIÓN COMPLEMENTO ==========")
+                        print("UUID COMPLEMENTO:", uuid_complemento)
+                        print("UUID FACTURAS:", uuids_facturas)
+                        print("FECHAS XML:", fechas_complemento)
+                        print("FECHAS SAVIA:", fechas_pagos_savia)
+
+                        print("TIPOS FECHAS XML:", [
+                            type(fecha) for fecha in fechas_complemento
+                        ])
+
+                        print("TIPOS FECHAS SAVIA:", [
+                            type(fecha) for fecha in fechas_pagos_savia
+                        ])
+
+                        print("PAGOS DE LA OC:", list(
+                            Pago.objects.filter(oc_id__in=oc_ids).values(
+                                'id',
+                                'oc_id',
+                                'hecho',
+                                'eliminado',
+                                'pagado_real'
+                            )
+                        ))
+                        print("===========================================")
 
                         fechas_no_coincidentes = [
                             fecha
