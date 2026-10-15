@@ -8,6 +8,13 @@
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .sv-alert-resumen {
+        white-space: pre-line;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+</style>
 
 {% if messages %}
     {% for message in messages %}
@@ -15,6 +22,9 @@
         Swal.fire({
             title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
             text: "{{ message|escapejs }}",
+            customClass: {
+                htmlContainer: 'sv-alert-resumen'
+            },
             icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
         });
     </script>
@@ -659,7 +669,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="sv-btn sv-btn-danger" onclick="enviarFormulario()">
+                <button type="button"
+                        id="btnConfirmarEliminar"
+                        class="sv-btn sv-btn-danger"
+                        onclick="enviarFormulario()">
                     <i class="fa-solid fa-trash-can"></i>
                     Eliminar
                 </button>
@@ -701,18 +714,34 @@ function setDeleteUrl(facturaId) {
     deleteForm.action = deleteUrl;
 }
 
+let eliminacionEnProceso = false;
+
 function enviarFormulario() {
-    const comentario = document.getElementById("comentario");
-    if (!comentario.value.trim()) {
-        comentario.focus();
-        Swal.fire({
-            title: "Comentario requerido",
-            text: "Escribe un comentario antes de eliminar la factura.",
-            icon: "warning"
-        });
+    const form = document.getElementById('deleteForm');
+    const boton = document.getElementById('btnConfirmarEliminar');
+    const comentario = document.getElementById('comentario');
+
+    // Evitar múltiples envíos
+    if (eliminacionEnProceso) return;
+
+    // Validar comentario obligatorio
+    if (!form.reportValidity()) {
         return;
     }
-    document.getElementById("deleteForm").submit();
+
+    // Bloquear nuevos intentos
+    eliminacionEnProceso = true;
+
+    boton.disabled = true;
+    boton.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"></span>
+        Eliminando...
+    `;
+
+    // Enviar formulario
+    form.submit();
 }
 
 document.addEventListener("DOMContentLoaded", function () {

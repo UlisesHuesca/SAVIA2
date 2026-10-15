@@ -11,9 +11,20 @@
     {% for message in messages %}
     <script>
         Swal.fire({
-            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Facturas repetidas{% else %}Excelente{% endif %}",
+            title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Facturas procesadas{% else %}Excelente{% endif %}",
             text: "{{ message|escapejs }}",
-            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}",
+            customClass: {
+                htmlContainer: 'sv-alert-resumen'
+            },
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#333366'
+        }).then(() => {
+            const modalElement = document.getElementById('dialog');
+
+            if (modalElement) {
+                bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+            }
         });
     </script>
     {% endfor %}
@@ -28,7 +39,7 @@
                     Cargar facturas
                 </h5>
                 <p class="sv-page-subtitle mb-0">
-                    Selecciona los archivos PDF y XML que deseas registrar.
+                    Selecciona los archivos XML que deseas registrar.
                 </p>
             </div>
 
@@ -43,7 +54,7 @@
 
             <div class="modal-body">
                 <div class="row g-4">
-                    <div class="col-12 col-lg-6">
+                    <!--<div class="col-12 col-lg-6">
                         <label for="archivo_pdf" class="form-label fw-semibold">
                             <i class="fa-solid fa-file-pdf text-danger me-2"></i>
                             Facturas PDF
@@ -53,15 +64,22 @@
                         <div class="form-text">
                             Puedes seleccionar varios documentos PDF.
                         </div>
-                    </div>
+                    </div>-->
 
-                    <div class="col-12 col-lg-6">
+                    <div class="col-12">
                         <label for="archivo_xml" class="form-label fw-semibold">
                             <i class="fa-solid fa-file-code text-primary me-2"></i>
                             Facturas XML
                         </label>
-                        <input id="archivo_xml" type="file" name="archivo_xml"
-                               class="form-control" accept="application/xml,text/xml,.xml" multiple>
+
+                        <input id="archivo_xml"
+                            type="file"
+                            name="archivo_xml"
+                            class="form-control form-control-lg"
+                            accept="application/xml,text/xml,.xml"
+                            multiple
+                            required>
+
                         <div class="form-text">
                             Puedes seleccionar varios archivos XML.
                         </div>
@@ -97,29 +115,49 @@
 <script>
 (function () {
     const form = document.querySelector('form[hx-post]');
-    const pdfInput = document.getElementById('archivo_pdf');
+    //const pdfInput = document.getElementById('archivo_pdf');
     const xmlInput = document.getElementById('archivo_xml');
     const summary = document.getElementById('uploadSummary');
     const submitButton = document.getElementById('btnRegistrarFacturas');
 
-    if (!form || !pdfInput || !xmlInput || !summary || !submitButton) return;
+    //if (!form || !pdfInput || !xmlInput || !summary || !submitButton) return;
+    if (!form || !xmlInput || !summary || !submitButton) return;
 
     function updateSummary() {
-        const pdfCount = pdfInput.files.length;
-        const xmlCount = xmlInput.files.length;
-        const total = pdfCount + xmlCount;
+    const xmlCount = xmlInput.files.length;
 
-        summary.querySelector('.sv-empty-title').textContent = total
-            ? `${total} archivo${total === 1 ? '' : 's'} seleccionado${total === 1 ? '' : 's'}`
-            : 'Archivos pendientes de seleccionar';
+    summary.querySelector('.sv-empty-title').textContent = xmlCount
+        ? `${xmlCount} archivo${xmlCount === 1 ? '' : 's'} XML seleccionado${xmlCount === 1 ? '' : 's'}`
+        : 'Archivos pendientes de seleccionar';
 
-        summary.querySelector('.sv-empty-text').textContent = total
-            ? `${pdfCount} PDF · ${xmlCount} XML`
-            : 'Los nombres originales de los archivos se conservarán durante el envío.';
+    summary.querySelector('.sv-empty-text').textContent = xmlCount
+        ? `${xmlCount} factura${xmlCount === 1 ? '' : 's'} pendiente${xmlCount === 1 ? '' : 's'} de validar`
+        : 'Los nombres originales de los archivos se conservarán durante el envío.';
     }
 
-    pdfInput.addEventListener('change', updateSummary);
-    xmlInput.addEventListener('change', updateSummary);
+    xmlInput.addEventListener('change', function () {
+        const archivos = Array.from(this.files);
+
+        const invalidos = archivos.filter(archivo =>
+            !archivo.name.toLowerCase().endsWith('.xml')
+        );
+
+        if (invalidos.length > 0) {
+            Swal.fire({
+                title: 'Archivo no permitido',
+                text: 'Solo se permiten archivos XML. No puedes cargar PDF, Excel, imágenes u otros formatos.',
+                icon: 'warning',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#333366'
+            });
+
+            this.value = '';
+            updateSummary();
+            return;
+        }
+
+        updateSummary();
+    });
 
     form.addEventListener('htmx:beforeRequest', function () {
         submitButton.disabled = true;
