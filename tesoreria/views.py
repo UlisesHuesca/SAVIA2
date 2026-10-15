@@ -1243,6 +1243,47 @@ def matriz_pagos(request):
                     output_field=CharField(),
                 ),
             ).order_by('-pagado_real')
+
+    elif usuario.tipo.comprador:
+        facturas_oc = Facturas.objects.filter(
+            oc=OuterRef('oc'),
+            hecho=True
+        )
+
+        facturas_oc_pendientes = facturas_oc.exclude(autorizada = True)
+
+        pagos = (
+            Pago.objects
+            .filter(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True, hecho=True)
+            .select_related(
+                'oc',
+                'oc__req',
+                'oc__req__orden',
+                'oc__req__orden__distrito',
+            )
+            .annotate(
+            tiene_facturas_oc=Exists(facturas_oc),
+            pendientes_oc=Exists(facturas_oc_pendientes),
+            )
+            .annotate(
+            estado_facturas=Case(
+                        # OC
+                When(
+                oc__isnull=False,
+                tiene_facturas_oc=False,
+                then=Value('sin_facturas')
+                ),
+                When(
+                oc__isnull=False,
+                pendientes_oc=False,
+                then=Value('todas_autorizadas')
+                ),
+                default=Value('pendientes'),
+                output_field=CharField()
+                )
+            )
+            .order_by('-pagado_real')
+        )
     elif usuario.distritos.nombre == "MATRIZ":
         filtro_pagos = (
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |
