@@ -268,7 +268,7 @@ def crear_gasto(request):
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
     #tipos = Tipo_Gasto.objects.all().exclude(id = 6)
     #print('tipos:',tipos)
-    colaboradores = colaborador.filter(distritos = usuario.distritos, )
+    colaboradores = colaborador.filter(distritos = usuario.distritos, st_activo = True).exclude(tipo__nombre = "PROVEEDOR_EXTERNO" )
     error_messages = {}
 
     
