@@ -339,11 +339,15 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'generar_cfdi_gasto' factura.id %}" download
-                                   class="sv-btn sv-btn-info sv-btn-icon"
-                                   title="Descargar PDF renderizado" aria-label="Descargar PDF renderizado">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
+                                <button type="button"
+                                        class="sv-btn sv-btn-info sv-btn-icon"
+                                        data-cfdi-url="{% url 'ver-cfdi-gasto' factura.id %}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cfdiPreviewModal"
+                                        title="Visualizar CFDI"
+                                        aria-label="Visualizar CFDI">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </td>
                             <td>
                                 {% if usuario.tipo.tesoreria %}
@@ -681,6 +685,46 @@
     </div>
 </div>
 
+<div class="modal fade"
+     id="cfdiPreviewModal"
+     tabindex="-1"
+     aria-labelledby="cfdiPreviewModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+                <h2 class="modal-title" id="cfdiPreviewModalLabel">
+                    <i class="fa-solid fa-file-pdf me-2"></i>
+                    Vista previa CFDI
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <iframe id="cfdiPreviewFrame"
+                        title="Vista previa CFDI"
+                        style="width:100%; height:75vh; border:0;">
+                </iframe>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
         crossorigin="anonymous"></script>
@@ -807,6 +851,24 @@ document.addEventListener("DOMContentLoaded", function () {
             URL.revokeObjectURL(objectUrl);
             objectUrl = null;
         }
+    });
+
+    const modal = document.getElementById("cfdiPreviewModal");
+    const frame = document.getElementById("cfdiPreviewFrame");
+
+    if (!modal || !frame) return;
+
+    modal.addEventListener("show.bs.modal", function (event) {
+        const boton = event.relatedTarget;
+        const url = boton?.getAttribute("data-cfdi-url");
+
+        if (url) {
+            frame.src = url;
+        }
+    });
+
+    modal.addEventListener("hidden.bs.modal", function () {
+        frame.removeAttribute("src");
     });
 });
 </script>

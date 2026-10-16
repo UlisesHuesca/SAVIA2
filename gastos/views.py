@@ -3940,6 +3940,22 @@ def generar_cfdi_gasto(request, pk):
         'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
     })
 
+@perfil_seleccionado_required
+@xframe_options_sameorigin
+def ver_cfdi_gasto(request, pk):
+    factura = get_object_or_404(Factura, pk=pk)
+
+    buffer = crear_pdf_cfdi_buffer(factura)
+    buffer.seek(0)
+
+    folio_fiscal = factura.emisor.get('uuid',f'factura_{factura.id}')
+
+    response = FileResponse(buffer,content_type='application/pdf')
+
+    response['Content-Disposition'] = (f'inline; filename="{folio_fiscal}.pdf"')
+
+    return response
+
 def crear_pdf_cfdi_gasto(factura):
     buffer = crear_pdf_cfdi_buffer(factura)
 
