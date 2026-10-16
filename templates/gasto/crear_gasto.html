@@ -376,22 +376,18 @@
             <div class="sv-card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <!--<label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>{% trans "Factura PDF" %}:</strong></label>
-                        <input type="file" name="archivo_pdf" class="form-control" multiple>-->
-                        <div class="sv-input-group input-group mb-3" title="Subir facturas PDF">
-                            <span class="input-group-text" >
-                                <i class="fa-solid fa-file-pdf fa-xl"></i>
-                            </span>
-                            <input type="file" name="archivo_pdf" class="form-control" multiple>
-                        </div>
                         
-                        <!--<label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
-                        <input type="file" name="archivo_xml" class="form-control" multiple>-->
                         <div class="sv-input-group input-group mb-3" title="Subir facturas XML">
                             <span class="input-group-text">
-                                <i class="fa-duotone fa-solid fa-file-xml fa-xl text-secondary"></i>
+                                <i class="fa-solid fa-file-code fa-xl text-primary"></i>
                             </span>
-                            <input type="file" name="archivo_xml" class="form-control" multiple>
+
+                            <input type="file"
+                                name="archivo_xml"
+                                class="form-control form-control-lg"
+                                accept=".xml"
+                                multiple
+                                required>
                         </div>
                     
                         <div class="text-end">
@@ -400,48 +396,133 @@
                             </button>
                         </div>
                 </form>
+                
                 <div class="sv-table-wrap">
-                    <table class="sv-table table table-light table-striped table-hover">
+                    <table class="sv-table table table-light table-striped table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>{% trans "Archivo PDF" %}</th>
-                                <th>{% trans "Archivo XML" %}</th>
-                                <th>{% trans "Fecha de Subida" %}</th>
-                                <th>{% trans "Concepto" %}</th>
-                                <th>{% trans "Total" %}</th>
-                                <th>{% trans "Eliminar" %}</th>
-                                <!-- Agrega más columnas si lo necesitas -->
+                                <th>Conceptos CFDI</th>
+                                <th>Fecha de subida</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {% for factura in facturas %}
                             <tr>
-                                <td>{{ factura.id }}</td>
-                                <td>
-                                    {% if factura.archivo_pdf %}
-                                    <a class="sv-btn sv-btn-icon sv-btn-danger" href="{{factura.archivo_pdf.url}}" download title="Descargar PDF">
-                                        <i class="fa-solid fa-file-pdf"></i>
-                                    </a>
-                                    {% endif %}
-                                </td>
+                                <!-- CONCEPTOS -->
                                 <td>
                                     {% if factura.archivo_xml %}
-                                    <a class="sv-btn sv-btn-icon sv-btn-secondary" href="{{factura.archivo_xml.url}}" download title="Descargar XML">
-                                        <i class="fa-solid fa-file-code"></i>
-                                    </a>
+                                        {% if factura.emisor.resultados %}
+                                            <div class="d-flex flex-column gap-2">
+                                                {% for concepto in factura.emisor.resultados %}
+                                                    <div class="d-flex align-items-start gap-2">
+
+                                                        <span class="sv-badge sv-badge-primary">
+                                                            {{ forloop.counter }}
+                                                        </span>
+
+                                                        <div>
+                                                            <span class="sv-cell-title d-block">
+                                                                {{ concepto.descripcion|default:"Sin descripción" }}
+                                                            </span>
+
+                                                            <span class="sv-cell-subtitle d-block">
+                                                                Clave SAT:
+                                                                {{ concepto.clave|default:"—" }}
+                                                                {% if concepto.cantidad %}
+                                                                    · Cant. {{ concepto.cantidad|floatformat:2 }}
+                                                                {% endif %}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="sv-cell-subtitle">
+                                                XML sin conceptos
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="sv-cell-subtitle">
+                                            Sin XML
+                                        </span>
                                     {% endif %}
                                 </td>
-                                <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
-                                <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
-                                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% else %} {{factura.monto|floatformat:2}} {% endif %}</td>
-                                <td scope="col"><a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'eliminar-factura' factura.id %}" aria-label="Eliminar factura"><i class="fa-solid fa-trash-can"></i></a></td>
+
+                                <!-- FECHA -->
+                                <td>
+                                    <span class="sv-cell-title d-block">
+                                        {{ factura.fecha_subida|date:"d/m/Y" }}
+                                    </span>
+
+                                    <span class="sv-cell-subtitle">
+                                        {{ factura.fecha_subida|date:"H:i" }}
+                                    </span>
+                                </td>
+
+                                <!-- TOTAL -->
+                                <td class="text-end factura-total">
+                                    {% if factura.archivo_xml %}
+                                        <strong>
+                                            ${{ factura.emisor.total|floatformat:2 }}
+                                        </strong>
+                                    {% else %}
+                                        <strong>
+                                            ${{ factura.monto|floatformat:2 }}
+                                        </strong>
+                                    {% endif %}
+                                </td>
+
+                                <!-- ACCIONES -->
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center gap-1">
+
+                                        {% if factura.archivo_xml %}
+                                            <!-- PDF RENDERIZADO -->
+                                            <a href="{% url 'generar_cfdi_gasto' factura.id %}"
+                                            class="sv-btn sv-btn-info sv-btn-icon"
+                                            title="Descargar PDF renderizado"
+                                            aria-label="Descargar PDF renderizado">
+                                                <i class="fa-solid fa-file-pdf"></i>
+                                            </a>
+
+                                            <!-- XML ORIGINAL -->
+                                            <a href="{{ factura.archivo_xml.url }}"
+                                            download
+                                            class="sv-btn sv-btn-secondary sv-btn-icon"
+                                            title="Descargar XML"
+                                            aria-label="Descargar XML">
+                                                <i class="fa-solid fa-file-code"></i>
+                                            </a>
+                                        {% endif %}
+
+                                        <!-- ELIMINAR -->
+                                        <a href="{% url 'eliminar-factura' factura.id %}"
+                                        class="sv-btn sv-btn-danger sv-btn-icon"
+                                        title="Eliminar factura"
+                                        aria-label="Eliminar factura">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <span class="sv-cell-subtitle">
+                                        No hay facturas registradas.
+                                    </span>
+                                </td>
                             </tr>
                             {% endfor %}
-                        
                         </tbody>
                     </table>
                 </div>
+
                 <table class="sv-table table table-light table-striped">
                     <thead>
                     <tr>
