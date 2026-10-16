@@ -32,6 +32,8 @@
 {% endif %}
 
 <main class="sv-page sv-page-with-navbar">
+    <form method="POST" id="facturasGastoForm">
+    {% csrf_token %}
     <header class="sv-page-header">
         <div>
             <p class="sv-page-eyebrow">Control documental</p>
@@ -58,6 +60,18 @@
             </span>
             {% endif %}
         </div>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-receipt"></i>
+                Gasto G{{ gasto.folio }}
+            </span>
+
+            <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Cerrar
+            </a>
+        </div>
+        
     </header>
 
     <section class="sv-card mb-4">
@@ -189,8 +203,7 @@
         </div>
     </section>
 
-    <form method="POST">
-        {% csrf_token %}
+   
 
         <section class="sv-card mb-4">
             <div class="sv-card-header">
@@ -438,14 +451,10 @@
                         Guardar estatus
                     </button>
                     {% endif %}
-                    <button type="submit" name="salir" class="sv-btn sv-btn-outline">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        Cerrar
-                    </button>
                 </div>
             </div>
         </section>
-    </form>
+    
 
     <section class="sv-card mb-4">
         <div class="sv-card-header">
@@ -621,6 +630,7 @@
             </table>
         </div>
     </section>
+    </form>
 </main>
 
 {% include 'partials/modal_host.html' %}

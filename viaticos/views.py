@@ -1367,8 +1367,8 @@ def matriz_facturas_viaticos(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
-        elif 'salir' in request.POST:
-            return redirect(next_url)
+        #elif 'salir' in request.POST:
+        #    return redirect(next_url)
         elif 'btn_deletevalerosa' in request.POST:
             print('borrando_vale')
             vale_id = request.POST.get('vale_id')

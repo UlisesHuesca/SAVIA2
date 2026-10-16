@@ -715,7 +715,6 @@ def agregar_vale_rosa(request, pk):
 
 
 @perfil_seleccionado_required
-
 def vale_azul_abono(request, pk):
     """
     pk = id del ValeRosa (color=azul)
@@ -2531,8 +2530,8 @@ def matriz_facturas_gasto(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
-        elif 'salir' in request.POST:
-            return redirect(next_url)
+        #elif 'salir' in request.POST:
+        #    return redirect(next_url)
         elif 'btn_deletevalerosa' in request.POST:
             print('borrando_vale')
             vale_id = request.POST.get('vale_id')

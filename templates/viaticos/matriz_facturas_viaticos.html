@@ -6,6 +6,8 @@
 {% block title %}Facturas de viático{% endblock %}
 {% block content %}
 <main class="sv-page sv-page-with-navbar">
+    <form method="POST" id="facturasViaticoForm">
+    {% csrf_token %}
     <header class="sv-page-header">
         <div>
             <h1 class="sv-page-title">
@@ -14,9 +16,17 @@
             </h1>
             <p class="sv-page-subtitle">Revisa conceptos, comprobantes y vales asociados al viático.</p>
         </div>
-        <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
-            <i class="fa-solid fa-arrow-left"></i>Regresar
-        </a>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-plane"></i>
+                Viático {{ viatico.folio }}
+            </span>
+
+            <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Cerrar
+            </a>
+        </div>
     </header>
 
     <section class="sv-card mb-3">
@@ -48,8 +58,7 @@
         </div>
     </section>
 
-    <form method="POST">
-        {% csrf_token %}
+   
         <section class="sv-card mb-3">
             <div class="sv-card-header">
                 <div>
@@ -143,7 +152,14 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="8"><div class="sv-empty-state"><i class="fa-solid fa-receipt"></i><h3>No hay facturas registradas</h3><p>Usa el botón “Subir facturas” para agregar documentos.</p></div></td></tr>
+                            
+                        <tr>
+                            <td colspan="11" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">No hay facturas cargadas</span>
+                                <span class="sv-empty-text">Carga una factura para iniciar la validación.</span>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -196,13 +212,7 @@
                         </button>
                         {% endif %}
 
-                        <button type="submit"
-                                name="salir"
-                                class="sv-btn sv-btn-outline">
-
-                            <i class="fa-solid fa-arrow-left"></i>
-                            Cerrar
-                        </button>
+                       
                     </div>
                 </div>
             </div>
@@ -233,13 +243,12 @@
                             {% endif %}
                         </td>
                         <td><div class="d-flex flex-wrap gap-2">
-                            <form method="POST">
-                                {% csrf_token %}
+                         
                                 <input type="hidden" name ="vale_id" value="{{vale.id}}">
                                 <button type="submit" name="btn_deletevalerosa" class="sv-btn sv-btn-danger sv-btn-icon" onclick="return confirm('¿Eliminar vale rosa?')" title="Eliminar">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
-                            </form>
+                           
                             <a href="{% url 'descargar_vale_rosa_pdf' vale.id|unlocalize vale.color %}" class="sv-btn sv-btn-outline sv-btn-icon" target="_blank" title="Descargar vale">
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
@@ -324,7 +333,9 @@
                    
                     {% endfor %}
                 </tbody>
-            </table></div></section></div></div>
+            </table>
+        </div>
+    </section></div></div>
 
         
     </form>
