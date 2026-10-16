@@ -376,18 +376,22 @@
             <div class="sv-card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
+                        <!--<label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>{% trans "Factura PDF" %}:</strong></label>
+                        <input type="file" name="archivo_pdf" class="form-control" multiple>-->
+                        <div class="sv-input-group input-group mb-3" title="Subir facturas PDF">
+                            <span class="input-group-text" >
+                                <i class="fa-solid fa-file-pdf fa-xl"></i>
+                            </span>
+                            <input type="file" name="archivo_pdf" class="form-control" multiple>
+                        </div>
                         
+                        <!--<label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
+                        <input type="file" name="archivo_xml" class="form-control" multiple>-->
                         <div class="sv-input-group input-group mb-3" title="Subir facturas XML">
                             <span class="input-group-text">
-                                <i class="fa-solid fa-file-code fa-xl text-primary"></i>
+                                <i class="fa-duotone fa-solid fa-file-xml fa-xl text-secondary"></i>
                             </span>
-
-                            <input type="file"
-                                name="archivo_xml"
-                                class="form-control form-control-lg"
-                                accept=".xml"
-                                multiple
-                                required>
+                            <input type="file" name="archivo_xml" class="form-control" multiple>
                         </div>
                     
                         <div class="text-end">
@@ -396,136 +400,48 @@
                             </button>
                         </div>
                 </form>
-                
                 <div class="sv-table-wrap">
-                    <table class="sv-table table table-light table-striped table-hover align-middle">
+                    <table class="sv-table table table-light table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Conceptos CFDI</th>
-                                <th>Fecha de subida</th>
-                                <th class="text-end">Total</th>
-                                <th class="text-center">Acciones</th>
+                                <th>#</th>
+                                <th>{% trans "Archivo PDF" %}</th>
+                                <th>{% trans "Archivo XML" %}</th>
+                                <th>{% trans "Fecha de Subida" %}</th>
+                                <th>{% trans "Concepto" %}</th>
+                                <th>{% trans "Total" %}</th>
+                                <th>{% trans "Eliminar" %}</th>
+                                <!-- Agrega más columnas si lo necesitas -->
                             </tr>
                         </thead>
-
                         <tbody>
                             {% for factura in facturas %}
                             <tr>
-                                <!-- CONCEPTOS -->
+                                <td>{{ factura.id }}</td>
                                 <td>
-                                    {% if factura.archivo_xml %}
-                                        {% if factura.emisor.resultados %}
-                                            <div class="d-flex flex-column gap-2">
-                                                {% for concepto in factura.emisor.resultados %}
-                                                    <div class="d-flex align-items-start gap-2">
-
-                                                        <span class="sv-badge sv-badge-primary">
-                                                            {{ forloop.counter }}
-                                                        </span>
-
-                                                        <div>
-                                                            <span class="sv-cell-title d-block">
-                                                                {{ concepto.descripcion|default:"Sin descripción" }}
-                                                            </span>
-
-                                                            <span class="sv-cell-subtitle d-block">
-                                                                Clave SAT:
-                                                                {{ concepto.clave|default:"—" }}
-                                                                {% if concepto.cantidad %}
-                                                                    · Cant. {{ concepto.cantidad|floatformat:2 }}
-                                                                {% endif %}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        {% else %}
-                                            <span class="sv-cell-subtitle">
-                                                XML sin conceptos
-                                            </span>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="sv-cell-subtitle">
-                                            Sin XML
-                                        </span>
+                                    {% if factura.archivo_pdf %}
+                                    <a class="sv-btn sv-btn-icon sv-btn-danger" href="{{factura.archivo_pdf.url}}" download title="Descargar PDF">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </a>
                                     {% endif %}
                                 </td>
-
-                                <!-- FECHA -->
                                 <td>
-                                    <span class="sv-cell-title d-block">
-                                        {{ factura.fecha_subida|date:"d/m/Y" }}
-                                    </span>
-
-                                    <span class="sv-cell-subtitle">
-                                        {{ factura.fecha_subida|date:"H:i" }}
-                                    </span>
-                                </td>
-
-                                <!-- TOTAL -->
-                                <td class="text-end factura-total">
                                     {% if factura.archivo_xml %}
-                                        <strong>
-                                            ${{ factura.emisor.total|floatformat:2 }}
-                                        </strong>
-                                    {% else %}
-                                        <strong>
-                                            ${{ factura.monto|floatformat:2 }}
-                                        </strong>
+                                    <a class="sv-btn sv-btn-icon sv-btn-secondary" href="{{factura.archivo_xml.url}}" download title="Descargar XML">
+                                        <i class="fa-solid fa-file-code"></i>
+                                    </a>
                                     {% endif %}
                                 </td>
-
-                                <!-- ACCIONES -->
-                                <td>
-                                    <div class="d-flex align-items-center justify-content-center gap-1">
-
-                                        {% if factura.archivo_xml %}
-                                            <!-- PDF RENDERIZADO -->
-                                            <button type="button"
-                                                    class="sv-btn sv-btn-info sv-btn-icon"
-                                                    data-cfdi-url="{% url 'ver-cfdi-gasto' factura.id %}"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#cfdiPreviewModal"
-                                                    title="Visualizar CFDI"
-                                                    aria-label="Visualizar CFDI">
-                                                <i class="fa-solid fa-eye"></i>
-                                            </button>
-
-                                            <!-- XML ORIGINAL -->
-                                            <a href="{{ factura.archivo_xml.url }}"
-                                            download
-                                            class="sv-btn sv-btn-secondary sv-btn-icon"
-                                            title="Descargar XML"
-                                            aria-label="Descargar XML">
-                                                <i class="fa-solid fa-file-code"></i>
-                                            </a>
-                                        {% endif %}
-
-                                        <!-- ELIMINAR -->
-                                        <a href="{% url 'eliminar-factura' factura.id %}"
-                                        class="sv-btn sv-btn-danger sv-btn-icon"
-                                        title="Eliminar factura"
-                                        aria-label="Eliminar factura">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </a>
-
-                                    </div>
-                                </td>
-                            </tr>
-
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center py-4">
-                                    <span class="sv-cell-subtitle">
-                                        No hay facturas registradas.
-                                    </span>
-                                </td>
+                                <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
+                                <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
+                                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% else %} {{factura.monto|floatformat:2}} {% endif %}</td>
+                                <td scope="col"><a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'eliminar-factura' factura.id %}" aria-label="Eliminar factura"><i class="fa-solid fa-trash-can"></i></a></td>
                             </tr>
                             {% endfor %}
+                        
                         </tbody>
                     </table>
                 </div>
-
                 <table class="sv-table table table-light table-striped">
                     <thead>
                     <tr>
@@ -846,46 +762,6 @@
 </div>
 </main>
 
-<div class="modal fade"
-     id="cfdiPreviewModal"
-     tabindex="-1"
-     aria-labelledby="cfdiPreviewModalLabel"
-     aria-hidden="true">
-
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content sv-modal">
-
-            <div class="modal-header">
-                <h2 class="modal-title" id="cfdiPreviewModalLabel">
-                    <i class="fa-solid fa-file-pdf me-2"></i>
-                    Vista previa CFDI
-                </h2>
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-            </div>
-
-            <div class="modal-body p-0">
-                <iframe id="cfdiPreviewFrame"
-                        title="Vista previa CFDI"
-                        style="width:100%; height:75vh; border:0;">
-                </iframe>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button"
-                        class="sv-btn sv-btn-outline"
-                        data-bs-dismiss="modal">
-                    Cerrar
-                </button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
 <!--AJAX CALL-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -896,8 +772,18 @@ $(document).ready(function(){
 });
 
 
-    
+    /*function sumarTotales() {
+        let total = 0;
+        const totales = document.querySelectorAll('.factura-total');
+        
+        totales.forEach((element) => {
+            const value = parseFloat(element.textContent.trim()) || 0;
+            total += value;
+        });
 
+        // Mostrar el total en el elemento correspondiente
+        document.getElementById('total-sum').textContent = total.toFixed(2); // Puedes ajustar el número de decimales según necesites
+    }*/
     function sumarTotales() {
     let totalFacturas = 0;
     let totalVales = 0;
@@ -1010,24 +896,6 @@ $(document).ready(function(){
                 btnAgregar.disabled = true;
             }, 50);
         });
-        const modal = document.getElementById("cfdiPreviewModal");
-        const frame = document.getElementById("cfdiPreviewFrame");
-
-        if (!modal || !frame) return;
-
-        modal.addEventListener("show.bs.modal", function (event) {
-            const boton = event.relatedTarget;
-            const url = boton?.getAttribute("data-cfdi-url");
-
-            if (url) {
-                frame.src = url;
-            }
-        });
-
-        modal.addEventListener("hidden.bs.modal", function () {
-            frame.removeAttribute("src");
-        });
-
     });
     
     function f_calculo_previo(){
