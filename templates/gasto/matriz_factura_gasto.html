@@ -102,13 +102,13 @@
                                     </button>
 
                                     {% if usuario.tipo.tesoreria %}
-                                    <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                    <!--<button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
                                             data-bs-toggle="modal" data-bs-target="#dialog"
                                             hx-target="#document"
                                             hx-get="{% url 'edit-comprobante-pago' pago.id %}"
                                             title="Cambiar comprobante" aria-label="Cambiar comprobante">
                                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    </button>
+                                    </button>-->
                                     {% endif %}
                                 </div>
                             </td>
@@ -194,14 +194,44 @@
 
         <section class="sv-card mb-4">
             <div class="sv-card-header">
-                <h2 class="sv-card-title">
-                    <i class="fa-solid fa-file-circle-check"></i>
-                    Documentación fiscal
-                </h2>
-                <button type="submit" name="btn_descargar_todo" class="sv-btn sv-btn-primary">
-                    <i class="fa-solid fa-file-zipper"></i>
-                    Descargar facturas
-                </button>
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        Documentación fiscal
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+                        Facturas y representaciones generadas desde los archivos XML.
+                    </p>
+                </div>
+
+                <div class="sv-actions">
+                    <button type="submit"
+                            name="btn_descargar_todo"
+                            class="sv-btn sv-btn-primary">
+
+                        <i class="fa-solid fa-file-zipper"></i>
+                        Descargar facturas
+                    </button>
+
+                    {% if gasto.cerrar_facturacion %}
+                    <span class="sv-badge sv-badge-warning">
+                        <i class="fa-solid fa-lock"></i>
+                        Facturación cerrada
+                    </span>
+                    {% else %}
+                    <button type="button"
+                            class="sv-btn sv-btn-success"
+                            data-bs-toggle="modal"
+                            data-bs-target="#dialog"
+                            hx-target="#document"
+                            hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Subir facturas
+                    </button>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="sv-table-wrap">
@@ -396,36 +426,10 @@
                         <strong id="totalXml">$0.00</strong>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
-                        {% if gasto.cerrar_facturacion %}
-                        <span class="sv-badge sv-badge-warning">
-                            <i class="fa-solid fa-lock"></i>
-                            No se permiten nuevas facturas
-                        </span>
-                        {% else %}
-                        <button type="button" class="sv-btn sv-btn-success"
-                                data-bs-toggle="modal" data-bs-target="#dialog"
-                                hx-target="#document"
-                                hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            Subir facturas
-                        </button>
-                        {% endif %}
-                    </div>
+                    
                 </div>
 
-                {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
-                <div class="form-check form-switch mt-3">
-                    {{ form.facturas_completas|add_class:"form-check-input" }}
-                    <label for="{{ form.facturas_completas.id_for_label }}" class="form-check-label">
-                        <strong>Facturas completas</strong>
-                        {% if gasto.verificacion_facturas %}
-                        · Validado por {{ gasto.verificacion_facturas.staff.staff.first_name }}
-                        {{ gasto.verificacion_facturas.staff.staff.last_name }}
-                        {% endif %}
-                    </label>
-                </div>
-                {% endif %}
+               
 
                 <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                     {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "RH" %}
@@ -619,10 +623,7 @@
     </section>
 </main>
 
-<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
-         role="document" hx-target="this"></div>
-</div>
+{% include 'partials/modal_host.html' %}
 
 <div class="modal fade" id="pdfPreviewModal" tabindex="-1"
      aria-labelledby="pdfPreviewTitle" aria-hidden="true">
@@ -789,21 +790,6 @@ function enviarFormulario() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    const dialogElement = document.getElementById("dialog");
-    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
-
-    dialogElement.addEventListener("hidden.bs.modal", function () {
-        window.location.reload();
-    });
-
-    htmx.on("htmx:afterSwap", function (event) {
-        if (!event.detail.target || event.detail.target.id !== "document") return;
-        const response = event.detail.xhr.responseText || "";
-        if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
-            dialog.hide();
-        }
-    });
-
     const previewModal = document.getElementById("pdfPreviewModal");
     const previewTitle = document.getElementById("pdfPreviewTitle");
     const previewFrame = document.getElementById("pdfPreviewFrame");

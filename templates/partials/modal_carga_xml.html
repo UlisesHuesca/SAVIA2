@@ -1,0 +1,332 @@
+{% load static %}
+
+<div class="modal-content sv-modal">
+    <form method="POST"
+          enctype="multipart/form-data"
+          hx-post="{{ request.path }}"
+          hx-encoding="multipart/form-data"
+          hx-target="#document"
+          hx-swap="innerHTML"
+          hx-indicator="#facturasLoading"
+          hx-disabled-elt="find button[type='submit']"
+          class="d-flex flex-column flex-grow-1 js-facturas-xml-form"
+          style="min-height: 0;">
+
+        {% csrf_token %}
+
+        <div class="modal-header">
+            <div>
+                <p class="sv-page-eyebrow mb-1">
+                    Documentación fiscal
+                </p>
+
+                <h2 class="modal-title sv-card-title">
+                    <i class="fa-solid fa-file-code"></i>
+                    {{ titulo|default:"Cargar facturas" }}
+                </h2>
+
+                <p class="sv-card-subtitle mb-0">
+                    {{ subtitulo|default:"Selecciona uno o varios archivos XML para registrarlos." }}
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+            </button>
+        </div>
+
+        <div class="modal-body overflow-auto">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}"
+                     role="alert">
+
+                    <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %} me-2"></i>
+
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row g-3">
+
+                <!-- Archivos XML -->
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+                            <label for="archivo_xml"
+                                   class="form-label fw-semibold">
+
+                                <i class="fa-solid fa-file-code text-primary me-2"></i>
+                                Facturas XML
+                            </label>
+
+                            <input type="file"
+                                   id="archivo_xml"
+                                   name="archivo_xml"
+                                   class="form-control form-control-lg js-facturas-xml-input"
+                                   accept=".xml,application/xml,text/xml"
+                                   multiple
+                                   required>
+
+                            <span class="sv-cell-subtitle d-block mt-2">
+                                Puedes seleccionar uno o varios CFDI en formato XML.
+                            </span>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Comentario opcional para compras -->
+                {% if mostrar_comentario %}
+                <div class="col-12">
+                    <section class="sv-card">
+                        <div class="sv-card-body">
+                            <div class="d-flex justify-content-between align-items-center gap-3">
+                                <label for="comentario"
+                                       class="form-label fw-semibold mb-0">
+                                    Comentario
+                                </label>
+
+                                <span class="sv-cell-subtitle js-comentario-contador">
+                                    0 / 100
+                                </span>
+                            </div>
+
+                            <textarea id="comentario"
+                                      name="comentario"
+                                      class="form-control js-comentario-factura mt-2"
+                                      rows="3"
+                                      maxlength="100"
+                                      placeholder="Escribe un comentario opcional"></textarea>
+                        </div>
+                    </section>
+                </div>
+                {% endif %}
+
+                <!-- Resumen compacto de archivos -->
+                <div class="col-12">
+                    <section class="sv-card js-upload-summary"
+                             aria-live="polite">
+
+                        <div class="sv-card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="sv-page-title-icon flex-shrink-0">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </span>
+
+                                <div class="overflow-hidden">
+                                    <span class="sv-empty-title d-block">
+                                        Sin archivos seleccionados
+                                    </span>
+
+                                    <span class="sv-empty-text d-block text-truncate">
+                                        Selecciona al menos una factura XML.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Indicador HTMX -->
+                <div class="col-12">
+                    <div id="facturasLoading"
+                         class="htmx-indicator alert alert-info mb-0"
+                         role="status">
+
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="spinner-border spinner-border-sm"
+                                  aria-hidden="true">
+                            </span>
+
+                            <div>
+                                <strong>Procesando facturas</strong>
+
+                                <p class="sv-cell-subtitle mb-0">
+                                    No cierres esta ventana mientras se validan los XML.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="modal-footer flex-shrink-0">
+            <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 w-100">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        name="btn_registrar"
+                        value="1"
+                        class="sv-btn sv-btn-success js-registrar-facturas">
+
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Registrar facturas
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    const documentContainer = document.getElementById('document');
+    const root = documentContainer || document;
+
+    const form = root.querySelector('.js-facturas-xml-form');
+
+    if (!form || form.dataset.initialized === 'true') {
+        return;
+    }
+
+    form.dataset.initialized = 'true';
+
+    const input = form.querySelector('.js-facturas-xml-input');
+    const summary = form.querySelector('.js-upload-summary');
+    const summaryTitle = summary
+        ? summary.querySelector('.sv-empty-title')
+        : null;
+    const summaryText = summary
+        ? summary.querySelector('.sv-empty-text')
+        : null;
+
+    const submitButton = form.querySelector(
+        '.js-registrar-facturas'
+    );
+
+    const comment = form.querySelector(
+        '.js-comentario-factura'
+    );
+
+    const commentCounter = form.querySelector(
+        '.js-comentario-contador'
+    );
+
+    function showWarning(title, message) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: 'warning',
+                confirmButtonText: 'Entendido'
+            });
+
+            return;
+        }
+
+        window.alert(message);
+    }
+
+    function updateSummary() {
+        const files = input
+            ? Array.from(input.files)
+            : [];
+
+        const count = files.length;
+
+        if (!summaryTitle || !summaryText) {
+            return;
+        }
+
+        if (!count) {
+            summaryTitle.textContent =
+                'Sin archivos seleccionados';
+
+            summaryText.textContent =
+                'Selecciona al menos una factura XML.';
+
+            summaryText.title = '';
+            return;
+        }
+
+        summaryTitle.textContent =
+            count === 1
+                ? '1 XML seleccionado'
+                : count + ' XML seleccionados';
+
+        const fileNames = files.map(function (file) {
+            return file.name;
+        }).join(', ');
+
+        summaryText.textContent = fileNames;
+        summaryText.title = fileNames;
+    }
+
+    input?.addEventListener('change', function () {
+        const invalidFiles = Array.from(input.files).filter(
+            function (file) {
+                return !file.name.toLowerCase().endsWith('.xml');
+            }
+        );
+
+        if (invalidFiles.length) {
+            input.value = '';
+            updateSummary();
+
+            showWarning(
+                'Archivo no permitido',
+                'Solo puedes cargar archivos XML.'
+            );
+
+            return;
+        }
+
+        updateSummary();
+    });
+
+    comment?.addEventListener('input', function () {
+        if (commentCounter) {
+            commentCounter.textContent =
+                comment.value.length + ' / 100';
+        }
+    });
+
+    form.addEventListener('submit', function (event) {
+        if (!input || input.files.length === 0) {
+            event.preventDefault();
+            input?.focus();
+
+            showWarning(
+                'Factura requerida',
+                'Selecciona al menos un archivo XML.'
+            );
+        }
+    });
+
+    form.addEventListener('htmx:beforeRequest', function () {
+        if (!submitButton) {
+            return;
+        }
+
+        submitButton.innerHTML = `
+            <span class="spinner-border spinner-border-sm"
+                  aria-hidden="true">
+            </span>
+            Procesando…
+        `;
+    });
+
+    form.addEventListener('htmx:afterRequest', function (event) {
+        if (event.detail.successful || !submitButton) {
+            return;
+        }
+
+        submitButton.disabled = false;
+
+        submitButton.innerHTML = `
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            Registrar facturas
+        `;
+    });
+})();
+</script>

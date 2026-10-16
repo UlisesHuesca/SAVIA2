@@ -53,13 +53,40 @@
         <section class="sv-card mb-3">
             <div class="sv-card-header">
                 <div>
-                    <h2 class="sv-card-title"><i class="fa-solid fa-receipt"></i>Facturas y comprobantes</h2>
-                    <span class="sv-cell-subtitle">Información fiscal extraída de los archivos XML.</span>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        Documentación fiscal
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+                        Facturas y representaciones generadas desde los archivos XML.
+                    </p>
                 </div>
-                <button type="submit" name="btn_descargar_todo" class="sv-btn sv-btn-primary">
-                    <i class="fas fa-file-archive"></i>Descargar facturas
-                </button>
+
+                <div class="sv-actions">
+                    <button type="submit"
+                            name="btn_descargar_todo"
+                            class="sv-btn sv-btn-primary">
+
+                        <i class="fa-solid fa-file-zipper"></i>
+                        Descargar facturas
+                    </button>
+
+                    <button type="button"
+                            class="sv-btn sv-btn-success"
+                            data-bs-toggle="modal"
+                            data-bs-target="#dialog"
+                            hx-target="#document"
+                            hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Subir facturas
+                    </button>
+                </div>
             </div>
+
+
+
             <div class="sv-table-wrap">
                 <table class="sv-table">
                     <thead>
@@ -142,6 +169,44 @@
                     </div>
                 </div>
             </div>
+            <div class="sv-card-footer">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+
+                    {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
+                    <div class="form-check form-switch">
+                        {{ form.facturas_completas|add_class:"form-check-input" }}
+
+                        <label for="{{ form.facturas_completas.id_for_label }}"
+                            class="form-check-label fw-semibold">
+                            Facturas completas
+                        </label>
+                    </div>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+
+                    <div class="sv-actions">
+                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin" %}
+                        <button type="submit"
+                                name="btn_factura_completa"
+                                class="sv-btn sv-btn-success">
+
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Guardar estado
+                        </button>
+                        {% endif %}
+
+                        <button type="submit"
+                                name="salir"
+                                class="sv-btn sv-btn-outline">
+
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
         <div class="row g-3 mb-3">
@@ -261,33 +326,10 @@
                 </tbody>
             </table></div></section></div></div>
 
-        <section class="sv-card">
-            <div class="sv-card-body">
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
-                    <div class="form-check form-switch">
-                        <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
-                        {{ form.facturas_completas|add_class:"form-check-input" }}
-                    </div>
-                    {% endif %}
-                    <div class="d-flex flex-wrap justify-content-end gap-2 ms-auto">
-                            <a class="sv-btn sv-btn-primary" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}"><i class="fa-solid fa-cloud-arrow-up"></i>Subir facturas</a>
-                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <button type="submit" name="btn_factura_completa" class="sv-btn sv-btn-success"><i class="fa-solid fa-floppy-disk"></i>Guardar estado</button>
-                        {% endif %}
-                            <button type="submit" name="salir" class="sv-btn sv-btn-outline"><i class="fa-solid fa-xmark"></i>Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        
     </form>
 </main>
-<!--Este es el modal 1 facturas-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
+{% include 'partials/modal_host.html' %}
 
 <div class="modal fade" id="documentPdfModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -356,14 +398,6 @@ if (documentPdfModal && documentPdfFrame) {
         documentPdfFrame.src = 'about:blank';
     });
 }
-
-var myModal = document.getElementById('dialog')
-myModal.addEventListener('hidden.bs.modal', function (event) {
-      location.reload();
-    })
-
-
-
 
 // Funciones para la primera tabla
 var xml = document.getElementsByClassName('total-xml');
@@ -549,26 +583,6 @@ function enviarFormulario() {
         document.getElementById('deleteForm').submit();  
     }
 }
-;(function() {
-    const modalElement = document.getElementById('dialog');
-    const modal = new bootstrap.Modal(modalElement);
-
-    htmx.on('htmx:afterSwap', (e) => {
-        if (e.detail.target.id === "document") {
-            const response = e.detail.xhr.responseText;
-            if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
-                modal.hide();
-                // Si quieres, puedes recargar también aquí:
-                setTimeout(() => location.reload(), 500); // Recarga medio segundo después
-            }
-        }
-    });
-})();
-
-
-
-
-
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');
 confirmModal.addEventListener('hidden.bs.modal', function (event) {

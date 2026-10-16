@@ -1,0 +1,58 @@
+<div class="modal fade"
+     id="dialog"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+         id="document"
+         role="document"
+         hx-target="this">
+    </div>
+</div>
+
+<script>
+(function () {
+    function initializeInvoiceDialog() {
+        const modalElement = document.getElementById('dialog');
+
+        if (!modalElement || modalElement.dataset.facturasInitialized === 'true') {
+            return;
+        }
+
+        modalElement.dataset.facturasInitialized = 'true';
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+        if (typeof htmx !== 'undefined') {
+            htmx.on('htmx:beforeSwap', function (event) {
+                const target = event.detail.target;
+                const xhr = event.detail.xhr;
+
+                if (!target || target.id !== 'document') {
+                    return;
+                }
+
+                if (xhr.status === 204 || !(xhr.responseText || '').trim()) {
+                    event.detail.shouldSwap = false;
+                    modalElement.dataset.refreshAfterClose = 'true';
+                    modal.hide();
+                }
+            });
+        }
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('document')?.replaceChildren();
+
+            if (modalElement.dataset.refreshAfterClose === 'true') {
+                window.location.reload();
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeInvoiceDialog);
+    } else {
+        initializeInvoiceDialog();
+    }
+})();
+</script>
