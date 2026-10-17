@@ -6,8 +6,27 @@
 {% block title %}Facturas de viático{% endblock %}
 {% block content %}
 <main class="sv-page sv-page-with-navbar">
+    {% if messages %}
+    <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        {% for message in messages %}
+            await Swal.fire({
+                title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Advertencia{% else %}Excelente{% endif %}",
+                text: "{{ message|escapejs }}",
+                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}",
+                customClass: {
+                    htmlContainer: "sv-alert-resumen"
+                },
+                confirmButtonText: "Aceptar"
+            });
+        {% endfor %}
+    });
+    </script>
+    {% endif %}
+
     <form method="POST" id="facturasViaticoForm">
     {% csrf_token %}
+    
     <header class="sv-page-header">
         <div>
             <h1 class="sv-page-title">
@@ -598,6 +617,32 @@ function enviarFormulario() {
 var confirmModal = document.getElementById('confirmModal');
 confirmModal.addEventListener('hidden.bs.modal', function (event) {
     location.reload();  
+});
+
+document.addEventListener("htmx:afterRequest", function (event) {
+    const target = event.detail.target;
+
+    if (!target || target.id !== "document") {
+        return;
+    }
+
+    if (
+        event.detail.successful &&
+        event.detail.xhr.status === 204
+    ) {
+        const modalElement = document.getElementById("dialog");
+
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+
+            if (modal) {
+                modal.hide();
+            }
+        }
+
+        // Actualizar la matriz para mostrar la factura registrada
+        window.location.reload();
+    }
 });
 </script>
 {% endblock %}
