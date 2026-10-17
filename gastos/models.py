@@ -494,3 +494,17 @@ class ArchivoSoporte(models.Model):
     def __str__(self):
         return f"{self.tipo.nombre} - {self.solicitud.folio if self.solicitud.folio else 'Nueva'}"
 
+class CodigoSATPermitido(models.Model):
+    codigo = models.CharField(max_length=8, unique=True)
+    concepto = models.CharField(max_length=500)
+    gasto = models.BooleanField(default=False)
+    viatico = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Código SAT permitido"
+        verbose_name_plural = "Códigos SAT permitidos"
+        ordering = ["codigo"]
+
+    def __str__(self):
+        return f"{self.codigo} - {self.concepto}"
+

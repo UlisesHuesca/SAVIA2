@@ -20,7 +20,7 @@ from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form, Solicitud_Viatico_Tipo_Form
 from tesoreria.forms import Facturas_Viaticos_Form
-#from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
+from gastos.services.cfdi import eliminar_caracteres_invalidos, extraer_datos_del_xml
 from gastos.models import Factura, ValeRosa
 #from tesoreria.views import generar_cfdi
 from .filters import Solicitud_Viatico_Filter
@@ -62,86 +62,8 @@ import xlsxwriter
 from io import BytesIO
 import xml.etree.ElementTree as ET
 
-#Se duplican funciones porque me arroja una referencia circular
-#######################################################################
-# Create your views here.
-def eliminar_caracteres_invalidos(archivo_xml):
-    # Definir la expresión regular para encontrar caracteres inválidos
-    regex = re.compile(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]')
 
-    # Leer el contenido del archivo XML
-    xml_content = archivo_xml.read().decode('utf-8')
 
-    if xml_content.startswith("o;?"):
-        print('Detectado "o;?" en el inicio del XML')
-        xml_content = xml_content[3:]
-
-    # Eliminar caracteres inválidos según la expresión regular
-    xml_content = regex.sub('', xml_content)
-
-    # Volver a posicionar el puntero del archivo al principio
-    archivo_xml.seek(0)
-
-    # Guardar el contenido modificado en el archivo original
-    archivo_xml.write(xml_content.encode('utf-8'))
-    archivo_xml.truncate()  # Asegurarse de que no quede contenido sobrante
-
-    print('Contenido corregido guardado exitosamente.')
-
-    # Retornar el archivo con el contenido modificado
-    return archivo_xml
-
-def extraer_datos_del_xml(archivo_xml):
-    try:
-        # Parsear el archivo XML
-        archivo_xml.seek(0)
-        tree = ET.parse(archivo_xml)
-        root = tree.getroot()
-    except (ET.ParseError, FileNotFoundError) as e:
-        print(f"Error al parsear el archivo XML: {e}")
-        return None, None  # Si ocurre un error, devuelve None
-    
-    # Identificar la versión del XML y el espacio de nombres
-    version = root.tag
-    ns = {}
-    if 'http://www.sat.gob.mx/cfd/3' in version:
-        ns = {
-            'cfdi': 'http://www.sat.gob.mx/cfd/3',
-            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
-            'if': 'https://www.interfactura.com/Schemas/Documentos',
-        }
-    elif 'http://www.sat.gob.mx/cfd/4' in version:
-        ns = {
-            'cfdi': 'http://www.sat.gob.mx/cfd/4',
-            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
-            'if': 'https://www.interfactura.com/Schemas/Documentos',
-        }
-    else:
-        print(f"Versión del documento XML no reconocida")
-        return None, None
-    
-
-    rfc_receptor = None
-    receptor = root.find('cfdi:Receptor', ns)
-    if receptor is not None:
-        rfc_receptor = receptor.get('Rfc')
-    else:
-        print("Receptor no encontrado")
-    # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
-    complemento = root.find('cfdi:Complemento', ns)
-    if complemento is not None:
-        timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
-        if timbre_fiscal is not None:
-            uuid = timbre_fiscal.get('UUID')
-            fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
-        else:
-            print("Timbre Fiscal Digital no encontrado")
-            return None, None, None
-    else:
-        print("Complemento no encontrado")
-        return None, None, None
-    
-    return uuid, fecha_timbrado, rfc_receptor####################################################################################
 
 
 # Create your views here.

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Porcentaje_iva, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
+from .models import CodigoSATPermitido
 # Register your models here.
 class Solicitud_Gasto_Admin(admin.ModelAdmin):
     list_display = ('id','created_at','folio','staff','colaborador', 'superintendente','pagada','tipo')
@@ -9,6 +10,7 @@ class Solicitud_Gasto_Admin(admin.ModelAdmin):
 class Conceptos_Entradas_Admin(admin.ModelAdmin):
     list_display =('id', 'concepto_material', 'entrada',)
     raw_id_fields = ('concepto_material',)
+
 
 class Articulo_Gasto_Admin(admin.ModelAdmin):
     list_display =('id','gasto','staff','proyecto', 'subproyecto','producto','comentario','created_at', 'validacion')
@@ -32,6 +34,13 @@ class Vale_Rosa_Admin(admin.ModelAdmin):
     raw_id_fields = ('creado_por','aprobado_por') 
     list_display = ('id','gasto','viatico', 'creado_por','aprobado_por','esta_aprobado','color')   
 
+class CodigoSATPermitidoAdmin(admin.ModelAdmin):
+    list_display = ("codigo","concepto","gasto","viatico",)
+    list_filter = ("gasto", "viatico")
+    search_fields = ("codigo", "concepto")
+    list_editable = ("gasto", "viatico")
+    list_per_page = 50
+
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
 
 admin.site.register(Articulo_Gasto, Articulo_Gasto_Admin)
@@ -51,3 +60,5 @@ admin.site.register(ValeRosa, Vale_Rosa_Admin)
 admin.site.register(TipoArchivoSoporte)
 
 admin.site.register(ArchivoSoporte)
+
+admin.site.register(CodigoSATPermitido, CodigoSATPermitidoAdmin)
