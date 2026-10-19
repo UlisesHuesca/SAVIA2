@@ -18,7 +18,7 @@ from django import forms  # por si no lo tienes ya importado
 from email.mime.image import MIMEImage
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado, Relacion_Servidor_Publico, Responsable_Interaccion
 from user.models import Profile, CustomUser, Tipo_perfil, Distrito, Almacen
-from compras.filters import CompraFilter
+from .filters import Compra_PE_Filter 
 from requisiciones.models import Requis
 from requisiciones.views import get_image_base64
 from user.decorators import perfil_seleccionado_required
@@ -100,7 +100,7 @@ def matriz_oc_proveedores(request):
     #suma_compras_no_pagadas = compras_no_pagadas.aggregate(total=Sum('costo_oc'))['total'] or 0
     #suma_compras_no_pagadas = sum(c.costo_plus_adicionales for c in compras_no_pagadas)
     print(suma_compras_no_pagadas)
-    myfilter = CompraFilter(request.GET, queryset=compras)
+    myfilter = Compra_PE_Filter(request.GET, queryset=compras)
     compras = myfilter.qs
     print(compras)
 
