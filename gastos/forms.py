@@ -172,7 +172,7 @@ class FacturaForm(forms.ModelForm):
 
 class UploadFileForm(forms.Form):
     archivo_pdf = forms.FileField(required=False) 
-    archivo_xml = forms.FileField(required=False) 
+    #archivo_xml = forms.FileField(required=False) 
 
 
 class Autorizacion_Gasto_Form(forms.ModelForm):

@@ -32,7 +32,7 @@ CURRENCIES =('USD','MXN')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = ['grupovordcab.cloud','www.grupovordcab.cloud','localhost', '127.0.0.1','yerod.cloud','www.yerod.cloud', 'vordcab.local','yerod.local',]
 

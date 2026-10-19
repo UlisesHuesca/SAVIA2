@@ -924,13 +924,15 @@ def verificar_uuid_unico(uuid, ano):
     return True
 
 
-def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario):
-    factura.archivo_xml = archivo_xml
+def guardar_factura(factura, archivo_procesado, nombre_archivo, uuid_extraido, fecha_timbrado_extraida, usuario):
+    #factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario
+    #factura.archivo_xml = archivo_xml
     factura.uuid = uuid_extraido
     factura.fecha_timbrado = fecha_timbrado_extraida
     factura.hecho = True
     factura.fecha_subida = datetime.now()
     factura.subido_por = usuario
+    factura.archivo_xml.save(nombre_archivo, archivo_procesado,save=False)
     factura.save()
 
 @perfil_seleccionado_required
@@ -945,113 +947,163 @@ def factura_nueva_gasto(request, pk):
     form = UploadFileForm()
 
     if request.method == 'POST' and 'btn_registrar' in request.POST:
+        form = UploadFileForm(request.POST, request.FILES)   
         # No permitir archivos PDF, aunque se envíen manualmente
-            
+        print('vamos')    
         if request.FILES.getlist('archivo_pdf'):
             messages.error(request,'Ya no se permite registrar facturas mediante PDF. ''Debes cargar los archivos XML.')
-        else:
-            form = UploadFileForm(request.POST, request.FILES)
-                
-            if form.is_valid():
-                archivos_xml = request.FILES.getlist('archivo_xml')
-                if not archivos_xml:
-                    messages.error(request, 'Debes subir al menos un archivo XML.')
-                    #return HttpResponse(status=204)
-                else:
-                    # Iterar sobre el número máximo de archivos en cualquiera de las listas
-                    facturas_registradas = []
-                    facturas_duplicadas = []
-                    facturas_invalidas = []
-                    RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
-                    for archivo_xml in archivos_xml:
-                   
-                    
-                        
-                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                    
-                        uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
-                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
-                        if not uuid_extraido or not fecha_timbrado_extraida:
-                            facturas_invalidas.append(
-                                f"{archivo_xml.name}: XML sin UUID o fecha de timbrado válida."
-                            )
-                            continue
-                        
-                        if rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
-                            messages.error(
-                                request,
-                                f"RFC receptor inválido ({rfc_receptor}). "
-                                f"Se esperaba uno de: {', '.join(RFC_RECEPTORES_ESPERADOS)}."
-                            )
-                            continue
-
-                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-
-                        if factura_existente:
-                            sol_gasto = factura_existente.solicitud_gasto
-
-                            if sol_gasto.autorizar is False or sol_gasto.autorizar2 is False:
-                                factura_existente.delete()
-                            else:
-                                facturas_duplicadas.append(uuid_extraido)
-                                continue
-                        else:
-                            factura_existente = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                            if factura_existente:
-                                oc = factura_existente.oc
-                                if oc.autorizado1 is False or oc.autorizado2 is False:
-                                    factura_existente.delete()
-                                else:
-                                    facturas_duplicadas.append(uuid_extraido)
-                                    continue
-                            else:
-                                factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                                if factura_existente:
-                                    viatico = factura_existente.solicitud_viatico
-                                    if viatico.autorizar is False or viatico.autorizar2 is False:
-                                        factura_existente.delete()
-                                    else:
-                                        facturas_duplicadas.append(uuid_extraido)
-                                        continue
-
-                        factura = Factura(solicitud_gasto=gasto, hecho = False)
-                        guardar_factura(factura,archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
-                        facturas_registradas.append(uuid_extraido)
-                    #messages.success(request, 'Los facturas se registraron de manera exitosa')
-                     # Mensajes de éxito o duplicados
-                    #
-                    # Resumen de resultados
-                    
-                    resumen = []
-                    if facturas_registradas:
-                        resumen.append(
-                            f"Registradas correctamente ({len(facturas_registradas)}): "
-                            f"{', '.join(facturas_registradas)}"
-                        )
-
-                    if facturas_duplicadas:
-                        resumen.append(
-                            f"Facturas duplicadas ({len(facturas_duplicadas)}): "
-                            f"{', '.join(facturas_duplicadas)}"
-                        )
-
-                    if facturas_invalidas:
-                        resumen.append(
-                            f"Archivos inválidos ({len(facturas_invalidas)}): "
-                            f"{'; '.join(facturas_invalidas)}"
-                        )
-
-                    if resumen:
-                        mensaje = "\n\n".join(resumen)
-
-                        if facturas_duplicadas or facturas_invalidas:
-                            messages.warning(request, mensaje)
-                        else:
-                            messages.success(request, mensaje)
-
-                    #return HttpResponse(status=204)
+      
+       
+        elif form.is_valid():
+            #print('validacion')
+            archivos_xml = request.FILES.getlist('archivo_xml')
+            if not archivos_xml:
+                messages.error(request, 'Debes subir al menos un archivo XML.')
+                return HttpResponse(status=204)
             else:
-                messages.error(request,'No se pudo subir tu documento')
+                print('ya pasó al else después de validación')
+                facturas_registradas = []
+                facturas_duplicadas = []
+                facturas_invalidas = []
+                RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
+                for archivo_xml in archivos_xml:     
+                    # 2. Validar extensión
+                    if not archivo_xml.name.lower().endswith(".xml"):
+                        facturas_invalidas.append(
+                            f"{archivo_xml.name}: "
+                            "el archivo debe ser XML."
+                        )
+                        continue
+                    
+                    
+                    datos = extraer_datos_del_xml(archivo_xml)
+
+                    if datos is None:
+                        facturas_invalidas.append(f"{archivo_xml}: XML inválido o incompleto")
+                        continue
+
+                    uuid_extraido = datos["uuid"]
+                    fecha_timbrado_extraida = datos["fecha_timbrado"]
+                    rfc_receptor = datos["rfc_receptor"]
+                    conceptos = datos["conceptos"]
+                    
+                    if rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
+                        messages.error(
+                            request,
+                            f"RFC receptor inválido ({rfc_receptor}). "
+                            f"Se esperaba uno de: {', '.join(RFC_RECEPTORES_ESPERADOS)}."
+                            )
+                        continue
+
+                    #Listo el código para hacer la valiación por conceptos __ por el momento comentado
+                    #3. Validar códigos SAT
+                    #valido, rechazados = validar_conceptos_sat(conceptos, tipo ="gasto")
+
+                    #if not valido:
+                    #    detalle = "; ".join(
+                    #            f"{item['codigo'] or 'Sin clave'} - "
+                    #            f"{item['descripcion']}"
+                    #            for item in rechazados
+                    #        )
+                        
+                    #    facturas_invalidas.append(
+                    #            f"{archivo_xml.name}: "
+                    #            f"conceptos SAT no autorizados: {detalle}"
+                    #        )
+                    #    continue
+
+                   # 5. Buscar UUID duplicado en los tres módulos
+                    filtros = {
+                        "uuid": uuid_extraido,
+                        "fecha_timbrado": fecha_timbrado_extraida,
+                        }
+                   
+                    factura_gasto = Factura.objects.filter(**filtros).first()
+                   
+                    factura_compra = Facturas.objects.filter(**filtros).first()
+                   
+                    factura_viatico = Viaticos_Factura.objects.filter(**filtros).first()
+                   
+                    existentes = [
+                        factura
+                        for factura in (
+                            factura_gasto,
+                            factura_compra,
+                            factura_viatico,
+                        )
+                            if factura is not None
+                        ]
+                   
+                    # 6. Comprobar si las existentes son reemplazables
+                    reemplazables = []
+                   
+                    for existente in existentes:
+                   
+                        if isinstance(existente, Factura):
+                            solicitud = existente.solicitud_gasto
+                   
+                            puede_reemplazar = (solicitud is not None and (solicitud.autorizar is False or solicitud.autorizar2 is False))
+                   
+                        elif isinstance(existente, Facturas):
+                            compra = existente.oc
+                   
+                            puede_reemplazar = (compra is not None and (compra.autorizado1 is False or compra.autorizado2 is False))
+                   
+                        else:
+                            solicitud = existente.solicitud_viatico
+                   
+                            puede_reemplazar = (solicitud is not None and (solicitud.autorizar is False or solicitud.autorizar2 is False))
+                   
+                        if puede_reemplazar:
+                            reemplazables.append(existente)
+                   
+                    # Si al menos una existente no puede reemplazarse,
+                    # no permitimos registrar el UUID.
+                    if len(reemplazables) != len(existentes):
+                        facturas_duplicadas.append(uuid_extraido)
+                        continue
+                   
+                    # 7. Preparar el archivo XML
+                    archivo_xml.seek(0)
+                   
+                    archivo_procesado = eliminar_caracteres_invalidos(
+                        archivo_xml
+                    )
+                   
+                    # 8. Crear una factura nueva por cada XML
+                    factura = Factura(solicitud_gasto=gasto, hecho=False)
+                   
+                    # 9. Guardar solamente si pasó todas las validaciones
+                    with transaction.atomic():
+                   
+                        for existente in reemplazables:
+                            existente.delete()
+                   
+                        guardar_factura(factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario)
+                   
+                    facturas_registradas.append(uuid_extraido)
+                   
+                # 10. Mensajes consolidados
+                if facturas_registradas:
+                    messages.success(
+                        request,
+                        "Facturas registradas correctamente: "
+                        + ", ".join(facturas_registradas)
+                    )
+                   
+                if facturas_duplicadas:
+                    messages.warning(
+                        request,
+                        "Facturas duplicadas: "
+                        + ", ".join(facturas_duplicadas)
+                    )
+                   
+                if facturas_invalidas:
+                    messages.error(request,"Facturas rechazadas:\n" + "\n".join(facturas_invalidas))
+                print(facturas_registradas, facturas_duplicadas, facturas_invalidas)
+                return HttpResponse(status=204)
+        else:
+            messages.error(request,"No se pudo validar el formulario.")
 
 
     context={
