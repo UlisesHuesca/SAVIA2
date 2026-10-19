@@ -133,7 +133,84 @@
                                 {% endif %}
                             </td>
                             <td>{{ factura.fecha_subido|date:"d/m/Y" }}</td>
-                            <td>{% if factura.factura_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
+                            
+                            <td>
+                                {% if factura.factura_xml %}
+                                    {% if factura.emisor.resultados %}
+                                        <div class="d-flex flex-column gap-3">
+                                            {% for concepto in factura.emisor.resultados %}
+                                                <div>
+                                                    <div class="d-flex align-items-start gap-2">
+                                                        <span class="sv-badge sv-badge-primary">
+                                                            {{ forloop.counter }}
+                                                        </span>
+
+                                                        <div>
+                                                            <span class="sv-cell-title d-block">
+                                                                {{ concepto.descripcion|default:"Sin descripción" }}
+                                                            </span>
+
+                                                            <span class="sv-cell-subtitle">
+                                                                Clave:
+                                                                {% firstof concepto.clave_prod_serv concepto.clave "—" %}
+                                                                · Unidad: {{ concepto.unidad|default:"—" }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row g-2 mt-1">
+                                                        <div class="col-4">
+                                                            <span class="sv-cell-subtitle d-block">
+                                                                Cantidad
+                                                            </span>
+                                                            <strong>{{ concepto.cantidad|floatformat:2 }}</strong>
+                                                        </div>
+
+                                                        <div class="col-4">
+                                                            <span class="sv-cell-subtitle d-block">
+                                                                Precio unitario
+                                                            </span>
+                                                            <strong>${{ concepto.precio|floatformat:2 }}</strong>
+                                                        </div>
+
+                                                        <div class="col-4">
+                                                            <span class="sv-cell-subtitle d-block">
+                                                                Importe
+                                                            </span>
+                                                            <strong>${{ concepto.importe|floatformat:2 }}</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    {% if concepto.impuesto %}
+                                                        <div class="mt-2">
+                                                            <span class="sv-badge sv-badge-neutral">
+                                                                Impuesto: ${{ concepto.impuesto|floatformat:2 }}
+
+                                                                {% if concepto.tipo_factor %}
+                                                                    · {{ concepto.tipo_factor }}
+                                                                {% endif %}
+
+                                                                {% if concepto.tasa_cuota %}
+                                                                    · Tasa {{ concepto.tasa_cuota }}
+                                                                {% endif %}
+                                                            </span>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+
+                                                {% if not forloop.last %}
+                                                    <hr class="my-0">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <span class="sv-cell-subtitle">XML sin conceptos</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="sv-cell-subtitle">Sin XML</span>
+                                {% endif %}
+                            </td>
+
                             <td>{% if factura.factura_xml %} {{ factura.emisor.nombre_emisor }} {% endif %}</td>
                             <td class="text-end">
                                 {% if factura.factura_xml %}
@@ -146,7 +223,15 @@
                                 {% if factura.factura_pdf %}<button type="button" class="sv-btn sv-btn-danger sv-btn-icon" data-bs-toggle="modal" data-bs-target="#documentPdfModal" data-pdf-url="{{ factura.factura_pdf.url }}#zoom=80" title="Ver PDF"><i class="fa-solid fa-file-pdf"></i></button>{% endif %}
                                 {% if factura.factura_xml %}<a href="{{ factura.factura_xml.url }}" download class="sv-btn sv-btn-outline sv-btn-icon" title="Descargar XML"><i class="fa-solid fa-file-code"></i></a>{% endif %}
                                 {% if factura.factura_xml %}
-                                <a href="{% url 'generar_cfdi_viaticos' factura.id %}" download class="sv-btn sv-btn-info sv-btn-icon" title="Descargar representación"><i class="fa-solid fa-file-arrow-down"></i></a>
+                                <button type="button"
+                                        class="sv-btn sv-btn-info sv-btn-icon"
+                                        data-cfdi-url="{% url 'ver-cfdi' 'viatico' factura.id %}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cfdiPreviewModal"
+                                        title="Visualizar CFDI"
+                                        aria-label="Visualizar CFDI">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                                 {% endif %}
                             </div></td>
                             <td>
@@ -402,6 +487,46 @@
     </div>
 </div>
 
+<div class="modal fade"
+     id="cfdiPreviewModal"
+     tabindex="-1"
+     aria-labelledby="cfdiPreviewModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+                <h2 class="modal-title" id="cfdiPreviewModalLabel">
+                    <i class="fa-solid fa-file-pdf me-2"></i>
+                    Vista previa CFDI
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <iframe id="cfdiPreviewFrame"
+                        title="Vista previa CFDI"
+                        style="width:100%; height:75vh; border:0;">
+                </iframe>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -642,6 +767,27 @@ document.addEventListener("htmx:afterRequest", function (event) {
 
         // Actualizar la matriz para mostrar la factura registrada
         window.location.reload();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("cfdiPreviewModal");
+    const frame = document.getElementById("cfdiPreviewFrame");
+
+    if (modal && frame) {
+
+        modal.addEventListener("show.bs.modal", function (event) {
+            const boton = event.relatedTarget;
+            const url = boton?.getAttribute("data-cfdi-url");
+
+            if (url) {
+                frame.src = url;
+            }
+        });
+
+        modal.addEventListener("hidden.bs.modal", function () {
+            frame.removeAttribute("src");
+        });
     }
 });
 </script>

@@ -3915,8 +3915,12 @@ def generar_cfdi_gasto(request, pk):
 
 @perfil_seleccionado_required
 @xframe_options_sameorigin
-def ver_cfdi_gasto(request, pk):
-    factura = get_object_or_404(Factura, pk=pk)
+def ver_cfdi(request, pk, tipo):
+    if tipo == "gasto":
+        factura = get_object_or_404(Factura, pk=pk)
+    elif tipo == "viatico":
+        factura = get_object_or_404(Viaticos_Factura, pk=pk)
+        
 
     buffer = crear_pdf_cfdi_buffer(factura)
     buffer.seek(0)
