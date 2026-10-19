@@ -292,14 +292,14 @@
                             <div class="sv-actions">
                                 {% if compra.estado_facturas == "sin_facturas" %}
                                 <a class="sv-btn sv-btn-danger sv-btn-icon"
-                                   href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
+                                   href="{% url 'matriz-facturas-nomodal' compra.id %}?next_url={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
                                    data-bs-toggle="tooltip" title="No tiene facturas"
                                    aria-label="No tiene facturas">
                                     <i class="fa-solid fa-file-circle-xmark"></i>
                                 </a>
                                 {% elif compra.estado_facturas == "pendientes" or compra.estado_facturas == "todas_autorizadas" %}
                                 <a class="sv-btn sv-btn-info sv-btn-icon"
-                                   href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
+                                   href="{% url 'matriz-facturas-nomodal' compra.id %}?next_url={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
                                    data-bs-toggle="tooltip" title="Facturas cargadas"
                                    aria-label="Facturas cargadas">
                                     <i class="fa-solid fa-file-circle-exclamation"></i>
