@@ -4137,10 +4137,9 @@ def matriz_facturas_nomodal(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
-        elif 'salir' in request.POST:
-            return redirect(redirect_url)
-
+        
     context={
+        'next_url':next_url,
         'pagos':pagos,
         'form':form,
         'facturas':facturas,

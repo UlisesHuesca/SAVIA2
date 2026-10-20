@@ -8,6 +8,13 @@
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .sv-alert-resumen {
+        white-space: pre-line;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+</style>
 
 {% if messages %}
     {% for message in messages %}
@@ -15,6 +22,9 @@
         Swal.fire({
             title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
             text: "{{ message|escapejs }}",
+            customClass: {
+                htmlContainer: 'sv-alert-resumen'
+            },
             icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
         });
     </script>
@@ -22,6 +32,8 @@
 {% endif %}
 
 <main class="sv-page sv-page-with-navbar">
+    <form method="POST" id="facturasGastoForm">
+    {% csrf_token %}
     <header class="sv-page-header">
         <div>
             <p class="sv-page-eyebrow">Control documental</p>
@@ -48,6 +60,18 @@
             </span>
             {% endif %}
         </div>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-receipt"></i>
+                Gasto G{{ gasto.folio }}
+            </span>
+
+            <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Cerrar
+            </a>
+        </div>
+        
     </header>
 
     <section class="sv-card mb-4">
@@ -92,13 +116,13 @@
                                     </button>
 
                                     {% if usuario.tipo.tesoreria %}
-                                    <button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
+                                    <!--<button type="button" class="sv-btn sv-btn-outline sv-btn-icon"
                                             data-bs-toggle="modal" data-bs-target="#dialog"
                                             hx-target="#document"
                                             hx-get="{% url 'edit-comprobante-pago' pago.id %}"
                                             title="Cambiar comprobante" aria-label="Cambiar comprobante">
                                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    </button>
+                                    </button>-->
                                     {% endif %}
                                 </div>
                             </td>
@@ -179,19 +203,48 @@
         </div>
     </section>
 
-    <form method="POST">
-        {% csrf_token %}
+   
 
         <section class="sv-card mb-4">
             <div class="sv-card-header">
-                <h2 class="sv-card-title">
-                    <i class="fa-solid fa-file-circle-check"></i>
-                    Documentación fiscal
-                </h2>
-                <button type="submit" name="btn_descargar_todo" class="sv-btn sv-btn-primary">
-                    <i class="fa-solid fa-file-zipper"></i>
-                    Descargar facturas
-                </button>
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        Documentación fiscal
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+                        Facturas y representaciones generadas desde los archivos XML.
+                    </p>
+                </div>
+
+                <div class="sv-actions">
+                    <button type="submit"
+                            name="btn_descargar_todo"
+                            class="sv-btn sv-btn-primary">
+
+                        <i class="fa-solid fa-file-zipper"></i>
+                        Descargar facturas
+                    </button>
+
+                    {% if gasto.cerrar_facturacion %}
+                    <span class="sv-badge sv-badge-warning">
+                        <i class="fa-solid fa-lock"></i>
+                        Facturación cerrada
+                    </span>
+                    {% else %}
+                    <button type="button"
+                            class="sv-btn sv-btn-success"
+                            data-bs-toggle="modal"
+                            data-bs-target="#dialog"
+                            hx-target="#document"
+                            hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Subir facturas
+                    </button>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="sv-table-wrap">
@@ -329,11 +382,15 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'generar_cfdi_gasto' factura.id %}" download
-                                   class="sv-btn sv-btn-info sv-btn-icon"
-                                   title="Descargar PDF renderizado" aria-label="Descargar PDF renderizado">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
+                                <button type="button"
+                                        class="sv-btn sv-btn-info sv-btn-icon"
+                                        data-cfdi-url="{% url 'ver-cfdi-gasto' factura.id %}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cfdiPreviewModal"
+                                        title="Visualizar CFDI"
+                                        aria-label="Visualizar CFDI">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </td>
                             <td>
                                 {% if usuario.tipo.tesoreria %}
@@ -382,36 +439,10 @@
                         <strong id="totalXml">$0.00</strong>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
-                        {% if gasto.cerrar_facturacion %}
-                        <span class="sv-badge sv-badge-warning">
-                            <i class="fa-solid fa-lock"></i>
-                            No se permiten nuevas facturas
-                        </span>
-                        {% else %}
-                        <button type="button" class="sv-btn sv-btn-success"
-                                data-bs-toggle="modal" data-bs-target="#dialog"
-                                hx-target="#document"
-                                hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            Subir facturas
-                        </button>
-                        {% endif %}
-                    </div>
+                    
                 </div>
 
-                {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
-                <div class="form-check form-switch mt-3">
-                    {{ form.facturas_completas|add_class:"form-check-input" }}
-                    <label for="{{ form.facturas_completas.id_for_label }}" class="form-check-label">
-                        <strong>Facturas completas</strong>
-                        {% if gasto.verificacion_facturas %}
-                        · Validado por {{ gasto.verificacion_facturas.staff.staff.first_name }}
-                        {{ gasto.verificacion_facturas.staff.staff.last_name }}
-                        {% endif %}
-                    </label>
-                </div>
-                {% endif %}
+               
 
                 <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                     {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "RH" %}
@@ -420,14 +451,10 @@
                         Guardar estatus
                     </button>
                     {% endif %}
-                    <button type="submit" name="salir" class="sv-btn sv-btn-outline">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        Cerrar
-                    </button>
                 </div>
             </div>
         </section>
-    </form>
+    
 
     <section class="sv-card mb-4">
         <div class="sv-card-header">
@@ -603,12 +630,10 @@
             </table>
         </div>
     </section>
+    </form>
 </main>
 
-<div class="modal fade" id="dialog" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document"
-         role="document" hx-target="this"></div>
-</div>
+{% include 'partials/modal_host.html' %}
 
 <div class="modal fade" id="pdfPreviewModal" tabindex="-1"
      aria-labelledby="pdfPreviewTitle" aria-hidden="true">
@@ -659,11 +684,54 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="sv-btn sv-btn-danger" onclick="enviarFormulario()">
+                <button type="button"
+                        id="btnConfirmarEliminar"
+                        class="sv-btn sv-btn-danger"
+                        onclick="enviarFormulario()">
                     <i class="fa-solid fa-trash-can"></i>
                     Eliminar
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade"
+     id="cfdiPreviewModal"
+     tabindex="-1"
+     aria-labelledby="cfdiPreviewModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+                <h2 class="modal-title" id="cfdiPreviewModalLabel">
+                    <i class="fa-solid fa-file-pdf me-2"></i>
+                    Vista previa CFDI
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <iframe id="cfdiPreviewFrame"
+                        title="Vista previa CFDI"
+                        style="width:100%; height:75vh; border:0;">
+                </iframe>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="sv-btn sv-btn-outline"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
         </div>
     </div>
 </div>
@@ -701,36 +769,37 @@ function setDeleteUrl(facturaId) {
     deleteForm.action = deleteUrl;
 }
 
+let eliminacionEnProceso = false;
+
 function enviarFormulario() {
-    const comentario = document.getElementById("comentario");
-    if (!comentario.value.trim()) {
-        comentario.focus();
-        Swal.fire({
-            title: "Comentario requerido",
-            text: "Escribe un comentario antes de eliminar la factura.",
-            icon: "warning"
-        });
+    const form = document.getElementById('deleteForm');
+    const boton = document.getElementById('btnConfirmarEliminar');
+    const comentario = document.getElementById('comentario');
+
+    // Evitar múltiples envíos
+    if (eliminacionEnProceso) return;
+
+    // Validar comentario obligatorio
+    if (!form.reportValidity()) {
         return;
     }
-    document.getElementById("deleteForm").submit();
+
+    // Bloquear nuevos intentos
+    eliminacionEnProceso = true;
+
+    boton.disabled = true;
+    boton.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"></span>
+        Eliminando...
+    `;
+
+    // Enviar formulario
+    form.submit();
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    const dialogElement = document.getElementById("dialog");
-    const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
-
-    dialogElement.addEventListener("hidden.bs.modal", function () {
-        window.location.reload();
-    });
-
-    htmx.on("htmx:afterSwap", function (event) {
-        if (!event.detail.target || event.detail.target.id !== "document") return;
-        const response = event.detail.xhr.responseText || "";
-        if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
-            dialog.hide();
-        }
-    });
-
     const previewModal = document.getElementById("pdfPreviewModal");
     const previewTitle = document.getElementById("pdfPreviewTitle");
     const previewFrame = document.getElementById("pdfPreviewFrame");
@@ -778,6 +847,24 @@ document.addEventListener("DOMContentLoaded", function () {
             URL.revokeObjectURL(objectUrl);
             objectUrl = null;
         }
+    });
+
+    const modal = document.getElementById("cfdiPreviewModal");
+    const frame = document.getElementById("cfdiPreviewFrame");
+
+    if (!modal || !frame) return;
+
+    modal.addEventListener("show.bs.modal", function (event) {
+        const boton = event.relatedTarget;
+        const url = boton?.getAttribute("data-cfdi-url");
+
+        if (url) {
+            frame.src = url;
+        }
+    });
+
+    modal.addEventListener("hidden.bs.modal", function () {
+        frame.removeAttribute("src");
     });
 });
 </script>

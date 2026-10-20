@@ -46,10 +46,10 @@
                     <i class="fa-solid fa-hashtag"></i>
                     OC {{ compra.folio }}
                 </span>
-                <button type="submit" name="salir" class="sv-btn sv-btn-outline">
+                <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
                     <i class="fa-solid fa-arrow-left"></i>
                     Cerrar
-                </button>
+                </a>
             </div>
         </header>
 
@@ -186,7 +186,7 @@
                             hx-target="#document"
                             hx-get="{% url 'factura-nueva' compra.id %}">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                        Subir factura
+                        Subir facturas
                     </button>
                 </div>
             </div>
@@ -209,39 +209,19 @@
                         {% for p in facturas %}
                         <tr>
                             <td><span class="sv-folio">{{ p.id }}</span></td>
-                          
                             <td>
+                                <span class="sv-cell-title d-block">
+                                    {{ p.emisor.fecha_timbrado|default:"Sin timbrado" }}
+                                </span>
                                 <span class="sv-cell-subtitle">
                                     Subida: {{ p.fecha_subido|date:"d/m/Y" }}
                                 </span>
                             </td>
-
-                            
-                                {% with emisor=p.emisor %}
-                                <td>
-                                {% if emisor %}
-                                    <strong class="sv-cell-title d-block">
-                                        {{ emisor.nombre_emisor|default:"Emisor sin nombre" }}
-                                    </strong>
-                                    <span class="sv-cell-subtitle d-block">
-                                        RFC: {{ emisor.rfc_emisor|default:"—" }}
-                                    </span>
-                                    <span class="sv-cell-title d-block mt-1">
-                                        ${{ emisor.total|floatformat:2 }} {{ emisor.moneda|default:"" }}
-                                    </span>
-                                    <span class="sv-cell-subtitle d-block">
-                                        {{ emisor.uuid }}
-                                    </span>
-                                    <span class="sv-badge sv-badge-neutral mt-1">
-                                        {{ emisor.metodo_pago|default:"Sin método" }}
-                                    </span>
-                                {% else %}
-                                    <span class="sv-cell-subtitle">Sin datos XML</span>
-                                {% endif %}
+                            <td>
+                                {% if p.emisor.metodo_pago %}
+                                <span class="sv-badge sv-badge-neutral">{{ p.emisor.metodo_pago }}</span>
+                                {% else %}—{% endif %}
                             </td>
-                            {% endwith %}
-                             
-                           
                             <td>
                                 {% if p.comentario %}{{ p.comentario }}{% else %}
                                 <span class="sv-cell-subtitle">Sin comentario</span>
@@ -345,14 +325,7 @@
     </form>
 </main>
 
-<div id="dialog" class="modal">
-    <div id="document" class="modal-dialog">
-        <!-- HTMX inserta aquí: -->
-        <div class="modal-content">
-            ...
-        </div>
-    </div>
-</div>
+{% include 'partials/modal_host.html' %}
 
 <div class="modal fade" id="pdfPreviewModal" tabindex="-1"
      aria-labelledby="pdfPreviewTitle" aria-hidden="true">
@@ -414,24 +387,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const dialogElement = document.getElementById('dialog');
-
-    if (dialogElement) {
-        const dialog = bootstrap.Modal.getOrCreateInstance(dialogElement);
-
-        dialogElement.addEventListener('hidden.bs.modal', function () {
-            window.location.reload();
-        });
-
-        if (typeof htmx !== 'undefined') {
-            htmx.on('htmx:beforeSwap', function (event) {
-                if (event.detail.target && event.detail.target.id === 'document' && !event.detail.xhr.response) {
-                    dialog.hide();
-                }
-            });
-        }
-    }
-
     const confirmModal = document.getElementById('confirmModal');
     const deleteForm = document.getElementById('deleteForm');
     const commentInput = document.getElementById('comentario');

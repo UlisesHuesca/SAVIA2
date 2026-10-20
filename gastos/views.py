@@ -715,7 +715,6 @@ def agregar_vale_rosa(request, pk):
 
 
 @perfil_seleccionado_required
-
 def vale_azul_abono(request, pk):
     """
     pk = id del ValeRosa (color=azul)
@@ -949,7 +948,7 @@ def eliminar_factura_gasto(request, pk):
 
         email.send()
         messages.success(request, f'La factura {factura.id} ha sido eliminada exitosamente')
-    except (BadHeaderError, SMTPException, socket.gaierror) as e:
+    except (BadHeaderError, SMTPException, socket.gaierror, TimeoutError, ConnectionError) as e:
         error_message = f'La factura {factura.id} ha sido eliminada, pero el correo no ha sido enviado debido a un error: {e}'
         messages.success(request, error_message)
     factura.delete()
@@ -1023,85 +1022,112 @@ def factura_nueva_gasto(request, pk):
 
     form = UploadFileForm()
 
-    if request.method == 'POST':
-        if 'btn_registrar' in request.POST:
-            form = UploadFileForm(request.POST, request.FILES or None)
-            if form.is_valid():
-                archivos_pdf = request.FILES.getlist('archivo_pdf')
-                archivos_xml = request.FILES.getlist('archivo_xml')
-                if not archivos_pdf and not archivos_xml:
-                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
-                    return HttpResponse(status=204)
+    if request.method == 'POST' and 'btn_registrar' in request.POST:
+        # No permitir archivos PDF, aunque se envíen manualmente
+            
+        if request.FILES.getlist('archivo_pdf'):
+            messages.error(request,'Ya no se permite registrar facturas mediante PDF. ''Debes cargar los archivos XML.')
+        else:
+            form = UploadFileForm(request.POST, request.FILES)
                 
-                # Iterar sobre el número máximo de archivos en cualquiera de las listas
-                max_len = max(len(archivos_pdf), len(archivos_xml))
-                facturas_registradas = []
-                facturas_duplicadas = []
-
-                for i in range(max_len):
-                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
-                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-                    factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
-                    if archivo_xml:
-                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-
-                        # Guardar temporalmente para extraer datos
-                        #factura_temp = Factura(archivo_xml=archivo_xml)
-                        #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
-
+            if form.is_valid():
+                archivos_xml = request.FILES.getlist('archivo_xml')
+                if not archivos_xml:
+                    messages.error(request, 'Debes subir al menos un archivo XML.')
+                    #return HttpResponse(status=204)
+                else:
+                    # Iterar sobre el número máximo de archivos en cualquiera de las listas
+                    facturas_registradas = []
+                    facturas_duplicadas = []
+                    facturas_invalidas = []
+                    RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
+                    for archivo_xml in archivos_xml:
+                   
+                    
                         
+                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                    
                         uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
-                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                        facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                        viaticos_factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                        RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
-                        if rfc_receptor and rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
+                        if not uuid_extraido or not fecha_timbrado_extraida:
+                            facturas_invalidas.append(
+                                f"{archivo_xml.name}: XML sin UUID o fecha de timbrado válida."
+                            )
+                            continue
+                        
+                        if rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
                             messages.error(
                                 request,
                                 f"RFC receptor inválido ({rfc_receptor}). "
                                 f"Se esperaba uno de: {', '.join(RFC_RECEPTORES_ESPERADOS)}."
                             )
-                            break # Saltar al siguiente archivo si el RFC no coincide
+                            continue
 
-                        if factura_existente or facturas_existentes or viaticos_factura_existente:
-                            # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
-                            if factura_existente and (factura_existente.solicitud_gasto.autorizar is False or factura_existente.solicitud_gasto.autorizar2 is False):
+                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+
+                        if factura_existente:
+                            sol_gasto = factura_existente.solicitud_gasto
+
+                            if sol_gasto.autorizar is False or sol_gasto.autorizar2 is False:
                                 factura_existente.delete()
-                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
-
-                            elif facturas_existentes and (facturas_existentes.oc.autorizado1 is False or facturas_existentes.oc.autorizado2 is False):
-                                facturas_existentes.delete()
-                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
-
-                            elif viaticos_factura_existente and (viaticos_factura_existente.solicitud_viatico.autorizar is False or viaticos_factura_existente.solicitud_viatico.autorizar2 is False):
-                                viaticos_factura_existente.delete()
-                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
-
                             else:
-                                # Si no cumple las condiciones de eliminación, consideramos la factura duplicada
                                 facturas_duplicadas.append(uuid_extraido)
-                                continue  # Saltar al siguiente archivo si se encuentra duplicado
+                                continue
                         else:
-                            # Si no existe ninguna factura, guardar la nueva
-                            guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
-                            #messages.success(request, 'Las facturas se registraron de manera exitosa')
-                    if archivo_pdf:
-                        factura.archivo_pdf = archivo_pdf
-                        factura.hecho = True
-                        factura.fecha_subida = datetime.now()
-                        factura.subido_por = usuario
-                        factura.save()
-                      
-                        facturas_registradas.append(uuid_extraido if archivo_xml else f"Factura PDF {archivo_pdf.name}")
+                            factura_existente = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                            if factura_existente:
+                                oc = factura_existente.oc
+                                if oc.autorizado1 is False or oc.autorizado2 is False:
+                                    factura_existente.delete()
+                                else:
+                                    facturas_duplicadas.append(uuid_extraido)
+                                    continue
+                            else:
+                                factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                                if factura_existente:
+                                    viatico = factura_existente.solicitud_viatico
+                                    if viatico.autorizar is False or viatico.autorizar2 is False:
+                                        factura_existente.delete()
+                                    else:
+                                        facturas_duplicadas.append(uuid_extraido)
+                                        continue
+
+                        factura = Factura(solicitud_gasto=gasto, hecho = False)
+                        guardar_factura(factura,archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+                        facturas_registradas.append(uuid_extraido)
                     #messages.success(request, 'Los facturas se registraron de manera exitosa')
                      # Mensajes de éxito o duplicados
-                #return HttpResponse(status=204)
-                if facturas_registradas:
-                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
-                if facturas_duplicadas:
-                    messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
+                    #
+                    # Resumen de resultados
+                    
+                    resumen = []
+                    if facturas_registradas:
+                        resumen.append(
+                            f"Registradas correctamente ({len(facturas_registradas)}): "
+                            f"{', '.join(facturas_registradas)}"
+                        )
 
+                    if facturas_duplicadas:
+                        resumen.append(
+                            f"Facturas duplicadas ({len(facturas_duplicadas)}): "
+                            f"{', '.join(facturas_duplicadas)}"
+                        )
+
+                    if facturas_invalidas:
+                        resumen.append(
+                            f"Archivos inválidos ({len(facturas_invalidas)}): "
+                            f"{'; '.join(facturas_invalidas)}"
+                        )
+
+                    if resumen:
+                        mensaje = "\n\n".join(resumen)
+
+                        if facturas_duplicadas or facturas_invalidas:
+                            messages.warning(request, mensaje)
+                        else:
+                            messages.success(request, mensaje)
+
+                    #return HttpResponse(status=204)
             else:
                 messages.error(request,'No se pudo subir tu documento')
 
@@ -2504,8 +2530,8 @@ def matriz_facturas_gasto(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
-        elif 'salir' in request.POST:
-            return redirect(next_url)
+        #elif 'salir' in request.POST:
+        #    return redirect(next_url)
         elif 'btn_deletevalerosa' in request.POST:
             print('borrando_vale')
             vale_id = request.POST.get('vale_id')
@@ -3912,6 +3938,22 @@ def generar_cfdi_gasto(request, pk):
     return HttpResponse(buffer, content_type='application/pdf', headers={
         'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
     })
+
+@perfil_seleccionado_required
+@xframe_options_sameorigin
+def ver_cfdi_gasto(request, pk):
+    factura = get_object_or_404(Factura, pk=pk)
+
+    buffer = crear_pdf_cfdi_buffer(factura)
+    buffer.seek(0)
+
+    folio_fiscal = factura.emisor.get('uuid',f'factura_{factura.id}')
+
+    response = FileResponse(buffer,content_type='application/pdf')
+
+    response['Content-Disposition'] = (f'inline; filename="{folio_fiscal}.pdf"')
+
+    return response
 
 def crear_pdf_cfdi_gasto(factura):
     buffer = crear_pdf_cfdi_buffer(factura)

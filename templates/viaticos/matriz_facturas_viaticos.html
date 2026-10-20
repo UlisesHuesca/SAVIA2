@@ -6,6 +6,8 @@
 {% block title %}Facturas de viático{% endblock %}
 {% block content %}
 <main class="sv-page sv-page-with-navbar">
+    <form method="POST" id="facturasViaticoForm">
+    {% csrf_token %}
     <header class="sv-page-header">
         <div>
             <h1 class="sv-page-title">
@@ -14,9 +16,17 @@
             </h1>
             <p class="sv-page-subtitle">Revisa conceptos, comprobantes y vales asociados al viático.</p>
         </div>
-        <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
-            <i class="fa-solid fa-arrow-left"></i>Regresar
-        </a>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-plane"></i>
+                Viático {{ viatico.folio }}
+            </span>
+
+            <a href="{{ next_url }}" class="sv-btn sv-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Cerrar
+            </a>
+        </div>
     </header>
 
     <section class="sv-card mb-3">
@@ -48,18 +58,44 @@
         </div>
     </section>
 
-    <form method="POST">
-        {% csrf_token %}
+   
         <section class="sv-card mb-3">
             <div class="sv-card-header">
                 <div>
-                    <h2 class="sv-card-title"><i class="fa-solid fa-receipt"></i>Facturas y comprobantes</h2>
-                    <span class="sv-cell-subtitle">Información fiscal extraída de los archivos XML.</span>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        Documentación fiscal
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+                        Facturas y representaciones generadas desde los archivos XML.
+                    </p>
                 </div>
-                <button type="submit" name="btn_descargar_todo" class="sv-btn sv-btn-primary">
-                    <i class="fas fa-file-archive"></i>Descargar facturas
-                </button>
+
+                <div class="sv-actions">
+                    <button type="submit"
+                            name="btn_descargar_todo"
+                            class="sv-btn sv-btn-primary">
+
+                        <i class="fa-solid fa-file-zipper"></i>
+                        Descargar facturas
+                    </button>
+
+                    <button type="button"
+                            class="sv-btn sv-btn-success"
+                            data-bs-toggle="modal"
+                            data-bs-target="#dialog"
+                            hx-target="#document"
+                            hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Subir facturas
+                    </button>
+                </div>
             </div>
+
+
+
             <div class="sv-table-wrap">
                 <table class="sv-table">
                     <thead>
@@ -116,7 +152,14 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="8"><div class="sv-empty-state"><i class="fa-solid fa-receipt"></i><h3>No hay facturas registradas</h3><p>Usa el botón “Subir facturas” para agregar documentos.</p></div></td></tr>
+                            
+                        <tr>
+                            <td colspan="11" class="sv-empty">
+                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <span class="sv-empty-title">No hay facturas cargadas</span>
+                                <span class="sv-empty-text">Carga una factura para iniciar la validación.</span>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -142,6 +185,38 @@
                     </div>
                 </div>
             </div>
+            <div class="sv-card-footer">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+
+                    {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
+                    <div class="form-check form-switch">
+                        {{ form.facturas_completas|add_class:"form-check-input" }}
+
+                        <label for="{{ form.facturas_completas.id_for_label }}"
+                            class="form-check-label fw-semibold">
+                            Facturas completas
+                        </label>
+                    </div>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+
+                    <div class="sv-actions">
+                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin" %}
+                        <button type="submit"
+                                name="btn_factura_completa"
+                                class="sv-btn sv-btn-success">
+
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Guardar estado
+                        </button>
+                        {% endif %}
+
+                       
+                    </div>
+                </div>
+            </div>
+
         </section>
 
         <div class="row g-3 mb-3">
@@ -168,13 +243,12 @@
                             {% endif %}
                         </td>
                         <td><div class="d-flex flex-wrap gap-2">
-                            <form method="POST">
-                                {% csrf_token %}
+                         
                                 <input type="hidden" name ="vale_id" value="{{vale.id}}">
                                 <button type="submit" name="btn_deletevalerosa" class="sv-btn sv-btn-danger sv-btn-icon" onclick="return confirm('¿Eliminar vale rosa?')" title="Eliminar">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
-                            </form>
+                           
                             <a href="{% url 'descargar_vale_rosa_pdf' vale.id|unlocalize vale.color %}" class="sv-btn sv-btn-outline sv-btn-icon" target="_blank" title="Descargar vale">
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
@@ -259,35 +333,14 @@
                    
                     {% endfor %}
                 </tbody>
-            </table></div></section></div></div>
+            </table>
+        </div>
+    </section></div></div>
 
-        <section class="sv-card">
-            <div class="sv-card-body">
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
-                    <div class="form-check form-switch">
-                        <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
-                        {{ form.facturas_completas|add_class:"form-check-input" }}
-                    </div>
-                    {% endif %}
-                    <div class="d-flex flex-wrap justify-content-end gap-2 ms-auto">
-                            <a class="sv-btn sv-btn-primary" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}"><i class="fa-solid fa-cloud-arrow-up"></i>Subir facturas</a>
-                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <button type="submit" name="btn_factura_completa" class="sv-btn sv-btn-success"><i class="fa-solid fa-floppy-disk"></i>Guardar estado</button>
-                        {% endif %}
-                            <button type="submit" name="salir" class="sv-btn sv-btn-outline"><i class="fa-solid fa-xmark"></i>Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        
     </form>
 </main>
-<!--Este es el modal 1 facturas-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
-
-    </div>
-</div>
+{% include 'partials/modal_host.html' %}
 
 <div class="modal fade" id="documentPdfModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -356,14 +409,6 @@ if (documentPdfModal && documentPdfFrame) {
         documentPdfFrame.src = 'about:blank';
     });
 }
-
-var myModal = document.getElementById('dialog')
-myModal.addEventListener('hidden.bs.modal', function (event) {
-      location.reload();
-    })
-
-
-
 
 // Funciones para la primera tabla
 var xml = document.getElementsByClassName('total-xml');
@@ -549,26 +594,6 @@ function enviarFormulario() {
         document.getElementById('deleteForm').submit();  
     }
 }
-;(function() {
-    const modalElement = document.getElementById('dialog');
-    const modal = new bootstrap.Modal(modalElement);
-
-    htmx.on('htmx:afterSwap', (e) => {
-        if (e.detail.target.id === "document") {
-            const response = e.detail.xhr.responseText;
-            if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
-                modal.hide();
-                // Si quieres, puedes recargar también aquí:
-                setTimeout(() => location.reload(), 500); // Recarga medio segundo después
-            }
-        }
-    });
-})();
-
-
-
-
-
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');
 confirmModal.addEventListener('hidden.bs.modal', function (event) {
