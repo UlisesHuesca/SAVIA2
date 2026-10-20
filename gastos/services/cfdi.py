@@ -69,6 +69,8 @@ def extraer_datos_del_xml(archivo_xml):
             return None
 
         receptor = root.find(f"{{{namespace}}}Receptor")
+        # RFC emisor
+        emisor = root.find(f"{{{namespace}}}Emisor")
 
         complemento = root.find(
             f"{{{namespace}}}Complemento"
@@ -100,9 +102,13 @@ def extraer_datos_del_xml(archivo_xml):
         datos = {
             "uuid": timbre.get("UUID"),
             "fecha_timbrado": timbre.get("FechaTimbrado"),
+            "rfc_emisor": (
+                emisor.get("Rfc") if emisor is not None else None
+            ),
             "rfc_receptor": (
                 receptor.get("Rfc") if receptor is not None else None
             ),
+            "tipo_comprobante": root.get("TipoDeComprobante"),
             "conceptos": conceptos,
         }
 
