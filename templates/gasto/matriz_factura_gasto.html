@@ -17,18 +17,21 @@
 </style>
 
 {% if messages %}
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
     {% for message in messages %}
-    <script>
-        Swal.fire({
-            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
-            text: "{{ message|escapejs }}",
-            customClass: {
-                htmlContainer: 'sv-alert-resumen'
-            },
-            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
-        });
-    </script>
+    await Swal.fire({
+        title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Advertencia{% else %}Excelente{% endif %}",
+        text: "{{ message|escapejs }}",
+        icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}",
+        customClass: {
+            htmlContainer: "sv-alert-resumen"
+        },
+        confirmButtonText: "Aceptar"
+    });
     {% endfor %}
+});
+</script>
 {% endif %}
 
 <main class="sv-page sv-page-with-navbar">
@@ -384,7 +387,7 @@
                             <td>
                                 <button type="button"
                                         class="sv-btn sv-btn-info sv-btn-icon"
-                                        data-cfdi-url="{% url 'ver-cfdi-gasto' factura.id %}"
+                                        data-cfdi-url="{% url 'ver-cfdi' 'gasto' factura.id %}"
                                         data-bs-toggle="modal"
                                         data-bs-target="#cfdiPreviewModal"
                                         title="Visualizar CFDI"
@@ -852,20 +855,46 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("cfdiPreviewModal");
     const frame = document.getElementById("cfdiPreviewFrame");
 
-    if (!modal || !frame) return;
+    if (modal && frame) {
 
-    modal.addEventListener("show.bs.modal", function (event) {
-        const boton = event.relatedTarget;
-        const url = boton?.getAttribute("data-cfdi-url");
+        modal.addEventListener("show.bs.modal", function (event) {
+            const boton = event.relatedTarget;
+            const url = boton?.getAttribute("data-cfdi-url");
 
-        if (url) {
-            frame.src = url;
-        }
-    });
+            if (url) {
+                frame.src = url;            }
 
-    modal.addEventListener("hidden.bs.modal", function () {
-        frame.removeAttribute("src");
-    });
+        });
+
+        modal.addEventListener("hidden.bs.modal", function () {
+            frame.removeAttribute("src");
+        });
+    }
+});
+
+document.addEventListener("htmx:afterRequest", function (event) {
+    if (
+        !event.detail.elt?.classList.contains("js-facturas-xml-form") ||
+        !event.detail.successful ||
+        event.detail.xhr.status !== 204
+    ) {
+        return;
+    }
+
+    const modalElement = document.getElementById("dialog");
+
+    if (!modalElement) {
+        location.reload();
+        return;
+    }
+
+    modalElement.addEventListener(
+        "hidden.bs.modal",
+        () => location.reload(),
+        { once: true }
+    );
+
+    bootstrap.Modal.getOrCreateInstance(modalElement).hide();
 });
 </script>
 {% endblock %}
