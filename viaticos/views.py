@@ -1126,20 +1126,20 @@ def factura_nueva_viatico(request, pk):
                     continue
 
                 # 4. Validar códigos SAT para Viáticos
-                valido, rechazados = validar_conceptos_sat(conceptos,tipo="viatico")
+                #valido, rechazados = validar_conceptos_sat(conceptos,tipo="viatico")
 
-                if not valido:
-                    detalle = "; ".join(
-                        f"{item['codigo'] or 'Sin clave'} - "
-                        f"{item['descripcion']}"
-                        for item in rechazados
-                    )
+                #if not valido:
+                #    detalle = "; ".join(
+                #        f"{item['codigo'] or 'Sin clave'} - "
+                #        f"{item['descripcion']}"
+                #        for item in rechazados
+                #    )
 
-                    facturas_invalidas.append(
-                        f"{archivo_xml.name}: "
-                        f"conceptos SAT no autorizados: {detalle}"
-                    )
-                    continue
+                #    facturas_invalidas.append(
+                #        f"{archivo_xml.name}: "
+                #        f"conceptos SAT no autorizados: {detalle}"
+                #    )
+                #    continue
 
                 # 5. Buscar UUID duplicado en los tres módulos
                 filtros = {
