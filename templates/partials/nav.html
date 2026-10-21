@@ -623,6 +623,9 @@ button.sv-navbar-icon-link {
                             <span class="badge bg-danger">({{conteo_servicios}})</span>
                              {% endif %}
                         </a>
+                        <a class="dropdown-item" href="{% url 'boveda_xml:lista_cfdi' %}">
+                                Búsqueda XML 
+                        </a>
                     
                         {% if usuario.tipo.rentabilidad == False %}
                             <div class="d-none">
@@ -848,7 +851,7 @@ button.sv-navbar-icon-link {
                             </a>
                            
                             <a class="dropdown-item" href="{% url 'boveda_xml:lista_cfdi' %}">
-                                Bóveda XML
+                                Bóveda XML 
                             </a>
                            
                             {% if usuario.tipo.rh %}

@@ -39,19 +39,48 @@ from num2words import num2words
 
 @perfil_seleccionado_required
 def lista_cfdi(request):
-    queryset = (
-        CFDI.objects
-        .select_related('subido_por')
-        .all()
-        .order_by('-fecha_timbrado', '-fecha_subido')
-    )
+    pk_profile =request.session.get('selected_profile_id')
+    perfil = Profile.objects.select_related("tipo").get(pk=pk_profile)
 
-    filtro = CFDIFilter(
-        request.GET or None,
-        queryset=queryset,
-    )
+    acceso_completo = (perfil.tipo.tesoreria or perfil.tipo.compras or perfil.tipo.finanzas)
+    uuid = request.GET.get("uuid", "").strip()
 
-    paginator = Paginator(filtro.qs, 25)
+    if acceso_completo:
+        queryset = (CFDI.objects
+                .select_related('subido_por')
+                .all()
+                .order_by('-fecha_timbrado', '-fecha_subido')
+            )
+        
+
+        if uuid:
+            queryset = queryset.filter(uuid__iexact=uuid)
+
+         # Los usuarios completos conservan todos los filtros
+        filtro = CFDIFilter(
+            request.GET or None,
+            queryset=queryset,
+        )
+
+        queryset = filtro.qs
+
+    else:
+        # Sin registros hasta realizar una búsqueda
+        queryset = CFDI.objects.none()
+
+        if uuid:
+            queryset = (
+                CFDI.objects
+                .select_related('subido_por')
+                .filter(uuid__iexact=uuid)
+                .order_by('-fecha_timbrado', '-fecha_subido')
+            )
+
+        # No aplicar filtros adicionales para estos usuarios
+        filtro = None
+
+   
+    paginator = Paginator(queryset, 25)
     pagina = paginator.get_page(request.GET.get('page'))
 
     parametros = request.GET.copy()
@@ -62,13 +91,11 @@ def lista_cfdi(request):
         'pagina': pagina,
         'form_carga': CargaMasivaXMLForm(),
         'querystring': parametros.urlencode(),
+        'acceso_completo': acceso_completo,
+        'uuid': uuid,
     }
 
-    return render(
-        request,
-        'boveda_xml/lista_cfdi.html',
-        context,
-    )
+    return render(request,'boveda_xml/lista_cfdi.html',context,)
 
 
 @perfil_seleccionado_required
@@ -99,11 +126,7 @@ def carga_masiva_xml(request):
             'querystring': '',
         }
 
-        return render(
-            request,
-            'boveda_xml/lista_cfdi.html',
-            context,
-        )
+        return render(request,'boveda_xml/lista_cfdi.html',context,)
 
     archivos = form.cleaned_data['archivos_xml']
     resultados = []
@@ -217,11 +240,7 @@ def carga_masiva_xml(request):
         'total_archivos': len(resultados),
     }
 
-    return render(
-        request,
-        'boveda_xml/resultado_carga.html',
-        context,
-    )
+    return render(request,'boveda_xml/resultado_carga.html',context,)
 # Create your views here.
 @perfil_seleccionado_required
 def generar_cfdi(request, pk):
