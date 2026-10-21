@@ -2887,8 +2887,9 @@ def convert_entradas_to_xls2(entradas):
     for row_num in range(2, len(data) + 1):  
         formula = (
             f'=IF(AND(P{row_num}=0,(O{row_num}="PESOS")),'
-            f'Q{row_num}*P{row_num}*M{row_num},'
-            f'Q{row_num}*M{row_num})'
+            f'Q{row_num}*M{row_num},'
+            f'Q{row_num}*P{row_num}*M{row_num})'
+            
         )
 
         ws[row_num][18].value = formula
