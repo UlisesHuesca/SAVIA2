@@ -499,6 +499,7 @@ def crear_gasto(request):
                             guardar_factura(
                                 factura,
                                 archivo_procesado,
+                                archivo_xml.name,
                                 uuid_extraido,
                                 fecha_timbrado_extraida,
                                 usuario
