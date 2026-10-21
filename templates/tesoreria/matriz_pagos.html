@@ -306,12 +306,12 @@
                     {% if pago.oc %}
                         <td>{{pago.oc.folio}}</td>
                         <td class="sv-col-distrito d-none">{{pago.oc.req.orden.distrito.nombre}}</td>
-                        <td class="sv-col-solicitado d-none">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
+                        <td class="sv-col-solicitado d-none">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}<small class="d-block text-secondary">OC: {{pago.oc.creada_por.staff.staff.first_name}} {{pago.oc.creada_por.staff.staff.last_name}}</small></td>
                         
                         <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
                         <td class="sv-col-subproyecto d-none">{{pago.oc.req.orden.subproyecto.nombre}}</td>
                         <td class="sv-col-autorizado d-none">{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
-                        <td>{{pago.oc.proveedor}}</td>
+                        <td>{{pago.oc.proveedor}} </td>
                         <td>
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
