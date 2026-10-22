@@ -345,6 +345,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-money-check-dollar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form_direccion.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda" }}
+                                <label for="{{ form_direccion.moneda.id_for_label }}">Moneda</label>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="col-12 col-md-6 col-xl-4">
                         <div class="sv-input-group input-group">

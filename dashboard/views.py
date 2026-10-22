@@ -18,6 +18,7 @@ from django.db.models import Sum, Q, Prefetch, F, Sum, Value, F,DecimalField, Ex
 from django.db.models.functions import Coalesce
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
+from compras.models import Moneda
 from entradas.models import EntradaArticulo
 from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato, Pozo
 from gastos.models import Articulo_Gasto 
@@ -1791,7 +1792,13 @@ def add_proveedores2(request, pk=None):
     # Instancias sin guardar: un GET no crea registros.
     proveedor = Proveedor(creado_por=usuario)
     direccion = Proveedor_direcciones(creado_por=usuario)
-
+   
+    if usuario.distritos.nombre == "BRASIL":
+        monedas = Moneda.objects.filter(nombre = "REAIS")
+    elif usuario.distritos.nombre == "Yerod":
+        monedas = Moneda.objects.filter(nombre = "PESOS")
+    else:
+        monedas = Moneda.objects.all()
 
     datos = request.POST if request.method == 'POST' else None
     archivos = request.FILES if request.method == 'POST' else None
@@ -1803,6 +1810,7 @@ def add_proveedores2(request, pk=None):
 
     # Debe asignarse antes de is_valid()
     form_direccion.fields['distrito'].queryset = distritos_disponibles
+    form_direccion.fields['moneda'].queryset = monedas
     error_messages = {}
     if request.method == 'POST':
         es_yerod = usuario.distritos.nombre.upper() == "YEROD"
@@ -1846,7 +1854,7 @@ def add_proveedores2(request, pk=None):
                     direccion.estatus = estatus
                 direccion.save()
                 form_direccion.save_m2m()
-                messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social}  asociado correctamente.')
+                messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
                 return redirect('dashboard-proveedores')
             for prefijo, formulario in (
                 ('proveedor', form),
