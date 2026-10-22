@@ -81,14 +81,8 @@ class ProveedoresDireccionesForm(forms.ModelForm):
         model = Proveedor_direcciones
         fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda','modificado_fecha','referencia','convenio',]
 
-    def __init__(self, *args, **kwargs):
-        
-        profile = kwargs.pop('profile', None)
-        super().__init__(*args, **kwargs)
-        if profile and profile.tipo.nombre == "Subdirector_Alt":
-            self.fields['distrito'].queryset = Distrito.objects.all()
-        else:
-            self.fields['distrito'].queryset = Distrito.objects.exclude(id__in=[7, 8])
+  
+      
 
 class ProveedoresExistDireccionesForm(forms.ModelForm):
    

@@ -274,9 +274,11 @@ def contadores_processor(request):
         conteo_servicios = servicios.count()
 
         if usuario.tipo.proveedores_edicion == True:
+            almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
             proveedores_altas = Proveedor.objects.filter(
             completo=True, 
             direcciones__estatus__nombre = "PREALTA",
+            direcciones__distrito__id__in = almacenes_distritos,
             ).exclude(familia__nombre="IMPUESTOS").distinct().count()
 
         if usuario.tipo.calidad == True:

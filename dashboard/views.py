@@ -1409,10 +1409,8 @@ def proveedores(request):
 def proveedores_altas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    proveedores = Proveedor.objects.filter(
-                completo=True, 
-                direcciones__estatus__nombre = "PREALTA",
-                ).exclude(familia__nombre="IMPUESTOS").distinct()
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    proveedores = Proveedor.objects.filter(completo=True, direcciones__estatus__nombre = "PREALTA", direcciones__distrito__in = almacenes_distritos).exclude(familia__nombre="IMPUESTOS").distinct()
    
     if usuario.tipo.proveedores_edicion:
         proveedores = proveedores
@@ -1774,34 +1772,20 @@ def add_proveedor_direccion(request, pk):
         }
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
-
+#Este es el momento que se agregan los proveedores
 @perfil_seleccionado_required
 def add_proveedores2(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
     #colaborador_sel = Profile.objects.all()
     usuario = Profile.objects.get(id = pk_perfil)
-    DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"]  # Sustituir por los IDs reales
+    #DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"]  # Sustituir por los IDs reales
 
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+
+    print(almacenes_distritos)
    
-
-    
-    if usuario.tipo.nombre == "Subdirector_Alt":
-        FormularioDireccion = Add_ProveedoresDir_Alt_Form
-        #proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
-    elif usuario.tipo.proveedores == True and usuario.distritos.nombre == "BRASIL":
-        FormularioDireccion = Add_ProveedoresDir_Alt_Form
-        DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"] 
-    elif usuario.tipo.proveedores == True and usuario.distritos.nombre == "Yerod":
-            FormularioDireccion = Add_ProveedoresDir_Alt_Form
-            DISTRITOS_EXCLUIDOS = ["BRASIL", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO"]
-    elif usuario.tipo.proveedores == True:
-        FormularioDireccion = Add_ProveedoresDireccionesForm
-        DISTRITOS_EXCLUIDOS = ["Yerod", "ALTAMIRA ALTERNATIVO", "MATRIZ ALTERNATIVO", "BRASIL"] 
-    #else: No creo que sea necesario, ya que ningún otro usuario debería tener acceso a esta vista, pero lo dejo comentado por si acaso
-    #    FormularioDireccion = ProveedoresDireccionesForm
     distritos_disponibles = (
-            Distrito.objects.filter(status=True)
-            .exclude(nombre__in=DISTRITOS_EXCLUIDOS)
+            Distrito.objects.filter(status=True, id__in = almacenes_distritos)  
             .order_by('nombre')
         )
     # Instancias sin guardar: un GET no crea registros.
@@ -1815,23 +1799,42 @@ def add_proveedores2(request, pk=None):
 
     form = ProveedoresForm(datos, archivos, instance=proveedor, prefix='proveedor',)
 
-    form_direccion = FormularioDireccion(datos, archivos, instance=direccion, prefix='direccion',)
+    form_direccion = ProveedoresDireccionesForm(datos, archivos, instance=direccion, prefix='direccion',)
 
     # Debe asignarse antes de is_valid()
     form_direccion.fields['distrito'].queryset = distritos_disponibles
     error_messages = {}
     if request.method == 'POST':
+        es_yerod = usuario.distritos.nombre.upper() == "YEROD"
+
+        rfc = (request.POST.get('proveedor-rfc') or '').strip().upper()
+        proveedor_existente = None
+
+        if es_yerod and rfc:
+            proveedor_existente = Proveedor.objects.filter(
+                rfc__iexact=rfc
+            ).first()
+
+        if proveedor_existente:
+            # Validar contra la instancia existente para evitar
+            # el error de unicidad del RFC.
+            form.instance = proveedor_existente
         # Validar por separado permite mostrar errores de ambos.
         proveedor_valido = form.is_valid()
         direccion_valida = form_direccion.is_valid()
 
         if proveedor_valido and direccion_valida:
             with transaction.atomic():
-                proveedor = form.save(commit=False)
-                proveedor.creado_por = usuario
-                proveedor.completo = True
-                proveedor.save()
-                form.save_m2m()
+                if proveedor_existente:
+                    # Yerod reutiliza el proveedor sin modificar
+                    # sus datos generales existentes.
+                    proveedor = proveedor_existente
+                else:
+                    proveedor = form.save(commit=False)
+                    proveedor.creado_por = usuario
+                    proveedor.completo = True
+                    proveedor.save()
+                    form.save_m2m()
                 direccion = form_direccion.save(commit=False)
                 direccion.nombre = proveedor
                 direccion.creado_por = usuario
@@ -1843,7 +1846,7 @@ def add_proveedores2(request, pk=None):
                     direccion.estatus = estatus
                 direccion.save()
                 form_direccion.save_m2m()
-                messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
+                messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social}  asociado correctamente.')
                 return redirect('dashboard-proveedores')
             for prefijo, formulario in (
                 ('proveedor', form),

@@ -56,7 +56,7 @@ import requests
 from xml.sax.saxutils import escape
 
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, time as datetime_time
 from decimal import Decimal
 import decimal
 import os
@@ -4190,8 +4190,10 @@ def factura_nueva(request, pk):
                     facturas_registradas = []
                     facturas_duplicadas = []
                     facturas_invalidas = []
-        
-                    RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
+                    if compra.req.orden.distrito.nombre == "Yerod":
+                        RFC_RECEPTORES_ESPERADOS = {"OSY260827551"}
+                    else:
+                        RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
                     rfc_proveedor = (compra.proveedor.nombre.rfc or "").strip().upper()
                 
                     fecha_actual = datetime.today()
@@ -6233,7 +6235,7 @@ def convert_excel_matriz_pagos(pagos):
     wb.add_named_style(percent_style)
 
     columns = ['Distrito','Folio','Tipo','Solicitado','Autorizado','Fecha Creación','Fecha Autorización','Proyecto','Subproyecto','Proveedor/Colaborador',
-               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago','Fecha de envío a CD', 'Tiene Facturas','Cuenta',]
+               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago','Envío a CD','Hora Envío a CD', 'Tiene Facturas','Cuenta','Comprador']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -6244,8 +6246,8 @@ def convert_excel_matriz_pagos(pagos):
     columna_max = len(columns)+2
 
     # Agregar los mensajes
-    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}').style = messages_style
-    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.1. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Grupo Vordcab S.A. de C.V.}').style = messages_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 30
 
     # Agregar los encabezados de las nuevas columnas debajo de los mensajes
@@ -6377,9 +6379,22 @@ def convert_excel_matriz_pagos(pagos):
             #facturas_completas = None
             tipo_de_cambio = ''
 
-        fecha_envio = pago.fecha_control_documentos or ''
+        if pago.fecha_control_documentos:
+            fecha_original = pago.fecha_control_documentos
+            print("Original:", pago.fecha_control_documentos)
 
-       
+            if (fecha_original.hour == 0 and fecha_original.minute == 0 and fecha_original.second == 0):
+                fecha_envio = fecha_original.date()
+                hora_envio = ''
+            else:
+                # Registro nuevo con fecha y hora
+                fecha_local = timezone.localtime(fecha_original)
+                fecha_envio = fecha_local.date()
+                hora_envio = fecha_local.time().replace(tzinfo=None)
+        else:
+            fecha_envio = ""
+            hora_envio = ""
+        comprador = (pago.oc.creada_por.staff.staff.first_name + ' ' + pago.oc.creada_por.staff.staff.last_name) if pago.oc else "NA"
 
         row = [
             distrito,
@@ -6398,9 +6413,11 @@ def convert_excel_matriz_pagos(pagos):
             tipo_de_cambio,
             f'=IF(N{row_num}="",L{row_num},L{row_num}*N{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             pago.pagado_date.replace(tzinfo=None),
-            fecha_envio, 
+            fecha_envio,
+            hora_envio, 
             tiene_facturas,
             cuenta,
+            comprador,
         ]
 
     
@@ -6408,6 +6425,9 @@ def convert_excel_matriz_pagos(pagos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num in (5, 6, 15, 16):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num in (17,):
+                celda = ws.cell(row = row_num, column=col_num+1, value = row[col_num])
+                celda.number_format='HH:MM'
             if col_num in (11, 13, 14):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        

@@ -1383,7 +1383,7 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
                                             </a>
                                             <br>
                                             <span style="display: inline-block; margin-top: 8px; color: #666666; font-size: 12px;">
-                                                Cómo subir facturas y complementos de pago
+                                                Tutorial Pre-Alta Proveedores 
                                             </span>
                                         </p>
                                         <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>

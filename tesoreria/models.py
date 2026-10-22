@@ -63,7 +63,7 @@ class Pago(models.Model):
     saldo = models.DecimalField(max_digits=14,decimal_places=4, null=True, default=0)
     indice = models.IntegerField(null=True, blank=True)  # Nuevo campo para el índice
     control_documentos = models.BooleanField(default=False)
-    fecha_control_documentos = models.DateField(null=True, blank=True)
+    fecha_control_documentos = models.DateTimeField(null=True, blank=True)
     exhibit = models.ForeignKey('finanzas.Exhibit', on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos')
     empresa_beneficiario = models.CharField(max_length=100, null=True, blank=True)
     eliminado = models.BooleanField(default=False)

@@ -1,288 +1,389 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags %}
 {% load widget_tweaks %}
 {% load tt_extras %}
-<html>
-<head>
-{% block title %}Altas de Proveedores{% endblock %}
-</head>
-<body>
-{% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-<!--<div class = "row mt-4">
-    <div class="col-lg-6 col-sm-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtro de Proveedores</h5>
+{% block title %}Altas de proveedores{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-user-check"></i>
+                </span>
+                Altas de proveedores
+            </h1>
+            <p class="sv-page-subtitle">
+                Consulta la información, documentación y estatus de los proveedores en proceso de alta.
+            </p>
+        </div>
+
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-building"></i>
+                {{ proveedores_list.paginator.count }} proveedor{{ proveedores_list.paginator.count|pluralize:"es" }}
+            </span>
+        </div>
+    </header>
+
+    <section class="sv-card mb-3">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros de proveedores
+                </h2>
+                <p class="sv-card-subtitle">
+                    Busca por razón social o RFC.
+                </p>
             </div>
-                {% csrf_token %}
-            <div class="card-body">
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razón Social"}}
-                                <label style="color: #121212;" for="id_razon_social">Razón Social</label>
+        </div>
+
+        <div class="sv-card-body">
+            <form method="GET">
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-lg-5">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-building"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón social" }}
+                                <label for="{{ myfilter.form.razon_social.id_for_label }}">
+                                    Razón social
+                                </label>
                             </div>
                         </div>
+
+                        {% for error in myfilter.form.razon_social.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder= RFC"}}
-                                <label style="color: #121212;" for="id_rfc">RFC</label>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-id-card"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC" }}
+                                <label for="{{ myfilter.form.rfc.id_for_label }}">
+                                    RFC
+                                </label>
                             </div>
                         </div>
+
+                        {% for error in myfilter.form.rfc.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="d-flex flex-column flex-sm-row justify-content-lg-end gap-2">
+                            <a href="{{ request.path }}" class="sv-btn sv-btn-outline">
+                                <i class="fa-solid fa-eraser"></i>
+                                Limpiar
+                            </a>
+                            <button type="submit" class="sv-btn sv-btn-primary">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Buscar
+                            </button>
+                        </div>
                     </div>
                 </div>
-                </form>
-               
-            </div>
-        </div>  
-    </div>
-    {% if usuario.tipo.proveedores_edicion %}
-    <div class="col-lg-2 col-sm-3 mt-2">
-        <div class="card">
-            <div class = "card-header">
-                <h5 class="card-title">Reportes</h5>
-            </div>
-            <div class="card-body">
-                <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills my-2" >
-                        <li class="nav-item mx-2 pl-5">
-                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                       
-                    </ul>
-                </form>
-            </div>
+            </form>
         </div>
-    </div>
-    {% endif %}
-    <div class="col-lg-2 col-sm-3 mt-2">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">Proveedores:</h5>
+    </section>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Proveedores registrados
+                </h2>
+                <p class="sv-card-subtitle">
+                    Revisa sus políticas, documentación y cuestionario de debida diligencia.
+                </p>
             </div>
-            <div class="card-body">
-                    <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills my-2" >
-                        <li class="fs-1 nav-item mx-2 pl-5">
-                             <strong>{{total_prov}}</strong>
-                        </li>
-                    </ul>
-                    </form>
-            </div>
+
+            <span class="sv-badge sv-badge-dark">
+                Página {{ proveedores_list.number }} de {{ proveedores_list.paginator.num_pages }}
+            </span>
         </div>
-    </div>
-</div>-->
 
-<div class="col-lg-12 my-2">
-    <div class="card">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Razón Social</th>
-                    <th scope="col">Contacto</th>
-                    <th scope="col">Telefono</th>
-                    <th scope="col">Distrito</th>
-                    <th scope="col">RFC</th>
-                    <th>Políticas</th>
-                    
-                    <th>Documentación</th>
-          
-                    <th>Cuestionario DD</th>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <th scope="col">Edición</th>
-                  
-                    <th scope="col">Direcciones</th>
-                    <th>Autorizar</th>
-                    {% endif %}
-                   
-                </tr>
-            </thead>
-            <tbody>
-                {% for proveedor in proveedores_list %}
-                <tr>
-                    <td>{{proveedor.id}}</td>
-                    <td>{{proveedor.razon_social}}</th>
-                    <td>{{proveedor.contacto}}</th>
-                    <td>{{proveedor.telefono}}</th>
-                    <td>{{proveedor.distrito}}</th>
-                    <td>{{proveedor.rfc}}</td>
-                    <td>{% if proveedor.politicas_no_autorizadas %}<i class="fa-solid fa-hourglass-half text-warning fa-2x"></i>
-                        {% else %}<i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i>{{proveedor.fecha_aceptacion_politica}} {% endif %}</th>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <td>
-                        {% if proveedor.documentos_completos %}
-                            <a class="btn btn-outline-success" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
-                                <i class="fa-duotone fa-solid fa-file-check fa-2x"></i>
-                            </a>
-                        {% else %}
-                            <a class="btn btn-outline-danger" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
-                               <i class="fa-duotone fa-solid fa-file-xmark fa-2x "></i>
-                            </a>
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+                <thead>
+                    <tr>
+                        <th>Proveedor</th>
+                        <th>Contacto</th>
+                        <th>Distrito</th>
+                        <th>Políticas</th>
+                        <th>Documentación</th>
+                        <th>Cuestionario DD</th>
+                        {% if usuario.tipo.proveedores_edicion %}
+                        <th>Acciones</th>
                         {% endif %}
-                    </td>
-                    {% else %}
-                    <td>
-                        {% if proveedor.documentos_completos %}
-                           <i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i>
-                        {% else %}
-                           <i class="fa-duotone fa-solid fa-file-xmark fa-2x text-danger"></i>
-                        {% endif %}
+                    </tr>
+                </thead>
 
-                    {% endif %}
-                    
-                    <td>
-                        {% if proveedor.dd_contestada %}
-                            <i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i>
-                        {% else %}
-                            <i class="fa-duotone fa-solid text-danger fa-file-xmark fa-2x"></i>
+                <tbody>
+                    {% for proveedor in proveedores_list %}
+                    <tr>
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ proveedor.razon_social|default:"Sin razón social" }}
+                            </span>
+                            <span class="sv-cell-subtitle">
+                                ID: {{ proveedor.id }} · RFC: {{ proveedor.rfc|default:"—" }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="sv-cell-title">
+                                {{ proveedor.contacto|default:"Sin contacto" }}
+                            </span>
+                            <span class="sv-cell-subtitle">
+                                <i class="fa-solid fa-phone me-1"></i>
+                                {{ proveedor.telefono|default:"Sin teléfono" }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if proveedor.distrito %}
+                            <span class="sv-badge sv-badge-neutral">
+                                <i class="fa-solid fa-location-dot"></i>
+                                {{ proveedor.distrito }}
+                            </span>
+                            {% else %}
+                            <span class="sv-cell-subtitle">Sin distrito</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if proveedor.politicas_no_autorizadas %}
+                            <span class="sv-badge sv-badge-warning">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                                Pendientes
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                                Aceptadas
+                            </span>
+                            {% if proveedor.fecha_aceptacion_politica %}
+                            <span class="sv-cell-subtitle">
+                                {{ proveedor.fecha_aceptacion_politica|date:"d/m/Y" }}
+                            </span>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if usuario.tipo.proveedores_edicion %}
+                            <a href="{% url 'documentacion-proveedores' proveedor.id %}?next={{ request.get_full_path|urlencode }}"
+                               class="sv-btn {% if proveedor.documentos_completos %}sv-btn-success{% else %}sv-btn-danger{% endif %}"
+                               title="Consultar documentación"
+                               aria-label="Consultar documentación de {{ proveedor.razon_social }}">
+                                <i class="fa-solid {% if proveedor.documentos_completos %}fa-file-circle-check{% else %}fa-file-circle-xmark{% endif %}"></i>
+                                {% if proveedor.documentos_completos %}Completa{% else %}Pendiente{% endif %}
+                            </a>
+                            {% elif proveedor.documentos_completos %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                                Completa
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-danger">
+                                <i class="fa-solid fa-file-circle-xmark"></i>
+                                Pendiente
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if proveedor.dd_contestada %}
+                            <span class="sv-badge sv-badge-success">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                                Contestado
+                            </span>
+                            {% else %}
+                            <span class="sv-badge sv-badge-danger">
+                                <i class="fa-solid fa-clipboard-question"></i>
+                                Pendiente
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        {% if usuario.tipo.proveedores_edicion %}
+                        <td>
+                            <div class="sv-actions">
+                                <a href="{% url 'dashboard-proveedores-update' proveedor.id %}?next={{ request.get_full_path|urlencode }}"
+                                   class="sv-btn sv-btn-info sv-btn-icon"
+                                   title="Editar proveedor"
+                                   aria-label="Editar proveedor {{ proveedor.razon_social }}">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+
+                                <a href="{% url 'proveedor-direcciones' proveedor.id %}?next={{ request.get_full_path|urlencode }}"
+                                   class="sv-btn sv-btn-outline sv-btn-icon"
+                                   title="Consultar direcciones"
+                                   aria-label="Consultar direcciones de {{ proveedor.razon_social }}">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="sv-btn sv-btn-success sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#dialog"
+                                        hx-target="#document"
+                                        hx-get="{% url 'autorizar-alta-proveedor' proveedor.id %}"
+                                        title="Autorizar alta"
+                                        aria-label="Autorizar alta de {{ proveedor.razon_social }}">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="sv-btn sv-btn-danger sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#dialog"
+                                        hx-target="#document"
+                                        hx-get="{% url 'cancelar-alta-proveedor' proveedor.id %}"
+                                        title="Rechazar alta"
+                                        aria-label="Rechazar alta de {{ proveedor.razon_social }}">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </div>
+                        </td>
                         {% endif %}
-                    </td>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <td>
-                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
-                            <i class="fa-duotone fa-solid fa-pen-to-square"></i>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if usuario.tipo.proveedores_edicion %}7{% else %}6{% endif %}"
+                            class="sv-empty">
+                            <span class="sv-empty-icon">
+                                <i class="fa-solid fa-building-circle-xmark"></i>
+                            </span>
+                            <span class="sv-empty-title">No se encontraron proveedores</span>
+                            <span class="sv-empty-text">
+                                Modifica los filtros o limpia la búsqueda para consultar otros registros.
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if proveedores_list.paginator.num_pages > 1 %}
+        <div class="sv-card-footer">
+            <nav aria-label="Paginación de proveedores">
+                <ul class="pagination sv-pagination justify-content-center mb-0">
+                    {% if proveedores_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url 1 'page' request.GET.urlencode %}"
+                           aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
                         </a>
-                    </td>
-                  
-                    <td>
-                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
-                            <i class="fa-duotone fa-solid fa-location-dot"></i>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url proveedores_list.previous_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página anterior">
+                            <i class="fa-solid fa-angle-left"></i>
                         </a>
-                    </td>
-                    <td>
-                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-alta-proveedor' proveedor.id %}">
-                            <i class="fa-duotone fa-solid fa-circle-check fa-2x"></i>
-                        </a>
-                        <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-alta-proveedor' proveedor.id %}">
-                           <i class="fa-duotone fa-solid fa-circle-xmark fa-2x"></i>
-                        </a>
-                    </td>
+                    </li>
                     {% endif %}
-                    
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+                    {% for pagina in proveedores_list.paginator.page_range %}
+                        {% if proveedores_list.number == pagina %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ pagina }}</span>
+                        </li>
+                        {% elif pagina > proveedores_list.number|add:'-2' and pagina < proveedores_list.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{% my_url pagina 'page' request.GET.urlencode %}">
+                                {{ pagina }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if proveedores_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url proveedores_list.next_page_number 'page' request.GET.urlencode %}"
+                           aria-label="Página siguiente">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{% my_url proveedores_list.paginator.num_pages 'page' request.GET.urlencode %}"
+                           aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<div class="modal fade"
+     id="dialog"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered"
+         id="document"
+         role="document"
+         hx-target="this">
     </div>
 </div>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center">
-            {% if proveedores_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
-            {% endif %}
 
-            {% for item in proveedores_list.paginator.page_range %}
-                {% if proveedores_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > proveedores_list.number|add:'-2' and item < proveedores_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
-                {% endif %}
-            {% endfor %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-            {% if proveedores_list.paginator.num_pages > proveedores_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ proveedores_list.paginator.num_pages}}">{{proveedores_list.paginator.num_pages}}</a></li>
-            {% endif %}
-
-            {% if proveedores_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
-        </ul>
-    </nav>
-<!--Este es el modal-->
-        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
-
-            </div>
-        </div>
-</body>
-</html>
-<!--AJAX CALL-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script>
-    $("#id_familia").change(function () {
-      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
-      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
-
-      $.ajax({                       // initialize an AJAX request
-        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
-        data: {
-          'familia_id': familiaId       // add the familia id to the GET parameters
-        },
-        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
-          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
-        }
-      });
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+        text: "{{ message|escapejs }}",
+        icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
     });
+    {% endfor %}
+});
+</script>
+{% endif %}
 
-    ;(function(){
-        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('dialog');
 
-        htmx.on('htmx:beforeSwap',(e)=>{
-            if (e.detail.target.id === "document" && !e.detail.xhr.response)
-                modal.hide()
-        })
-    })()
+    if (!modalElement || typeof htmx === 'undefined') {
+        return;
+    }
 
-    var myModal = document.getElementById('dialog')
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
 
-    myModal.addEventListener('hidden.bs.modal', function (event) {
-       setTimeout(function(){
-           // location.reload();
-        },3000);
-    })
-  </script>
+    htmx.on('htmx:beforeSwap', function (event) {
+        if (
+            event.detail.target.id === 'document' &&
+            !event.detail.xhr.response
+        ) {
+            modal.hide();
+        }
+    });
+});
+</script>
 {% endblock %}
-
-<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
-<!--style="background-color: #515151; color:white;"-->
-<!--style="background-color: #711F1B; color:white;"-->
