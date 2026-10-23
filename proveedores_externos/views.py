@@ -24,6 +24,8 @@ from requisiciones.models import Requis
 from requisiciones.views import get_image_base64
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
+from utils.email_theme import obtener_tema_correo
+from utils.enviar_correo import enviar_correo_savia
 #from .forms import SubirDocumentoForm, UploadFileForm, RegistroProveedorForm
 from .forms import (
     SubirDocumentoForm,
@@ -1415,7 +1417,7 @@ def check_proveedor_ajax(request):
     })
 
 def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo, es_savia_negro = False):
-    print(tipo)
+    #print(tipo)
     static_path = settings.STATIC_ROOT
     # ------------------------------------------------------------------
     # Identidad visual y configuración según empresa
@@ -1427,6 +1429,8 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo, 
         color_fondo_acento = "#EAF6EE"
 
         img_path_encabezado = os.path.join(static_path,"images","SAVIA_Negro_verde.jpg",)
+
+        img_path_empresa = None
 
         logo_encabezado_html = """
             <table cellspacing="0" cellpadding="0" border="0" role="presentation" align="center" style="margin: 0 auto;">
@@ -1467,13 +1471,13 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo, 
         color_acento = "#3E92CC"
         color_fondo_acento = "#EAF4FA"
 
-        img_path_encambezado = os.path.join(
+        img_path_encabezado = os.path.join(
             static_path,
             'images',
             'SAVIA_Logo.png',
         )
 
-        img_path_vordcab = os.path.join(
+        img_path_empresa = os.path.join(
             static_path,
             'images',
             'logo_vordcab.jpg',
@@ -1633,88 +1637,35 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo, 
         </html>
         """
 
-    try:
-            # Seleccionar la cuenta SMTP según la empresa
-        if es_savia_negro:
-            conexion_correo = get_connection(
-                backend="django.core.mail.backends.smtp.EmailBackend",
-                host=settings.YEROD_EMAIL_HOST,
-                port=settings.YEROD_EMAIL_PORT,
-                username=settings.YEROD_EMAIL_HOST_USER,
-                password=settings.YEROD_EMAIL_HOST_PASSWORD,
-                use_tls=settings.YEROD_EMAIL_USE_TLS,
-                use_ssl=settings.YEROD_EMAIL_USE_SSL,
-                fail_silently=False,
+
+    imagenes_inline = [
+        (
+            "logo_encabezado",
+            img_path_encabezado,
+        ),
+    ]
+
+    if img_path_empresa:
+        imagenes_inline.append(
+            (
+                "logo_empresa",
+                img_path_empresa,
             )
-
-            from_email = settings.YEROD_FROM_EMAIL
-
-        else:
-            conexion_correo = get_connection(
-                backend="django.core.mail.backends.smtp.EmailBackend",
-                host=settings.EMAIL_HOST,
-                port=settings.EMAIL_PORT,
-                username=settings.EMAIL_HOST_USER,
-                password=settings.EMAIL_HOST_PASSWORD,
-                use_tls=settings.EMAIL_USE_TLS,
-                use_ssl=settings.EMAIL_USE_SSL,
-                fail_silently=False,
-            )
-
-            from_email = settings.DEFAULT_FROM_EMAIL
-
-        email = EmailMessage(
-            subject= asunto,
-            body=html_message,
-            from_email= from_email,
-            to=[email_destino],
-            bcc= correos_copia,
-            connection=conexion_correo,
         )
-        email.content_subtype = "html"
-         # Necesario para mostrar las imágenes CID dentro del correo
-        email.mixed_subtype = "related"
+    try:
+        enviados = enviar_correo_savia(
+            asunto = asunto,
+            html_message = html_message,
+            destinatarios = [email_destino],
+            bcc= correos_copia,
+            es_savia_negro = es_savia_negro,
+            imagenes_inline = imagenes_inline,
+        )
 
-        # Adjuntar logo de Grupo Vordcab
-        with open(img_path_encabezado, "rb") as archivo:
-            subtipo = ("png" if img_path_encabezado.lower().endswith(".png") else "jpeg")
+        return bool(enviados)
 
-            logo_encabezado = MIMEImage(archivo.read(),_subtype=subtipo,)
-
-            logo_encabezado.add_header("Content-ID","<logo_encabezado>",)
-
-            logo_encabezado.add_header("Content-Disposition","inline",filename=os.path.basename(img_path_encabezado),)
-
-            email.attach(logo_encabezado)
-
-        # SAVIA normal lleva un segundo logo; YEROD no
-        if not es_savia_negro:
-            with open(img_path_vordcab, "rb") as archivo:
-                logo_savia = MIMEImage(
-                    archivo.read(),
-                    _subtype="png",
-                )
-
-            logo_savia.add_header(
-                "Content-ID",
-                "<logo_savia>",
-            )
-
-            logo_savia.add_header(
-                "Content-Disposition",
-                "inline",
-                filename="SAVIA_Logo.png",
-            )
-
-            email.attach(logo_savia)
-        email.send()
-
-        return True
-    except Exception as e:
-        print(f"Error al enviar el correo: {e}")
-
-        return False
-
+    except Exception as error:
+        print(f"Error al enviar el correo {error}")
 
 def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
     static_path = settings.STATIC_ROOT
