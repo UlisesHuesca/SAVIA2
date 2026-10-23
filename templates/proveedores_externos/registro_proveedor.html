@@ -1,263 +1,485 @@
 {% extends 'partials/base.html' %}
-{% load static %}
 {% load widget_tweaks %}
-{% block title %}Registro de Proveedor{% endblock %}
+
+{% block title %}Registro de proveedor{% endblock %}
+
+{# Esta pantalla es pública y no necesita la barra de navegación. #}
+{% block navbar %}{% endblock %}
 
 {% block content %}
-<h6>&nbsp;</h6>
-<h6>&nbsp;</h6>
-<div class="row my-4">
-    <div class="col-md-4">
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
-            {% endfor %}
+<main class="sv-page {% if request.empresa_portal == 'YEROD' %}sv-theme-negro{% else %}sv-theme-vordcab{% endif %}">
+    <header class="sv-page-header">
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-building-circle-check"></i>
+                </span>
+                Registro de proveedor
+            </h1>
+            <p class="sv-page-subtitle">
+                Completa tu información comercial, bancaria y de contacto para continuar con el proceso de alta.
+            </p>
+        </div>
+
+        {% if tipo_invitacion %}
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-envelope-open-text"></i>
+                Invitación de proveedor
+            </span>
+        </div>
         {% endif %}
-    </div>
-</div>
+    </header>
 
+    <form method="POST" id="registroProveedorForm" novalidate>
+        {% csrf_token %}
 
-<div class="container d-flex justify-content-center align-items-center mt-5 mb-5">
-    <div class="card col-md-10 offset-md-2">
-        <div class="card-header text-center text-white" style="background-color: #122D45;">
-            <h4>Completa tu registro como proveedor</h4>
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            <div class="fw-semibold mb-1">
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                No fue posible completar el registro
+            </div>
+            {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
         </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}
-                    <div>{{ error }}</div>
-                    {% endfor %}
+        {% endif %}
+
+        {% if not registro_yerod_existente %}
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-user-lock"></i>
+                        Datos de acceso
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Define la identificación del proveedor y una contraseña segura.
+                    </p>
                 </div>
-                {% endif %}
+            </div>
 
-
-                <!-- Datos de acceso -->
-                <h5 class="mb-3">Datos de acceso</h5>
-                {% if tipo_invitacion == "NUEVO_PROVEEDOR" %}
-                <div class="col-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{ form.razon_social|add_class:"form-control"|attr:"placeholder= Razón Social" }}
-                            <label style="color: #121212;" for="id_area">Razón Social*</label>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="col-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{ form.password|add_class:"form-control" |attr:"placeholder= Password" }}
-                            <label style="color: #121212;" for="id_area">Password*</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{ form.confirm_password|add_class:"form-control"|attr:"placeholder=Confirmar Password" }}
-                            <label style="color: #121212;" for="id_area">Confirmar Password*</label>
-                        </div>
-                    </div>
-                </div>
-                <label class="text-muted" style="font-size: 0.85rem;">
-                    <strong>La contraseña debe cumplir lo siguiente:</strong><br>
-                    • Debe contener al menos 8 caracteres.<br>
-                    • Debe contener al menos una letra mayúscula.<br>
-                    • Debe contener al menos una letra minúscula.<br>
-                    • Debe contener al menos un número.<br>
-                    • Debe contener al menos un caracter especial: <code>@ $ ! % * # ? & _</code>
-                </label>
-
-              
-
-                <hr class="my-4" />
-
-                <!-- Datos bancarios -->
-                <h5 class="mb-3">Datos bancarios</h5>
-                <div class="row">
-                    <div class="col-sm-12 col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.banco|add_class:"form-control"|attr:"placeholder=Banco"}}
-                            <label for="id_banco">Banco*</label>
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    {% if tipo_invitacion == 'NUEVO_PROVEEDOR' %}
+                    <div class="col-12">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-building"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón social"|attr:"autocomplete:organization" }}
+                                <label for="{{ form.razon_social.id_for_label }}">
+                                    Razón social*
+                                </label>
                             </div>
                         </div>
+                        {% for error in form.razon_social.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                      <div class="col-sm-12 col-lg-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda"}}
-                                <label for="id_lugar_partida">Moneda*</label>
+                    {% endif %}
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.password|add_class:"form-control"|append_attr:"placeholder=Contraseña"|attr:"autocomplete:new-password" }}
+                                <label for="{{ form.password.id_for_label }}">
+                                    Contraseña*
+                                </label>
+                            </div>
+                        </div>
+                        {% for error in form.password.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.confirm_password|add_class:"form-control"|append_attr:"placeholder=Confirmar contraseña"|attr:"autocomplete:new-password" }}
+                                <label for="{{ form.confirm_password.id_for_label }}">
+                                    Confirmar contraseña*
+                                </label>
+                            </div>
+                        </div>
+                        {% for error in form.confirm_password.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12">
+                        <div class="sv-card-body sv-bg-light border rounded mb-0" role="note">
+                            <div class="sv-card-title mb-2">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                Requisitos de la contraseña
+                            </div>
+                            <div class="row g-2 small">
+                                <div class="col-12 col-md-6">
+                                    <i class="fa-solid fa-check me-1"></i>
+                                    Al menos 8 caracteres.
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <i class="fa-solid fa-check me-1"></i>
+                                    Una letra mayúscula y una minúscula.
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <i class="fa-solid fa-check me-1"></i>
+                                    Al menos un número.
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <i class="fa-solid fa-check me-1"></i>
+                                    Un carácter especial: <code>@ $ ! % * # ? &amp; _</code>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-sm-12 col-lg-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cuenta|add_class:"form-control"|attr:"placeholder=Cuenta"}}
-                                <label for="id_lugar_partida">Cuenta*</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-12 col-lg-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.clabe|add_class:"form-control"|attr:"placeholder=Clabe"}}
-                                <label for="id_lugar_partida">Clabe*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-sm-12 col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.referencia|add_class:"form-control"|attr:"placeholder=Referencia"}}
-                            <label for="id_referencia">Referencia</label>
-                            </div>
-                        </div>
-                    </div>   
-                
-                
-                    <div class="col-sm-12 col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.convenio|add_class:"form-control"|attr:"placeholder=Convenio"}}
-                            <label for="id_convenio">Convenio</label>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-                <hr class="my-4" />
-                
-                <h5 class="mb-3">Condiciones de Compra</h5>
-                    <div class="row">
-                        <div class="col-sm-12 col-lg-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.condiciones|add_class:"form-control"|append_attr:"placeholder=Condiciones de compra"}}
-                                <label for="id_lugar_partida">Condiciones de compra*</label>
-                                </div>
-                            </div>
-                        </div>
-                   
-                        <div class="col-sm-12 col-lg-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
-                                <label for="id_lugar_partida">Días de crédito*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <hr class="my-4" />
-                <!-- Datos de contacto -->
-                <h5 class="mb-3">Datos de Proveedor y Contacto</h5>
-                <div class ="row">
-                    <div class="col-lg-6 col-sm-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.domicilio|add_class:"form-control"|attr:"placeholder=Domicilio"}}
-                            <label for="id_lugar_partida">Domicilio*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.telefono|add_class:"form-control"|attr:"placeholder=Teléfono"}}
-                            <label for="id_lugar_partida">Teléfono*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-lg-6 col-sm-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.contacto|add_class:"form-control"|attr:"placeholder=Contacto"}}
-                            <label for="id_lugar_partida">Contacto*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 col-sm-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.email_opt|add_class:"form-control"|attr:"placeholder=Email Opcional"| remove_attr:"required"}}
-                            <label for="id_lugar_partida">Email Opcional</label>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="col-lg-6 col-sm-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.pais|add_class:"form-control"|attr:"placeholder=País"}}
-                            <label for="id_lugar_partida">País</label>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="col-lg-6 col-sm-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.estado|add_class:"form-control"|attr:"placeholder=Estado"}}
-                            <label for="id_lugar_partida">Estado</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-
-                </div>
-                <hr class="my-4" />
-
-                <div class="text-center">
-                    <button type="submit" class="btn btn-success mt-3">Registrarme</button>
-                </div>
-
-
-              
-                
-            </form>
+            </div>
+        </section>
+        {% else %}
+        <div class="sv-card mb-3" role="status">
+            <div class="sv-card-body d-flex align-items-center gap-2">
+                <span class="sv-badge sv-badge-primary">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Registro existente
+                </span>
+                <span class="sv-cell-subtitle mt-0">
+                    Se utilizarán los datos de acceso asociados con tu registro existente.
+                </span>
+            </div>
         </div>
-    </div>
-</div>
+        {% endif %}
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-building-columns"></i>
+                        Datos bancarios
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Registra la cuenta en la que se realizarán los pagos del proveedor.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-building-columns"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.banco|add_class:"form-select" }}
+                                <label for="{{ form.banco.id_for_label }}">Banco*</label>
+                            </div>
+                        </div>
+                        {% for error in form.banco.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-coins"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.moneda|add_class:"form-select" }}
+                                <label for="{{ form.moneda.id_for_label }}">Moneda*</label>
+                            </div>
+                        </div>
+                        {% for error in form.moneda.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-hashtag"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"|attr:"autocomplete:off" }}
+                                <label for="{{ form.cuenta.id_for_label }}">Cuenta*</label>
+                            </div>
+                        </div>
+                        {% for error in form.cuenta.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-barcode"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.clabe|add_class:"form-control"|append_attr:"placeholder=CLABE"|attr:"autocomplete:off" }}
+                                <label for="{{ form.clabe.id_for_label }}">CLABE*</label>
+                            </div>
+                        </div>
+                        {% for error in form.clabe.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia" }}
+                                <label for="{{ form.referencia.id_for_label }}">Referencia</label>
+                            </div>
+                        </div>
+                        {% for error in form.referencia.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-handshake"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio" }}
+                                <label for="{{ form.convenio.id_for_label }}">Convenio</label>
+                            </div>
+                        </div>
+                        {% for error in form.convenio.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-card mb-3">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-file-contract"></i>
+                        Condiciones de compra
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Indica las condiciones comerciales acordadas para las compras.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-file-contract"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.condiciones|add_class:"form-select" }}
+                                <label for="{{ form.condiciones.id_for_label }}">
+                                    Condiciones de compra*
+                                </label>
+                            </div>
+                        </div>
+                        {% for error in form.condiciones.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-regular fa-calendar-days"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito" }}
+                                <label for="{{ form.dias_credito.id_for_label }}">
+                                    Días de crédito*
+                                </label>
+                            </div>
+                        </div>
+                        {% for error in form.dias_credito.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-card">
+            <div class="sv-card-header">
+                <div>
+                    <h2 class="sv-card-title">
+                        <i class="fa-solid fa-address-card"></i>
+                        Datos del proveedor y contacto
+                    </h2>
+                    <p class="sv-card-subtitle">
+                        Registra el domicilio y los medios de contacto principales.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sv-card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.domicilio|add_class:"form-control"|append_attr:"placeholder=Domicilio"|attr:"autocomplete:street-address" }}
+                                <label for="{{ form.domicilio.id_for_label }}">Domicilio*</label>
+                            </div>
+                        </div>
+                        {% for error in form.domicilio.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-phone"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.telefono|add_class:"form-control"|append_attr:"placeholder=Teléfono"|attr:"autocomplete:tel" }}
+                                <label for="{{ form.telefono.id_for_label }}">Teléfono*</label>
+                            </div>
+                        </div>
+                        {% for error in form.telefono.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.contacto|add_class:"form-control"|append_attr:"placeholder=Contacto"|attr:"autocomplete:name" }}
+                                <label for="{{ form.contacto.id_for_label }}">Contacto*</label>
+                            </div>
+                        </div>
+                        {% for error in form.contacto.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-at"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.email_opt|add_class:"form-control"|append_attr:"placeholder=Correo electrónico opcional"|remove_attr:"required"|attr:"autocomplete:email" }}
+                                <label for="{{ form.email_opt.id_for_label }}">
+                                    Correo electrónico opcional
+                                </label>
+                            </div>
+                        </div>
+                        {% for error in form.email_opt.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-earth-americas"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.pais|add_class:"form-select"|attr:"autocomplete:country-name" }}
+                                <label for="{{ form.pais.id_for_label }}">País</label>
+                            </div>
+                        </div>
+                        {% for error in form.pais.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.estado|add_class:"form-select"|attr:"autocomplete:address-level1" }}
+                                <label for="{{ form.estado.id_for_label }}">Estado</label>
+                            </div>
+                        </div>
+                        {% for error in form.estado.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="sv-card-footer">
+                <div class="d-flex justify-content-end">
+                    <button type="submit"
+                            id="btnRegistrarProveedor"
+                            class="sv-btn sv-btn-primary">
+                        <i class="fa-solid fa-user-check"></i>
+                        Registrarme
+                    </button>
+                </div>
+            </div>
+        </section>
+    </form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% for message in messages %}
+    Swal.fire({
+        title: "{% if message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Atención{% else %}Excelente{% endif %}",
+        text: "{{ message|escapejs }}",
+        icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+    });
+    {% endfor %}
+});
+</script>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('registroProveedorForm');
+    const submitButton = document.getElementById('btnRegistrarProveedor');
+    let enviandoFormulario = false;
+
+    if (!form || !submitButton) {
+        return;
+    }
+
+    form.addEventListener('submit', function (event) {
+        if (enviandoFormulario) {
+            event.preventDefault();
+            return;
+        }
+
+        enviandoFormulario = true;
+        submitButton.disabled = true;
+        submitButton.setAttribute('aria-disabled', 'true');
+        submitButton.innerHTML =
+            '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' +
+            '<span>Procesando registro...</span>';
+    });
+});
+</script>
 {% endblock %}

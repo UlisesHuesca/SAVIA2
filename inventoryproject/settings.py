@@ -325,28 +325,32 @@ AUTHENTICATION_BACKENDS = ['user.backends.EmailBackend']
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-#DEFAULT_FROM_EMAIL ='savia@vordcab.com'
-DEFAULT_FROM_EMAIL = 'savia@grupovordcab.com'
 
-
+# ---------------------------------------------------------
+# Correo principal: Vordcab
+# ---------------------------------------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#EMAIL_HOST = 'smtp.gmail.com'
-
-#EMAIL_USE_TLS = True
-#EMAIL_USE_SSL = False
-#EMAIL_HOST ='mail.vordcab.com' #'smtp.gmail.com' 
-#EMAIL_PORT ='26'#'465'
-#EMAIL_HOST_USER ='savia@vordcab.com'
-#EMAIL_HOST_PASSWORD = 'TgySq*/168*/'
-#EMAIL_HOST_PASSWORD = '78UjYgAH-+/7857/*'
-#EMAIL_USE_TLS = True
-#EMAIL_USE_SSL = True
-EMAIL_HOST = 'mail.grupovordcab.com'
+EMAIL_HOST = os.getenv("EMAIL_HOST","mail.grupovordcab.com",)
 EMAIL_PORT = os.getenv('EMAIL_PORT')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
-#EMAIL_USE_SSL = False
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "SAVIA 2.1 <savia@grupovordcab.com>",
+)
+
+# ---------------------------------------------------------
+# Correo alternativo: YEROD
+# ---------------------------------------------------------
+YEROD_EMAIL_HOST = os.getenv("YEROD_EMAIL_HOST",EMAIL_HOST,)
+YEROD_EMAIL_PORT = int(os.getenv("YEROD_EMAIL_PORT",str(EMAIL_PORT),))
+YEROD_EMAIL_HOST_USER = os.getenv("YEROD_EMAIL_HOST_USER","savia@yerod.mx",)
+YEROD_EMAIL_HOST_PASSWORD = os.getenv("YEROD_EMAIL_HOST_PASSWORD","",)
+YEROD_EMAIL_USE_TLS = (os.getenv("YEROD_EMAIL_USE_TLS",str(EMAIL_USE_TLS),).lower()== "true")
+YEROD_EMAIL_USE_SSL = (os.getenv("YEROD_EMAIL_USE_SSL",str(EMAIL_USE_SSL),).lower()== "true")
+YEROD_FROM_EMAIL = os.getenv("YEROD_FROM_EMAIL","SAVIA YEROD <savia@yerod.mx>",)
 
 USE_THOUSAND_SEPARATOR = True
 CELERY_BROKER_URL = 'amqp://localhost'

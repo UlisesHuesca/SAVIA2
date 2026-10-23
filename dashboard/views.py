@@ -2086,12 +2086,12 @@ def edit_proveedor_direccion(request, pk):
     next_param = request.POST.get('next') or request.GET.get('next')
     print('next_param:', next_param)
     #print('estoy aquí')
-    if usuario.tipo.proveedores == True:
+    if usuario.tipo.proveedores_edicion == True:
         direccion = Proveedor_direcciones.objects.get(id = pk)
         proveedor = Proveedor.objects.get(id = direccion.nombre.id)
 
         if request.method =='POST':
-            form = ProveedoresDireccionesForm(request.POST, instance = direccion, profile = usuario)
+            form = ProveedoresDireccionesForm(request.POST, instance = direccion)
             if form.is_valid():
                 cambio_cuenta = 'cuenta' in form.changed_data
                 cambio_clabe = 'clabe' in form.changed_data
@@ -2184,7 +2184,7 @@ def edit_proveedor_direccion(request, pk):
                 return redirect(url)
                 #return redirect('proveedor-direcciones', pk= proveedor.id)
         else:
-            form = ProveedoresDireccionesForm(instance = direccion, profile = usuario)
+            form = ProveedoresDireccionesForm(instance = direccion)
     else:
         raise Http404("No tienes permiso para ver esta vista")
     context = {

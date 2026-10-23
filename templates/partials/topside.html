@@ -56,7 +56,7 @@
                         
                         {% if usuario.tipo.proveedor_externo %}
                             {% if usuario.distritos.nombre == "Yerod" %}
-
+                                {% if prealta %}<p class="sv-dashboard-subtitle">Portal de Proveedor Yerod <span class="sv-badge sv-badge-warning">PREALTA</span></p>{% endif %}
                             {% else %}
                                 {% if prealta %}<p class="sv-dashboard-subtitle">Portal de Proveedor de Grupo Vordcab <span class="sv-badge sv-badge-warning">PREALTA</span></p>
                             
@@ -468,6 +468,10 @@
                         {% endif %}
                     {% endif %} 
                     {% if usuario.tipo.proveedor_externo %}
+                        {% if usuario.distritos.nombre == "Yerod" %}
+                        <p> En espera de ser autorizado por el administrador </p>
+                        {% else %}
+                        
                         {% if prealta %}
                         <div class="sv-dashboard-grid">
                             
@@ -568,6 +572,7 @@
                                 </div>
                             {% endif %}
                         </div>
+                        {% endif %}
                         {% endif %}
                     
                    

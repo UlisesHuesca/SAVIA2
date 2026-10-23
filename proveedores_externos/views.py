@@ -1,15 +1,16 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import Http404, HttpResponse, JsonResponse
-from django.core.mail import EmailMessage
 from django.conf import settings
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
-from django.db.models.functions import Concat, Coalesce
 from django.core.paginator import Paginator
+from django.core.mail import EmailMessage, get_connection
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.contrib import messages
+from django.db import transaction
+from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
+from django.db.models.functions import Concat, Coalesce
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import Http404, HttpResponse, JsonResponse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
 from django.urls import reverse
 from django.views.decorators.http import require_GET
@@ -33,7 +34,8 @@ from .forms import (
     MiembroAltaDireccionForm,
     FuncionarioPublicoRelacionadoForm,
     RelacionServidorPublicoForm,
-    ResponsableInteraccionForm
+    ResponsableInteraccionForm,
+    RegistroDireccionYerodForm
 )
 from dashboard.forms import ProveedoresDireccionesForm, ProveedoresExistDireccionesForm
 from io import BytesIO
@@ -49,7 +51,7 @@ import unicodedata
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 import json
-from django.core.mail import EmailMessage
+
 # Create your views here.
 
 
@@ -1075,14 +1077,9 @@ def invitar_proveedor(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = get_object_or_404(Profile, id=pk_perfil)
     es_gerente_compras = (perfil.tipo.nombre == 'Gerente_compras')
-
-
-     
-    #print('es_gerente_compras:', es_gerente_compras)
-    
     
     if request.method == 'POST':
-        email = (request.POST.get('email') or '').strip()
+        email = (request.POST.get('email') or '').strip().lower()
         rfc   = (request.POST.get('rfc') or '').strip().upper()
         tipo  = (request.POST.get('tipo') or '').strip()
         # Convertir checkboxes a booleanos
@@ -1090,317 +1087,542 @@ def invitar_proveedor(request):
         servicio = bool(request.POST.get('servicio'))
         arrendamiento = bool(request.POST.get('arrendamiento'))
         
-        
-        if InvitacionProveedor.objects.filter(email=email, usado=False).exists():
-            messages.error(request, 'Ya existe una invitación pendiente para este correo.')
-            return redirect('invitar-proveedor')
+        # ----------------------------------------------------------
+        # Validar tipo de invitación
+        # ----------------------------------------------------------
+        tipos_validos = (
+            "NUEVO_PROVEEDOR",
+            "NUEVA_DIRECCION",
+            "NUEVO_USUARIO",
+        )
 
-        if tipo not in ('NUEVO_PROVEEDOR', 'NUEVA_DIRECCION', 'NUEVO_USUARIO'):
+        if tipo not in tipos_validos:
             messages.error(request, 'Tipo de invitación inválido.')
             return redirect('invitar-proveedor')
-        
-        distrito_id = request.POST.get('distrito')
 
+
+        # ----------------------------------------------------------
+        # Determinar distrito de la invitación
+        # ----------------------------------------------------------
+        distrito_id = request.POST.get("distrito")
 
         if es_gerente_compras and distrito_id:
             distrito = get_object_or_404(
                 Distrito,
                 pk=distrito_id,
+                status=True,
             )
         else:
             distrito = perfil.distritos
 
+        es_savia_negro = (distrito.nombre.strip().upper() == "YEROD")
 
+        print("distrito:", distrito)
+        print("tipo:", tipo)
+        print("es_savia_negro:", es_savia_negro)
 
-        ESTATUS_VALIDOS = ['NUEVO', 'APROBADO']
+        # ----------------------------------------------------------
+        # Invitaciones pendientes
+        #
+        # La misma dirección de correo puede tener una invitación
+        # pendiente en otro distrito. Solo se bloquea si corresponde
+        # al mismo distrito.
+        # ----------------------------------------------------------
 
-        print('distrito:',distrito)
-        print('tipo:',tipo)
-        if tipo in ("NUEVA_DIRECCION", "NUEVO_USUARIO"):
-            # En estos casos, el proveedor DEBE existir
-            proveedor = Proveedor.objects.filter(rfc=rfc).first()
-            if not proveedor:
-                messages.error(
-                    request,
-                    'No se encontró un proveedor con ese RFC. '
-                    'Debes registrarlo como nuevo proveedor primero.'
-                )
-                return redirect('invitar-proveedor')
-            
-             # No puedes invitar si ya tiene dirección ACTIVA en ese distrito
-            existe_dir = Proveedor_direcciones.objects.filter(
-                nombre=proveedor,
-                distrito=distrito,
-                completo=True,
-                estatus__nombre__in=ESTATUS_VALIDOS,
-            ).exists()
-            
-            if existe_dir:
-                messages.error(
-                    request,
-                    f'El proveedor ya tiene una dirección activa en el distrito {distrito}. '
-                    'No puedes enviar invitación para este distrito.'
-                )
-                return redirect('invitar-proveedor')
-            else:
-                
-                #print('sí, esta pasando1')
-                if tipo == "NUEVO_USUARIO" and User.objects.filter(email = email).exists():
-                    messages.error(request, 'Este correo ya está registrado como usuario en SAVIA.')
-                    return redirect('invitar-proveedor')
+        invitacion_pendiente = (InvitacionProveedor.objects.filter(email=email, usado=False, distrito= distrito,).exists())
 
-                if InvitacionProveedor.objects.filter(email=email, usado = False).exists():
-                    messages.error(request, 'Ya existe una invitación activa para este correo.')
-                    return redirect('invitar-proveedor')
-             
+        if invitacion_pendiente:
+            messages.error(request, f'Ya existe una invitación pendiente para este correo en el distrito.{distrito}')
+            return redirect('invitar-proveedor')
 
-                invitacion = InvitacionProveedor.objects.create(
-                    proveedor = proveedor,
-                    email=email,
-                    rfc=rfc,
-                    creado_por=perfil,
-                    tipo=tipo,
-                     # <<< Los 3 booleanos guardados correctamente >>>
-                    producto=producto,
-                    servicio=servicio,
-                    arrendamiento=arrendamiento,
-                    usado= False,
+        # ----------------------------------------------------------
+        # Buscar el proveedor globalmente
+        #
+        # El proveedor puede existir en Vordcab y posteriormente
+        # registrarse también en YEROD. No se duplica el registro
+        # principal; la relación con la empresa se determina mediante
+        # Proveedor_direcciones.distrito.
+        # ----------------------------------------------------------
+        proveedor = (Proveedor.objects.filter(rfc__iexact=rfc).first())
+        
+        estatus_validos = ['NUEVO', 'APROBADO']
+
+        proveedor_activo_en_distrito = False
+
+        if proveedor:
+            proveedor_activo_en_distrito = (
+                Proveedor_direcciones.objects
+                .filter(
+                    nombre=proveedor,
                     distrito=distrito,
+                    completo=True,
+                    estatus__nombre__in=estatus_validos,
                 )
+                .exists()
+            )
 
-                if tipo == "NUEVA_DIRECCION":
-                    link = request.build_absolute_uri(reverse('user-login'))
-                else:
-                    link = request.build_absolute_uri(reverse('registro-proveedor', args=[invitacion.token]))
-                
-                enviar_correo_invitacion(
-                    email, rfc, link,
-                    f"{perfil.staff.staff.first_name} {perfil.staff.staff.last_name}", tipo
+        # ----------------------------------------------------------
+        # NUEVO PROVEEDOR
+        #
+        # Si existe en otros distritos, la invitación se permite.
+        # Solo se bloquea si ya existe en el distrito seleccionado.
+        # ----------------------------------------------------------
+        if tipo == "NUEVO_PROVEEDOR":
+            if proveedor_activo_en_distrito:
+                messages.error(
+                    request,
+                    (
+                        f"El proveedor con RFC {rfc} ya se encuentra "
+                        f"registrado en el distrito {distrito}."
+                    ),
                 )
+                return redirect("invitar-proveedor")
 
-                return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
-                
-        else:
-            print('sí, esta pasando')
             invitacion = InvitacionProveedor.objects.create(
+                proveedor=proveedor,
                 email=email,
                 rfc=rfc,
                 creado_por=perfil,
                 tipo=tipo,
-                 # <<< Los 3 booleanos guardados correctamente >>>
                 producto=producto,
                 servicio=servicio,
                 arrendamiento=arrendamiento,
+                usado=False,
                 distrito=distrito,
             )
 
             link = request.build_absolute_uri(
-                reverse('registro-proveedor', args=[invitacion.token])
+                reverse(
+                    "registro-proveedor",
+                    args=[invitacion.token],
+                )
             )
-            enviar_correo_invitacion(
-                email, rfc, link,
-                f"{perfil.staff.staff.first_name} {perfil.staff.staff.last_name}", tipo
+
+        # ----------------------------------------------------------
+        # NUEVA DIRECCIÓN O NUEVO USUARIO
+        # ----------------------------------------------------------
+        else:
+            if not proveedor:
+                messages.error(
+                    request,
+                    (
+                        "No se encontró un proveedor con ese RFC. "
+                        "Debes registrarlo como nuevo proveedor primero."
+                    ),
+                )
+                return redirect("invitar-proveedor")
+
+            # Ambos procesos agregan una dirección en el distrito.
+            # Si ya existe una dirección activa, no debe duplicarse.
+            if proveedor_activo_en_distrito:
+                messages.error(
+                    request,
+                    (
+                        "El proveedor ya tiene una dirección activa "
+                        f"en el distrito {distrito}."
+                    ),
+                )
+                return redirect("invitar-proveedor")
+
+            if tipo == "NUEVO_USUARIO" and not es_savia_negro and User.objects.filter(email__iexact=email).exists():
+                usuario_existente = User.objects.filter(email__iexact=email,).exists()
+
+                if usuario_existente:
+                    messages.error(request,("Este correo ya está registrado como usuario en SAVIA."),)
+                    return redirect("invitar-proveedor")
+
+            invitacion = InvitacionProveedor.objects.create(
+                proveedor=proveedor,
+                email=email,
+                rfc=rfc,
+                creado_por=perfil,
+                tipo=tipo,
+                producto=producto,
+                servicio=servicio,
+                arrendamiento=arrendamiento,
+                usado=False,
+                distrito=distrito,
             )
 
-            return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
+            if tipo == "NUEVA_DIRECCION":
+                link = request.build_absolute_uri(reverse("user-login"))
+            else:
+                link = request.build_absolute_uri(
+                    reverse("registro-proveedor", args=[invitacion.token],))
 
-    distritos = Distrito.objects.filter(status = True).exclude(Q(nombre='BRASIL') | Q(nombre='MATRIZ ALTERNATIVO') | Q(nombre='ALTAMIRA ALTERNATIVO')).order_by('nombre')
+        # ----------------------------------------------------------
+        # Enviar correo con el tema correspondiente
+        # ----------------------------------------------------------
+        creado_por_nombre = (
+            f"{perfil.staff.staff.first_name} "
+            f"{perfil.staff.staff.last_name}"
+        ).strip()
 
+        correo_enviado = enviar_correo_invitacion(
+            email_destino=email,
+            rfc=rfc,
+            link=link,
+            creado_por_nombre=creado_por_nombre,
+            tipo=tipo,
+            es_savia_negro=es_savia_negro,
+        )
+
+
+        if correo_enviado:
+            messages.success(request,(f"La invitación fue creada y enviada correctamente para el distrito {distrito}."),)
+        else:
+            messages.warning(request,("La invitación fue creada, pero no fue posible enviar el correo electrónico."),)
+
+        return render(request,"proveedores_externos/invitacion_enviada.html",{"link": link,"distrito": distrito,"es_savia_negro": es_savia_negro,},)
+
+
+    almacenes_distritos = set(perfil.almacen.values_list('distrito__id', flat=True))
+    distritos = (Distrito.objects.filter(status=True, id__in = almacenes_distritos).order_by("nombre"))
+ 
     context = {
         'perfil': perfil,
         'es_gerente_compras': es_gerente_compras,
         'distritos': distritos,
     }
 
-    
     return render(request, 'proveedores_externos/formulario_invitacion.html', context)
 
 
 def check_proveedor_ajax(request):
+    pk_perfil = request.session.get("selected_profile_id")
+    perfil = get_object_or_404(Profile, id = pk_perfil)
     rfc   = (request.GET.get('rfc') or '').strip().upper()
-    email = (request.GET.get('email') or '').strip()
-    exists_rfc = Proveedor.objects.filter(rfc=rfc).exists()
-    exists_email_or_invite = (
-        User.objects.filter(email=email).exists() or
-        InvitacionProveedor.objects.filter(email=email, usado=False).exists()
-    )
-    print(exists_rfc)
-    print(exists_email_or_invite)
+    email = (request.GET.get('email') or '').strip().lower()
+    distrito = perfil.distritos
+    es_yerod = bool(distrito and distrito.nombre.strip().upper() == "YEROD")
+    proveedor = (Proveedor.objects.filter(rfc__iexact=rfc).first())
     proveedor_razon = ''
     proveedor_id = None
     direcciones_data = []
     estatus_set = set()
    
+    estatus_validos = ['NUEVO', 'APROBADO']
 
-    ESTATUS_VALIDOS = ['NUEVO', 'APROBADO']
+    direcciones_filtradas = (
+        Proveedor_direcciones.objects.none()
+    )
 
-    if exists_rfc:
-        proveedor = Proveedor.objects.filter(rfc=rfc).first()
-        print('proveedor:',proveedor)
-        if proveedor:
-
-            proveedor_razon = proveedor.razon_social
-            proveedor_id = proveedor.id
-            print('proveedor_razon:', proveedor_razon)
-            # FILTRAR SOLO DIRECCIONES ACTIVAS CON ESTATUS PERMITIDO
-            direcciones_filtradas = Proveedor_direcciones.objects.filter(
-                nombre = proveedor,
-                distrito__status=True,
-                estatus__nombre__in=ESTATUS_VALIDOS
+    if proveedor:
+        if es_yerod:
+            # YEROD solamente revisa direcciones de YEROD
+            direcciones_filtradas = (Proveedor_direcciones.objects.filter(
+                nombre=proveedor, distrito=distrito, distrito__status=True, completo=True, estatus__nombre__in=estatus_validos,)
+                .select_related(
+                    "distrito",
+                    "estatus",
+                )
             )
-            print('direcciones_filtradas:', direcciones_filtradas)
 
-            for d in direcciones_filtradas:
-                distrito_nombre = getattr(getattr(d, 'distrito', None), 'nombre', '')
-                estatus_nombre = getattr(getattr(d, 'estatus', None), 'nombre', '')
-
-                if estatus_nombre:
-                    estatus_set.add(estatus_nombre)
-
-                direcciones_data.append({
-                    'id': d.id,
-                    'distrito': distrito_nombre,
-                    'estatus': estatus_nombre,
-                })
+            exists_rfc = (direcciones_filtradas.exists())
         
+        else:
+            # Vordcab conserva el comportamiento anterior
+            direcciones_filtradas = (
+                Proveedor_direcciones.objects
+                .filter(
+                    nombre=proveedor,
+                    distrito__status=True,
+                    estatus__nombre__in=estatus_validos,
+                )
+                .select_related(
+                    "distrito",
+                    "estatus",
+                )
+            )
+
+            exists_rfc = True
+
+    else:
+        exists_rfc = False
+
+    # El usuario continúa siendo global en SAVIA.
+    exists_user_email = User.objects.filter(email__iexact=email,).exists()
+
+    if es_yerod:
+        # En YEROD no importa que el User ya exista.
+        # Solamente evitamos duplicar una invitación pendiente de YEROD.
+        exists_pending_invite  = (InvitacionProveedor.objects
+            .filter(
+                email__iexact=email,
+                usado=False,
+                distrito=distrito,
+            )
+            .exists()
+        )
+        exists_email_or_invite = (
+            exists_pending_invite
+        )
+    else:
+        # Vordcab conserva la validación anterior.
+        exists_pending_invite = (
+            InvitacionProveedor.objects
+            .filter(
+                email__iexact=email,
+                usado=False,
+            )
+            .exists()
+        )
+
+
+        exists_email_or_invite = (exists_user_email or exists_pending_invite)
+
+     # Solo se muestran datos si el proveedor ya existe
+    # dentro del alcance correspondiente.
+    if proveedor and exists_rfc:
+        proveedor_razon = proveedor.razon_social
+        proveedor_id = proveedor.id
+
+        for direccion in direcciones_filtradas:
+            distrito_nombre = (direccion.distrito.nombre if direccion.distrito else "")
+
+            estatus_nombre = (direccion.estatus.nombre if direccion.estatus else "")
+
+            if estatus_nombre:
+                estatus_set.add(
+                    estatus_nombre
+                )
+
+            direcciones_data.append(
+                {
+                    "id": direccion.id,
+                    "distrito": distrito_nombre,
+                    "estatus": estatus_nombre,
+                }
+            )
+
+    print("Distrito:", distrito)
+    print("Es YEROD:", es_yerod)
+    print("Proveedor global:", proveedor)
+    print("Existe para este portal:", exists_rfc)
+    print("Existe usuario:", exists_user_email)
+    print("Existe invitación:", exists_pending_invite)
+
    
     return JsonResponse({
         'exists_rfc': exists_rfc,
         'exists_email_or_invite': exists_email_or_invite,
+        "exists_user_email": exists_user_email,
+        "exists_pending_invite": exists_pending_invite,
         'proveedor_id': proveedor_id,
         'proveedor_razon': proveedor_razon,
         'direcciones': direcciones_data,
         'estatus_lista': list(estatus_set),
     })
 
-def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
+def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo, es_savia_negro = False):
     print(tipo)
     static_path = settings.STATIC_ROOT
-    img_path_savia = os.path.join(
-        static_path,
-        'images',
-        'SAVIA_Logo.png',
-    )
+    # ------------------------------------------------------------------
+    # Identidad visual y configuración según empresa
+    # ------------------------------------------------------------------
+    if es_savia_negro:
+        nombre_empresa = "YEROD"
+        color_principal = "#1A1A1A"
+        color_acento = "#288C45"
+        color_fondo_acento = "#EAF6EE"
 
-    img_path_vordcab = os.path.join(
-        static_path,
-        'images',
-        'logo_vordcab.jpg',
-    )
-    link = link
+        img_path_encabezado = os.path.join(static_path,"images","SAVIA_Negro_verde.jpg",)
+
+        logo_encabezado_html = """
+            <table cellspacing="0" cellpadding="0" border="0" role="presentation" align="center" style="margin: 0 auto;">
+                <tr>
+                    <td width="76" height="76" align="center" valign="middle" style="width: 76px; height: 76px; overflow: hidden;">
+                        <img src="cid:logo_encabezado" alt="YEROD" width="76" height="76" style="display: block; width: 76px !important; height: 76px !important; max-width: 76px !important; max-height: 76px !important; object-fit: cover; object-position: center; border: 2px solid #288C45; border-radius: 50%;">
+                    </td>
+                </tr>
+            </table>
+        """
+
+        logo_inferior_html = ""
+
+        pasos_cumplimiento = ""
+
+        texto_politicas = (
+            ""
+        )
+
+        # Debe configurarse en settings.py para que el remitente tampoco
+        # muestre un dominio relacionado con Grupo Vordcab.
+        from_email = getattr(
+            settings,
+            "YEROD_FROM_EMAIL",
+            settings.DEFAULT_FROM_EMAIL,
+        )
+
+        # Aquí puedes colocar posteriormente correos propios de YEROD.
+        correos_copia = getattr(
+            settings,
+            "YEROD_PROVEEDORES_BCC",
+            [],
+        )
+
+    else:
+        nombre_empresa = "GRUPO VORDCAB S.A. DE C.V."
+        color_principal = "#173F5F"
+        color_acento = "#3E92CC"
+        color_fondo_acento = "#EAF4FA"
+
+        img_path_encambezado = os.path.join(
+            static_path,
+            'images',
+            'SAVIA_Logo.png',
+        )
+
+        img_path_vordcab = os.path.join(
+            static_path,
+            'images',
+            'logo_vordcab.jpg',
+        )
+
+        logo_encabezado_html = """
+            <img src="cid:logo_encabezado" alt="Grupo Vordcab" width="120" style="display: block; width: 120px !important; max-width: 120px !important; height: auto; border: 0;">
+        """
+
+        logo_inferior_html = """
+            <table width="100%" cellspacing="0" cellpadding="0" border="0" role="presentation">
+                <tr>
+                    <td align="center" style="padding-top: 24px;">
+                        <img src="cid:logo_savia" alt="SAVIA 2.0" width="50" height="50" style="display: block; width: 50px !important; height: 50px !important; max-width: 50px !important; max-height: 50px !important; object-fit: cover; border-radius: 50%;">
+                    </td>
+                </tr>
+            </table>
+        """
+
+        pasos_cumplimiento = """
+            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+                <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
+                <li>Subir los documentos requeridos.</li>
+                <li>Contestar el cuestionario de Debida Diligencia.</li>
+            </ol>
+        """
+
+        texto_politicas = (
+            "Aceptar las políticas y códigos de Grupo Vordcab."
+        )
+
+        from_email = settings.DEFAULT_FROM_EMAIL
+
+        correos_copia = [
+            "proveedores.sur@grupovordcab.com",
+            "ulises.huesca@grupovordcab.com",
+        ]
+
+
     if tipo == 'NUEVA_DIRECCION':
-        titulo = "Agregar nueva dirección de facturación/servicio"
+        titulo = "Agregar nueva dirección"
+        asunto = "Invitación para agregar una dirección"
         cuerpo = f"""
-            Has recibido una invitación para agregar una <strong>nueva dirección</strong>
+            Has recibido una invitación para agregar una<strong>nueva dirección de facturación o servicio</strong>
             asociada al RFC <strong>{rfc}</strong> en el portal de proveedores.
         """
         pasos = """
-            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+            <ol style="margin: 0; padding-left: 20px; color: #56615B; font-size: 15px; line-height: 1.8;">
                 <li>Accede al portal con tus credenciales habituales.</li>
                 <li>Da clic en el botón "Agregar dirección"</li>
                 <li>Llena la información de domicilio, contacto y condiciones de pago.</li>
             </ol>
         """
         texto_boton = "Ir al portal"
+
     if tipo == 'NUEVO_USUARIO':
-        titulo = "Agregar un nuevo usuario + dirección de proveedor existente"
+        titulo = "Registro de nuevo usuario"
+        asunto = "Invitación para registrar un nuevo usuario"
         cuerpo = f"""
-            Has recibido una invitación para darte de alta como <strong> usuario nuevo </strong> dentro de nuestra plataforma.
+            Has recibido una invitación para darte de alta como <strong>nuevo usuario</strong> dentro de nuestra plataforma.
             Esta nueva cuenta está asociada con el RFC de proveedor existente <strong>{rfc}</strong>        
         """
-        pasos = """
+        pasos = f"""
             <ul style="font-size: 15px; padding-left: 20px; color: #333;">
                 <li><strong>Completar tu registro inicial</strong> dando clic en el botón que aparece a continuación.</li>
                 <li>Acceder al portal de proveedores con los datos de acceso generados.</li>
             </ul>
-            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
-                <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
-                <li>Subir los documentos requeridos.</li>
-                <li>Contestar el cuestionario de Debida Diligencia.</li>
-            </ol>
+            
+            {pasos_cumplimiento}
         """
         texto_boton = "Completar registro"
     else:
         titulo = "Invitación a registrarte como proveedor"
+        asunto = "Invitación para registro de proveedor"
         cuerpo = f"""
             Has sido invitado a registrarte como proveedor en nuestra plataforma.
             Tu RFC registrado es <strong>{rfc}</strong>.
         """
-        pasos = """
+        pasos = f"""
             <ul style="font-size: 15px; padding-left: 20px; color: #333;">
                 <li><strong>Completar tu registro inicial</strong> dando clic en el botón que aparece a continuación.</li>
                 <li>Acceder al portal de proveedores con los datos de acceso generados.</li>
             </ul>
-            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
-                <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
-                <li>Subir los documentos requeridos.</li>
-                <li>Contestar el cuestionario de Debida Diligencia.</li>
-            </ol>
+            {pasos_cumplimiento}
         """
         texto_boton = "Completar registro"
 
+    # ------------------------------------------------------------------
+    # HTML
+    # ------------------------------------------------------------------
+
     html_message = f"""
+        <!DOCTYPE html>
         <html>
             <head>
                 <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+            <body style="margin: 0; padding: 0; background-color: #F1F3F2; color: #29332E; font-family: Arial, Helvetica, sans-serif;">
+                <table width="100%" cellspacing="0" cellpadding="0" border="0" role="presentation" style="width: 100%; background-color: #F1F3F2;">
                     <tr>
-                        <td align="center">
-                            <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                        <td align="center" style="padding: 32px 15px;">
+                             <table width="600" cellspacing="0" cellpadding="0" border="0" role="presentation" style="width: 100%; max-width: 600px; background-color: #FFFFFF; border: 1px solid #DDE3DF; border-radius: 14px;">
                                 <tr>
-                                    <td align="center">
-                                        <img
-                                            src="cid:logo_vordcab"
-                                            alt="Logo Grupo Vordcab"
-                                            style="width: 120px; height: auto;"
-                                        >
+                                    <td align="center" style="padding: 25px 20px; background-color: {color_principal}; border-top: 4px solid {color_acento}; border-radius: 14px 14px 0 0;">
+                                        {logo_encabezado_html}
+                                        <h1 style="margin: 14px 0 0; color: #FFFFFF; font-size: 21px; line-height: 1.3; font-weight: 700;">{titulo}</h1>
+                                        <p style="margin: 6px 0 0; color: #D4DBD7; font-size: 13px; line-height: 1.5;">Portal de proveedores</p>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 20px;">
-                                        <p style="font-size: 18px;">Hola,</p>
-                                        <p style="font-size: 16px;">
-                                            {cuerpo}
-                                        </p>
-                                        <h3 style="margin-top: 30px; font-size: 16px;">Pasos a seguir</h3>
-                                        {pasos}
+                                    <td style="padding: 28px;">
+                                        <p style="margin: 0 0 18px; color: #29332E; font-size: 17px; line-height: 1.5;">Hola:</p>
+
+                                        <p style="margin: 0 0 22px; color: #56615B; font-size: 15px; line-height: 1.7;">{cuerpo}</p>
+                                         
+                                        <table width="100%" cellspacing="0" cellpadding="0" border="0" role="presentation" style="width: 100%; background-color: #F7F9F8; border: 1px solid #E0E6E2; border-radius: 10px;">
+                                            <tr>
+                                                <td style="padding: 20px;">
+                                                    <h2 style="margin: 0 0 14px; color: #29332E; font-size: 16px; line-height: 1.4;">Pasos a seguir</h2>
+                                                    {pasos}
+                                                </td>
+                                            </tr>
+                                        </table>
                                         
 
-                                        <p style="text-align: center; margin: 30px 0;">
-                                            <a href="{link}" 
-                                            style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display:inline-block;">
-                                                {texto_boton}
-                                            </a>
-                                        </p>
-                                        <!-- Botón del tutorial -->
-                                        <p style=" text-align: center; margin: 15px 0 30px 0;">
-                                            <a href="https://youtu.be/o727lMJdUCk?si=e4vgIkB4r1iZfUXd" target="_blank" title="Tutorial para proveedores Pre-alta"
-                                                style="background-color: #ffffff; color: #dc3545; padding: 11px 22px; text-decoration: none; border: 1px solid #dc3545;
-                                                    border-radius: 5px; display: inline-block; font-size: 14px; font-weight: bold;">
-                                                ▶ Ver tutorial
-                                            </a>
-                                            <br>
-                                            <span style="display: inline-block; margin-top: 8px; color: #666666; font-size: 12px;">
-                                                Tutorial Pre-Alta Proveedores 
-                                            </span>
-                                        </p>
-                                        <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
-                                        <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
-                                        <div style="text-align: center; margin-top: 30px;">
-                                            <img
-                                                src="cid:logo_savia"
-                                                alt="SAVIA 2.0"
-                                                style="
-                                                    width: 50px;
-                                                    height: auto;
-                                                    border-radius: 50%;
-                                                "
-                                            >
-                                            
-                                            <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
-                                        </div>
+                                        <table width="100%" cellspacing="0" cellpadding="0" border="0" role="presentation">
+                                            <tr>
+                                                <td align="center" style="padding: 26px 0 14px;">
+                                                    <a href="{link}" style="display: inline-block; padding: 13px 25px; background-color: {color_acento}; color: #FFFFFF; font-size: 15px; font-weight: bold; line-height: 1.2; text-decoration: none; border-radius: 6px;">{texto_boton}</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" cellspacing="0" cellpadding="0" border="0" role="presentation" style="width: 100%; margin-top: 12px; background-color: {color_fondo_acento}; border-left: 4px solid {color_acento}; border-radius: 6px;">
+                                            <tr>
+                                                <td style="padding: 15px 17px; color: #30493A; font-size: 14px; line-height: 1.5;">
+                                                    ¿Necesitas ayuda con tu registro?
+                                                    <a href="https://youtu.be/o727lMJdUCk?si=e4vgIkB4r1iZfUXd" target="_blank" style="color: {color_acento}; font-weight: bold; text-decoration: none;">Consulta el tutorial para proveedores.</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <p style="margin: 24px 0 0; color: #77817B; font-size: 13px; line-height: 1.6;">Si no esperabas este correo, puedes ignorarlo.</p>
+
+                                        <p style="margin: 24px 0 0; color: #44514A; font-size: 14px; line-height: 1.6;">Atentamente,<br><strong>{creado_por_nombre}</strong><br><strong>{nombre_empresa}</strong></p>
+
+                                        {logo_inferior_html}
+
+                                        <p style="margin: 24px 0 0; color: #969E99; font-size: 12px; line-height: 1.5; text-align: center;">Este mensaje fue generado automáticamente por SAVIA 2.1.<br>Por favor, no respondas a este correo.</p>
                                     </td>
                                 </tr>
                             </table>
@@ -1412,42 +1634,66 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
         """
 
     try:
+            # Seleccionar la cuenta SMTP según la empresa
+        if es_savia_negro:
+            conexion_correo = get_connection(
+                backend="django.core.mail.backends.smtp.EmailBackend",
+                host=settings.YEROD_EMAIL_HOST,
+                port=settings.YEROD_EMAIL_PORT,
+                username=settings.YEROD_EMAIL_HOST_USER,
+                password=settings.YEROD_EMAIL_HOST_PASSWORD,
+                use_tls=settings.YEROD_EMAIL_USE_TLS,
+                use_ssl=settings.YEROD_EMAIL_USE_SSL,
+                fail_silently=False,
+            )
+
+            from_email = settings.YEROD_FROM_EMAIL
+
+        else:
+            conexion_correo = get_connection(
+                backend="django.core.mail.backends.smtp.EmailBackend",
+                host=settings.EMAIL_HOST,
+                port=settings.EMAIL_PORT,
+                username=settings.EMAIL_HOST_USER,
+                password=settings.EMAIL_HOST_PASSWORD,
+                use_tls=settings.EMAIL_USE_TLS,
+                use_ssl=settings.EMAIL_USE_SSL,
+                fail_silently=False,
+            )
+
+            from_email = settings.DEFAULT_FROM_EMAIL
+
         email = EmailMessage(
-            subject='Invitación para registro de proveedor',
+            subject= asunto,
             body=html_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email_destino, "proveedores.sur@grupovordcab.com", "ulises.huesca@grupovordcab.com"],
+            from_email= from_email,
+            to=[email_destino],
+            bcc= correos_copia,
+            connection=conexion_correo,
         )
         email.content_subtype = "html"
          # Necesario para mostrar las imágenes CID dentro del correo
         email.mixed_subtype = "related"
 
         # Adjuntar logo de Grupo Vordcab
-        with open(img_path_vordcab, "rb") as archivo:
-            logo_vordcab = MIMEImage(
-                archivo.read(),
-                _subtype="jpeg",
-            )
+        with open(img_path_encabezado, "rb") as archivo:
+            subtipo = ("png" if img_path_encabezado.lower().endswith(".png") else "jpeg")
 
-            logo_vordcab.add_header(
-                "Content-ID",
-                "<logo_vordcab>",
-            )
+            logo_encabezado = MIMEImage(archivo.read(),_subtype=subtipo,)
 
-            logo_vordcab.add_header(
-                "Content-Disposition",
-                "inline",
-                filename="logo_vordcab.jpg",
-            )
+            logo_encabezado.add_header("Content-ID","<logo_encabezado>",)
 
-        email.attach(logo_vordcab)
+            logo_encabezado.add_header("Content-Disposition","inline",filename=os.path.basename(img_path_encabezado),)
 
-        # Adjuntar logo de SAVIA
-        with open(img_path_savia, "rb") as archivo:
-            logo_savia = MIMEImage(
-                archivo.read(),
-                _subtype="png",
-            )
+            email.attach(logo_encabezado)
+
+        # SAVIA normal lleva un segundo logo; YEROD no
+        if not es_savia_negro:
+            with open(img_path_vordcab, "rb") as archivo:
+                logo_savia = MIMEImage(
+                    archivo.read(),
+                    _subtype="png",
+                )
 
             logo_savia.add_header(
                 "Content-ID",
@@ -1460,10 +1706,14 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
                 filename="SAVIA_Logo.png",
             )
 
-        email.attach(logo_savia)
+            email.attach(logo_savia)
         email.send()
+
+        return True
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
+
+        return False
 
 
 def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
@@ -1532,7 +1782,7 @@ def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
     """
 
     email = EmailMessage(
-        subject="Registro exitoso en SAVIA 2.0",
+        subject="Registro exitoso en SAVIA 2.1",
         body=html_success_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[usuario_email],
@@ -1540,9 +1790,224 @@ def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
     email.content_subtype = "html"
     email.send()
 
+
+def registro_yerod_existente(request, invitacion, proveedor, user, distrito,):
+    customuser = CustomUser.objects.filter(staff=user).first()
+
+    # Tomamos como referencia la última dirección registrada,
+    # preferentemente de otro distrito.
+    direccion_referencia = (Proveedor_direcciones.objects.filter(nombre=proveedor,completo=True,).exclude(distrito=distrito,).order_by("-id").first())
+
+    initial = {
+        "email": invitacion.email,
+        "rfc": proveedor.rfc,
+        "razon_social": proveedor.razon_social,
+        "contacto": (
+            direccion_referencia.contacto
+            if direccion_referencia
+            else user.first_name
+        ),
+        "domicilio": (
+            direccion_referencia.domicilio
+            if direccion_referencia
+            else ""
+        ),
+        "telefono": (
+            direccion_referencia.telefono
+            if direccion_referencia
+            else (
+                customuser.phone
+                if customuser
+                else ""
+            )
+        ),
+        "banco": (
+            direccion_referencia.banco
+            if direccion_referencia
+            else (
+                customuser.banco
+                if customuser
+                else None
+            )
+        ),
+        "cuenta": (
+            direccion_referencia.cuenta
+            if direccion_referencia
+            else (
+                customuser.cuenta_bancaria
+                if customuser
+                else ""
+            )
+        ),
+        "clabe": (
+            direccion_referencia.clabe
+            if direccion_referencia
+            else (
+                customuser.clabe
+                if customuser
+                else ""
+            )
+        ),
+        "email_opt": (
+            direccion_referencia.email_opt
+            if direccion_referencia
+            else ""
+        ),
+        "moneda": (
+            direccion_referencia.moneda
+            if direccion_referencia
+            else None
+        ),
+        "condiciones": (
+            "CREDITO"
+            if (
+                direccion_referencia
+                and direccion_referencia.financiamiento
+            )
+            else "CONTADO"
+        ),
+        "dias_credito": (
+            direccion_referencia.dias_credito
+            if direccion_referencia
+            else 0
+        ),
+    }
+
+    if request.method == "POST":
+        form = RegistroDireccionYerodForm(request.POST)
+    else:
+        form = RegistroProveedorForm(initial=initial)
+
+    # Estos datos ya existen y no deben solicitarse nuevamente.
+    for campo in (
+        "password",
+        "razon_social",
+        "rfc",
+        "email",
+    ):
+        form.fields.pop(campo, None)
+
+    if request.method == "POST" and form.is_valid():
+
+        with transaction.atomic():
+
+            # Si el usuario tiene User, pero no CustomUser,
+            # se crea la extensión correspondiente.
+            if customuser is None:
+                customuser = CustomUser.objects.create(
+                    staff=user,
+                    banco=form.cleaned_data["banco"],
+                    cuenta_bancaria=form.cleaned_data["cuenta"],
+                    clabe=form.cleaned_data["clabe"],
+                    phone=form.cleaned_data["telefono"],
+                    puesto="Proveedor Externo",
+                    nivel=5,
+                    apoyo_renta=0,
+                    apoyo_mantto=0,
+                )
+
+            tipo = Tipo_perfil.objects.get(
+                nombre="PROVEEDOR_EXTERNO"
+            )
+
+            profile = Profile.objects.filter(
+                staff=customuser,
+                tipo=tipo,
+                distritos=distrito,
+            ).first()
+
+            if profile is None:
+                profile = Profile.objects.create(
+                    staff=customuser,
+                    tipo=tipo,
+                    proveedor=proveedor,
+                    distritos=distrito,
+                    st_activo=True,
+                )
+            else:
+                profile.proveedor = proveedor
+                profile.st_activo = True
+                profile.save(
+                    update_fields=[
+                        "proveedor",
+                        "st_activo",
+                    ]
+                )
+
+            almacenes = Almacen.objects.filter(
+                nombre=distrito.nombre
+            )
+            profile.almacen.set(almacenes)
+
+            financiamiento = (
+                form.cleaned_data["condiciones"]
+                == "CREDITO"
+            )
+
+            status = Estatus_proveedor.objects.get(
+                nombre="PREALTA"
+            )
+
+            Proveedor_direcciones.objects.update_or_create(
+                nombre=proveedor,
+                distrito=distrito,
+                defaults={
+                    "creado_por": profile,
+                    "domicilio": form.cleaned_data["domicilio"],
+                    "telefono": form.cleaned_data["telefono"],
+                    "contacto": form.cleaned_data["contacto"],
+                    "email": invitacion.email,
+                    "banco": form.cleaned_data["banco"],
+                    "clabe": form.cleaned_data["clabe"],
+                    "cuenta": form.cleaned_data["cuenta"],
+                    "email_opt": form.cleaned_data["email_opt"],
+                    "estatus": status,
+                    "producto": invitacion.producto,
+                    "servicio": invitacion.servicio,
+                    "arrendamiento": invitacion.arrendamiento,
+                    "moneda": form.cleaned_data["moneda"],
+                    "financiamiento": financiamiento,
+                    "dias_credito": form.cleaned_data[
+                        "dias_credito"
+                    ],
+                    "completo": True,
+                },
+            )
+
+            invitacion.usado = True
+            invitacion.fecha_uso = now()
+            invitacion.proveedor = proveedor
+            invitacion.save(update_fields=["usado", "fecha_uso", "proveedor",])
+
+        messages.success(request,"La dirección de Yerod fue registrada correctamente.",)
+
+        return redirect("user-login")
+
+    context = {
+        "form": form,
+        "tipo_invitacion": invitacion.tipo,
+        "proveedor_existente": proveedor,
+        "es_yerod": True,
+        "registro_yerod_existente": True,
+    }
+
+    return render(request,"proveedores_externos/registro_proveedor.html",context,)
+
 def registro_proveedor(request, token):
     invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
     tipo_invitacion = invitacion.tipo or 'NUEVO_PROVEEDOR'
+
+    distrito = (invitacion.distrito)
+
+    es_yerod = bool(distrito and distrito.nombre.strip().upper() == "YEROD")
+
+    proveedor_existente = None
+    usuario_existente = None
+
+    if es_yerod:
+        proveedor_existente = Proveedor.objects.filter(rfc__iexact=invitacion.rfc).first()
+        usuario_existente = User.objects.filter(Q(email__iexact=invitacion.email) | Q(username__iexact=invitacion.email)).first()
+
 
     # =======================================
     # 1) SOLO NUEVA DIRECCIÓN (tu form nuevo)
@@ -1550,10 +2015,17 @@ def registro_proveedor(request, token):
     if tipo_invitacion == 'NUEVA_DIRECCION':
         return registro_solo_direccion(request, invitacion)
 
-    # =======================================
-    # 2) FLUJO ORIGINAL (NUEVO_PROVEEDOR)
-    #    aquí dejas exactamente tu código actual
-    # =======================================
+    # Yerod: ya existen proveedor y usuario.
+    # Solamente se capturan los datos de la nueva dirección.
+    if (tipo_invitacion == "NUEVO_PROVEEDOR" and es_yerod and proveedor_existente and usuario_existente):
+        return registro_yerod_existente(
+            request=request,
+            invitacion=invitacion,
+            proveedor=proveedor_existente,
+            user=usuario_existente,
+            distrito=distrito,
+        )
+    
 
     
     if request.method == 'POST':

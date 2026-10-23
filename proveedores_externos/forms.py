@@ -85,7 +85,19 @@ class RegistroProveedorForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Las contraseñas no coinciden.")
         return cleaned_data
-    
+
+class RegistroDireccionYerodForm(RegistroProveedorForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for campo in (
+            "razon_social",
+            "password",
+            "confirm_password",
+        ):
+            self.fields.pop(campo, None)
+
 class DebidaDiligenciaForm(forms.ModelForm):
     class Meta:
         model = Debida_Diligencia
