@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function precheckInvite() {
         rfcField.value = (rfcField.value || '').trim().toUpperCase();
-        emailField.value = (emailField.value || '').trim();
+        emailField.value = (emailField.value || '').trim().toLowerCase();
 
         if (!form.checkValidity()) {
             form.classList.add('was-validated');
@@ -303,79 +303,225 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         try {
-            const response = await fetch("{% url 'check_proveedor_ajax' %}?" + params.toString(), {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
-            });
+            const response = await fetch(
+                "{% url 'check_proveedor_ajax' %}?" + params.toString(),
+                {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }
+            );
 
             if (!response.ok) {
-                throw new Error('No fue posible verificar los datos del proveedor.');
+                throw new Error(
+                    'No fue posible verificar los datos del proveedor.'
+                );
             }
 
             const data = await response.json();
 
-            if (!data.exists_rfc && !data.exists_email_or_invite) {
+            /*
+            * No existe proveedor, perfil de proveedor ni invitación.
+            *
+            * Aunque exista un User normal con ese correo, se permite
+            * continuar porque todavía no es proveedor.
+            */
+            if (data.estado === 'NUEVO_PROVEEDOR') {
                 submitInvite('NUEVO_PROVEEDOR');
                 return;
             }
 
-            let extraInfo = '';
-
-            if (data.proveedor_razon) {
-                extraInfo += '<div class="text-start mt-3">' +
-                    '<span class="text-muted d-block">Proveedor encontrado</span>' +
-                    '<strong>' + escapeHtml(data.proveedor_razon) + '</strong>' +
-                    '</div>';
-            }
-
-            if (Array.isArray(data.direcciones) && data.direcciones.length) {
-                extraInfo += '<div class="text-start mt-3">' +
-                    '<span class="text-muted d-block mb-2">Direcciones registradas</span>' +
-                    '<div class="list-group">';
-
-                data.direcciones.forEach(function (direccion) {
-                    extraInfo += '<div class="list-group-item d-flex justify-content-between gap-3">' +
-                        '<span>' + escapeHtml(direccion.distrito || 'Sin distrito') + '</span>' +
-                        '<span class="badge bg-light text-dark border">' + escapeHtml(direccion.estatus || 'Sin estatus') + '</span>' +
-                        '</div>';
+            /*
+            * Ya existe una invitación pendiente para el correo dentro
+            * del portal correspondiente.
+            */
+            if (data.estado === 'INVITACION_PENDIENTE') {
+                await Swal.fire({
+                    title: 'Invitación pendiente',
+                    text: (
+                        'Ya existe una invitación activa para este correo ' +
+                        'en el distrito seleccionado.'
+                    ),
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
                 });
 
-                extraInfo += '</div></div>';
+                setLoading(false);
+                return;
             }
 
-            const result = await Swal.fire({
-                title: 'Proveedor existente',
-                html: '<p class="mb-0">El RFC, el correo o una invitación previa ya se encuentran registrados.</p>' + extraInfo,
-                icon: 'question',
-                showCancelButton: true,
-                showDenyButton: true,
-                confirmButtonText: '<i class="fa-solid fa-user-plus me-1"></i> Dirección + usuario',
-                denyButtonText: '<i class="fa-solid fa-location-dot me-1"></i> Solo dirección',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true,
+            /*
+            * El correo sí tiene un perfil de proveedor externo, pero
+            * pertenece a un RFC diferente del capturado.
+            */
+            if (data.estado === 'CORREO_OTRO_PROVEEDOR') {
+                await Swal.fire({
+                    title: 'Correo asociado a otro proveedor',
+                    text: (
+                        'El correo capturado ya está asociado a un perfil ' +
+                        'de proveedor externo diferente al RFC indicado.'
+                    ),
+                    icon: 'error',
+                    confirmButtonText: 'Revisar información',
+                    customClass: {
+                        confirmButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+
+                setLoading(false);
+                emailField.focus();
+                return;
+            }
+
+            /*
+            * El RFC corresponde a un proveedor existente.
+            */
+            if (data.estado === 'PROVEEDOR_EXISTENTE') {
+                let extraInfo = '';
+
+                if (data.proveedor_razon) {
+                    extraInfo +=
+                        '<div class="text-start mt-3">' +
+                            '<span class="text-muted d-block">' +
+                                'Proveedor encontrado' +
+                            '</span>' +
+                            '<strong>' +
+                                escapeHtml(data.proveedor_razon) +
+                            '</strong>' +
+                        '</div>';
+                }
+
+                if (
+                    Array.isArray(data.direcciones) &&
+                    data.direcciones.length
+                ) {
+                    extraInfo +=
+                        '<div class="text-start mt-3">' +
+                            '<span class="text-muted d-block mb-2">' +
+                                'Direcciones registradas' +
+                            '</span>' +
+                            '<div class="list-group">';
+
+                    data.direcciones.forEach(function (direccion) {
+                        extraInfo +=
+                            '<div class="list-group-item ' +
+                                'd-flex justify-content-between gap-3">' +
+                                '<span>' +
+                                    escapeHtml(
+                                        direccion.distrito ||
+                                        'Sin distrito'
+                                    ) +
+                                '</span>' +
+                                '<span class="badge bg-light ' +
+                                    'text-dark border">' +
+                                    escapeHtml(
+                                        direccion.estatus ||
+                                        'Sin estatus'
+                                    ) +
+                                '</span>' +
+                            '</div>';
+                    });
+
+                    extraInfo += '</div></div>';
+                }
+
+                const mensajeProveedor = data.email_mismo_proveedor
+                    ? (
+                        'El RFC y el correo pertenecen a un proveedor ' +
+                        'externo que ya se encuentra registrado.'
+                    )
+                    : (
+                        'El RFC pertenece a un proveedor existente. ' +
+                        'Selecciona cómo deseas agregar esta nueva relación.'
+                    );
+
+                const result = await Swal.fire({
+                    title: 'Proveedor existente',
+                    html:
+                        '<p class="mb-0">' +
+                            mensajeProveedor +
+                        '</p>' +
+                        extraInfo,
+                    icon: 'question',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText:
+                        '<i class="fa-solid fa-user-plus me-1"></i>' +
+                        ' Dirección + usuario',
+                    denyButtonText:
+                        '<i class="fa-solid fa-location-dot me-1"></i>' +
+                        ' Solo dirección',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        denyButton: 'btn btn-outline-primary',
+                        cancelButton: 'btn btn-outline-secondary'
+                    },
+                    buttonsStyling: false
+                });
+
+                if (result.isConfirmed) {
+                    submitInvite('NUEVO_USUARIO');
+                    return;
+                }
+
+                if (result.isDenied) {
+                    submitInvite('NUEVA_DIRECCION');
+                    return;
+                }
+
+                setLoading(false);
+                return;
+            }
+
+            /*
+            * Protección por si el backend devuelve un estado que el
+            * JavaScript todavía no contempla.
+            */
+            await Swal.fire({
+                title: 'Resultado no reconocido',
+                text: (
+                    'La verificación terminó, pero el servidor devolvió ' +
+                    'un estado desconocido.'
+                ),
+                icon: 'error',
+                confirmButtonText: 'Entendido',
                 customClass: {
-                    confirmButton: 'btn btn-primary',
-                    denyButton: 'btn btn-outline-primary',
-                    cancelButton: 'btn btn-outline-secondary'
+                    confirmButton: 'btn btn-danger'
                 },
                 buttonsStyling: false
             });
 
-            if (result.isConfirmed) {
-                submitInvite('NUEVO_USUARIO');
-            } else if (result.isDenied) {
-                submitInvite('NUEVA_DIRECCION');
-            } else {
-                setLoading(false);
-            }
+            setLoading(false);
+
         } catch (error) {
-            console.error('Error al verificar el proveedor:', error);
+            console.error(
+                'Error al verificar el proveedor:',
+                error
+            );
+
             await Swal.fire({
                 title: 'Error',
-                text: error.message || 'No se pudo verificar el RFC o el correo.',
-                icon: 'error'
+                text: (
+                    error.message ||
+                    'No se pudo verificar el RFC o el correo.'
+                ),
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                customClass: {
+                    confirmButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
             });
+
             setLoading(false);
         }
     }

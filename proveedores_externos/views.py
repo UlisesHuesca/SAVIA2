@@ -39,6 +39,8 @@ from .forms import (
     ResponsableInteraccionForm,
     RegistroDireccionYerodForm
 )
+
+
 from dashboard.forms import ProveedoresDireccionesForm, ProveedoresExistDireccionesForm
 from io import BytesIO
 
@@ -1337,13 +1339,18 @@ def check_proveedor_ajax(request):
                 )
             )
 
-            exists_rfc = True
+            exists_rfc = direcciones_filtradas.exists()
 
     else:
         exists_rfc = False
 
-    # El usuario continúa siendo global en SAVIA.
+    # Existe cualquier cuenta User con ese correo
+    # Es informativo; no significa que sea proveedor
     exists_user_email = User.objects.filter(email__iexact=email,).exists()
+
+    # Solamente se considera proveedor si el correo tiene:
+    # User -> CustomUser -> Profile PROVEEDOR_EXTERNO -> Proveedor
+    perfiles_proveedor = (Profile.objects.filter(staff__staff__email__iexact=email, tipo__nombre__iexact="PROVEEDOR_EXTERNO", proveedor__isnull=False, st_activo=True,))
 
     if es_yerod:
         # En YEROD no importa que el User ya exista.
@@ -1360,18 +1367,16 @@ def check_proveedor_ajax(request):
             exists_pending_invite
         )
     else:
+
+        # Para Vordcab se excluyen expresamente
+        # los perfiles pertenecientes a Yerod.
+        exists_provider_email = (perfiles_proveedor.exclude(distritos__nombre__iexact="YEROD",).exists())
+
         # Vordcab conserva la validación anterior.
-        exists_pending_invite = (
-            InvitacionProveedor.objects
-            .filter(
-                email__iexact=email,
-                usado=False,
-            )
-            .exists()
-        )
+        exists_pending_invite = (InvitacionProveedor.objects.filter(email__iexact=email,usado=False,).exclude(distrito__nombre__iexact="YEROD",).exists())
 
 
-        exists_email_or_invite = (exists_user_email or exists_pending_invite)
+        exists_email_or_invite = (exists_provider_email or exists_pending_invite)
 
      # Solo se muestran datos si el proveedor ya existe
     # dentro del alcance correspondiente.
@@ -1404,11 +1409,26 @@ def check_proveedor_ajax(request):
     print("Existe usuario:", exists_user_email)
     print("Existe invitación:", exists_pending_invite)
 
+    if exists_pending_invite:
+        estado = "INVITACION_PENDIENTE"
+
+    elif exists_provider_email and not exists_rfc:
+        estado = "CORREO_OTRO_PROVEEDOR"
+
+    elif exists_rfc:
+        estado = "PROVEEDOR_EXISTENTE"
+
+    else:
+        # Puede existir un User normal, pero no es proveedor.
+        estado = "NUEVO_PROVEEDOR"
+
    
     return JsonResponse({
+        "estado": estado,
         'exists_rfc': exists_rfc,
         'exists_email_or_invite': exists_email_or_invite,
         "exists_user_email": exists_user_email,
+        "exists_provider_email": exists_provider_email,
         "exists_pending_invite": exists_pending_invite,
         'proveedor_id': proveedor_id,
         'proveedor_razon': proveedor_razon,
@@ -1742,369 +1762,768 @@ def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
     email.send()
 
 
-def registro_yerod_existente(request, invitacion, proveedor, user, distrito,):
-    customuser = CustomUser.objects.filter(staff=user).first()
+def registro_usuario_existente(request,invitacion,proveedor,user,customuser,distrito,):
+    es_yerod = bool(distrito and distrito.nombre.strip().upper() == "YEROD")
 
-    # Tomamos como referencia la última dirección registrada,
-    # preferentemente de otro distrito.
-    direccion_referencia = (Proveedor_direcciones.objects.filter(nombre=proveedor,completo=True,).exclude(distrito=distrito,).order_by("-id").first())
+    # ==========================================================
+    # 1. DIRECCIÓN ANTERIOR PARA PRELLENAR EL FORMULARIO
+    # ==========================================================
+
+    direccion_anterior = None
+
+    if proveedor:
+        direccion_anterior = (
+            Proveedor_direcciones.objects
+            .filter(
+                nombre=proveedor,
+                completo=True,
+            )
+            .exclude(
+                distrito=distrito,
+            )
+            .select_related(
+                "banco",
+                "moneda",
+            )
+            .order_by("-id")
+            .first()
+        )
 
     initial = {
         "email": invitacion.email,
-        "rfc": proveedor.rfc,
-        "razon_social": proveedor.razon_social,
-        "contacto": (
-            direccion_referencia.contacto
-            if direccion_referencia
-            else user.first_name
-        ),
-        "domicilio": (
-            direccion_referencia.domicilio
-            if direccion_referencia
-            else ""
-        ),
-        "telefono": (
-            direccion_referencia.telefono
-            if direccion_referencia
-            else (
-                customuser.phone
-                if customuser
-                else ""
-            )
-        ),
-        "banco": (
-            direccion_referencia.banco
-            if direccion_referencia
-            else (
-                customuser.banco
-                if customuser
-                else None
-            )
-        ),
-        "cuenta": (
-            direccion_referencia.cuenta
-            if direccion_referencia
-            else (
-                customuser.cuenta_bancaria
-                if customuser
-                else ""
-            )
-        ),
-        "clabe": (
-            direccion_referencia.clabe
-            if direccion_referencia
-            else (
-                customuser.clabe
-                if customuser
-                else ""
-            )
-        ),
-        "email_opt": (
-            direccion_referencia.email_opt
-            if direccion_referencia
-            else ""
-        ),
-        "moneda": (
-            direccion_referencia.moneda
-            if direccion_referencia
-            else None
-        ),
-        "condiciones": (
-            "CREDITO"
-            if (
-                direccion_referencia
-                and direccion_referencia.financiamiento
-            )
-            else "CONTADO"
-        ),
-        "dias_credito": (
-            direccion_referencia.dias_credito
-            if direccion_referencia
-            else 0
-        ),
+        "rfc": invitacion.rfc,
+        "contacto": user.first_name,
     }
 
-    if request.method == "POST":
-        form = RegistroDireccionYerodForm(request.POST)
-    else:
-        form = RegistroProveedorForm(initial=initial)
+    if proveedor:
+        initial["razon_social"] = (proveedor.razon_social)
 
-    # Estos datos ya existen y no deben solicitarse nuevamente.
-    for campo in (
+    if customuser:
+        initial.update({
+            "telefono": customuser.phone,
+            "banco": customuser.banco,
+            "cuenta": customuser.cuenta_bancaria,
+            "clabe": customuser.clabe,
+        })
+
+    if direccion_anterior:
+        initial.update({
+            "contacto": direccion_anterior.contacto,
+            "telefono": direccion_anterior.telefono,
+            "domicilio": direccion_anterior.domicilio,
+            "email_opt": direccion_anterior.email_opt,
+            "banco": direccion_anterior.banco,
+            "cuenta": direccion_anterior.cuenta,
+            "clabe": direccion_anterior.clabe,
+            "moneda": direccion_anterior.moneda,
+            "dias_credito": (
+                direccion_anterior.dias_credito
+            ),
+        })
+
+    # ==========================================================
+    # 2. CREAR FORMULARIO
+    # ==========================================================
+
+    if request.method == "POST":
+        form = RegistroProveedorForm(
+            request.POST
+        )
+    else:
+        form = RegistroProveedorForm(
+            initial=initial
+        )
+
+    # El User ya existe y conserva su contraseña actual.
+    form.fields.pop(
         "password",
-        "razon_social",
-        "rfc",
-        "email",
-    ):
-        form.fields.pop(campo, None)
+        None,
+    )
+
+    form.fields.pop(
+        "confirm_password",
+        None,
+    )
+
+    # Si el proveedor ya existe globalmente, se reutiliza
+    # y no se vuelve a solicitar la razón social.
+    if proveedor:
+        form.fields.pop("razon_social",None,)
+
+    # ==========================================================
+    # 3. PROCESAR FORMULARIO
+    # ==========================================================
 
     if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
 
-        with transaction.atomic():
+                # ------------------------------------------
+                # Crear proveedor solamente si no existe
+                # ------------------------------------------
 
-            # Si el usuario tiene User, pero no CustomUser,
-            # se crea la extensión correspondiente.
-            if customuser is None:
-                customuser = CustomUser.objects.create(
-                    staff=user,
-                    banco=form.cleaned_data["banco"],
-                    cuenta_bancaria=form.cleaned_data["cuenta"],
-                    clabe=form.cleaned_data["clabe"],
-                    phone=form.cleaned_data["telefono"],
-                    puesto="Proveedor Externo",
-                    nivel=5,
-                    apoyo_renta=0,
-                    apoyo_mantto=0,
+                if proveedor is None:
+                    proveedor = Proveedor.objects.create(
+                        rfc=invitacion.rfc,
+                        razon_social=(
+                            form.cleaned_data[
+                                "razon_social"
+                            ]
+                        ),
+                        creado_por=invitacion.creado_por,
+                        completo=True,
+                    )
+
+                # ------------------------------------------
+                # Crear CustomUser solamente si no existe
+                # ------------------------------------------
+
+                if customuser is None:
+                    customuser = CustomUser.objects.create(
+                        staff=user,
+                        banco=form.cleaned_data["banco"],
+                        cuenta_bancaria=(
+                            form.cleaned_data["cuenta"]
+                        ),
+                        clabe=form.cleaned_data["clabe"],
+                        phone=form.cleaned_data["telefono"],
+                        puesto="Proveedor Externo",
+                        nivel=5,
+                        apoyo_renta=0,
+                        apoyo_mantto=0,
+                    )
+
+                tipo = Tipo_perfil.objects.get(
+                    nombre="PROVEEDOR_EXTERNO"
                 )
 
-            tipo = Tipo_perfil.objects.get(
+                # ------------------------------------------
+                # Buscar Profile en el distrito específico
+                # ------------------------------------------
+
+                profile_existente = (
+                    Profile.objects
+                    .filter(
+                        staff=customuser,
+                        tipo=tipo,
+                        distritos=distrito,
+                    )
+                    .first()
+                )
+
+                if profile_existente:
+                    if (profile_existente.proveedor_id and profile_existente.proveedor_id != proveedor.id):
+                        raise ValueError(
+                            "El usuario ya tiene un perfil de proveedor en este distrito asociado a otro proveedor.")
+
+                    profile = profile_existente
+                    profile.proveedor = proveedor
+                    profile.st_activo = True
+                    profile.save(update_fields=["proveedor","st_activo",])
+
+                else:
+                    profile = Profile.objects.create(
+                        staff=customuser,
+                        tipo=tipo,
+                        proveedor=proveedor,
+                        distritos=distrito,
+                        st_activo=True,
+                    )
+
+                # ------------------------------------------
+                # Asignar almacenes del distrito
+                # ------------------------------------------
+
+                almacenes = Almacen.objects.filter(
+                    nombre=distrito.nombre
+                )
+
+                profile.almacen.set(
+                    almacenes
+                )
+
+                # ------------------------------------------
+                # Condiciones comerciales
+                # ------------------------------------------
+
+                condicion_seleccionada = (
+                    form.cleaned_data["condiciones"]
+                )
+
+                financiamiento = (
+                    str(condicion_seleccionada)
+                    .strip()
+                    .upper()
+                    == "CREDITO"
+                )
+
+                estatus = (
+                    Estatus_proveedor.objects.get(
+                        nombre="PREALTA"
+                    )
+                )
+
+                # ------------------------------------------
+                # Crear dirección del nuevo distrito
+                # ------------------------------------------
+
+                Proveedor_direcciones.objects.update_or_create(
+                    nombre=proveedor,
+                    distrito=distrito,
+                    defaults={
+                        "creado_por": profile,
+                        "domicilio": (
+                            form.cleaned_data["domicilio"]
+                        ),
+                        "telefono": (
+                            form.cleaned_data["telefono"]
+                        ),
+                        "contacto": (
+                            form.cleaned_data["contacto"]
+                        ),
+                        "email": invitacion.email,
+                        "banco": (
+                            form.cleaned_data["banco"]
+                        ),
+                        "clabe": (
+                            form.cleaned_data["clabe"]
+                        ),
+                        "cuenta": (
+                            form.cleaned_data["cuenta"]
+                        ),
+                        "email_opt": (
+                            form.cleaned_data["email_opt"]
+                        ),
+                        "estatus": estatus,
+                        "producto": invitacion.producto,
+                        "servicio": invitacion.servicio,
+                        "arrendamiento": (
+                            invitacion.arrendamiento
+                        ),
+                        "moneda": (
+                            form.cleaned_data["moneda"]
+                        ),
+                        "financiamiento": financiamiento,
+                        "dias_credito": (
+                            form.cleaned_data[
+                                "dias_credito"
+                            ]
+                            or 0
+                        ),
+                        "completo": True,
+                    },
+                )
+
+                # ------------------------------------------
+                # Cerrar invitación
+                # ------------------------------------------
+
+                invitacion.usado = True
+                invitacion.fecha_uso = now()
+                invitacion.proveedor = proveedor
+
+                invitacion.save(
+                    update_fields=[
+                        "usado",
+                        "fecha_uso",
+                        "proveedor",
+                    ]
+                )
+
+            messages.success(
+                request,
+                "El perfil de proveedor fue agregado "
+                "correctamente. Puedes ingresar con tu "
+                "contraseña actual.",
+            )
+
+            return redirect(
+                "user-login"
+            )
+
+        except ValueError as error:
+            messages.error(
+                request,
+                str(error),
+            )
+
+        except Exception as error:
+            messages.error(
+                request,
+                "No fue posible completar el registro: "
+                f"{error}",
+            )
+
+    # ==========================================================
+    # 4. CONTEXTO
+    # ==========================================================
+    print('proveedor',proveedor)
+    context = {
+        "form": form,
+        "tipo_invitacion": invitacion.tipo,
+        "invitacion": invitacion,
+        "proveedor_existente": proveedor,
+        "distrito": distrito,
+        "es_yerod": es_yerod,
+        "registro_usuario_existente": True,
+        "mostrar_razon_social": not proveedor,
+        "mostrar_password": False,
+    }
+
+    return render(request,"proveedores_externos/registro_proveedor.html",context,)
+
+@transaction.atomic
+def registro_proveedor(request, token):
+    invitacion = get_object_or_404(InvitacionProveedor,token=token,usado=False,)
+
+    tipo_invitacion = (invitacion.tipo or "NUEVO_PROVEEDOR")
+
+    distrito = (invitacion.distrito or invitacion.creado_por.distritos)
+
+    if distrito is None:
+        messages.error(request,"La invitación no tiene un distrito asignado.",)
+
+        return redirect("user-login")
+
+    es_yerod = bool(distrito.nombre and distrito.nombre.strip().upper() == "YEROD")
+
+    # ==========================================================
+    # 1. BUSCAR EL PROVEEDOR GLOBAL
+    # ==========================================================
+    # Se reutiliza el mismo objeto Proveedor para no duplicar RFC.
+    # Esto no significa que ya exista en Yerod o Vordcab.
+
+    proveedor_global = invitacion.proveedor
+
+    if proveedor_global is None:
+        proveedor_global = (Proveedor.objects.filter(rfc__iexact=invitacion.rfc).first())
+
+    # ==========================================================
+    # 2. VERIFICAR SI EL PROVEEDOR YA EXISTE EN ESTE PORTAL
+    # ==========================================================
+
+    proveedor_en_portal = False
+
+    if proveedor_global:
+        if es_yerod:
+            proveedor_en_portal = (Proveedor_direcciones.objects.filter(nombre=proveedor_global, distrito__nombre__iexact="YEROD", completo=True,).exists())
+
+        else:
+            proveedor_en_portal = (Proveedor_direcciones.objects.filter(nombre=proveedor_global,completo=True,)
+                                   .exclude(distrito__nombre__iexact="YEROD",).exists())
+
+    # ==========================================================
+    # 3. BUSCAR USER Y CUSTOMUSER
+    # ==========================================================
+    # User y CustomUser son globales. Se reutilizan tanto para
+    # Yerod como para los distritos de Vordcab.
+
+    usuario_existente = (User.objects.filter(Q(email__iexact=invitacion.email)| Q(username__iexact=invitacion.email)).first())
+
+    customuser_existente = None
+
+    if usuario_existente:
+        customuser_existente = (CustomUser.objects.filter(staff=usuario_existente).first())
+
+    # ==========================================================
+    # 4. BUSCAR PROFILE DEL DISTRITO ACTUAL
+    # ==========================================================
+    # Aunque el usuario tenga Profile de proveedor en Yerod o en
+    # otro distrito Vordcab, solo importa si ya lo tiene en el
+    # distrito específico de esta invitación.
+
+    perfil_proveedor_distrito = None
+
+    if customuser_existente:
+        perfil_proveedor_distrito = (
+            Profile.objects
+            .filter(
+                staff=customuser_existente,
+                tipo__nombre="PROVEEDOR_EXTERNO",
+                distritos=distrito,
+            )
+            .first()
+        )
+
+    # ==========================================================
+    # 5. INVITACIÓN: SOLO NUEVA DIRECCIÓN
+    # ==========================================================
+
+    if tipo_invitacion == "NUEVA_DIRECCION":
+        return registro_solo_direccion(request, invitacion,)
+
+    # ==========================================================
+    # 6. USER EXISTENTE, PERO SIN PROFILE EN ESTE DISTRITO
+    # ==========================================================
+    # Aplica tanto para:
+    # - NUEVO_PROVEEDOR
+    # - NUEVO_USUARIO
+    #
+    # Se conserva su contraseña actual.
+
+    if (tipo_invitacion in ("NUEVO_PROVEEDOR", "NUEVO_USUARIO",) and usuario_existente and not perfil_proveedor_distrito):
+        return registro_usuario_existente(
+            request=request,
+            invitacion=invitacion,
+            proveedor=proveedor_global,
+            user=usuario_existente,
+            customuser=customuser_existente,
+            distrito=distrito,
+        )
+
+    # ==========================================================
+    # 7. EL USUARIO YA TIENE PROFILE EN ESTE DISTRITO
+    # ==========================================================
+
+    if (
+        usuario_existente
+        and perfil_proveedor_distrito
+    ):
+        if (
+            proveedor_global
+            and perfil_proveedor_distrito.proveedor_id
+            and perfil_proveedor_distrito.proveedor_id
+            != proveedor_global.id
+        ):
+            messages.error(
+                request,
+                "El usuario ya tiene un perfil de proveedor externo "
+                "en este distrito, pero está relacionado con otro RFC.",
+            )
+
+        else:
+            messages.warning(
+                request,
+                "El usuario ya tiene un perfil de proveedor externo "
+                f"en el distrito {distrito}.",
+            )
+
+        return redirect("user-login")
+
+    # ==========================================================
+    # 8. VALIDAR NUEVO_USUARIO
+    # ==========================================================
+
+    if (
+        tipo_invitacion == "NUEVO_USUARIO"
+        and proveedor_global is None
+    ):
+        messages.error(
+            request,
+            "La invitación solicita agregar un usuario, pero no se "
+            "encontró el proveedor relacionado.",
+        )
+
+        return redirect("user-login")
+
+    # ==========================================================
+    # 9. FUNCIÓN PARA CONFIGURAR EL FORMULARIO
+    # ==========================================================
+
+    def configurar_formulario(formulario):
+        # Si el proveedor global ya existe, no es necesario volver
+        # a capturar la razón social.
+        if (
+            tipo_invitacion == "NUEVO_USUARIO"
+            or proveedor_global is not None
+        ):
+            formulario.fields["razon_social"].required = False
+            formulario.fields["razon_social"].widget = (
+                forms.HiddenInput()
+            )
+
+        return formulario
+
+    # ==========================================================
+    # 10. REGISTRO NORMAL
+    # ==========================================================
+    # Aquí solo se llega cuando el User todavía no existe.
+
+    if request.method == "POST":
+        form = RegistroProveedorForm(
+            request.POST
+        )
+
+        form = configurar_formulario(form)
+
+        if form.is_valid():
+            # ------------------------------------------
+            # Crear User
+            # ------------------------------------------
+
+            user = User.objects.create_user(
+                username=invitacion.email,
+                email=invitacion.email,
+                first_name=form.cleaned_data["contacto"],
+                password=form.cleaned_data["password"],
+            )
+
+            # ------------------------------------------
+            # Reutilizar o crear Proveedor
+            # ------------------------------------------
+
+            if proveedor_global:
+                proveedor = proveedor_global
+
+            else:
+                proveedor = Proveedor.objects.create(
+                    rfc=invitacion.rfc,
+                    razon_social=(
+                        form.cleaned_data["razon_social"]
+                    ),
+                    creado_por=invitacion.creado_por,
+                    completo=True,
+                )
+
+            # ------------------------------------------
+            # Crear CustomUser
+            # ------------------------------------------
+
+            customuser = CustomUser.objects.create(
+                staff=user,
+                banco=form.cleaned_data["banco"],
+                cuenta_bancaria=form.cleaned_data["cuenta"],
+                clabe=form.cleaned_data["clabe"],
+                phone=form.cleaned_data["telefono"],
+                puesto="Proveedor Externo",
+                nivel=5,
+                apoyo_renta=0,
+                apoyo_mantto=0,
+            )
+
+            # ------------------------------------------
+            # Crear Profile del distrito
+            # ------------------------------------------
+
+            tipo_perfil = Tipo_perfil.objects.get(
                 nombre="PROVEEDOR_EXTERNO"
             )
 
-            profile = Profile.objects.filter(
+            profile = Profile.objects.create(
                 staff=customuser,
-                tipo=tipo,
+                tipo=tipo_perfil,
+                proveedor=proveedor,
                 distritos=distrito,
-            ).first()
-
-            if profile is None:
-                profile = Profile.objects.create(
-                    staff=customuser,
-                    tipo=tipo,
-                    proveedor=proveedor,
-                    distritos=distrito,
-                    st_activo=True,
-                )
-            else:
-                profile.proveedor = proveedor
-                profile.st_activo = True
-                profile.save(
-                    update_fields=[
-                        "proveedor",
-                        "st_activo",
-                    ]
-                )
+                st_activo=True,
+            )
 
             almacenes = Almacen.objects.filter(
                 nombre=distrito.nombre
             )
+
             profile.almacen.set(almacenes)
 
-            financiamiento = (
+            # ------------------------------------------
+            # Condiciones comerciales
+            # ------------------------------------------
+
+            condicion_seleccionada = (
                 form.cleaned_data["condiciones"]
-                == "CREDITO"
             )
 
-            status = Estatus_proveedor.objects.get(
+            nombre_condicion = str(
+                condicion_seleccionada
+            ).strip().upper()
+
+            financiamiento = (
+                nombre_condicion == "CREDITO"
+            )
+
+            producto_inv = invitacion.producto
+            servicio_inv = invitacion.servicio
+            arrendamiento_inv = (
+                invitacion.arrendamiento
+            )
+
+            estatus = Estatus_proveedor.objects.get(
                 nombre="PREALTA"
             )
+
+            # ------------------------------------------
+            # Crear dirección del distrito
+            # ------------------------------------------
 
             Proveedor_direcciones.objects.update_or_create(
                 nombre=proveedor,
                 distrito=distrito,
                 defaults={
                     "creado_por": profile,
-                    "domicilio": form.cleaned_data["domicilio"],
-                    "telefono": form.cleaned_data["telefono"],
-                    "contacto": form.cleaned_data["contacto"],
+                    "domicilio": (
+                        form.cleaned_data["domicilio"]
+                    ),
+                    "telefono": (
+                        form.cleaned_data["telefono"]
+                    ),
+                    "contacto": (
+                        form.cleaned_data["contacto"]
+                    ),
                     "email": invitacion.email,
-                    "banco": form.cleaned_data["banco"],
-                    "clabe": form.cleaned_data["clabe"],
-                    "cuenta": form.cleaned_data["cuenta"],
-                    "email_opt": form.cleaned_data["email_opt"],
-                    "estatus": status,
-                    "producto": invitacion.producto,
-                    "servicio": invitacion.servicio,
-                    "arrendamiento": invitacion.arrendamiento,
-                    "moneda": form.cleaned_data["moneda"],
+                    "banco": (
+                        form.cleaned_data["banco"]
+                    ),
+                    "clabe": (
+                        form.cleaned_data["clabe"]
+                    ),
+                    "cuenta": (
+                        form.cleaned_data["cuenta"]
+                    ),
+                    "email_opt": (
+                        form.cleaned_data["email_opt"]
+                    ),
+                    "estatus": estatus,
+                    "producto": producto_inv,
+                    "servicio": servicio_inv,
+                    "arrendamiento": arrendamiento_inv,
+                    "moneda": (
+                        form.cleaned_data["moneda"]
+                    ),
                     "financiamiento": financiamiento,
-                    "dias_credito": form.cleaned_data[
-                        "dias_credito"
-                    ],
+                    "dias_credito": (
+                        form.cleaned_data[
+                            "dias_credito"
+                        ]
+                        or 0
+                    ),
                     "completo": True,
                 },
             )
 
+            # ------------------------------------------
+            # Cerrar invitación
+            # ------------------------------------------
+
             invitacion.usado = True
-            invitacion.fecha_uso = now()
+            invitacion.fecha_uso = timezone.now()
             invitacion.proveedor = proveedor
-            invitacion.save(update_fields=["usado", "fecha_uso", "proveedor",])
 
-        messages.success(request,"La dirección de Yerod fue registrada correctamente.",)
+            invitacion.save(
+                update_fields=[
+                    "usado",
+                    "fecha_uso",
+                    "proveedor",
+                ]
+            )
 
-        return redirect("user-login")
+            # ------------------------------------------
+            # Enviar confirmación
+            # ------------------------------------------
+
+            savia_url = (
+                "https://yerod.cloud"
+                if es_yerod
+                else "https://grupovordcab.cloud"
+            )
+
+            correo_destino = invitacion.email
+
+            transaction.on_commit(
+                lambda: enviar_correo_registro_exitoso(
+                    usuario_email=correo_destino,
+                    creado_por_nombre=(
+                        f"{invitacion.creado_por.staff.staff.first_name} "
+                        f"{invitacion.creado_por.staff.staff.last_name}"
+                    ),
+                    savia_url=savia_url,
+                )
+            )
+
+            messages.success(
+                request,
+                "Registro exitoso. Ya puedes ingresar con "
+                "las credenciales registradas.",
+            )
+
+            return redirect("user-login")
+
+        print("El formulario NO es válido")
+        print(form.errors)
+
+        messages.error(
+            request,
+            "Error al registrar el proveedor. "
+            "Por favor, revisa los datos ingresados.",
+        )
+
+    else:
+        initial = {
+            "email": invitacion.email,
+            "rfc": invitacion.rfc,
+        }
+
+        if proveedor_global:
+            initial["razon_social"] = (
+                proveedor_global.razon_social
+            )
+
+            # Utilizar una dirección anterior como referencia,
+            # incluso si pertenece al otro portal.
+            direccion_referencia = (
+                Proveedor_direcciones.objects
+                .filter(
+                    nombre=proveedor_global,
+                    completo=True,
+                )
+                .exclude(
+                    distrito=distrito,
+                )
+                .order_by("-id")
+                .first()
+            )
+
+            if direccion_referencia:
+                initial.update({
+                    "contacto": (
+                        direccion_referencia.contacto
+                    ),
+                    "telefono": (
+                        direccion_referencia.telefono
+                    ),
+                    "domicilio": (
+                        direccion_referencia.domicilio
+                    ),
+                    "email_opt": (
+                        direccion_referencia.email_opt
+                    ),
+                    "banco": (
+                        direccion_referencia.banco
+                    ),
+                    "cuenta": (
+                        direccion_referencia.cuenta
+                    ),
+                    "clabe": (
+                        direccion_referencia.clabe
+                    ),
+                    "moneda": (
+                        direccion_referencia.moneda
+                    ),
+                    "dias_credito": (
+                        direccion_referencia.dias_credito
+                    ),
+                })
+
+        form = RegistroProveedorForm(
+            initial=initial
+        )
+
+        form = configurar_formulario(form)
 
     context = {
         "form": form,
-        "tipo_invitacion": invitacion.tipo,
-        "proveedor_existente": proveedor,
-        "es_yerod": True,
-        "registro_yerod_existente": True,
+        "tipo_invitacion": tipo_invitacion,
+        "invitacion": invitacion,
+        "distrito": distrito,
+        "es_yerod": es_yerod,
+        "proveedor_global": proveedor_global,
+        "proveedor_en_portal": proveedor_en_portal,
+        "usuario_existente": False,
+        "registro_usuario_existente": False,
+
+        # Puede conservarse temporalmente si el template todavía
+        # utiliza el nombre anterior.
+        "registro_yerod_existente": False,
     }
 
-    return render(request,"proveedores_externos/registro_proveedor.html",context,)
-
-def registro_proveedor(request, token):
-    invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
-    tipo_invitacion = invitacion.tipo or 'NUEVO_PROVEEDOR'
-
-    distrito = (invitacion.distrito)
-
-    es_yerod = bool(distrito and distrito.nombre.strip().upper() == "YEROD")
-
-    proveedor_existente = None
-    usuario_existente = None
-
-    if es_yerod:
-        proveedor_existente = Proveedor.objects.filter(rfc__iexact=invitacion.rfc).first()
-        usuario_existente = User.objects.filter(Q(email__iexact=invitacion.email) | Q(username__iexact=invitacion.email)).first()
-
-
-    # =======================================
-    # 1) SOLO NUEVA DIRECCIÓN (tu form nuevo)
-    # =======================================
-    if tipo_invitacion == 'NUEVA_DIRECCION':
-        return registro_solo_direccion(request, invitacion)
-
-    # Yerod: ya existen proveedor y usuario.
-    # Solamente se capturan los datos de la nueva dirección.
-    if (tipo_invitacion == "NUEVO_PROVEEDOR" and es_yerod and proveedor_existente and usuario_existente):
-        return registro_yerod_existente(
-            request=request,
-            invitacion=invitacion,
-            proveedor=proveedor_existente,
-            user=usuario_existente,
-            distrito=distrito,
-        )
-    
-
-    
-    if request.method == 'POST':
-        #print(invitacion.email)
-        form = RegistroProveedorForm(request.POST)
-        # 🔹 Si la invitación YA tiene proveedor, ocultamos y hacemos opcional razon_social
-        if invitacion.tipo =="NUEVO_USUARIO":
-            form.fields['razon_social'].required = False
-            form.fields['razon_social'].widget = forms.HiddenInput()
-        if form.is_valid():
-            print("El formulario es válido")
-            # 1 Objeto user
-            user = User.objects.create(
-                username=invitacion.email,
-                email=invitacion.email,
-                first_name = form.cleaned_data['contacto'],
-                password=make_password(form.cleaned_data['password'])
-            )
-                
-            # 2 Objeto proveedor
-            if invitacion.proveedor:
-                proveedor = invitacion.proveedor
-            else:
-                proveedor = Proveedor.objects.create(
-                    rfc=invitacion.rfc,
-                    razon_social=form.cleaned_data['razon_social'],
-                    creado_por=invitacion.creado_por,
-                    completo = True,
-                )
-
-                #3 Objeto CustomUser
-            customuser = CustomUser.objects.create(
-                staff = user,
-                banco = form.cleaned_data['banco'],
-                cuenta_bancaria = form.cleaned_data['cuenta'],
-                clabe = form.cleaned_data['clabe'],
-                phone = form.cleaned_data['telefono'],
-                puesto = "Proveedor Externo",
-                nivel = 5,
-                apoyo_renta = 0,
-                apoyo_mantto = 0,
-            )
-            #4 Objeto tipo
-            tipo = Tipo_perfil.objects.get(nombre="PROVEEDOR_EXTERNO")
-            distrito = invitacion.creado_por.distritos
-            #5 Objeto perfil
-            profile = Profile.objects.create(
-                staff=customuser,
-                tipo=tipo,
-                proveedor=proveedor,
-                distritos= distrito,
-                st_activo =True,
-
-            )
-           
-            almacenes = Almacen.objects.filter(nombre = distrito.nombre)
-            profile.almacen.set(almacenes)
-            condicion_seleccionada = form.cleaned_data['condiciones']
-            if condicion_seleccionada == 'CREDITO':
-                financiamiento = True
-            else:
-                financiamiento = False
-
-            producto_inv = invitacion.producto
-            servicio_inv = invitacion.servicio
-            arrendamiento_inv = invitacion.arrendamiento
-            #5.5
-            status = Estatus_proveedor.objects.get(nombre="PREALTA")
-                #6 Objeto Proveedor_direcciones
-            direccion, creada = Proveedor_direcciones.objects.update_or_create(
-                nombre=proveedor,
-                distrito = invitacion.creado_por.distritos,
-                defaults = {
-                'creado_por' : profile,
-                'domicilio':form.cleaned_data['domicilio'],
-                'telefono':form.cleaned_data['telefono'],
-                'contacto':form.cleaned_data['contacto'],
-                'email':invitacion.email,
-                'banco':form.cleaned_data['banco'],
-                'clabe':form.cleaned_data['clabe'],
-                #distrito=invitacion.creado_por.distritos,
-                'cuenta': form.cleaned_data['cuenta'],
-                'email_opt': form.cleaned_data['email_opt'],
-                'estatus' : status,
-                 # Aquí capturas los booleanos:
-                'producto': producto_inv,
-                'servicio': servicio_inv,
-                'arrendamiento': arrendamiento_inv,
-                'moneda':form.cleaned_data['moneda'],
-                'financiamiento':financiamiento,
-                'dias_credito':form.cleaned_data['dias_credito'],
-                'completo': True,
-                }
-            )
-            #Deshabilitación de la invitación por medio del usado = True
-            invitacion.usado = True
-            invitacion.fecha_uso = now()
-            invitacion.proveedor = proveedor
-            invitacion.save()
-           
-            # Datos del correo
-            savia_url = "https://grupovordcab.cloud"
-            correo_destino = invitacion.email
-            enviar_correo_registro_exitoso(
-                usuario_email = correo_destino, 
-                creado_por_nombre = f"{invitacion.creado_por.staff.staff.first_name} {invitacion.creado_por.staff.staff.last_name}", 
-                savia_url = savia_url
-                )
-            messages.success(request, 'Registro exitoso. Espera correo de confirmación')    
-            return redirect('user-login')  # O alguna página de éxito        
-        else:
-            print("El formulario NO es válido")
-            print(form.errors)
-            messages.error(request, f'Error al registrar el proveedor. Por favor, revisa los datos ingresados.{form.errors}')
-            
-    else:
-        form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
-
-        if tipo_invitacion == 'NUEVO_USUARIO':
-            form.fields['razon_social'].required = False
-            form.fields['razon_social'].widget = forms.HiddenInput()
-
-    context = {
-        'form': form,
-        'tipo_invitacion': tipo_invitacion,
-    }
-
-    return render(request, 'proveedores_externos/registro_proveedor.html', context)
+    return render(request,"proveedores_externos/registro_proveedor.html", context,)
 
 #@login_required
 def cuestionario_debida_diligencia(request, proveedor_id):
@@ -2240,65 +2659,80 @@ def cuestionario_debida_diligencia(request, proveedor_id):
 
         return render(request, 'proveedores_externos/cuestionario.html', context)
     
-def registro_solo_direccion(request, pk):
-    """
-    Usado cuando InvitacionProveedor.tipo == 'NUEVA_DIRECCION'
-    Solo crea un Proveedor_direcciones adicional.
-    """
-    pk_perfil = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk_perfil)
-    # El proveedor ya debe existir (el flujo de invitación ya validó el RFC)
-    proveedor = Proveedor.objects.get(id=pk)
-    invitacion = InvitacionProveedor.objects.get(proveedor = proveedor,tipo= "NUEVA_DIRECCION", usado = False)
-    form = ProveedoresExistDireccionesForm()
-    if not invitacion:
-         # Si NO hay invitación válida, lo regresas al index (o donde prefieras)
-        messages.error(
-            request,
-            'No tienes una invitación válida para registrar una nueva dirección.'
-        )
-        return redirect('index')   # <-- cambia 'index' si tu URL se llama distinto
 
-    if request.method == 'POST':
-        item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, distrito = invitacion.creado_por.distritos)
-        form = ProveedoresExistDireccionesForm(request.POST, instance = item)
+def registro_solo_direccion(request, invitacion,):
+    """
+    Procesa una invitación de tipo NUEVA_DIRECCION.
+
+    Funciona para Yerod y Vordcab utilizando siempre el distrito
+    guardado en la invitación.
+    """
+
+    if (invitacion.tipo != "NUEVA_DIRECCION" or invitacion.usado):
+        messages.error(request,"No tienes una invitación válida para registrar una nueva dirección.",)
+        return redirect("user-login")
+
+    distrito = (invitacion.distrito or invitacion.creado_por.distritos)
+
+    es_yerod = bool(distrito and distrito.nombre.strip().upper() == "YEROD")
+
+    proveedor = (invitacion.proveedor or Proveedor.objects.filter(rfc__iexact=invitacion.rfc).first())
+
+    if proveedor is None:
+        messages.error(request,"No se encontró el proveedor relacionado con esta invitación.",)
+        return redirect("user-login")
+
+    # Si ya existe una dirección para el proveedor y distrito,
+    # se actualiza. En caso contrario se crea después de validar.
+    direccion_existente = (Proveedor_direcciones.objects.filter(nombre=proveedor, distrito=distrito,).first())
+
+    if request.method == "POST":
+        form = ProveedoresExistDireccionesForm(request.POST,instance=direccion_existente,)
+
         if form.is_valid():
-            direccion = form.save(commit=False)
-            direccion.nombre = proveedor
-            direccion.creado_por = usuario
-            actualizado_por = usuario
-            status = Estatus_proveedor.objects.get(nombre = "NUEVO")
-            direccion.estatus = status
-            # si quieres asegurar distrito por defecto:
-            
-            #direccion.distrito = invitacion.creado_por.distritos
-            direccion.created_at = datetime.now()
-            direccion.completo = True
-            direccion.save()
+            with transaction.atomic():
+                direccion = form.save(commit=False)
+                direccion.nombre = proveedor
+                direccion.distrito = distrito
+                # La invitación fue generada por este perfil.
+                direccion.creado_por = (invitacion.creado_por)
 
-            invitacion.usado = True
-            invitacion.fecha_uso = datetime.now()
-            #invitacion.proveedor = proveedor
-            invitacion.save()
+                direccion.estatus = (Estatus_proveedor.objects.get(nombre="NUEVO"))
 
-            messages.success(request, 'Nueva dirección registrada correctamente.')
-            # aquí ya podrías mandarlo a su dashboard de proveedor
-            return redirect('dashboard-index')  # o 'dashboard-proveedor'
-        else:
-            print(form.errors)
-            messages.error(request, f'Error al registrar la dirección: {form.errors}')
-   
-        
+                if not direccion.created_at:
+                    direccion.created_at = (timezone.now())
 
-      
+                direccion.completo = True
+                direccion.save()
+
+                form.save_m2m()
+
+                invitacion.usado = True
+                invitacion.fecha_uso = (timezone.now())
+                invitacion.proveedor = proveedor
+
+                invitacion.save(update_fields=["usado", "fecha_uso", "proveedor",])
+
+            messages.success(request, "La nueva dirección fue registrada correctamente.",)
+
+            return redirect("user-login")
+
+        messages.error(request,"Revisa la información del formulario.",)
+
+        print(form.errors)
+
+    else:
+        form = ProveedoresExistDireccionesForm(instance=direccion_existente,)
 
     context = {
-        'form': form, 
-        'invitacion': invitacion, 
-        'proveedor': proveedor
+        "form": form,
+        "invitacion": invitacion,
+        "proveedor": proveedor,
+        "distrito": distrito,
+        "es_yerod": es_yerod,
     }
 
-    return render(request,'proveedores_externos/registro_direccion.html', context)
+    return render(request,"proveedores_externos/registro_direccion.html", context,)
     
 def eliminar_miembro(request, pk):
     miembro = get_object_or_404(Miembro_Alta_Direccion, id=pk)

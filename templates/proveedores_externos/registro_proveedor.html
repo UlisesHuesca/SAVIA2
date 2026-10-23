@@ -46,7 +46,7 @@
         </div>
         {% endif %}
 
-        {% if not registro_yerod_existente %}
+      
         <section class="sv-card mb-3">
             <div class="sv-card-header">
                 <div>
@@ -59,61 +59,81 @@
                     </p>
                 </div>
             </div>
-
             <div class="sv-card-body">
                 <div class="row g-3">
-                    {% if tipo_invitacion == 'NUEVO_PROVEEDOR' %}
+
+                    {% if mostrar_razon_social %}
                     <div class="col-12">
                         <div class="sv-input-group input-group">
                             <span class="input-group-text">
                                 <i class="fa-solid fa-building"></i>
                             </span>
+
                             <div class="form-floating form-floating-group flex-grow-1">
                                 {{ form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón social"|attr:"autocomplete:organization" }}
+
                                 <label for="{{ form.razon_social.id_for_label }}">
                                     Razón social*
                                 </label>
                             </div>
                         </div>
+
                         {% for error in form.razon_social.errors %}
-                        <div class="text-danger small mt-1">{{ error }}</div>
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
                         {% endfor %}
                     </div>
                     {% endif %}
+
+
+                    {% if mostrar_password %}
 
                     <div class="col-12 col-lg-6">
                         <div class="sv-input-group input-group">
                             <span class="input-group-text">
                                 <i class="fa-solid fa-lock"></i>
                             </span>
+
                             <div class="form-floating form-floating-group flex-grow-1">
                                 {{ form.password|add_class:"form-control"|append_attr:"placeholder=Contraseña"|attr:"autocomplete:new-password" }}
+
                                 <label for="{{ form.password.id_for_label }}">
                                     Contraseña*
                                 </label>
                             </div>
                         </div>
+
                         {% for error in form.password.errors %}
-                        <div class="text-danger small mt-1">{{ error }}</div>
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
                         {% endfor %}
                     </div>
+
 
                     <div class="col-12 col-lg-6">
                         <div class="sv-input-group input-group">
                             <span class="input-group-text">
                                 <i class="fa-solid fa-shield-halved"></i>
                             </span>
+
                             <div class="form-floating form-floating-group flex-grow-1">
                                 {{ form.confirm_password|add_class:"form-control"|append_attr:"placeholder=Confirmar contraseña"|attr:"autocomplete:new-password" }}
+
                                 <label for="{{ form.confirm_password.id_for_label }}">
                                     Confirmar contraseña*
                                 </label>
                             </div>
                         </div>
+
                         {% for error in form.confirm_password.errors %}
-                        <div class="text-danger small mt-1">{{ error }}</div>
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
                         {% endfor %}
                     </div>
+
 
                     <div class="col-12">
                         <div class="sv-card-body sv-bg-light border rounded mb-0" role="note">
@@ -121,42 +141,64 @@
                                 <i class="fa-solid fa-circle-info me-1"></i>
                                 Requisitos de la contraseña
                             </div>
+
                             <div class="row g-2 small">
                                 <div class="col-12 col-md-6">
                                     <i class="fa-solid fa-check me-1"></i>
                                     Al menos 8 caracteres.
                                 </div>
+
                                 <div class="col-12 col-md-6">
                                     <i class="fa-solid fa-check me-1"></i>
                                     Una letra mayúscula y una minúscula.
                                 </div>
+
                                 <div class="col-12 col-md-6">
                                     <i class="fa-solid fa-check me-1"></i>
                                     Al menos un número.
                                 </div>
+
                                 <div class="col-12 col-md-6">
                                     <i class="fa-solid fa-check me-1"></i>
-                                    Un carácter especial: <code>@ $ ! % * # ? &amp; _</code>
+                                    Un carácter especial:
+                                    <code>@ $ ! % * # ? &amp; _</code>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {% else %}
+
+                    <div class="col-12">
+                        <div class="sv-card-body sv-bg-light border rounded mb-0" role="status">
+                            <div class="d-flex align-items-start gap-3">
+                                <span class="sv-badge sv-badge-primary">
+                                    <i class="fa-solid fa-user-check"></i>
+                                </span>
+
+                                <div>
+                                    <div class="sv-card-title mb-1">
+                                        Usuario existente
+                                    </div>
+
+                                    <div class="sv-cell-subtitle mt-0">
+                                        Se utilizarán tu usuario y contraseña actuales.
+                                        No es necesario crear nuevos datos de acceso.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% endif %}
+
                 </div>
             </div>
+            
         </section>
-        {% else %}
-        <div class="sv-card mb-3" role="status">
-            <div class="sv-card-body d-flex align-items-center gap-2">
-                <span class="sv-badge sv-badge-primary">
-                    <i class="fa-solid fa-circle-info"></i>
-                    Registro existente
-                </span>
-                <span class="sv-cell-subtitle mt-0">
-                    Se utilizarán los datos de acceso asociados con tu registro existente.
-                </span>
-            </div>
-        </div>
-        {% endif %}
+       
+       
+        
 
         <section class="sv-card mb-3">
             <div class="sv-card-header">
