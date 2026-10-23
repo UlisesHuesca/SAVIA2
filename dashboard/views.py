@@ -1773,7 +1773,7 @@ def add_proveedor_direccion(request, pk):
         }
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
-#Este es el momento que se agregan los proveedores
+#Este es la función correcta que agrega a los proveedores
 @perfil_seleccionado_required
 def add_proveedores2(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
@@ -2081,10 +2081,15 @@ def edit_proveedores(request, pk):
 def edit_proveedor_direccion(request, pk):
 
     pk_perfil = request.session.get('selected_profile_id')
-    colaborador = Profile.objects.all()
-    usuario = colaborador.get(id = pk_perfil)
+    usuario = Profile.objects.get(id = pk_perfil)
     next_param = request.POST.get('next') or request.GET.get('next')
     print('next_param:', next_param)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    
+   
+       
+    distritos_disponibles = (Distrito.objects.filter(status=True, id__in = almacenes_distritos).order_by('nombre'))
+    
     #print('estoy aquí')
     if usuario.tipo.proveedores_edicion == True:
         direccion = Proveedor_direcciones.objects.get(id = pk)
@@ -2187,6 +2192,9 @@ def edit_proveedor_direccion(request, pk):
             form = ProveedoresDireccionesForm(instance = direccion)
     else:
         raise Http404("No tienes permiso para ver esta vista")
+
+    form.fields['distrito'].queryset = distritos_disponibles
+
     context = {
         'proveedor':proveedor,
         'form': form,
