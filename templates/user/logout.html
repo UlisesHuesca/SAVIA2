@@ -3,8 +3,11 @@
 
 {% block title %}Sesión cerrada{% endblock %}
 
+{# Oculta la barra de navegación en esta pantalla #}
+{% block navbar %}{% endblock %}
+
 {% block content %}
-<main class="sv-page">
+<main class="sv-page {% if request.empresa_portal == 'YEROD' %}sv-theme-negro{% else %}sv-theme-vordcab{% endif %}">
     <div class="row justify-content-center align-items-center min-vh-75">
         <div class="col-12 col-md-8 col-lg-5 col-xl-4">
 
@@ -21,7 +24,7 @@
 
                     <p class="sv-page-subtitle mb-4">
                         Tu sesión se cerró correctamente.
-                        Gracias por utilizar SAVIA.
+                        Gracias por utilizar SAVIA
                     </p>
 
                     <a class="sv-btn sv-btn-primary"

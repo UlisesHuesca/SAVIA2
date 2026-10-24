@@ -600,8 +600,22 @@ class ArticuloComprado(models.Model):
     def __str__(self):
         return f'{self.id} - {self.producto.producto.articulos.producto.producto} - {self.oc.id} - {self.cantidad} - {self.precio_unitario}'
 
+class CategoriaEvidencia(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.CharField(max_length=250, blank=True)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        ordering = ['nombre']
+
 class Evidencia(models.Model):
+    categoria = models.ForeignKey(CategoriaEvidencia, on_delete = models.PROTECT, null=True, blank=True, related_name="evidencias")
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name='evidencias')
+    gasto = models.ForeignKey('gastos.Solicitud_Gasto', on_delete=models.CASCADE, null=True, blank=True, related_name='evidencias')
+    viatico = models.ForeignKey('viaticos.Solicitud_Viatico', on_delete=models.CASCADE, null=True, blank=True, related_name='evidencias')
     file = models.FileField(upload_to='evidencias', validators = [FileExtensionValidator(allowed_extensions=('pdf','png','jpg','jpeg'))])
     uploaded = models.DateField()
     comentario = models.CharField(max_length=200, null=True, blank=True)

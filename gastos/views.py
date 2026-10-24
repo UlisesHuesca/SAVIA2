@@ -15,7 +15,6 @@ from django.conf import settings
 from django.urls import reverse
 from django.core.mail import EmailMessage, BadHeaderError
 import traceback
-import calendar
 
 from datetime import date, datetime
 
@@ -33,10 +32,10 @@ from user.models import Profile, Distrito, Empresa
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta, Facturas, Tipo_Pago
-from compras.models import Proveedor_direcciones
+from compras.models import Proveedor_direcciones, Evidencia, CategoriaEvidencia
+from compras.forms import EvidenciaForm
 from tesoreria.forms import Facturas_Gastos_Form, Transferencia_Form, Cargo_Abono_Form
 
-from compras.views import attach_oc_pdf
 from tesoreria.utils import extraer_texto_de_pdf, encontrar_variables, extraer_bloques_formato_2, detectar_formato_pdf, encontrar_variables_bloques
 from requisiciones.views import get_image_base64
 from viaticos.models import Viaticos_Factura, Solicitud_Viatico
@@ -2547,6 +2546,7 @@ def generar_archivo_zip(facturas, gasto):
 
 @perfil_seleccionado_required
 def matriz_facturas_gasto(request, pk):
+    print('matriz_factura_gasto')
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
     gasto = Solicitud_Gasto.objects.get(id = pk)
@@ -2557,28 +2557,16 @@ def matriz_facturas_gasto(request, pk):
     form =  Facturas_Gastos_Form(instance=gasto)
     next_url = request.GET.get('next','mis-gastos')
 
+    evidencias = (gasto.evidencias.filter(hecho=True).select_related('categoria', 'subido_por').order_by('-uploaded', '-id'))
 
-    #if gasto.approbado_fecha2:
-        #fecha_aprobacion = gasto.approbado_fecha2.date()
+    categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True).order_by('nombre'))
 
-        # último día del mes de aprobación
-        #ultimo_dia_mes = calendar.monthrange(
-        #    fecha_aprobacion.year,
-        #    fecha_aprobacion.month
-        #)[1]
+    form_evidencia = EvidenciaForm()
 
-        #fecha_corte = fecha_aprobacion.replace(day=ultimo_dia_mes)
-
-        #hoy = timezone.localdate()
-
-        #if hoy > fecha_corte:
-        #    gasto.cerrar_facturacion = True
-        #    gasto.save(update_fields=['cerrar_facturacion'])
-    #factura_form = FacturaForm()
-    #next_url = request.GET.get('next', 'mis-gastos') 
-    #print(next_url)
 
     if request.method == 'POST':
+        print('POST recibido:', list(request.POST.keys()))
+        print('FILES recibidos:', list(request.FILES.keys()))
         form = Facturas_Gastos_Form(request.POST, instance=gasto)
         if "btn_factura_completa" in request.POST:
             fecha_hora = datetime.today()
@@ -2616,6 +2604,25 @@ def matriz_facturas_gasto(request, pk):
             #gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
             vale.delete()
             return redirect('matriz-facturas-gasto', gasto.id)
+        elif 'btn_evidencia' in request.POST:
+            form_evidencia = EvidenciaForm(request.POST,request.FILES)
+            print('si entra')
+            # IMPORTANTE:
+            # Validar aquí que el perfil pueda agregar evidencias
+            # a este gasto, no solo consultarlo.
+            if form_evidencia.is_valid():
+                print('si valida')
+                evidencia = form_evidencia.save(commit=False)
+                evidencia.gasto = gasto
+                evidencia.oc = None
+                evidencia.viatico = None
+                evidencia.subido_por = usuario
+                evidencia.uploaded = timezone.localdate()
+                evidencia.hecho = True
+                evidencia.save()
+
+                messages.success(request,'La evidencia se registró correctamente.')
+
 
             
     context={
@@ -2627,6 +2634,9 @@ def matriz_facturas_gasto(request, pk):
         'facturas':facturas,
         'usuario':usuario,
         'vales_rosa':vales_rosa,
+        'evidencias': evidencias,
+        'categorias_evidencia': categorias_evidencia,
+        'form_evidencia': form_evidencia,
         }
 
     return render(request, 'gasto/matriz_factura_gasto.html', context)

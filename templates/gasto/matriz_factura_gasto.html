@@ -457,6 +457,171 @@ document.addEventListener("DOMContentLoaded", async function () {
                 </div>
             </div>
         </section>
+    <!-- ==========================================
+            EVIDENCIAS Y DOCUMENTACIÓN ADICIONAL
+         =========================================== -->
+
+    <section class="sv-card mb-4" id="seccionEvidencias">
+
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title">
+                    <i class="fa-solid fa-folder-open"></i>
+                    Evidencias y documentación adicional
+                </h2>
+
+                <p class="sv-card-subtitle mb-0">
+                    Autorizaciones, líneas de captura, confirmaciones
+                    y documentos de respaldo del gasto.
+                </p>
+            </div>
+
+            <div class="sv-actions">
+                <button
+                    type="button"
+                    class="sv-btn sv-btn-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalEvidencias">
+
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Agregar evidencia
+                </button>
+            </div>
+        </div>
+
+        <div class="sv-card-body">
+
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-5">
+                    <label for="filtroCategoriaEvidencia"
+                        class="form-label fw-semibold">
+                        Categoría
+                    </label>
+
+                    <select
+                        id="filtroCategoriaEvidencia"
+                        class="form-select">
+
+                        <option value="">Todas las categorías</option>
+
+                        {% for categoria in categorias_evidencia %}
+                        <option value="{{ categoria.id|unlocalize }}">
+                            {{ categoria.nombre }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="sv-table-wrap">
+            <table class="sv-table">
+
+                <thead>
+                    <tr>
+                        <th>Documento</th>
+                        <th>Categoría</th>
+                        <th>Comentario</th>
+                        <th>Fecha</th>
+                        <th>Subido por</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tablaEvidencias">
+
+                    {% for evidencia in evidencias %}
+
+                    <tr data-categoria="{{ evidencia.categoria_id|default:'' }}">
+
+                        <td>
+                            <span class="sv-cell-title">
+                                <i class="fa-solid fa-file-lines me-2"></i>
+                                {{ evidencia.file.name }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="sv-badge sv-badge-neutral">
+                                {{ evidencia.categoria.nombre|default:"Sin clasificar" }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ evidencia.comentario|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ evidencia.uploaded|date:"d/m/Y" }}
+                        </td>
+
+                        <td>
+                            {{ evidencia.subido_por|default:"—" }}
+                        </td>
+
+                        <td>
+                            <div class="sv-actions">
+
+                                <!-- Visualizar -->
+                                <a href="{{ evidencia.file.url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="sv-btn sv-btn-info sv-btn-icon"
+                                title="Visualizar evidencia"
+                                aria-label="Visualizar evidencia">
+
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+
+                                <!-- Descargar -->
+                                <a href="{{ evidencia.file.url }}"
+                                download
+                                class="sv-btn sv-btn-outline sv-btn-icon"
+                                title="Descargar evidencia"
+                                aria-label="Descargar evidencia">
+
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr class="js-evidencias-vacio">
+                        <td colspan="6" class="sv-empty">
+                            <span class="sv-empty-icon">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </span>
+
+                            <span class="sv-empty-title">
+                                Sin evidencias registradas
+                            </span>
+
+                            <span class="sv-empty-text">
+                                Agrega documentación de respaldo
+                                para este gasto.
+                            </span>
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                    <tr class="js-evidencias-sin-resultados d-none">
+                        <td colspan="6" class="sv-empty">
+                            <span class="sv-empty-title">
+                                No hay evidencias para esta categoría.
+                            </span>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </section>
     
 
     <section class="sv-card mb-4">
@@ -663,6 +828,111 @@ document.addEventListener("DOMContentLoaded", async function () {
     </div>
 </div>
 
+<div class="modal fade" id="modalEvidencias" tabindex="-1" aria-labelledby="modalEvidenciasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <form method="POST" action="{{ request.get_full_path }}" enctype="multipart/form-data" id="formEvidencias">
+                {% csrf_token %}
+                 <input type="hidden" name="btn_evidencia" value="1">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title" id="modalEvidenciasLabel">
+                            <i class="fa-solid fa-folder-plus me-2"></i>
+                            Agregar evidencia
+                        </h2>
+
+                        <span class="sv-modal-subtitle">
+                            Gasto G{{ gasto.folio }}
+                        </span>
+                    </div>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <!-- Categoría -->
+                        <div class="col-12">
+                            <label for="{{ form_evidencia.categoria.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Categoría *
+                            </label>
+
+                            {{ form_evidencia.categoria }}
+                        </div>
+
+                        <!-- Archivo -->
+                        <div class="col-12">
+                            <label for="{{ form_evidencia.file.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Documento *
+                            </label>
+
+                            {{ form_evidencia.file }}
+
+                            <div class="form-text">
+                                Selecciona un archivo PDF, PNG,
+                                JPG o JPEG.
+                            </div>
+                        </div>
+
+                        <!-- Resumen -->
+                        <div class="col-12">
+                            <div class="sv-empty"
+                                 id="resumenEvidencias">
+
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </span>
+
+                                <span class="sv-empty-title">
+                                    Ningún archivo seleccionado
+                                </span>
+
+                                <span class="sv-empty-text">
+                                    Selecciona el documento que deseas adjuntar.
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Comentario -->
+                        <div class="col-12">
+                            <label for="{{ form_evidencia.comentario.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Comentario
+                            </label>
+
+                            {{ form_evidencia.comentario }}
+
+                            <div class="form-text">
+                                Máximo 200 caracteres.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" id="btnGuardarEvidencia" class="sv-btn sv-btn-success">
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Guardar evidencia
+                    </button>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="confirmModal" tabindex="-1"
      aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -807,6 +1077,66 @@ document.addEventListener("DOMContentLoaded", function () {
     const previewTitle = document.getElementById("pdfPreviewTitle");
     const previewFrame = document.getElementById("pdfPreviewFrame");
     const previewLoading = document.getElementById("pdfPreviewLoading");
+    const form = document.getElementById("formEvidencias");
+    if (!form) return;
+
+    const input = document.getElementById("id_file");
+    const resumen = document.getElementById("resumenEvidencias");
+    const boton = document.getElementById("btnGuardarEvidencia");
+
+    if (input && resumen) {
+
+        input.addEventListener("change", function () {
+
+            const archivo = this.files[0];
+
+            resumen.replaceChildren();
+
+            const titulo = document.createElement("span");
+            titulo.className = "sv-empty-title d-block";
+
+            if (!archivo) {
+                titulo.textContent = "Ningún archivo seleccionado";
+            } else {
+                titulo.textContent = archivo.name;
+
+                const detalle = document.createElement("span");
+                detalle.className = "sv-empty-text d-block mt-2";
+                detalle.textContent =
+                    (archivo.size / 1024 / 1024).toFixed(2)
+                    + " MB";
+
+                resumen.appendChild(detalle);
+            }
+
+            resumen.prepend(titulo);
+        });
+    }
+
+    form.addEventListener("submit", function (event) {
+
+        if (!form.reportValidity()) {
+            event.preventDefault();
+            return;
+        }
+
+        if (form.dataset.enviando === "true") {
+            event.preventDefault();
+            return;
+        }
+
+        form.dataset.enviando = "true";
+
+        boton.disabled = true;
+        boton.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"></span>
+            Guardando...
+        `;
+    });
+
+
     let objectUrl = null;
 
     previewModal.addEventListener("show.bs.modal", async function (event) {
@@ -870,6 +1200,26 @@ document.addEventListener("DOMContentLoaded", function () {
             frame.removeAttribute("src");
         });
     }
+});
+
+form.addEventListener("submit", function (event) {
+
+    console.log(
+        "Formulario:",
+        form.id
+    );
+
+    console.log(
+        "Campos:",
+        [...new FormData(form).keys()]
+    );
+
+    console.log(
+        "Campo btn_evidencia:",
+        form.querySelector('[name="btn_evidencia"]')
+    );
+
+    // Resto de tu código actual...
 });
 
 document.addEventListener("htmx:afterRequest", function (event) {

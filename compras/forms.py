@@ -1,5 +1,5 @@
 from django import forms
-from .models import Compra, ArticuloComprado, Comparativo, Item_Comparativo, Proveedor_direcciones, Proveedor
+from .models import Compra, ArticuloComprado, Comparativo, Item_Comparativo, Proveedor_direcciones, Proveedor, Evidencia, CategoriaEvidencia
 from dashboard.models import Product, Inventario
 from requisiciones.models import ArticulosRequisitados, Requis
 
@@ -118,3 +118,40 @@ class RequisDevolucionForm(forms.ModelForm):
         widgets = {
             "comentario_devolucion": forms.Textarea(attrs={"rows":2}),
         }
+
+class EvidenciaForm(forms.ModelForm):
+
+    class Meta:
+        model = Evidencia
+        fields = ['categoria', 'file', 'comentario']
+
+        widgets = {
+            'categoria': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+            'file': forms.ClearableFileInput(
+                attrs={
+                    'class': 'form-control',
+                    'accept': '.pdf,.png,.jpg,.jpeg'
+                }
+            ),
+            'comentario': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Describe la evidencia adjunta...'
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['categoria'].queryset = (CategoriaEvidencia.objects.filter(activo=True))
+
+        self.fields['categoria'].required = True
+        self.fields['categoria'].empty_label = ('Selecciona una categoría')
+
+        self.fields['file'].required = True
+
+        self.fields['comentario'].required = False
