@@ -323,10 +323,18 @@
 
         </section>
 
-        <div class="row g-3 mb-3">
-        <div class="col-12 col-xl-6"><section class="sv-card h-100">
+    <!-- ==========================================
+        EVIDENCIAS Y DOCUMENTACIÓN ADICIONAL
+      =========================================== -->
+
+    {% include 'evidencias/seccion_evidencias.html' %}
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-xl-6">
+            <section class="sv-card h-100">
             <div class="sv-card-header"><h2 class="sv-card-title"><i class="fa-solid fa-ticket"></i>Vales rosa</h2><span class="sv-badge sv-badge-danger">Pendientes y aprobados</span></div>
-            <div class="sv-table-wrap"><table class="sv-table table-sm">
+            <div class="sv-table-wrap">
+            <table class="sv-table table-sm">
                 <thead>
                     <tr><th>ID</th><th>Motivo</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr>
                 </thead>
@@ -378,10 +386,15 @@
                         <td colspan="2"></td>
                     </tr>
                 </tfoot>
-            </table></div></section></div>
-            <div class="col-12 col-xl-6"><section class="sv-card h-100">
+            </table>
+            </div>
+            </section>
+        </div>
+        <div class="col-12 col-xl-6">
+            <section class="sv-card h-100">
             <div class="sv-card-header"><h2 class="sv-card-title"><i class="fa-solid fa-ticket-simple"></i>Vales azules</h2><span class="sv-badge sv-badge-info">Abonos</span></div>
-            <div class="sv-table-wrap"><table class="sv-table table-sm">
+            <div class="sv-table-wrap">
+                <table class="sv-table table-sm">
                 <thead>
                     <tr><th>ID</th><th>Motivo</th><th>Monto</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr>
                 </thead>
@@ -437,14 +450,20 @@
                    
                     {% endfor %}
                 </tbody>
-            </table>
+                </table>
+            </div>
+            </section>
         </div>
-    </section></div></div>
+    </div>
 
         
     </form>
 </main>
+
+
 {% include 'partials/modal_host.html' %}
+
+ 
 
 <div class="modal fade" id="documentPdfModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -527,8 +546,13 @@
     </div>
 </div>
 
+{% if puede_subir_evidencia %}
+    {% include 'evidencias/modal_evidencias.html' %}
+{% endif %}
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'js/evidencias.js' %}"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% if messages %}
     {% for message in messages %}

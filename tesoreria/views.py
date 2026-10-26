@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, FileResponse, Http404, JsonResponse
 from django.core.mail import EmailMessage, BadHeaderError
-import socket
-from smtplib import SMTPException
+
+
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -12,13 +12,18 @@ from django.contrib import messages
 #from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils.timezone import localtime
+from django.utils import timezone
+from django.urls import reverse
 from django.utils.dateparse import parse_date, parse_datetime
 from django.template.loader import render_to_string
 from django.urls import reverse, NoReverseMatch
 from django.views.decorators.http import require_POST
+
+from smtplib import SMTPException
+
 from user.models import Distrito, Empresa
 from compras.models import ArticuloComprado, Compra, TipoPrioridad
-from compras.forms import CompraForm
+from compras.forms import EvidenciaForm, CategoriaEvidencia
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf_nueva #convert_excel_matriz_compras
 from dashboard.models import Subproyecto, Producto_Calidad
@@ -44,9 +49,9 @@ from num2words import num2words
 import json
 import qrcode
 import tempfile
+import socket
 from PIL import Image
-from django.utils import timezone
-from django.urls import reverse
+
 import re
 from openpyxl.styles import numbers
 from openpyxl.chart import BarChart, Reference
@@ -4027,6 +4032,13 @@ def matriz_facturas_nomodal(request, pk):
 
         pago.fecha_pdf = fecha_pdf  # Asignar el valor a la variable de instancia
         #print(pago.fecha_pdf)  # Imprimir el valor de fecha_pdf
+
+    evidencias = (compra.evidencias.filter(hecho=True).select_related('categoria', 'subido_por').order_by('-uploaded', '-id'))
+    
+    categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True).order_by('nombre'))
+
+    form_evidencia = EvidenciaForm()
+    
    
     if request.method == 'POST':
         #connector = '&' if '?' in base_url else '?'
@@ -4057,6 +4069,24 @@ def matriz_facturas_nomodal(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
+        elif 'btn_evidencia' in request.POST:
+            form_evidencia = EvidenciaForm(request.POST,request.FILES)
+                    
+            # IMPORTANTE:
+            # Validar aquí que el perfil pueda agregar evidencias
+            # a este gasto, no solo consultarlo.
+            if form_evidencia.is_valid():
+                print('si valida')
+                evidencia = form_evidencia.save(commit=False)
+                evidencia.gasto = None
+                evidencia.oc = compra
+                evidencia.viatico = None
+                evidencia.subido_por = perfil
+                evidencia.uploaded = timezone.localdate()
+                evidencia.hecho = True
+                evidencia.save()
+        
+                messages.success(request,'La evidencia se registró correctamente.')
         
     context={
         'next_url':next_url,
@@ -4064,6 +4094,10 @@ def matriz_facturas_nomodal(request, pk):
         'form':form,
         'facturas':facturas,
         'compra':compra,
+        'evidencias': evidencias,
+        'categorias_evidencia': categorias_evidencia,
+        'puede_subir_evidencia': True,  # Sustituir por permiso real
+        'form_evidencia':form_evidencia,
         }
 
     return render(request, 'tesoreria/matriz_factura_no_modal.html', context)

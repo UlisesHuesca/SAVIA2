@@ -32,7 +32,7 @@ from user.models import Profile, Distrito, Empresa
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta, Facturas, Tipo_Pago
-from compras.models import Proveedor_direcciones, Evidencia, CategoriaEvidencia
+from compras.models import Proveedor_direcciones, CategoriaEvidencia
 from compras.forms import EvidenciaForm
 from tesoreria.forms import Facturas_Gastos_Form, Transferencia_Form, Cargo_Abono_Form
 
@@ -2637,6 +2637,7 @@ def matriz_facturas_gasto(request, pk):
         'evidencias': evidencias,
         'categorias_evidencia': categorias_evidencia,
         'form_evidencia': form_evidencia,
+        'puede_subir_evidencia': True,  # Sustituir por permiso real
         }
 
     return render(request, 'gasto/matriz_factura_gasto.html', context)

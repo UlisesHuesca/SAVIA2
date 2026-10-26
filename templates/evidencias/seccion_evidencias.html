@@ -1,0 +1,162 @@
+<!-- templates/evidencias/seccion_evidencias.html -->
+{% load l10n %}
+
+<section class="sv-card mb-4" id="seccionEvidencias">
+
+    <div class="sv-card-header">
+        <div>
+            <h2 class="sv-card-title">
+                <i class="fa-solid fa-folder-open"></i>
+                Evidencias y documentación adicional
+            </h2>
+
+            <p class="sv-card-subtitle mb-0">
+                Autorizaciones, líneas de captura, confirmaciones
+                y documentos de respaldo.
+            </p>
+        </div>
+
+        <div class="sv-actions">
+
+            <span class="sv-badge sv-badge-neutral">
+                {{ evidencias|length }} archivo(s)
+            </span>
+
+            {% if puede_subir_evidencia %}
+            <button
+                type="button"
+                class="sv-btn sv-btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#modalEvidencias">
+
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                Agregar evidencia
+            </button>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="sv-card-body">
+
+        <div class="row g-3">
+            <div class="col-12 col-md-5">
+
+                <label for="filtroCategoriaEvidencia"
+                       class="form-label fw-semibold">
+                    Categoría
+                </label>
+
+                <select
+                    id="filtroCategoriaEvidencia"
+                    class="form-select">
+
+                    <option value="">Todas las categorías</option>
+
+                    {% for categoria in categorias_evidencia %}
+                    <option value="{{ categoria.id|unlocalize }}">
+                        {{ categoria.nombre }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="sv-table-wrap">
+        <table class="sv-table">
+
+            <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Categoría</th>
+                    <th>Comentario</th>
+                    <th>Fecha</th>
+                    <th>Subido por</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody id="tablaEvidencias">
+
+                {% for evidencia in evidencias %}
+                <tr data-categoria="{{ evidencia.categoria_id|default:'' }}">
+
+                    <td>
+                        <span class="sv-cell-title">
+                            <i class="fa-solid fa-file-lines me-2"></i>
+                            {{ evidencia.file.name }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="sv-badge sv-badge-neutral">
+                            {{ evidencia.categoria.nombre|default:"Sin clasificar" }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ evidencia.comentario|default:"—" }}
+                    </td>
+
+                    <td>
+                        {{ evidencia.uploaded|date:"d/m/Y" }}
+                    </td>
+
+                    <td>
+                        {{ evidencia.subido_por|default:"—" }}
+                    </td>
+
+                    <td>
+                        <div class="sv-actions">
+
+                            <a href="{{ evidencia.file.url }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="sv-btn sv-btn-info sv-btn-icon"
+                               title="Visualizar evidencia">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+
+                            <a href="{{ evidencia.file.url }}"
+                               download
+                               class="sv-btn sv-btn-outline sv-btn-icon"
+                               title="Descargar evidencia">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+
+                        </div>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+                <tr class="js-evidencias-vacio">
+                    <td colspan="6" class="sv-empty">
+                        <span class="sv-empty-icon">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </span>
+
+                        <span class="sv-empty-title">
+                            Sin evidencias registradas
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tr class="js-evidencias-sin-resultados d-none">
+                    <td colspan="6" class="sv-empty">
+                        <span class="sv-empty-title">
+                            No hay evidencias para esta categoría.
+                        </span>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</section>

@@ -17,6 +17,8 @@ from user.models import Profile
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from dashboard.models import Inventario, Product
 from requisiciones.views import get_image_base64
+from compras.models import CategoriaEvidencia
+from compras.forms import EvidenciaForm
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form, Solicitud_Viatico_Tipo_Form
@@ -1333,6 +1335,12 @@ def matriz_facturas_viaticos(request, pk):
     #print('Fecha limite para ingresar factura:', fecha_limite)
     #print('Fecha actual:', date.today())
     fuera_de_tiempo = date.today() > fecha_limite
+
+    evidencias = (viatico.evidencias.filter(hecho=True).select_related('categoria', 'subido_por').order_by('-uploaded', '-id'))
+    
+    categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True).order_by('nombre'))
+    
+    form_evidencia = EvidenciaForm()
     #print(fuera_de_tiempo)
 
     if request.method == 'POST':
@@ -1371,6 +1379,23 @@ def matriz_facturas_viaticos(request, pk):
             #gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
             vale.delete()
             return redirect('matriz-facturas-viaticos', viatico.id)
+        elif 'btn_evidencia' in request.POST:
+            form_evidencia = EvidenciaForm(request.POST,request.FILES)
+            print('si entra')
+            # IMPORTANTE:
+            # Validar aquí que el perfil pueda agregar evidencias
+            # a este gasto, no solo consultarlo.
+            if form_evidencia.is_valid():
+                print('si valida')
+                evidencia = form_evidencia.save(commit=False)
+                evidencia.gasto = None
+                evidencia.oc = None
+                evidencia.viatico = viatico
+                evidencia.subido_por = perfil
+                evidencia.uploaded = timezone.localdate()
+                evidencia.hecho = True
+                evidencia.save()
+                messages.success(request,'La evidencia se registró correctamente.')
 
     context={
         'next_url':next_url,
@@ -1380,6 +1405,10 @@ def matriz_facturas_viaticos(request, pk):
         'viatico': viatico,
         'fuera_de_tiempo':fuera_de_tiempo,
         'totales': totales,
+        'evidencias': evidencias,
+        'categorias_evidencia': categorias_evidencia,
+        'form_evidencia': form_evidencia,
+        'puede_subir_evidencia': True,  # Sustituir por permiso real
         }
 
     return render(request, 'viaticos/matriz_facturas_viaticos.html', context)

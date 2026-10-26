@@ -1,0 +1,112 @@
+<!-- templates/evidencias/modal_evidencias.html -->
+
+<div class="modal fade"
+     id="modalEvidencias"
+     tabindex="-1"
+     aria-labelledby="modalEvidenciasLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content sv-modal">
+
+            <form method="POST"
+                  action="{{ request.get_full_path }}"
+                  enctype="multipart/form-data"
+                  id="formEvidencias">
+
+                {% csrf_token %}
+                <input type="hidden" name="btn_evidencia" value="1">
+
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title" id="modalEvidenciasLabel">
+                            <i class="fa-solid fa-folder-plus me-2"></i>
+                            Agregar evidencia
+                        </h2>
+
+                        <span class="sv-modal-subtitle">
+                            {{ folio_evidencia }}
+                        </span>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label for="{{ form_evidencia.categoria.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Categoría *
+                            </label>
+
+                            {{ form_evidencia.categoria }}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form_evidencia.file.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Documento *
+                            </label>
+
+                            {{ form_evidencia.file }}
+
+                            <div class="form-text">
+                                Se permite un archivo PDF, PNG,
+                                JPG o JPEG por registro.
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="sv-empty" id="resumenEvidencias">
+                                <span class="sv-empty-icon">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </span>
+
+                                <span class="sv-empty-title">
+                                    Ningún archivo seleccionado
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form_evidencia.comentario.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Comentario
+                            </label>
+
+                            {{ form_evidencia.comentario }}
+
+                            <div class="form-text">
+                                Máximo 200 caracteres.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="sv-btn sv-btn-outline"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                            id="btnGuardarEvidencia"
+                            class="sv-btn sv-btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Guardar evidencia
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>

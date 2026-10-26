@@ -385,6 +385,17 @@
     </div>
 </div>
 
+ <!-- ==========================================
+        EVIDENCIAS Y DOCUMENTACIÓN ADICIONAL
+      =========================================== -->
+
+{% include 'evidencias/seccion_evidencias.html' %}
+
+{% if puede_subir_evidencia %}
+    {% include 'evidencias/modal_evidencias.html' %}
+{% endif %}
+
+<script src="{% static 'js/evidencias.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const confirmModal = document.getElementById('confirmModal');
