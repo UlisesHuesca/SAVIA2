@@ -9,6 +9,7 @@ def encontrar_variables(texto):
 
     # Definir los patrones de regex para cada variable
     patrones = {
+        'fecha_valor': r'Fecha valor:\s*(\d{2}/\d{2}/\d{4})',
         'fecha': r'Fecha de aplicación:\s*(\d{2}/\d{2}/\d{4})', #r'Fecha de creación:\s*(\d{2}/\d{2}/\d{4})',
         'hora_operacion': r'(?:Hora de captura en el canal|Hora):\s*(\d{2}:\d{2}:\d{2})',
         'importe_operacion': r'(?:Importe|Importe de la operación):\s?([\d,.]+)',
@@ -42,13 +43,14 @@ def encontrar_variables(texto):
             else:
                 variables[clave] = 'No disponible'
 
+    # Priorizar fecha valor cuando esté disponible
+    if variables['fecha_valor'] != 'No disponible':
+        variables['fecha'] = variables['fecha_valor']
+    
     return variables
 
 
-    # Imprimir para depuración
-    #print(f"Variables extraídas: {variables}")
-
-    return variables
+ 
 
 def limpiar_importe(importe_str):
     if not importe_str:
