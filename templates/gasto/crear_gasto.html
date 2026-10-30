@@ -78,7 +78,7 @@
                                 </div>
                             </div>
                         </div>
-                            <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
+                            <div class="form-check form-switch col-auto mx-4 sv-check" id="Otro_Colaborador">
                                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
                                 <label class="form-check-label" for="SwitchColaborador" id="LabelColaborador">{% trans "Otro Colaborador" %}</label>
                             </div>
@@ -135,16 +135,20 @@
                                 </div>
                             </div>
 
-                            <div class="sv-expense-options">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="activarFacturas">
-                                <label class="form-check-label" for="activarFacturas">Subir facturas</label>
-                            </div>
-                            
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="activarValeRosa">
-                                <label class="form-check-label" for="activarValeRosa">Agregar vale rosa</label>
-                            </div>
+                            <div class="sv-check-grid">
+                                <div class="form-check form-switch sv-check">
+                                    <input class="form-check-input" type="checkbox" id="activarFacturas">
+                                    <label class="form-check-label" for="activarFacturas">
+                                        Subir facturas
+                                    </label>
+                                </div>
+
+                                <div class="form-check form-switch sv-check">
+                                    <input class="form-check-input" type="checkbox" id="activarValeRosa">
+                                    <label class="form-check-label" for="activarValeRosa">
+                                        Agregar vale rosa
+                                    </label>
+                                </div>
                             </div>
 
 
@@ -731,12 +735,12 @@
                 </div>
 
             <div class="sv-expense-tax-row">
-                <div class="form-check form-switch" id="Otros_impuestos">
+                <div class="form-check form-switch sv-check" id="Otros_impuestos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
                         <label class="form-check-label" for="Switch_Otros_impuestos">{% trans "Otros Impuestos" %}</label>
                 </div>
                 <div>
-                    <div id="otros_impuestos" class="sv-input-group input-group d-none">
+                    <div id="otros_impuestos" class="sv-input-group input-group d-none sv-check">
                     <span class="input-group-text"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.otros_impuestos|add_class:"form-control"|append_attr:"placeholder= Otros Impuestos"}}
@@ -747,7 +751,7 @@
             </div>
                 
             <div class="sv-expense-tax-row">
-                <div class="form-check form-switch" id="Impuestos_retenidos">
+                <div class="form-check form-switch sv-check" id="Impuestos_retenidos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Impuestos_retenidos">
                         <label class="form-check-label" for="Switch_Impuestos_retenidos">Impuestos Retenidos</label>
                 </div>

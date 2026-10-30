@@ -438,11 +438,11 @@
                     <td class="sv-col-validar d-none">
                          {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                         
-                        <input class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para validación" {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}checked disabled{% endif %}>
+                        <input class="validacion_checkbox form-check-input sv-check-input-lg" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para validación" {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}checked disabled{% endif %}>
                         {% endif %}
                     </td>
                     <td class="sv-col-imprimir">
-                        <input class="print_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="imprimir_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para imprimir">
+                        <input class="print_checkbox form-check-input sv-check-input-lg" data-id="{{ pago.id|unlocalize }}" data-monto="{{ pago.monto|unlocalize }}" type="checkbox" name="imprimir_ids" value="{{ pago.id|unlocalize }}" aria-label="Seleccionar para imprimir">
                     </td>
                     <td class="sv-col-registro">
                         <ul class="nav nav-pills">
@@ -583,12 +583,12 @@
                         {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                             {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}
                                 {% if pago.oc %}
-                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                <input class="payment_checkbox form-check-input sv-check-input-lg" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                
                                 {% elif pago.gasto %}
-                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                <input class="payment_checkbox form-check-input sv-check-input-lg" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                 {% elif pago.viatico %}
-                                <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                <input class="payment_checkbox form-check-input sv-check-input-lg" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                 {% endif %}
                             {% endif %}
                         {% endif %}

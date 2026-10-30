@@ -1373,7 +1373,7 @@ body {
     height: 46px;
 }
 
-.sv-expense-options {
+/*.sv-expense-options {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
@@ -1397,6 +1397,7 @@ body {
 .sv-expense-tax-row .form-check-input {
     margin-top: 0;
 }
+*/
 
 .sv-expense-create .sv-card-actions {
     display: flex;
@@ -1689,7 +1690,7 @@ body {
     border-bottom: 1px solid var(--sv-border, #dfe5e8);
 }
 
-.sv-check-option {
+/*.sv-check-option {
     display: inline-flex;
     align-items: center;
     gap: 9px;
@@ -1715,7 +1716,7 @@ body {
 
 .sv-check-option i {
     color: var(--sv-primary);
-}
+}*/
 
 @media only screen and (max-width: 768px) {
     .sv-summary-grid {
@@ -1727,3 +1728,17 @@ body {
         flex-direction: column;
     }
 }
+
+/* Checkbox individual grande para tablas */
+.sv-check-input-lg {
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: 0;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.sv-check-input-lg:disabled {
+    cursor: not-allowed;
+}
+
