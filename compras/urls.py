@@ -61,6 +61,7 @@ urlpatterns = [
     path("compras/<int:compra_id>/pdf/", views.ver_oc_pdf, name="ver_oc_pdf"),
     path("compras/catalogo/", views.catalogo_precios, name="catalogo-precios"),
     path("compras/catalogo/<int:producto_id>/precios/", views.producto_precios_detalle, name="producto-precios-detalle"),
+    path('preevaluacion/<int:pk>/',views.preevaluacion,name='preevaluacion'),
     ]
 
 #if settings.DEBUG:

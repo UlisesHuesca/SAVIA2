@@ -36,6 +36,12 @@ class Subfamilia(models.Model):
     def __str__(self):
         return f'{self.nombre}'
 
+class Criticidad(models.Model):
+    nombre = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.nombre}'
+
 class Product(models.Model):
     codigo = models.CharField(max_length=6,null=True, unique=True)
     nombre = models.TextField(null=True)

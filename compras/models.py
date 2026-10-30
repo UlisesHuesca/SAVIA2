@@ -1,13 +1,12 @@
 from django.db import models
-from dashboard.models import Inventario, ArticulosparaSurtir, Familia
+from dashboard.models import Inventario, Familia, Criticidad
 from requisiciones.models import Requis, ArticulosRequisitados
-from user.models import Distrito, Banco, Pais
+from user.models import Distrito, Banco, Pais, Profile
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import decimal
-from phone_field import PhoneField
 import re
 import PyPDF2
 import uuid
@@ -20,6 +19,12 @@ class Estatus_proveedor(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+
+class Tipo_Evaluacion(models.Model):
+    nombre = models.CharField(max_length=20, null=True, blank=True)
+
+    def __str__(self):
+        return self.nombre or ""
 
 
 class Proveedor(models.Model):
@@ -356,6 +361,39 @@ class Comparativo(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+
+class Preevaluacion(models.Model):
+    nombre = models.ForeignKey(Proveedor, on_delete=models.CASCADE, null=True, related_name = "preevaluaciones")
+    creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    creado_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(null=True)
+    tipo_evaluacion = models.ForeignKey(Tipo_Evaluacion, on_delete= models.CASCADE, null=True)
+    criticidad = models.ForeignKey(Criticidad, on_delete= models.CASCADE, null=True)
+    especs_ver = models.CharField(max_length=255, null=True, blank=True) #Campo para la evaluacion inicial simplificada
+    especs_b = models.BooleanField(default=False) #Campo para la evaluacion inicial simplificada
+    precios_ver = models.CharField(max_length=255, null=True, blank=True) #Campo para la evaluacion inicial simplificada
+    precios_b = models.BooleanField(default = False) #Campo para la evaluacion inicial simplificada
+    verif_calidad = models.CharField(max_length=255, null=True, blank=True) #Campo para la evaluacion inicial (campo 1)
+    verif_calidad_b= models.BooleanField(default = False)
+    control_cadena_suministro = models.CharField(max_length=255, null=True, blank=True)  #Campo para la evaluacion inicial (campo 2)
+    control_cadena_b= models.BooleanField(default = False) #Campo para la evaluacion inicial simplificada (boleano 2)
+    capacidad_proveedor = models.CharField(max_length=255, null=True, blank=True)  #Campo para la evaluacion inicial (campo 3)
+    capacidad_proveedor_b= models.BooleanField(default = False) #Campo para la evaluacion inicial (boleano 3)
+    requisitos_sgc_ver = models.CharField(max_length=255, null=True, blank=True)  #Campo para la evaluacion inicial (campo 4)
+    sgc_b = models.BooleanField(default=False)  #Campo para la evaluacion inicial (boleano 4)
+    eval_compra = models.CharField(max_length=255, null=True, blank=True)
+    eval_compra_b= models.BooleanField(default = False)
+    eval_actividades = models.CharField(max_length=255, null=True, blank=True) #Campo para la evaluacion inicial (campo 6)
+    eval_actividades_b= models.BooleanField(default = False)
+    resultado = models.BooleanField(default= None, null=True)
+    areas_exito = models.CharField(max_length=255, null=True, blank=True)
+    areas_oportunidad = models.CharField(max_length=255, null=True, blank=True)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    completo = models.BooleanField(default=False)
+    comparativo_model = models.ForeignKey(Comparativo, on_delete = models.CASCADE, null=True, blank=True, related_name="preevaluaciones_comparativo")
+
+    def __str__(self):
+        return f'Preevaluación {self.id} - {self.nombre}'
 
 class Item_Comparativo(models.Model):
     producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)

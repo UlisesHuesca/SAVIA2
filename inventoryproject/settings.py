@@ -148,7 +148,15 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '3306',
-	}
+	},
+    "vordtec": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("VORDTEC_DATABASE_NAME"),
+        "USER": os.getenv("VORDTEC_DATABASE_USER"),
+        "PASSWORD": os.getenv("VORDTEC_DATABASE_PASSWORD"),
+        "HOST": os.getenv("VORDTEC_DATABASE_HOST", "localhost"),
+        "PORT": os.getenv("VORDTEC_DATABASE_PORT", "3306"),
+    },
 }
 
 LEGACY_ACTIVOS_DATABASE_NAME = os.getenv(

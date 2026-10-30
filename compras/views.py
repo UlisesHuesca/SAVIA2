@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-#from django.contrib.auth.decorators import login_required
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
@@ -8,6 +7,7 @@ from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, D
 from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
 from django.utils.html import escape
+from django.utils.timezone import make_aware, is_aware
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
@@ -19,22 +19,24 @@ from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
 
-from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
+
+#from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
 from utils.email_theme import obtener_tema_correo
-from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir, Producto_Calidad, Product
+from dashboard.models import Inventario, Activo
 from solicitudes.filters import InventoryFilter
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter, ComparativoFilter
-from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
-from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm, RequisDevolucionForm
+from .models import ArticuloComprado, Compra, Proveedor_direcciones, Comparativo, Item_Comparativo, Proveedor, Preevaluacion
+from .forms import (CompraForm, ArticuloCompradoForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, 
+                    Compra_ComentarioGerForm, RequisDevolucionForm, PreevaluacionForm)
 from requisiciones.forms import Articulo_Cancelado_Form
 from requisiciones.filters import RequisFilter
 from tesoreria.forms import Facturas_Form
 from requisiciones.views import get_image_base64
-from django.utils.timezone import make_aware, is_aware
+
 import pytz
 import socket
 
@@ -6983,3 +6985,50 @@ def debida_diligencia_create(request):
         'relacion_formset': relacion_formset,
         'responsable_formset': responsable_formset
     })
+
+
+@perfil_seleccionado_required
+def preevaluacion(request, pk):
+
+    pk_profile = request.session.get('selected_profile_id')
+
+    usuario = get_object_or_404(Profile, id=pk_profile)
+
+    proveedor = get_object_or_404(Proveedor,id=pk)
+
+    # Recuperar evaluación pendiente
+    preevaluacion = (Preevaluacion.objects.filter(nombre=proveedor,completo=False).order_by('-id').first())
+
+    # Evitamos crear registros durante una petición GET
+    if request.method == 'POST':
+
+        form = PreevaluacionForm(request.POST, instance=preevaluacion)
+
+        if form.is_valid():
+
+            evaluacion = form.save(commit=False)
+
+            evaluacion.nombre = proveedor
+            evaluacion.creado_por = usuario
+            evaluacion.completo = True
+            evaluacion.modified_at = timezone.now()
+
+            evaluacion.save()
+
+            messages.success(
+                request,
+                'Has creado la preevaluación con éxito.'
+            )
+
+            return redirect('dashboard-proveedores')
+
+    else:
+
+        form = PreevaluacionForm(instance=preevaluacion)
+
+    context = {
+        'proveedor': proveedor,
+        'form': form,
+    }
+
+    return render(request,'compras/preevaluacion.html',context)
