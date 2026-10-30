@@ -19,14 +19,38 @@ class Solicitud_Gasto_Filter(django_filters.FilterSet):
     end_date = DateFilter(field_name='approbado_fecha2', lookup_expr='lte')
     distrito = django_filters.ModelChoiceFilter(queryset=Distrito.objects.none(),  label="Distrito")
     #Busqueda parcial para la parte de gasto
-    proyecto = django_filters.ModelChoiceFilter(queryset=Proyecto.objects.filter(activo=True, complete=True), method='filter_by_proyecto', label="Proyecto")
-    subproyecto = django_filters.ModelChoiceFilter(queryset=Subproyecto.objects.all(), method='filter_by_subproyecto', label="Subproyecto")
+    proyecto = django_filters.ModelChoiceFilter(queryset=Proyecto.objects.none(), method='filter_by_proyecto', label='Proyecto', empty_label='Proyecto',)
+    subproyecto =  django_filters.ModelChoiceFilter(queryset=Subproyecto.objects.none(), method='filter_by_subproyecto', label='Subproyecto', empty_label='Subproyecto',)
 
    
 
     def __init__(self, *args, **kwargs):
         perfil = kwargs.pop('perfil', None)
         super().__init__(*args, **kwargs)
+
+        # Proyectos y subproyectos presentes en el queryset base.
+        proyectos_ids = (self.queryset.exclude(articulos__proyecto__isnull=True).values_list('articulos__proyecto_id',flat=True,).distinct())
+        subproyectos_ids = (self.queryset.exclude(articulos__subproyecto__isnull=True).values_list('articulos__subproyecto_id',flat=True,).distinct())
+
+        proyectos = (Proyecto.objects.filter(id__in=proyectos_ids, activo=True,complete=True,).order_by('nombre'))
+
+        subproyectos = (Subproyecto.objects.filter(id__in=subproyectos_ids,proyecto__activo=True,proyecto__complete=True,).select_related('proyecto').order_by('nombre'))
+
+        # Cuando ya se seleccionó un proyecto, mostrar únicamente
+        # sus subproyectos.
+        proyecto_id = self.data.get('proyecto')
+        if proyecto_id:
+            try:
+                subproyectos = subproyectos.filter(
+                    proyecto_id=int(proyecto_id)
+                )
+            except (TypeError, ValueError):
+                pass
+
+        self.filters['proyecto'].queryset = proyectos
+        self.filters['subproyecto'].queryset = subproyectos
+
+
 
         if perfil:
             almacenes_distritos = perfil.almacen.values_list(

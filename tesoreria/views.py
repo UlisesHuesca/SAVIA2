@@ -4943,7 +4943,8 @@ def mis_gastos(request):
         distrito = usuario_original.distritos, 
         complete=True
         ).distinct().order_by('-folio')
-    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+    
+    myfilter = Solicitud_Gasto_Filter(request.GET,queryset=gastos,perfil=usuario_original,)
     gastos = myfilter.qs
 
 

@@ -1519,42 +1519,47 @@ def gastos_pendientes_autorizar(request):
     if perfil.sustituto:
         perfil = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
 
-    solicitudes = Solicitud_Gasto.objects.filter(superintendente=perfil,complete=True, autorizar = None).order_by('-folio')
-    ids_solicitudes_validadas = [solicitud.id for solicitud in solicitudes if solicitud.get_validado]
+    solicitudes_base = Solicitud_Gasto.objects.filter(superintendente=perfil,complete=True, autorizar = None
+                                                      ).order_by('-folio'
+                                                      ).prefetch_related('articulos__proyecto','articulos__subproyecto').order_by('-folio')
 
-    solicitudes = Solicitud_Gasto.objects.filter(id__in=ids_solicitudes_validadas)
+    myfilter = Solicitud_Gasto_Filter(request.GET,queryset=solicitudes_base,perfil=perfil,)
+           
+    # get_validado es una propiedad calculada y no puede filtrarse
+    # directamente desde la base de datos.
+    solicitudes_validadas = [
+        solicitud
+        for solicitud in myfilter.qs
+        if solicitud.get_validado
+    ]
+  
+    
 
-    myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
-    solicitudes = myfilter.qs
+    #print(gasto.proyectos)
 
-    for solicitud in solicitudes:
-        articulos_gasto = Articulo_Gasto.objects.filter(gasto=solicitud)
+    #Set up pagination
+    p = Paginator(solicitudes_validadas, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
 
+    for gasto in ordenes_list.object_list:
+        articulos_gasto = gasto.articulos.all()
+        
         proyectos = set()
         subproyectos = set()
-
+        
         for articulo in articulos_gasto:
             if articulo.proyecto:
                 proyectos.add(str(articulo.proyecto.nombre))
             if articulo.subproyecto:
                 subproyectos.add(str(articulo.subproyecto.nombre))
+        
+        gasto.proyectos = ', '.join(proyectos)
+        gasto.subproyectos = ', '.join(subproyectos)
+        print('proyectos:',gasto.proyectos)
 
-        solicitud.proyectos = ', '.join(proyectos)
-        solicitud.subproyectos = ', '.join(subproyectos)
-    #Set up pagination
-    p = Paginator(solicitudes, 10)
-    page = request.GET.get('page')
-    ordenes_list = p.get_page(page)
-
-    #Set up pagination
-    p = Paginator(solicitudes, 10)
-    page = request.GET.get('page')
-    ordenes_list = p.get_page(page)
-
-    #if request.method =='POST' and 'btnExcel' in request.POST:
-
-        #return convert_excel_solicitud_matriz(solicitudes)
-
+   
+    
     context= {
         'perfil':perfil,
         'ordenes_list':ordenes_list,
