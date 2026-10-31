@@ -398,7 +398,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                             <td>
                                 {% if usuario.tipo.tesoreria %}
                                 <div class="form-check d-flex justify-content-center">
-                                    <input type="checkbox" class="form-check-input"
+                                    <input type="checkbox" class="form-check-input sv-check-input-lg"
                                            name="autorizar_factura_{{ factura.id|unlocalize }}"
                                            aria-label="Autorizar factura"
                                            {% if factura.autorizada %}checked{% endif %}>

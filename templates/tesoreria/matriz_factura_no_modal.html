@@ -305,7 +305,7 @@
             <div class="sv-card-footer d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 {% if usuario.tipo.nombre == 'RH' or usuario.tipo.nombre == 'Admin' %}
                 <div class="form-check form-switch">
-                    {{ form.facturas_completas|add_class:"form-check-input" }}
+                    {{ form.facturas_completas|add_class:"form-check-input " }}
                     <label for="{{ form.facturas_completas.id_for_label }}" class="form-check-label fw-semibold">
                         Facturas completas
                     </label>
