@@ -120,7 +120,7 @@ def entrada_servicios(request):
         compras = compras_base.filter(id__in = entrada_productos.values('oc_id'))
 
     elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
-        compras = compras_base.filter(req__orden__proyecto__contrato__tiene_pozos = True, id__in = entrada_productos.values('oc_id'))
+        compras = compras_base.filter((Q(req__orden__proyecto__contrato__tiene_pozos=True) & Q(id__in=entrada_productos.values('oc_id'))) | Q(req__orden__staff=usuario)).distinct()
     else:
         #Este ciclo solo trae a la compras con servicios igual a false para utilizarla en el ciclo de abajo y ser marcadas como True en caso de que solo tengan servicios
         compras = compras_base.filter( req__orden__staff = usuario, id__in = entrada_productos.values('oc_id') )

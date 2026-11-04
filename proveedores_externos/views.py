@@ -1511,7 +1511,7 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo, 
             <table width="100%" cellspacing="0" cellpadding="0" border="0" role="presentation">
                 <tr>
                     <td align="center" style="padding-top: 24px;">
-                        <img src="cid:logo_savia" alt="SAVIA 2.0" width="50" height="50" style="display: block; width: 50px !important; height: 50px !important; max-width: 50px !important; max-height: 50px !important; object-fit: cover; border-radius: 50%;">
+                        <img src="cid:logo_savia" alt="SAVIA 2.1" width="50" height="50" style="display: block; width: 50px !important; height: 50px !important; max-width: 50px !important; max-height: 50px !important; object-fit: cover; border-radius: 50%;">
                     </td>
                 </tr>
             </table>
@@ -1740,7 +1740,7 @@ def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
 
                                 <div style="text-align: center; margin-top: 30px;">
                                     <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                    <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
+                                    <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.1</p>
                                 </div>
                             </td>
                         </tr>
