@@ -62,7 +62,30 @@
             <div class="sv-card-body">
                 <div class="row g-3">
 
-                    {% if mostrar_razon_social %}
+                    {% if proveedor_global %}
+                    <div class="col-12">
+                        <div class="sv-card-body sv-bg-light border rounded mb-0" role="note">
+                            <div class="sv-card-title mb-2">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                Razón social
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <span class="fw-semibold">Razón social:</span>
+                                    {{ proveedor_global.razon_social }}
+                                </div>
+
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <span class="fw-semibold">RFC:</span>
+                                    {{ proveedor_global.rfc }}
+                                </div>
+
+                             
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
                     <div class="col-12">
                         <div class="sv-input-group input-group">
                             <span class="input-group-text">
@@ -87,7 +110,7 @@
                     {% endif %}
 
 
-                    {% if mostrar_password %}
+                    {% if not registro_usuario_existente %}
 
                     <div class="col-12 col-lg-6">
                         <div class="sv-input-group input-group">

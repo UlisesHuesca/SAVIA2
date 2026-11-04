@@ -1901,15 +1901,7 @@ def registro_usuario_existente(request,invitacion,proveedor,user,customuser,dist
                 # Buscar Profile en el distrito específico
                 # ------------------------------------------
 
-                profile_existente = (
-                    Profile.objects
-                    .filter(
-                        staff=customuser,
-                        tipo=tipo,
-                        distritos=distrito,
-                    )
-                    .first()
-                )
+                profile_existente = (Profile.objects.filter(staff=customuser,tipo=tipo,distritos=distrito,).first())
 
                 if profile_existente:
                     if (profile_existente.proveedor_id and profile_existente.proveedor_id != proveedor.id):
@@ -2057,7 +2049,7 @@ def registro_usuario_existente(request,invitacion,proveedor,user,customuser,dist
     # ==========================================================
     # 4. CONTEXTO
     # ==========================================================
-    print('proveedor',proveedor)
+    print("Proveedor global:", (not proveedor))
     context = {
         "form": form,
         "tipo_invitacion": invitacion.tipo,
@@ -2107,6 +2099,7 @@ def registro_proveedor(request, token):
     if proveedor_global:
         if es_yerod:
             proveedor_en_portal = (Proveedor_direcciones.objects.filter(nombre=proveedor_global, distrito__nombre__iexact="YEROD", completo=True,).exists())
+            
 
         else:
             proveedor_en_portal = (Proveedor_direcciones.objects.filter(nombre=proveedor_global,completo=True,)
@@ -2119,7 +2112,7 @@ def registro_proveedor(request, token):
     # Yerod como para los distritos de Vordcab.
 
     usuario_existente = (User.objects.filter(Q(email__iexact=invitacion.email)| Q(username__iexact=invitacion.email)).first())
-
+    
     customuser_existente = None
 
     if usuario_existente:
@@ -2162,6 +2155,7 @@ def registro_proveedor(request, token):
     # Se conserva su contraseña actual.
 
     if (tipo_invitacion in ("NUEVO_PROVEEDOR", "NUEVO_USUARIO",) and usuario_existente and not perfil_proveedor_distrito):
+       
         return registro_usuario_existente(
             request=request,
             invitacion=invitacion,
@@ -2171,32 +2165,18 @@ def registro_proveedor(request, token):
             distrito=distrito,
         )
 
+        
+
     # ==========================================================
     # 7. EL USUARIO YA TIENE PROFILE EN ESTE DISTRITO
     # ==========================================================
 
-    if (
-        usuario_existente
-        and perfil_proveedor_distrito
-    ):
-        if (
-            proveedor_global
-            and perfil_proveedor_distrito.proveedor_id
-            and perfil_proveedor_distrito.proveedor_id
-            != proveedor_global.id
-        ):
-            messages.error(
-                request,
-                "El usuario ya tiene un perfil de proveedor externo "
-                "en este distrito, pero está relacionado con otro RFC.",
-            )
+    if (usuario_existente and perfil_proveedor_distrito):
+        if (proveedor_global and perfil_proveedor_distrito.proveedor_id and perfil_proveedor_distrito.proveedor_id != proveedor_global.id):
+            messages.error(request, "El usuario ya tiene un perfil de proveedor externo en este distrito, pero está relacionado con otro RFC.",)
 
         else:
-            messages.warning(
-                request,
-                "El usuario ya tiene un perfil de proveedor externo "
-                f"en el distrito {distrito}.",
-            )
+            messages.warning(request,f"El usuario ya tiene un perfil de proveedor externo en el distrito {distrito}.",)
 
         return redirect("user-login")
 
@@ -2204,15 +2184,8 @@ def registro_proveedor(request, token):
     # 8. VALIDAR NUEVO_USUARIO
     # ==========================================================
 
-    if (
-        tipo_invitacion == "NUEVO_USUARIO"
-        and proveedor_global is None
-    ):
-        messages.error(
-            request,
-            "La invitación solicita agregar un usuario, pero no se "
-            "encontró el proveedor relacionado.",
-        )
+    if (tipo_invitacion == "NUEVO_USUARIO"and proveedor_global is None):
+        messages.error(request,"La invitación solicita agregar un usuario, pero no se encontró el proveedor relacionado.",)
 
         return redirect("user-login")
 
@@ -2223,10 +2196,8 @@ def registro_proveedor(request, token):
     def configurar_formulario(formulario):
         # Si el proveedor global ya existe, no es necesario volver
         # a capturar la razón social.
-        if (
-            tipo_invitacion == "NUEVO_USUARIO"
-            or proveedor_global is not None
-        ):
+        
+        if (tipo_invitacion == "NUEVO_USUARIO" or proveedor_global is not None):
             formulario.fields["razon_social"].required = False
             formulario.fields["razon_social"].widget = (
                 forms.HiddenInput()
@@ -2240,9 +2211,7 @@ def registro_proveedor(request, token):
     # Aquí solo se llega cuando el User todavía no existe.
 
     if request.method == "POST":
-        form = RegistroProveedorForm(
-            request.POST
-        )
+        form = RegistroProveedorForm(request.POST)
 
         form = configurar_formulario(form)
 
@@ -2435,8 +2404,8 @@ def registro_proveedor(request, token):
 
             return redirect("user-login")
 
-        print("El formulario NO es válido")
-        print(form.errors)
+        #rint("El formulario NO es válido")
+        #print(form.errors)
 
         messages.error(
             request,
@@ -2457,18 +2426,7 @@ def registro_proveedor(request, token):
 
             # Utilizar una dirección anterior como referencia,
             # incluso si pertenece al otro portal.
-            direccion_referencia = (
-                Proveedor_direcciones.objects
-                .filter(
-                    nombre=proveedor_global,
-                    completo=True,
-                )
-                .exclude(
-                    distrito=distrito,
-                )
-                .order_by("-id")
-                .first()
-            )
+            direccion_referencia = (Proveedor_direcciones.objects.filter(nombre=proveedor_global,completo=True,).exclude(distrito=distrito,).order_by("-id").first())
 
             if direccion_referencia:
                 initial.update({
@@ -2501,9 +2459,7 @@ def registro_proveedor(request, token):
                     ),
                 })
 
-        form = RegistroProveedorForm(
-            initial=initial
-        )
+        form = RegistroProveedorForm(initial=initial)
 
         form = configurar_formulario(form)
 
@@ -2515,8 +2471,8 @@ def registro_proveedor(request, token):
         "es_yerod": es_yerod,
         "proveedor_global": proveedor_global,
         "proveedor_en_portal": proveedor_en_portal,
-        "usuario_existente": False,
-        "registro_usuario_existente": False,
+        "usuario_existente": usuario_existente,
+        
 
         # Puede conservarse temporalmente si el template todavía
         # utiliza el nombre anterior.
