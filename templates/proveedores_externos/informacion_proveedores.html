@@ -951,12 +951,16 @@
                                 </a>
                                 {% endif %}
 
-                                <a class="sv-btn sv-btn-danger sv-btn-icon"
-                                   href="{% url 'generar-pdf-proveedor' direccion.id|unlocalize %}"
-                                   title="Descargar registro PDF"
-                                   aria-label="Descargar registro PDF">
+                                <button type="button"
+                                        class="sv-btn sv-btn-danger sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#pdfPreviewModal"
+                                        data-document-url="{% url 'generar-pdf-proveedor' direccion.id|unlocalize %}"
+                                        data-document-title="Registro del proveedor"
+                                        title="Visualizar registro PDF"
+                                        aria-label="Visualizar registro PDF">
                                     <i class="fa-solid fa-file-pdf"></i>
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -1033,13 +1037,15 @@
     <div class="modal-dialog modal-lg modal-dialog-centered" id="document" hx-target="this"></div>
 </div>
 
+
+
 <!-- Visor PDF reutilizable -->
 <div class="modal fade"
      id="pdfPreviewModal"
      tabindex="-1"
      aria-labelledby="pdfPreviewModalLabel"
      aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content sv-modal">
             <div class="modal-header">
                 <div>

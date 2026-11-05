@@ -250,9 +250,16 @@
                             {% endif %}
 
                             <td class="text-center">
-                                <a class="sv-btn sv-btn-icon sv-btn-danger" href="{% url 'generar-pdf-proveedor' direccion.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Generar registro PDF" aria-label="Generar registro PDF">
+                                <button type="button"
+                                        class="sv-btn sv-btn-icon sv-btn-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#pdfPreviewModal"
+                                        data-document-url="{% url 'generar-pdf-proveedor' direccion.id %}"
+                                        data-document-title="Registro del proveedor"
+                                        title="Visualizar registro PDF"
+                                        aria-label="Visualizar registro PDF">
                                     <i class="fa-solid fa-file-pdf"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                     {% empty %}
@@ -333,6 +340,41 @@
     <div class="modal-dialog modal-lg modal-dialog-centered" id="document" hx-target="this"></div>
 </div>
 
+<!-- Visor PDF reutilizable -->
+<div class="modal fade"
+     id="pdfPreviewModal"
+     tabindex="-1"
+     aria-labelledby="pdfPreviewModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title sv-card-title" id="pdfPreviewModalLabel">
+                        <i class="fa-solid fa-file-pdf text-danger"></i>
+                        Documento del proveedor
+                    </h2>
+                    <p class="sv-card-subtitle mb-0">Vista previa del archivo seleccionado.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="ratio ratio-4x3">
+                    <iframe id="pdfPreviewFrame" title="Vista previa del documento PDF"></iframe>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const storageKey = "savia_direcciones_proveedor_columnas_v1";
@@ -389,6 +431,41 @@
                 }
             });
         }
+
+
+
+        // Visor PDF reutilizable
+        const pdfModalElement = document.getElementById("pdfPreviewModal");
+        const pdfFrame = document.getElementById("pdfPreviewFrame");
+        const pdfTitle = document.getElementById("pdfPreviewModalLabel");
+
+        if (pdfModalElement && pdfFrame && pdfTitle) {
+
+            pdfModalElement.addEventListener("show.bs.modal", function (event) {
+                const trigger = event.relatedTarget;
+
+                if (!trigger) return;
+
+                const documentUrl = trigger.getAttribute("data-document-url") || "";
+                const documentTitle = trigger.getAttribute("data-document-title") || "Documento del proveedor";
+
+                pdfFrame.src = documentUrl;
+
+                // Actualizar el título conservando el icono
+                pdfTitle.replaceChildren();
+
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-file-pdf text-danger";
+
+                pdfTitle.appendChild(icon);
+                pdfTitle.appendChild(document.createTextNode(" " + documentTitle));
+            });
+
+            pdfModalElement.addEventListener("hidden.bs.modal", function () {
+                pdfFrame.removeAttribute("src");
+            });
+        }
+
 
         function saveColumns() {
             const selectedColumns = Array.from(toggles)

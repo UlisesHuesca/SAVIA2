@@ -4568,7 +4568,7 @@ def draw_table_pages(c, data, col_widths, style_first, style_other,
         t.drawOn(c, x, y_other)
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('proveedores')
+@tipo_usuario_requerido('proveedores','proveedor_externo')
 def generar_pdf_proveedor(request, pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
@@ -4837,7 +4837,7 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
 
     c.save()
     buf.seek(0)
-    return FileResponse(buf, as_attachment=True, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf')
+    return FileResponse(buf, as_attachment=False, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf', content_type='application/pdf')
 
 
 

@@ -205,26 +205,14 @@ def matriz_direcciones(request):
 
         # Obtener todos los documentos del proveedor
         documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
+
+        #Obtener la lista directamente de los tipos de documentos que se manejan en el sistema
+
         
         tipos_documentos = [
-            'csf',
-            'comprobante_domicilio',
-            'opinion_cumplimiento',
-            'credencial_acta_constitutiva',
-            'curriculum',
-            'competencias',
-            'contrato',
-            'factura_predial',
-            'otros',
-            'carta_credito',
-            'visita',
-            'calificacion',
-            'cotizacion',
-            'repse',
-            'cumplimiento_imss',
-            'busqueda_mediatica',
-            'calidad'
+            tipo for tipo, nombre in DocumentosProveedor._meta.get_field('tipo_documento').choices
         ]
+
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
         documentos_validados_count = {tipo: 0 for tipo in tipos_documentos}
