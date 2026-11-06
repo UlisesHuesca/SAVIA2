@@ -324,6 +324,35 @@ def agregar_cfdi_zip(zip_file, factura, xml, carpeta, tipo):
     return ruta_xml_general
 
 
+def agregar_evidencias_zip(zip_file, documento, carpeta):
+    """
+    Agrega al ZIP las evidencias de categoría
+    'Soporte Administrativo' relacionadas con el documento.
+    """
+
+    evidencias = documento.evidencias.filter(categoria__nombre="Soporte Administrativo")
+
+    for evidencia in evidencias:
+
+        if not evidencia.file:
+            continue
+
+        nombre_archivo = (
+            f"{evidencia.id}_"
+            f"{os.path.basename(evidencia.file.name)}"
+        )
+
+        ruta_zip = os.path.join(carpeta, "SOPORTE_ADMINISTRATIVO", nombre_archivo).replace("\\", "/")
+
+        # Evitar archivos duplicados dentro de la misma carpeta
+        if ruta_zip in zip_file.NameToInfo:
+            continue
+
+        with evidencia.file.open("rb") as archivo:
+            zip_file.writestr(ruta_zip, archivo.read())
+
+
+
 def descargar_documentos_pagos(pagos):
     #Las importaciones de las funciones de generación de PDF se hacen dentro de la función para evitar problemas de importación circular.
     # ------------------------------------------------------------------
@@ -368,6 +397,8 @@ def descargar_documentos_pagos(pagos):
                     zip_file.writestr(os.path.join(carpeta, "VALES_ROSA", nombre_archivo),pdf_vale_buf.getvalue())
 
                     zip_file.writestr(f"GENERAL_VALES_ROSA/{nombre_archivo}", pdf_vale_buf.getvalue())
+            
+                agregar_evidencias_zip(zip_file, gasto, carpeta)
             elif pago.oc:
                 oc = pago.oc
                 carpeta = f'{pago.pagado_real}_COMPRA_{oc.folio}_{oc.req.orden.distrito.nombre}'
@@ -393,7 +424,9 @@ def descargar_documentos_pagos(pagos):
                     zip_file.writestr(os.path.join(carpeta, f'OC_{oc.folio}.pdf'), pdf_buf.getvalue())
                     processed_docs.add(oc.id)
                     # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
-                        
+
+                agregar_evidencias_zip(zip_file, oc, carpeta)
+
             elif pago.viatico:
                 viatico = pago.viatico
                 carpeta = f'{pago.pagado_real}_VIATICO_{viatico.folio}_{viatico.distrito.nombre}'
@@ -428,7 +461,7 @@ def descargar_documentos_pagos(pagos):
 
                     zip_file.writestr(f"GENERAL_VALES/{nombre_archivo}", pdf_vale_buf.getvalue())
 
-
+                agregar_evidencias_zip(zip_file, viatico, carpeta)
             if pago.comprobante_pago and carpeta is not None:
                 fecha_pago = pago.pagado_real.strftime('%Y-%m-%d') if pago.pagado_real else 'SIN_FECHA'
                 if pago.gasto:
