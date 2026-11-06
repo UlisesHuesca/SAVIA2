@@ -1407,7 +1407,7 @@ def matriz_facturas_viaticos(request, pk):
         'fuera_de_tiempo':fuera_de_tiempo,
         'totales': totales,
         'evidencias': evidencias,
-        'categorias_evidencia': categorias_evidencia,
+        #'categorias_evidencia': categorias_evidencia,
         'form_evidencia': form_evidencia,
         'puede_subir_evidencia': True,  # Sustituir por permiso real
         }

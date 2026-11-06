@@ -2640,7 +2640,7 @@ def matriz_facturas_gasto(request, pk):
         'usuario':usuario,
         'vales_rosa':vales_rosa,
         'evidencias': evidencias,
-        'categorias_evidencia': categorias_evidencia,
+        #'categorias_evidencia': categorias_evidencia,
         'form_evidencia': form_evidencia,
         'puede_subir_evidencia': True,  # Sustituir por permiso real
         }

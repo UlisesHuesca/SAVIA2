@@ -3290,7 +3290,7 @@ def matriz_facturas_nomodal(request, pk):
         'facturas':facturas,
         'compra':compra,
         'evidencias': evidencias,
-        'categorias_evidencia': categorias_evidencia,
+        #'categorias_evidencia': categorias_evidencia,
         'puede_subir_evidencia': True,  # Sustituir por permiso real
         'form_evidencia':form_evidencia,
         }
