@@ -4615,31 +4615,31 @@ def mis_comprobaciones_gasto(request):
 
                 suma = 0
                 for factura in gasto.facturas.all():
-                    
-                    if factura.archivo_pdf and factura.hecho: 
-                        path = factura.archivo_pdf.path
-                        if os.path.exists(path):  # ✅ Validación que te faltó
-                            merger.append(path)
-                        else:
-                            print(f"Archivo no encontrado: {path}")
-                    elif factura.archivo_xml and factura.hecho:
-                        try:
-                            buffer = crear_pdf_cfdi_buffer(factura)  # <-- aquí llamas a tu función que genera el PDF desde XML
-                            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
-                                temp_pdf.write(buffer.read())
-                                temp_pdf.flush()
-                                merger.append(temp_pdf.name, import_outline=False)
-                        except Exception as e:
-                            print(f"Error al generar PDF desde XML para factura {factura.id}: {str(e)}") 
+                    if not factura.archivo_xml or not factura.hecho:
+                        continue
 
-                    if factura.archivo_xml and factura.hecho: 
-                        try:
-                            if factura.emisor is not None:
-                                suma += decimal.Decimal(factura.emisor['total'])
-                        except FileNotFoundError:
-                            # Ignorar o registrar si el archivo XML no existe
-                            pass
-                        gasto.suma_total_facturas = suma    
+                    # Generar PDF directamente desde el XML
+                    try:
+                        buffer = crear_pdf_cfdi_buffer(factura)
+
+                        if buffer:
+                            buffer.seek(0)
+
+                            # Agregar el PDF generado al documento consolidado
+                            merger.append(buffer, import_outline=False)
+
+                    except Exception as e:
+                        print(f"Error al generar PDF desde XML para factura {factura.id}: {e}")
+
+                    # Calcular monto comprobado
+                    try:
+                        if factura.emisor is not None:
+                            suma += decimal.Decimal(str(factura.emisor["total"]))
+
+                    except (KeyError, TypeError, ValueError, decimal.InvalidOperation):
+                        pass
+
+                gasto.suma_total_facturas = suma
                     
                     
                 
