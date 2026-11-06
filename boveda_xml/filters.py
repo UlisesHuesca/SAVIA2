@@ -1,7 +1,12 @@
+import datetime
+
 import django_filters
 from django import forms
 from django.db.models import Q
 from .models import CFDI
+from datetime import datetime, time, timedelta
+
+from django.utils import timezone
 
 
 class CFDIFilter(django_filters.FilterSet):
@@ -29,17 +34,20 @@ class CFDIFilter(django_filters.FilterSet):
     )
 
     fecha_inicio = django_filters.DateFilter(
-        field_name='fecha_timbrado',
-        lookup_expr='date__gte',
+        method='filter_fecha_inicio',
         label='Timbrado desde',
-        widget=forms.DateInput(attrs={'type': 'date'}),
+        widget=forms.DateInput(
+            attrs={'type': 'date'}
+        ),
     )
 
+
     fecha_fin = django_filters.DateFilter(
-        field_name='fecha_timbrado',
-        lookup_expr='date__lte',
+        method='filter_fecha_fin',
         label='Timbrado hasta',
-        widget=forms.DateInput(attrs={'type': 'date'}),
+        widget=forms.DateInput(
+            attrs={'type': 'date'}
+        ),
     )
 
     total_minimo = django_filters.NumberFilter(
@@ -87,3 +95,20 @@ class CFDIFilter(django_filters.FilterSet):
             Q(serie__icontains=value) |
             Q(folio__icontains=value)
         )
+
+    def filter_fecha_inicio(self, queryset, name, value,):
+        if not value:
+            return queryset
+
+        fecha_desde = timezone.make_aware(datetime.combine(value, time.min), timezone.get_current_timezone(),)
+
+        return queryset.filter(fecha_timbrado__gte=fecha_desde)
+
+
+    def filter_fecha_fin(self, queryset, name, value,):
+        if not value:
+            return queryset
+
+        fecha_hasta = timezone.make_aware(datetime.combine(value + timedelta(days=1),time.min,),timezone.get_current_timezone(),)
+
+        return queryset.filter(fecha_timbrado__lt=fecha_hasta)
