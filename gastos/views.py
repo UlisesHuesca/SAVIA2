@@ -2562,9 +2562,9 @@ def matriz_facturas_gasto(request, pk):
     form =  Facturas_Gastos_Form(instance=gasto)
     next_url = request.GET.get('next','mis-gastos')
 
-    evidencias = (gasto.evidencias.filter(hecho=True).select_related('categoria', 'subido_por').order_by('-uploaded', '-id'))
+    evidencias = (gasto.evidencias.filter(hecho=True, categoria__nombre="Soporte Administrativo").select_related('categoria', 'subido_por').order_by('-uploaded', '-id'))
 
-    categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True).order_by('nombre'))
+    #categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True, nombre="Soporte Administrativo").order_by('nombre'))
 
     form_evidencia = EvidenciaForm()
 
@@ -2616,8 +2616,8 @@ def matriz_facturas_gasto(request, pk):
             # Validar aquí que el perfil pueda agregar evidencias
             # a este gasto, no solo consultarlo.
             if form_evidencia.is_valid():
-                print('si valida')
                 evidencia = form_evidencia.save(commit=False)
+                evidencia.categoria = get_object_or_404(CategoriaEvidencia, nombre="Soporte Administrativo", activo=True)
                 evidencia.gasto = gasto
                 evidencia.oc = None
                 evidencia.viatico = None

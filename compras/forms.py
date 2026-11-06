@@ -123,12 +123,9 @@ class EvidenciaForm(forms.ModelForm):
 
     class Meta:
         model = Evidencia
-        fields = ['categoria', 'file', 'comentario']
+        fields = ['file', 'comentario']
 
         widgets = {
-            'categoria': forms.Select(
-                attrs={'class': 'form-select'}
-            ),
             'file': forms.ClearableFileInput(
                 attrs={
                     'class': 'form-control',
@@ -146,11 +143,6 @@ class EvidenciaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.fields['categoria'].queryset = (CategoriaEvidencia.objects.filter(activo=True))
-
-        self.fields['categoria'].required = True
-        self.fields['categoria'].empty_label = ('Selecciona una categoría')
 
         self.fields['file'].required = True
 

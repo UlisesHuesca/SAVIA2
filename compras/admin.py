@@ -44,6 +44,11 @@ class DocumentosProveedorAdmin(admin.ModelAdmin):
     list_display = ('id','proveedor','tipo_documento','archivo',)
     raw_id_fields = ('proveedor',)
 
+class Evidencia_Admin(admin.ModelAdmin):
+    list_display = ('id','oc','gasto','viatico','categoria','subido_por','uploaded','hecho')
+    search_fields = ('oc__folio','gasto__folio_gasto','viatico__folio_viatico',)
+    raw_id_fields = ('oc','gasto','viatico','subido_por',)
+
  
 # Register your models here.
 admin.site.register(Compra, CompraAdmin)
@@ -78,7 +83,7 @@ admin.site.register(Responsable_Interaccion)
 
 admin.site.register(Tipo_contrato, Tipo_contrato_Admin)
 
-admin.site.register(Evidencia)
+admin.site.register(Evidencia, Evidencia_Admin)
 
 admin.site.register(CategoriaEvidencia)
 
