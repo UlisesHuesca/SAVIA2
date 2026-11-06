@@ -103,7 +103,7 @@ def lista_cfdi(request):
     return render(request,'boveda_xml/lista_cfdi.html',context,)
 
 
-MAX_XML_POR_ZIP = 2500
+MAX_XML_POR_ZIP = 4500
 MAX_TAMANIO_XML = 15 * 1024 * 1024
 MAX_TAMANIO_ZIP_DESCOMPRIMIDO = 500 * 1024 * 1024
 
