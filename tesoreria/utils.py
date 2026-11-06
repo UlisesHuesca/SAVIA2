@@ -13,10 +13,10 @@ from openpyxl import Workbook
 from openpyxl.styles import numbers
 
 # Importar desde sus módulos actuales:
-from gastos.views import render_pdf_gasto, generar_pdf_vale_rosa, crear_pdf_cfdi_buffer
-from viaticos.views import generar_pdf_viatico
+
+
 # generar_pdf_nueva
-from compras.views import generar_pdf_nueva
+
 
 # extraer_datos_xml_carpetas
 def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, beneficiario, nombre_general, factura):
@@ -287,6 +287,10 @@ def extraer_texto_pdf_prop(file_field):
         return f"Error al leer el archivo: {str(e)}"
 
 def agregar_cfdi_zip(zip_file, factura, xml, carpeta, tipo):
+    #Las importaciones de las funciones de generación de PDF se hacen dentro de la función para evitar problemas de importación circular.
+    # ------------------------------------------------------------------
+    from gastos.views import crear_pdf_cfdi_buffer
+    # -----------------------------------------------------------------
     if not xml:
         return None
 
@@ -321,6 +325,12 @@ def agregar_cfdi_zip(zip_file, factura, xml, carpeta, tipo):
 
 
 def descargar_documentos_pagos(pagos):
+    #Las importaciones de las funciones de generación de PDF se hacen dentro de la función para evitar problemas de importación circular.
+    # ------------------------------------------------------------------
+    from gastos.views import render_pdf_gasto, generar_pdf_vale_rosa
+    from viaticos.views import generar_pdf_viatico
+    from compras.views import generar_pdf_nueva
+    # ------------------------------------------------------------------
     zip_buffer = BytesIO()
     datos_xml_lista = []
     processed_docs = set()
