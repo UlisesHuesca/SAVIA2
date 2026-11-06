@@ -4613,7 +4613,7 @@ def mis_comprobaciones_gasto(request):
                         except Exception as e:
                             print(f"Error al agregar comprobante de pago para gasto {gasto.folio}: {e}")
 
-                suma = 0
+                suma = decimal.Decimal("0")
                 for factura in gasto.facturas.all():
                     if not factura.archivo_xml or not factura.hecho:
                         continue
@@ -4779,19 +4779,41 @@ def mis_comprobaciones_gasto(request):
             )
             email.attach(nombre_archivo, contenido_pdf, 'application/pdf')
             # Adjuntar los XMLs de las facturas
+            # Adjuntar XML y PDF generado para cada CFDI
             for gasto in gastos_enviar:
                 for factura in gasto.facturas.all():
-                    if factura.archivo_xml and factura.hecho:
-                        try:
-                            path = factura.archivo_xml.path
-                            if os.path.exists(path):
-                                nombre_xml = f"G{gasto.folio}_F{factura.uuid}.xml"
-                                with open(path, 'rb') as f:
-                                    email.attach(nombre_xml, f.read(), 'application/xml')
-                            else:
-                                print(f"XML no encontrado: {path}")
-                        except Exception as e:
-                            print(f"Error al adjuntar XML: {e}")
+
+                    if not factura.archivo_xml or not factura.hecho:
+                        continue
+
+                    try:
+                        # XML original
+                        with factura.archivo_xml.open("rb") as archivo:
+                            contenido_xml = archivo.read()
+
+                        nombre_xml = f"G{gasto.folio}_F{factura.uuid}.xml"
+
+                        email.attach(nombre_xml, contenido_xml,"application/xml")
+
+                        # PDF generado desde el XML
+                        buffer_cfdi = crear_pdf_cfdi_buffer(factura)
+
+                        if buffer_cfdi:
+                            buffer_cfdi.seek(0)
+
+                            nombre_pdf = f"G{gasto.folio}_F{factura.uuid}.pdf"
+
+                            email.attach(
+                                nombre_pdf,
+                                buffer_cfdi.read(),
+                                "application/pdf"
+                            )
+
+                    except Exception as e:
+                        print(
+                            f"Error adjuntando CFDI {factura.id}: "
+                            f"{type(e).__name__}: {e}"
+                        )
             email.content_subtype = "html"
             email.send()
 
