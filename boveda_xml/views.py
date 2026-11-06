@@ -2,6 +2,7 @@ from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.core.files.base import ContentFile
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -36,6 +37,10 @@ import qrcode
 import tempfile
 import io
 from num2words import num2words
+
+from pathlib import PurePosixPath
+from zipfile import ZipFile, BadZipFile
+
 
 @perfil_seleccionado_required
 def lista_cfdi(request):
@@ -98,26 +103,145 @@ def lista_cfdi(request):
     return render(request,'boveda_xml/lista_cfdi.html',context,)
 
 
+MAX_XML_POR_ZIP = 2500
+MAX_TAMANIO_XML = 15 * 1024 * 1024
+MAX_TAMANIO_ZIP_DESCOMPRIMIDO = 500 * 1024 * 1024
+
+
+def obtener_xml_desde_archivo(archivo):
+    """
+    Recibe un XML o ZIP y devuelve XML individuales.
+
+    Los ZIP se procesan en memoria, sin extraer archivos
+    físicamente en el servidor.
+    """
+
+    nombre_archivo = archivo.name.lower()
+
+    if nombre_archivo.endswith('.xml'):
+        archivo.seek(0)
+        yield archivo
+        return
+
+    if not nombre_archivo.endswith('.zip'):
+        raise CFDIError('Solo se permiten archivos XML o ZIP.')
+
+    try:
+        archivo.seek(0)
+
+        with ZipFile(archivo, 'r') as archivo_zip:
+            integrantes_xml = [
+                integrante
+                for integrante in archivo_zip.infolist()
+                if (
+                    not integrante.is_dir()
+                    and integrante.filename.lower().endswith('.xml')
+                )
+            ]
+
+            if not integrantes_xml:
+                raise CFDIError('El archivo ZIP no contiene archivos XML.')
+
+            if len(integrantes_xml) > MAX_XML_POR_ZIP:
+                raise CFDIError(f'El archivo ZIP contiene más de {MAX_XML_POR_ZIP} XML.')
+
+            tamanio_total = sum(integrante.file_size for integrante in integrantes_xml)
+
+            if tamanio_total > MAX_TAMANIO_ZIP_DESCOMPRIMIDO:
+                raise CFDIError('El contenido descomprimido del ZIP excede el tamaño permitido.')
+
+            for integrante in integrantes_xml:
+                if integrante.flag_bits & 0x1:
+                    raise CFDIError(f'El archivo {integrante.filename} está protegido con contraseña.')
+
+                if integrante.file_size > MAX_TAMANIO_XML:
+                    raise CFDIError(
+                        f'El XML {integrante.filename} excede el tamaño permitido.')
+
+                with archivo_zip.open(integrante, 'r') as xml_zip:
+                    contenido = xml_zip.read(
+                        MAX_TAMANIO_XML + 1
+                    )
+
+                if len(contenido) > MAX_TAMANIO_XML:
+                    raise CFDIError(f'El XML {integrante.filename} excede el tamaño permitido.')
+
+                ruta_normalizada = (integrante.filename.replace('\\', '/'))
+
+                nombre_xml = PurePosixPath(ruta_normalizada).name
+
+                yield ContentFile(contenido, name=nombre_xml,)
+
+    except BadZipFile:
+        raise CFDIError('El archivo ZIP está dañado o no es válido.')
+
+
+def procesar_archivo_xml(archivo, usuario, uuids_del_lote,):
+    resultado = {
+        'archivo': archivo.name,
+        'uuid': None,
+        'estatus': 'RECHAZADO',
+        'mensaje': '',
+    }
+
+    try:
+        archivo.seek(0)
+        datos = parsear_cfdi(archivo)
+
+        uuid = datos['uuid']
+        resultado['uuid'] = uuid
+
+        if uuid in uuids_del_lote:
+            raise CFDIError('El UUID está repetido dentro del mismo lote.')
+
+        uuids_del_lote.add(uuid)
+
+        if CFDI.objects.filter(uuid=uuid).exists():
+            raise CFDIError('El UUID ya se encuentra almacenado en la bóveda.')
+
+        fecha_timbrado = datos['fecha_timbrado']
+
+        if fecha_timbrado is None:
+            raise CFDIError('El CFDI no contiene fecha de timbrado.')
+
+        archivo.seek(0)
+
+        try:
+            with transaction.atomic():
+                CFDI.objects.create(archivo_xml=archivo, subido_por=usuario, **datos,)
+
+        except IntegrityError:
+            raise CFDIError(
+                'El UUID ya fue cargado por otro usuario.'
+            )
+
+        resultado['estatus'] = 'GUARDADO'
+        resultado['mensaje'] = ('XML guardado correctamente.')
+
+    except CFDIError as error:
+        resultado['mensaje'] = str(error)
+
+    except Exception as error:
+        resultado['mensaje'] = (f'Ocurrió un error inesperado: {error}')
+
+    return resultado
+
 @perfil_seleccionado_required
 def carga_masiva_xml(request):
     if request.method != 'POST':
         return redirect('boveda_xml:lista_cfdi')
 
     pk_profile = request.session.get('selected_profile_id')
-    usuario = get_object_or_404(Profile, id=pk_profile)
 
-    form = CargaMasivaXMLForm(request.POST, request.FILES)
+    usuario = get_object_or_404(Profile,id=pk_profile,)
+
+    form = CargaMasivaXMLForm(request.POST,request.FILES,)
 
     if not form.is_valid():
-        queryset = (
-            CFDI.objects
-            .select_related('subido_por')
-            .all()
-            .order_by('-fecha_timbrado', '-fecha_subido')
-        )
+        queryset = (CFDI.objects.select_related('subido_por').all().order_by('-fecha_timbrado','-fecha_subido',))
 
-        filtro = CFDIFilter(request.GET or None, queryset=queryset)
-        paginator = Paginator(filtro.qs, 25)
+        filtro = CFDIFilter(request.GET or None, queryset=queryset,)
+        paginator = Paginator(filtro.qs,25,)
 
         context = {
             'filtro': filtro,
@@ -129,108 +253,67 @@ def carga_masiva_xml(request):
         return render(request,'boveda_xml/lista_cfdi.html',context,)
 
     archivos = form.cleaned_data['archivos_xml']
+
     resultados = []
     uuids_del_lote = set()
 
     guardados = 0
     rechazados = 0
 
-    fecha_actual = timezone.localdate()
-
-    for archivo in archivos:
-        resultado = {
-            'archivo': archivo.name,
-            'uuid': None,
-            'estatus': 'RECHAZADO',
-            'mensaje': '',
-        }
-
+    for archivo_cargado in archivos:
         try:
-            datos = parsear_cfdi(archivo)
-            uuid = datos['uuid']
+            archivos_xml = obtener_xml_desde_archivo(
+                archivo_cargado
+            )
 
-            resultado['uuid'] = uuid
-
-            # Duplicado dentro de la misma selección.
-            if uuid in uuids_del_lote:
-                raise CFDIError(
-                    'El UUID está repetido dentro del mismo lote.'
+            for archivo_xml in archivos_xml:
+                resultado = procesar_archivo_xml(
+                    archivo=archivo_xml,
+                    usuario=usuario,
+                    uuids_del_lote=uuids_del_lote,
                 )
 
-            uuids_del_lote.add(uuid)
+                resultados.append(resultado)
 
-            # Duplicado previamente almacenado.
-            cfdi_existente = CFDI.objects.filter(uuid=uuid).first()
-
-            if cfdi_existente:
-                raise CFDIError(
-                    'El UUID ya se encuentra almacenado en la bóveda.'
-                )
-
-            fecha_timbrado = datos['fecha_timbrado']
-
-            if fecha_timbrado is None:
-                raise CFDIError(
-                    'El CFDI no contiene fecha de timbrado.'
-                )
-
-            fecha_timbrado_local = timezone.localtime(
-                fecha_timbrado
-            ).date()
-
-            # Regla previamente definida:
-            # solo se admiten CFDI del mes y año actuales.
-            #if (
-            #    fecha_timbrado_local.month != fecha_actual.month or
-            #    fecha_timbrado_local.year != fecha_actual.year
-            #):
-            #    raise CFDIError(
-            #        'La fecha de timbrado no corresponde al mes '
-            #        'y año actuales.'
-            #    )
-
-            archivo.seek(0)
-
-            try:
-                with transaction.atomic():
-                    CFDI.objects.create(
-                        archivo_xml=archivo,
-                        subido_por=usuario,
-                        **datos,
-                    )
-
-            except IntegrityError:
-                raise CFDIError(
-                    'El UUID ya fue cargado por otro usuario.'
-                )
-
-            resultado['estatus'] = 'GUARDADO'
-            resultado['mensaje'] = 'XML guardado correctamente.'
-            guardados += 1
+                if resultado['estatus'] == 'GUARDADO':
+                    guardados += 1
+                else:
+                    rechazados += 1
 
         except CFDIError as error:
-            resultado['mensaje'] = str(error)
+            resultados.append({
+                'archivo': archivo_cargado.name,
+                'uuid': None,
+                'estatus': 'RECHAZADO',
+                'mensaje': str(error),
+            })
+
             rechazados += 1
 
         except Exception as error:
-            resultado['mensaje'] = (
-                f'Ocurrió un error inesperado: {error}'
-            )
-            rechazados += 1
+            resultados.append({
+                'archivo': archivo_cargado.name,
+                'uuid': None,
+                'estatus': 'RECHAZADO',
+                'mensaje': (
+                    'No fue posible procesar el archivo: '
+                    f'{error}'
+                ),
+            })
 
-        finally:
-            resultados.append(resultado)
+            rechazados += 1
 
     if guardados:
         messages.success(
             request,
-            f'Se guardaron correctamente {guardados} XML.'
+            f'Se guardaron correctamente '
+            f'{guardados} XML.',
         )
 
     if rechazados:
         messages.warning(
             request,
-            f'Se rechazaron {rechazados} XML.'
+            f'Se rechazaron {rechazados} XML.',
         )
 
     context = {
@@ -241,6 +324,9 @@ def carga_masiva_xml(request):
     }
 
     return render(request,'boveda_xml/resultado_carga.html',context,)
+
+
+
 # Create your views here.
 @perfil_seleccionado_required
 def generar_cfdi(request, pk):
