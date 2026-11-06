@@ -3798,7 +3798,7 @@ def crear_pdf_cfdi_buffer(factura):
     # Título
     c.setFillColor(prussian_blue)
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(30, height - 40, "FACTURA GENERADA POR SAVIA 2.0")
+    c.drawString(30, height - 40, "FACTURA GENERADA POR SAVIA 2.1")
 
     # Datos del Emisor
     c.setFillColor(black)

@@ -30,7 +30,7 @@ from dashboard.models import Subproyecto, Producto_Calidad
 from utils.email_theme import obtener_tema_correo
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago, EstadoCuenta
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura, ValeRosa
-from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto, generar_pdf_vale_rosa
+from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto, generar_pdf_vale_rosa, crear_pdf_cfdi_buffer as cfdi_buffer
 from gastos.services.cfdi import extraer_datos_del_xml, eliminar_caracteres_invalidos
 from gastos.services.validacion_sat import validar_conceptos_sat
 from viaticos.views import generar_pdf_viatico
@@ -4620,7 +4620,7 @@ def mis_comprobaciones_gasto(request):
 
                     # Generar PDF directamente desde el XML
                     try:
-                        buffer = crear_pdf_cfdi_buffer(factura)
+                        buffer = cfdi_buffer(factura)
 
                         if buffer:
                             buffer.seek(0)
@@ -4640,9 +4640,6 @@ def mis_comprobaciones_gasto(request):
                         pass
 
                 gasto.suma_total_facturas = suma
-                    
-                    
-                
                 comprobado = gasto.suma_total_facturas
                 monto = gasto.get_total_solicitud  # o gasto.monto si lo prefieres
                 diferencia = comprobado - monto
@@ -4660,7 +4657,9 @@ def mis_comprobaciones_gasto(request):
 
                  # ⚠️ Salimos del bucle antes de escribir o cerrar
             if not merger.pages:
-                return HttpResponse("No hay facturas válidas para imprimir.", content_type="text/plain")
+                merger.close()
+                messages.warning(request, "Debes seleccionar al menos un gasto para generar la comprobación.")
+                return redirect(request.path)
 
            
            
@@ -4780,6 +4779,7 @@ def mis_comprobaciones_gasto(request):
             email.attach(nombre_archivo, contenido_pdf, 'application/pdf')
             # Adjuntar los XMLs de las facturas
             # Adjuntar XML y PDF generado para cada CFDI
+            # Adjuntar únicamente los XML originales
             for gasto in gastos_enviar:
                 for factura in gasto.facturas.all():
 
@@ -4787,36 +4787,19 @@ def mis_comprobaciones_gasto(request):
                         continue
 
                     try:
-                        # XML original
                         with factura.archivo_xml.open("rb") as archivo:
                             contenido_xml = archivo.read()
 
-                        nombre_xml = f"G{gasto.folio}_F{factura.uuid}.xml"
+                        nombre_xml = (f"G{gasto.folio}_F{factura.uuid or factura.id}.xml")
 
-                        email.attach(nombre_xml, contenido_xml,"application/xml")
-
-                        # PDF generado desde el XML
-                        buffer_cfdi = crear_pdf_cfdi_buffer(factura)
-
-                        if buffer_cfdi:
-                            buffer_cfdi.seek(0)
-
-                            nombre_pdf = f"G{gasto.folio}_F{factura.uuid}.pdf"
-
-                            email.attach(
-                                nombre_pdf,
-                                buffer_cfdi.read(),
-                                "application/pdf"
-                            )
+                        email.attach(nombre_xml, contenido_xml, "application/xml")
 
                     except Exception as e:
-                        print(
-                            f"Error adjuntando CFDI {factura.id}: "
-                            f"{type(e).__name__}: {e}"
-                        )
+                        print(f"Error adjuntando XML {factura.id}: {type(e).__name__}: {e}")
+
             email.content_subtype = "html"
             email.send()
-
+                        
             messages.success(request, "El correo fue enviado exitosamente.")
             return redirect('mis-comprobaciones-gasto')
         
@@ -4958,7 +4941,9 @@ def mis_comprobaciones_viaticos(request):
 
                  # ⚠️ Salimos del bucle antes de escribir o cerrar
             if not merger.pages:
-                return HttpResponse("No hay facturas válidas para imprimir.", content_type="text/plain")
+                merger.close()
+                messages.warning(request, "Debes seleccionar al menos un gasto para generar la comprobación.")
+                return redirect(request.path)
 
            
            

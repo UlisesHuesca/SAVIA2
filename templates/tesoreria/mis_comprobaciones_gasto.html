@@ -440,14 +440,17 @@
         </section>
     </form>
 </main>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% if messages %}
     {% for message in messages %}
     <script>
         Swal.fire({
-            title: "{% if message.tags == 'error' %}Error{% else %}Excelente{% endif %}",
+            title: "{% if message.level_tag == 'error' %}Error{% elif message.level_tag == 'warning' %}Advertencia{% elif message.level_tag == 'info' %}Información{% else %}Excelente{% endif %}",
             text: "{{ message|escapejs }}",
-            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}"
+            icon: "{% if message.level_tag == 'error' %}error{% elif message.level_tag == 'warning' %}warning{% elif message.level_tag == 'info' %}info{% else %}success{% endif %}",
+            confirmButtonText: "Aceptar",
+            confirmButtonColor: "#7066e0"
         });
     </script>
     {% endfor %}
