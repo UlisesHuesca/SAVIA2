@@ -329,25 +329,53 @@
 
 <div class="modal fade" id="pdfPreviewModal" tabindex="-1"
      aria-labelledby="pdfPreviewTitle" aria-hidden="true">
+
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content sv-modal">
+
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title" id="pdfPreviewTitle">
-                        <i class="fa-solid fa-file-pdf me-2"></i>Vista previa
+                        <i class="fa-solid fa-file-pdf me-2"></i>
+                        Vista previa
                     </h2>
-                    <span class="sv-modal-subtitle">Documento asociado a la compra</span>
+                    <span class="sv-modal-subtitle">
+                        Documento asociado
+                    </span>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
             </div>
+
             <div class="modal-body sv-document-viewer">
+
                 <div class="sv-document-loading" id="pdfPreviewLoading">
-                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <div class="spinner-border"
+                         role="status"
+                         aria-hidden="true"></div>
                     <span>Cargando documento…</span>
                 </div>
-                <iframe class="sv-document-frame d-none" id="pdfPreviewFrame"
-                        title="Vista previa del documento"></iframe>
+
+                <!-- PDF -->
+                <iframe
+                    class="sv-document-frame d-none"
+                    id="pdfPreviewFrame"
+                    title="Vista previa del documento">
+                </iframe>
+
+                <!-- Imágenes -->
+                <img
+                    id="evidenciaPreviewImage"
+                    class="d-none img-fluid mx-auto"
+                    alt="Vista previa de evidencia"
+                    style="max-height: 75vh; object-fit: contain;">
+
             </div>
+
         </div>
     </div>
 </div>

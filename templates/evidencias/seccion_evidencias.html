@@ -39,30 +39,7 @@
 
     <div class="sv-card-body">
 
-        <div class="row g-3">
-            <div class="col-12 col-md-5">
-
-                <label for="filtroCategoriaEvidencia"
-                       class="form-label fw-semibold">
-                    Categoría
-                </label>
-
-                <select
-                    id="filtroCategoriaEvidencia"
-                    class="form-select">
-
-                    <option value="">Todas las categorías</option>
-
-                    {% for categoria in categorias_evidencia %}
-                    <option value="{{ categoria.id|unlocalize }}">
-                        {{ categoria.nombre }}
-                    </option>
-                    {% endfor %}
-
-                </select>
-
-            </div>
-        </div>
+     
 
     </div>
 
@@ -112,22 +89,13 @@
 
                     <td>
                         <div class="sv-actions">
-
-                            <a href="{{ evidencia.file.url }}"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="sv-btn sv-btn-info sv-btn-icon"
-                               title="Visualizar evidencia">
+                            <button type="button"
+                                    class="sv-btn sv-btn-info sv-btn-icon js-preview-evidencia"
+                                    data-url="{{ evidencia.file.url }}"
+                                    data-nombre="{{ evidencia.file.name }}"
+                                    title="Visualizar evidencia">
                                 <i class="fa-solid fa-eye"></i>
-                            </a>
-
-                            <a href="{{ evidencia.file.url }}"
-                               download
-                               class="sv-btn sv-btn-outline sv-btn-icon"
-                               title="Descargar evidencia">
-                                <i class="fa-solid fa-download"></i>
-                            </a>
-
+                            </button>
                         </div>
                     </td>
 
@@ -157,6 +125,62 @@
 
             </tbody>
         </table>
+
     </div>
+    <!-- Modal exclusivo para visualizar evidencias -->
+<div class="modal fade"
+     id="evidenciaPreviewModal"
+     tabindex="-1"
+     aria-labelledby="evidenciaPreviewTitle"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="evidenciaPreviewTitle">
+                        <i class="fa-solid fa-folder-open me-2"></i>
+                        Vista previa de evidencia
+                    </h2>
+                    <span class="sv-modal-subtitle">
+                        Soporte administrativo
+                    </span>
+                </div>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body sv-document-viewer">
+
+                <div class="sv-document-loading"
+                     id="evidenciaPreviewLoading">
+                    <div class="spinner-border"
+                         role="status"
+                         aria-hidden="true"></div>
+                    <span>Cargando evidencia…</span>
+                </div>
+
+                <!-- Visualización PDF -->
+                <iframe id="evidenciaPreviewFrame"
+                        class="sv-document-frame d-none"
+                        title="Vista previa de evidencia PDF">
+                </iframe>
+
+                <!-- Visualización de imágenes -->
+                <img id="evidenciaPreviewImage"
+                     class="d-none img-fluid mx-auto"
+                     alt="Vista previa de evidencia"
+                     style="max-height: 75vh; object-fit: contain;">
+
+            </div>
+
+        </div>
+    </div>
+</div>
 
 </section>

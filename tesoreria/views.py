@@ -3280,8 +3280,9 @@ def matriz_facturas_nomodal(request, pk):
                 evidencia.uploaded = timezone.localdate()
                 evidencia.hecho = True
                 evidencia.save()
-        
+
                 messages.success(request,'La evidencia se registró correctamente.')
+                return redirect(request.path)
         
     context={
         'next_url':next_url,
