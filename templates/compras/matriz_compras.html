@@ -433,8 +433,8 @@
                         </td>
                         {% if usuario.tipo.comprador or usuario.tipo.oc_superintendencia %}
                         <td class="sv-col-acciones d-none text-center">
-                            {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
-                                {% if compra.comparativo_model %}
+                           
+                            {% if compra.comparativo_model %}
                                 <button
                                     type="button"
                                     class="sv-btn sv-btn-icon sv-btn-success"
@@ -446,12 +446,10 @@
                                 >
                                     <i class="fa-solid fa-scale-balanced"></i>
                                 </button>
-                                {% else %}
-                                <span class="sv-cell-subtitle">—</span>
-                                {% endif %}
                             {% else %}
-                            <span class="sv-cell-subtitle">—</span>
+                                <span class="sv-cell-subtitle">—</span>
                             {% endif %}
+                            
                         </td>
                         <td class="sv-col-acciones d-none text-center">
                             {% if compra.pagada == False and compra.regresar_oc == False %}
