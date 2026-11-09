@@ -336,7 +336,7 @@ def relacionar_cfdi_compra(request, pk):
 
     if not rfc_emisor:
         messages.error(request, "El CFDI no tiene RFC emisor.")
-        return redirect("lista-cfdi")
+        return redirect("boveda_xml:lista_cfdi")
 
     # Órdenes del proveedor que emitió el CFDI.
     compras_base = Compra.objects.filter(proveedor__nombre__rfc=rfc_emisor)
@@ -361,7 +361,7 @@ def relacionar_cfdi_compra(request, pk):
 
             if cfdi.factura_compra_id or tiene_registro_previo():
                 messages.warning(request, "Este CFDI ya tiene una factura registrada.")
-                return redirect("lista-cfdi")
+                return redirect("boveda_xml:lista_cfdi")
 
             compra = get_object_or_404(compras_base, pk=compra_id)
 
@@ -406,12 +406,12 @@ def relacionar_cfdi_compra(request, pk):
 
         messages.success(request, f"CFDI {cfdi.uuid} relacionado correctamente con la OC {compra.folio}.")
 
-        return redirect("lista-cfdi")
+        return redirect("boveda_xml:lista_cfdi")
 
     # GET: impedir nuevas relaciones si ya existe una factura.
     if cfdi.factura_compra_id or tiene_registro_previo():
         messages.warning(request, "Este CFDI ya está relacionado o registrado.")
-        return redirect("lista-cfdi")
+        return redirect("boveda_xml:lista_cfdi")
 
     # Buscar OC por folio.
     buscar = request.GET.get("buscar", "").strip()
