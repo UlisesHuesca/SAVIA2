@@ -1,23 +1,26 @@
 from django.http import FileResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render,  get_object_or_404, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.core.files import File
 from django.core.files.base import ContentFile
+from django.views.decorators.http import require_http_methods
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
-from tesoreria.views import cfdi_compras
-
-from dashboard.models import Profile
-
-# Ajusta este import a la ubicación real de tu decorador.
-from user.decorators import perfil_seleccionado_required
 
 from .filters import CFDIFilter
 from .forms import CargaMasivaXMLForm
 from .models import CFDI
 from .services.parser_cfdi import CFDIError, parsear_cfdi
 from .services.datos_pdf import preparar_datos_pdf
+
+from user.decorators import perfil_seleccionado_required
+from dashboard.models import Profile
+from compras.models import Compra
+from tesoreria.models import Facturas
+from tesoreria.views import guardar_factura
+from gastos.models import Factura
+from viaticos.models import Viaticos_Factura
 
 #PDF generator
 from reportlab.pdfgen import canvas
@@ -30,7 +33,6 @@ from compras.tasks import convert_excel_matriz_compras_task
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
-from bs4 import BeautifulSoup
 from user.decorators import perfil_seleccionado_required
 
 import qrcode
@@ -304,17 +306,10 @@ def carga_masiva_xml(request):
             rechazados += 1
 
     if guardados:
-        messages.success(
-            request,
-            f'Se guardaron correctamente '
-            f'{guardados} XML.',
-        )
+        messages.success(request, f'Se guardaron correctamente {guardados} XML.',)
 
     if rechazados:
-        messages.warning(
-            request,
-            f'Se rechazaron {rechazados} XML.',
-        )
+        messages.warning(request, f'Se rechazaron {rechazados} XML.',)
 
     context = {
         'resultados': resultados,
@@ -325,6 +320,117 @@ def carga_masiva_xml(request):
 
     return render(request,'boveda_xml/resultado_carga.html',context,)
 
+
+
+
+@require_http_methods(["GET", "POST"])
+def relacionar_cfdi_compra(request, pk):
+    print("Iniciando la función relacionar_cfdi_compra con pk:", pk)
+    pk_profile = request.session.get("selected_profile_id")
+    usuario = get_object_or_404(Profile, id=pk_profile)
+
+    cfdi = get_object_or_404(CFDI, id=pk)
+    print("CFDI encontrado:", cfdi.rfc_emisor)
+    # RFC del emisor registrado en Bóveda.
+    rfc_emisor = (cfdi.rfc_emisor or "").strip().upper()
+
+    if not rfc_emisor:
+        messages.error(request, "El CFDI no tiene RFC emisor.")
+        return redirect("lista-cfdi")
+
+    # Órdenes del proveedor que emitió el CFDI.
+    compras_base = Compra.objects.filter(proveedor__nombre__rfc=rfc_emisor)
+    
+
+    def tiene_registro_previo():
+        return (
+            Facturas.objects.filter(uuid__iexact=cfdi.uuid).exists()
+            or Factura.objects.filter(uuid__iexact=cfdi.uuid).exists()
+            or Viaticos_Factura.objects.filter(uuid__iexact=cfdi.uuid).exists()
+        )
+
+    if request.method == "POST":
+
+        compra_id = request.POST.get("compra_id")
+        comentario = request.POST.get("comentario", "").strip()[:100]
+
+        # Volver a comprobar la relación dentro de la transacción.
+        with transaction.atomic():
+
+            cfdi = get_object_or_404(CFDI.objects.select_for_update(), pk=pk)
+
+            if cfdi.factura_compra_id or tiene_registro_previo():
+                messages.warning(request, "Este CFDI ya tiene una factura registrada.")
+                return redirect("lista-cfdi")
+
+            compra = get_object_or_404(compras_base, pk=compra_id)
+
+            # RFC receptor autorizado según empresa.
+            if compra.req.orden.distrito.nombre == "Yerod":
+                rfc_esperados = {"OSY260827551"}
+            else:
+                rfc_esperados = {"GVO020226811", "SPP0605268G8",}
+
+            rfc_receptor = (cfdi.rfc_receptor or "").strip().upper()
+
+            if rfc_receptor not in rfc_esperados:
+                messages.error(request, "El RFC receptor no corresponde a la empresa de la OC.")
+                return redirect("relacionar-cfdi-compra", pk=pk)
+
+            if cfdi.tipo_comprobante == "P":
+                messages.error(request, "No se permite relacionar complementos de pago.")
+                return redirect("relacionar-cfdi-compra", pk=pk)
+
+            # Crear el objeto de Compras.
+            factura = Facturas(oc=compra, hecho=False)
+
+            # Reutilizar el XML existente en Bóveda.
+            nombre_archivo = cfdi.archivo_xml.name.rsplit("/", 1)[-1]
+
+            with cfdi.archivo_xml.open("rb") as origen:
+                archivo = File(origen, name=nombre_archivo)
+
+                guardar_factura(
+                    factura,
+                    archivo,
+                    nombre_archivo,
+                    cfdi.uuid,
+                    cfdi.fecha_timbrado,
+                    usuario,
+                    comentario
+                )
+
+            # Guardar vinculación.
+            cfdi.factura_compra = factura
+            cfdi.save(update_fields=["factura_compra"])
+
+        messages.success(request, f"CFDI {cfdi.uuid} relacionado correctamente con la OC {compra.folio}.")
+
+        return redirect("lista-cfdi")
+
+    # GET: impedir nuevas relaciones si ya existe una factura.
+    if cfdi.factura_compra_id or tiene_registro_previo():
+        messages.warning(request, "Este CFDI ya está relacionado o registrado.")
+        return redirect("lista-cfdi")
+
+    # Buscar OC por folio.
+    buscar = request.GET.get("buscar", "").strip()
+
+    compras = Compra.objects.none()
+
+     # Órdenes del proveedor que emitió el CFDI.
+    #compras = Compra.objects.filter(proveedor__nombre__rfc__iexact=rfc_emisor)
+
+    if buscar:
+        compras = (compras_base.filter(folio__icontains=buscar).select_related("req", "req__orden", "proveedor", "proveedor__nombre",).order_by("-id")[:30])
+
+    context = {
+        "cfdi": cfdi,
+        "compras": compras,
+        "buscar": buscar,
+    }
+
+    return render(request, "boveda_xml/relacionar_cfdi_compra.html", context)
 
 
 # Create your views here.
@@ -347,6 +453,10 @@ def generar_cfdi(request, pk):
     )
 
     return response
+
+
+
+
 
 
 def cfdi_pdf(factura):

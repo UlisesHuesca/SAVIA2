@@ -17,7 +17,10 @@ class CFDI(models.Model):
         ('VINCULADO', 'Vinculado'),
         ('CANCELADO', 'Cancelado en SAT'),
     ]
-
+    # Vinculación con los módulos operativos
+    factura_compra = models.OneToOneField('tesoreria.Facturas',  on_delete=models.SET_NULL, related_name='cfdi_boveda_compra', null=True, blank=True, verbose_name='Factura de compra vinculada',)
+    #factura_gasto = models.OneToOneField('gastos.Factura', on_delete=models.SET_NULL, related_name='cfdi_boveda_gasto', null=True, blank=True, verbose_name='Factura de gasto vinculada',)
+    #factura_viatico = models.OneToOneField('viaticos.Viaticos_Factura', on_delete=models.SET_NULL, related_name='cfdi_boveda_viatico', null=True, blank=True, verbose_name='Factura de viático vinculada',)
     # Identificación fiscal
     uuid = models.CharField(max_length=36, unique=True, db_index=True, verbose_name='UUID',)
     version_cfdi = models.CharField(max_length=10, null=True, blank=True, verbose_name='Versión CFDI',)

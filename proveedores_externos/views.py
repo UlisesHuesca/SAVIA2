@@ -901,32 +901,6 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
-    # Escribir encabezados debajo de los mensajes
-    #worksheet.write(2, columna_max - 1, "Fecha Inicial", head_style)
-    #worksheet.write(3, columna_max - 1, "Fecha Final", head_style)
-    #worksheet.write(4, columna_max - 1, "Total de OC's", head_style)
-    #worksheet.write(5, columna_max - 1, "Requisiciones Aprobadas", head_style)
-    #worksheet.write(6, columna_max - 1, "Requisiciones Atendidas", head_style)
-    #worksheet.write(7, columna_max - 1, "KPI Colocadas/Aprobadas", head_style)
-    #worksheet.write(8, columna_max - 1, "OC Entregadas/Pagadas/Productos", head_style)
-    #worksheet.write(9, columna_max - 1, "OC Pagadas/Productos", head_style)
-    #worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
-    #if num_approved_requis <= 0:
-    #     num_approved_requis=1
-    #indicador = num_requis_atendidas/num_approved_requis
-    #letra_columna = xl_col_to_name(columna_max)
-    #formula = f"={letra_columna}9/{letra_columna}10"
-    # Escribir datos y fórmulas
-    #worksheet.write(2, columna_max, start_date, date_style)  # Ejemplo de escritura de fecha
-    #worksheet.write(3, columna_max, end_date, date_style)
-    #worksheet.write_formula(4, columna_max, '=COUNTA(A:A)-1', body_style)  # Ejemplo de fórmula
-    #worksheet.write(5, columna_max, num_approved_requis, body_style)
-    #worksheet.write(6, columna_max, num_requis_atendidas, body_style)
-    #worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
-    #worksheet.write_formula(8, columna_max, '=COUNTIFS(P:P, "Pagada", W:W, "Entregada", S:S, "PRODUCTOS")', body_style)
-    # Escribir otra fórmula COUNTIF, también con el estilo corporal
-    #worksheet.write_formula(9, columna_max, '=COUNTIFS(P:P, "Pagada", S:S, "PRODUCTOS")', body_style)
-    #worksheet.write_formula(10, columna_max, formula, percent_style)
 
     for i, column in enumerate(columns):
         worksheet.write(0, i, column, head_style)

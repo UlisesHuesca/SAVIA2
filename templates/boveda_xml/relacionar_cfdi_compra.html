@@ -1,0 +1,266 @@
+
+{% extends 'partials/base.html' %}
+{% load humanize %}
+{% load l10n %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="fa-solid fa-link me-2 text-primary"></i>
+                Relacionar CFDI con orden de compra
+            </h4>
+            <p class="text-muted mb-0">
+                Selecciona la orden de compra a la que deseas vincular esta factura.
+            </p>
+        </div>
+
+        <a href="{% url 'boveda_xml:lista_cfdi' %}"
+           class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i>
+            Volver a Bóveda
+        </a>
+    </div>
+
+    <!-- Información CFDI -->
+    <div class="card sv-card shadow-sm border-0 mb-4">
+
+        <div class="card-header sv-card-header">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-file-invoice me-2"></i>
+                Información del CFDI
+            </h5>
+        </div>
+
+        <div class="card-body sv-card-body">
+
+            <div class="row g-4">
+
+                <div class="col-12">
+                    <div class="small text-muted mb-1">UUID</div>
+                    <div class="fw-semibold font-monospace text-break">
+                        {{ cfdi.uuid }}
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="small text-muted mb-1">Emisor</div>
+                    <div class="fw-semibold">{{ cfdi.nombre_emisor }}</div>
+                    <div class="small text-muted">{{ cfdi.rfc_emisor }}</div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="small text-muted mb-1">Receptor</div>
+                    <div class="fw-semibold">{{ cfdi.nombre_receptor }}</div>
+                    <div class="small text-muted">{{ cfdi.rfc_receptor }}</div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="small text-muted mb-1">Fecha de timbrado</div>
+                    <div class="fw-semibold">
+                        {{ cfdi.fecha_timbrado|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="small text-muted mb-1">Moneda</div>
+                    <div class="fw-semibold">{{ cfdi.moneda }}</div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="small text-muted mb-1">Importe total</div>
+                    <div class="fw-bold fs-5 text-success">
+                        ${{ cfdi.total|floatformat:2|intcomma }}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Buscar OC -->
+    <div class="card sv-card shadow-sm border-0">
+
+        <div class="card-header sv-card-header">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-magnifying-glass me-2"></i>
+                Buscar orden de compra
+            </h5>
+        </div>
+
+        <div class="card-body sv-card-body">
+
+            <form method="GET" class="mb-4">
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-12 col-lg-8">
+                        <label for="buscarOC" class="form-label fw-semibold">
+                            Folio de orden de compra
+                        </label>
+
+                        <div class="input-group sv-input-group">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-hashtag"></i>
+                            </span>
+
+                            <input
+                                id="buscarOC"
+                                type="text"
+                                name="buscar"
+                                class="form-control"
+                                placeholder="Ej. OC12345"
+                                value="{{ buscar }}"
+                                autocomplete="off"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>
+                            Buscar OC
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Orden de compra</th>
+                            <th>Proveedor</th>
+                            <th>Distrito</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for compra in compras %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">
+                                    {{ compra.folio }}
+                                </span>
+                            </td>
+
+                            <td>{{ compra.proveedor.nombre }}</td>
+
+                            <td>{{ compra.req.orden.distrito.nombre }}</td>
+
+                            <td class="text-end">
+                                <form method="POST" class="form-relacionar-cfdi">
+                                    {% csrf_token %}
+
+                                  
+                                    <input
+                                        type="hidden"
+                                        name="compra_id"
+                                        value="{{ compra.pk|unlocalize }}"
+                                    >
+                                   
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-success btn-sm"
+                                        data-folio="{{ compra.folio }}"
+                                    >
+                                        <i class="fa-solid fa-link me-1"></i>
+                                        Relacionar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+
+                                <i class="fa-solid fa-folder-open fa-2x text-muted mb-3"></i>
+
+                                <div class="fw-semibold text-muted">
+                                    {% if buscar %}
+                                        No se encontraron órdenes de compra.
+                                    {% else %}
+                                        Introduce un folio para buscar órdenes de compra.
+                                    {% endif %}
+                                </div>
+
+                                <small class="text-muted d-block mt-1">
+                                    Solo se mostrarán órdenes asociadas al RFC emisor del CFDI.
+                                </small>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".form-relacionar-cfdi").forEach(form => {
+
+        form.addEventListener("submit", function (event) {
+
+            event.preventDefault();
+
+            const boton = form.querySelector("button[type='submit']");
+            const folio = boton.dataset.folio;
+
+            Swal.fire({
+                title: "¿Relacionar factura?",
+                html: `
+                    <p class="mb-2">
+                        ¿Deseas relacionar este CFDI con la orden de compra?
+                    </p>
+                    <div class="fw-bold fs-5">
+                        ${folio}
+                    </div>
+                    <small class="text-muted">
+                        Se creará el registro de factura correspondiente.
+                    </small>
+                `,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, relacionar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#198754",
+                reverseButtons: true,
+                focusCancel: true
+            }).then(resultado => {
+
+                if (resultado.isConfirmed) {
+
+                    const compraId = form.querySelector(
+                        'input[name="compra_id"]'
+                    ).value;
+
+                    console.log("ID de compra enviado:", compraId);
+                    console.log("Folio de OC:", folio);
+
+                    boton.disabled = true;
+                    form.submit();
+                }
+
+            });
+
+        });
+
+    });
+
+});
+</script>
+
+{% endblock %}

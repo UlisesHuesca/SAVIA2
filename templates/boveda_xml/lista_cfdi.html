@@ -205,6 +205,7 @@
                         <th>Tipo</th>
                         <th>XML</th>
                         <th>PDF</th>
+                        <th>Acción</th>
                     </tr>
                 </thead>
 
@@ -321,6 +322,17 @@
                             <span class="sv-cell-subtitle">No aplica</span>
                             {% endif %}
                         </td>
+                        <td>
+                            {% if usuario.tipo.comprador %}
+                                {% if not cfdi.factura_compra_id %}
+                                    <a href="{% url 'boveda_xml:relacionar-cfdi-compra' cfdi.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fa-solid fa-link"></i>
+                                        Relacionar
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+
                     </tr>
 
                     {% empty %}
@@ -392,6 +404,7 @@
                         </a>
                     </li>
                     {% endif %}
+                
                 </ul>
             </nav>
         </div>
