@@ -1570,7 +1570,7 @@ def render_pdf_responsiva_activos(request, pk):
             distritos = activo.responsable.distritos, 
             tipo__activos = True, 
             st_activo = True
-            ).first()
+            ).exclude(tipo__nombre = "Admin").first()
         print(activo_resp)
         if activo_resp:
             fecha_actual = datetime.now().strftime('%d/%m/%Y')
