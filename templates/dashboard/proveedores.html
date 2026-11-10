@@ -151,6 +151,7 @@
                         <th scope="col">Direcciones</th>
                         {% if usuario.tipo.proveedores %}
                             <th>Documentación</th>
+                            <th>Preevaluación</th>
                         {% endif %}
                     {% endif %}
                     <!-- <th>Debida Diligencia</th> -->
@@ -194,15 +195,19 @@
                             <i class="fa-duotone fa-solid fa-file-check"></i>
                         </a>
                     </td>
+                    <td>
+                        <a
+                            href="{% url 'preevaluaciones' proveedor.id %}"
+                            class="btn {% if proveedor.preevaluaciones.exists %}btn-outline-info{% else %}btn-outline-danger{% endif %}"
+                            title="Preevaluaciones del proveedor"
+                            aria-label="Preevaluaciones del proveedor">
+                            <i class="fa-solid fa-list-check"></i>
+                        </a>
+                    </td>
                     
                     {% endif %}
-                    <!-- <td>
-                    {% if proveedor.ultimo_cuestionario %}
-                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'descargar-pdf-dd' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
-                            <i class="fa-duotone fa-solid fa-file-check"></i>
-                        </a>
-                    {% endif %}
-                    </td> -->
+                    
+                   
                 </tr>
                 {% empty %}
                 <tr><td colspan="12"><div class="sv-empty-state"><i class="fa-solid fa-building-circle-exclamation"></i><h3>No se encontraron proveedores</h3><p>Prueba con otros criterios de búsqueda.</p></div></td></tr>

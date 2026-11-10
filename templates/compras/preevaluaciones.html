@@ -1,0 +1,339 @@
+
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Preevaluaciones de proveedores{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- ENCABEZADO -->
+    <div class="sv-page-header mb-4">
+        <div>
+            <h3 class="mb-1 fw-bold">
+                <i class="fa-solid fa-list-check me-2 text-primary"></i>
+                Preevaluaciones de proveedores
+            </h3>
+            <p class="text-muted mb-0">
+                Consulta y administración de evaluaciones de proveedores.
+            </p>
+        </div>
+    </div>
+
+    <!-- INFORMACIÓN DEL PROVEEDOR -->
+    <div class="sv-card card mb-4">
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap justify-content-between
+                        align-items-center gap-3">
+
+                <div>
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Proveedor
+                    </small>
+
+                    <h5 class="fw-bold mb-1">
+                        {{ proveedor.razon_social }}
+                    </h5>
+
+                    <span class="text-muted small">
+                        <i class="fa-solid fa-building me-1"></i>
+                        Registro de preevaluaciones
+                    </span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    <a href="{% url 'dashboard-proveedores' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Regresar
+                    </a>
+
+                    <a href="{% url 'preevaluacion' proveedor.id %}"
+                       class="btn btn-success">
+                        <i class="fa-solid fa-plus me-1"></i>
+                        Nueva preevaluación
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- LISTADO DE PREEVALUACIONES -->
+    <div class="sv-card card">
+
+        <div class="card-header bg-transparent py-3">
+            <div class="d-flex flex-wrap justify-content-between
+                        align-items-center gap-2">
+
+                <h5 class="mb-0 fw-semibold">
+                    <i class="fa-solid fa-clipboard-check me-2"></i>
+                    Historial de preevaluaciones
+                </h5>
+
+                <span class="badge bg-secondary">
+                    {{ preevaluaciones.paginator.count }}
+                    registro{{ preevaluaciones.paginator.count|pluralize }}
+                </span>
+
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Tipo de evaluación</th>
+                            <th>Creado por</th>
+                            <th>Fecha</th>
+                            <th>Comparativo</th>
+                            <th>Estado</th>
+                            <th class="text-center pe-3">Documento</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in preevaluaciones %}
+
+                        <tr>
+
+                            <!-- TIPO -->
+                            <td class="ps-3">
+                                <span class="fw-semibold">
+                                    {{ item.tipo_evaluacion.nombre|default:"Sin definir" }}
+                                </span>
+                            </td>
+
+                            <!-- RESPONSABLE -->
+                            <td>
+                                {% if item.creado_por %}
+                                    {{ item.creado_por.staff.get_full_name|default:"Sin nombre" }}
+                                {% else %}
+                                    <span class="text-muted">Sin asignar</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- FECHA -->
+                            <td>
+                                {% if item.creado_at %}
+                                    <span class="text-nowrap">
+                                        <i class="fa-regular fa-calendar me-1 text-muted"></i>
+                                        {{ item.creado_at|date:"d/m/Y" }}
+                                    </span>
+
+                                    <div class="text-muted small">
+                                        {{ item.creado_at|date:"H:i" }}
+                                    </div>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <!-- COMPARATIVO -->
+                            <td>
+                                {% if item.comparativo_model %}
+
+                                    <div class="d-flex align-items-center gap-2">
+
+                                        <span class="small">
+                                            {{ item.comparativo_model.nombre|default:"Comparativo" }}
+                                        </span>
+
+                                        <a href="{% url 'comparativas-pdf' item.comparativo_model.id %}"
+                                           class="btn btn-sm btn-outline-danger"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           title="Ver comparativo"
+                                           aria-label="Ver comparativo">
+
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                        </a>
+
+                                    </div>
+
+                                {% else %}
+                                    <span class="text-muted small">
+                                        Sin comparativo
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- ESTADO -->
+                            <td>
+                                {% if item.resultado == True %}
+
+                                    <span class="badge bg-success">
+                                        <i class="fa-solid fa-circle-check me-1"></i>
+                                        Autorizado
+                                    </span>
+
+                                {% elif item.resultado == False %}
+
+                                    <span class="badge bg-danger">
+                                        <i class="fa-solid fa-circle-xmark me-1"></i>
+                                        Cancelado
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fa-solid fa-clock me-1"></i>
+                                        Pendiente
+                                    </span>
+
+                                {% endif %}
+                            </td>
+
+                            <!-- PDF -->
+                            <td class="text-center pe-3">
+
+                                <a href="{% url 'preevaluacion-pdf' item.id %}"
+                                   class="btn btn-sm btn-outline-primary"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   title="Consultar preevaluación"
+                                   aria-label="Consultar preevaluación">
+
+                                    <i class="fa-solid fa-file-pdf"></i>
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+
+                                <div class="text-muted">
+
+                                    <i class="fa-solid fa-clipboard-list
+                                              fa-3x mb-3 opacity-50"></i>
+
+                                    <h6 class="fw-semibold">
+                                        No existen preevaluaciones registradas
+                                    </h6>
+
+                                    <p class="small mb-3">
+                                        Este proveedor todavía no cuenta
+                                        con preevaluaciones.
+                                    </p>
+
+                                    <a href="{% url 'preevaluacion' proveedor.id %}"
+                                       class="btn btn-success btn-sm">
+                                        <i class="fa-solid fa-plus me-1"></i>
+                                        Crear primera preevaluación
+                                    </a>
+
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- PAGINACIÓN -->
+        {% if preevaluaciones.has_other_pages %}
+
+        <div class="card-footer bg-transparent py-3">
+
+            <nav aria-label="Paginación de preevaluaciones">
+
+                <ul class="pagination pagination-sm
+                           justify-content-center mb-0">
+
+                    {% if preevaluaciones.has_previous %}
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page=1"
+                           aria-label="Primera página">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ preevaluaciones.previous_page_number }}"
+                           aria-label="Página anterior">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    {% endif %}
+
+                    {% for numero in preevaluaciones.paginator.page_range %}
+
+                        {% if numero == preevaluaciones.number %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ numero }}
+                            </span>
+                        </li>
+
+                        {% elif numero >= preevaluaciones.number|add:"-2" and numero <= preevaluaciones.number|add:"2" %}
+
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ numero }}">
+                                {{ numero }}
+                            </a>
+                        </li>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                    {% if preevaluaciones.has_next %}
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ preevaluaciones.next_page_number }}"
+                           aria-label="Página siguiente">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ preevaluaciones.paginator.num_pages }}"
+                           aria-label="Última página">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+
+                    {% endif %}
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

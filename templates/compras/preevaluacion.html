@@ -1,0 +1,476 @@
+
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Preevaluación de proveedor{% endblock %}
+
+{% block content %}
+<style>
+    /* Select2 - Comparativo de compras */
+    #comparativo .select2-container .select2-selection--single {
+        height: 60px !important;
+        display: flex;
+        align-items: center;
+        border-radius: 0 8px 8px 0;
+        border: 1px solid #ced4da;
+    }
+
+    #comparativo .select2-selection__rendered {
+        line-height: normal !important;
+        padding-left: 16px !important;
+        padding-right: 55px !important;
+        font-size: 1rem;
+    }
+
+    #comparativo .select2-selection__arrow {
+        height: 100% !important;
+        top: 0 !important;
+        right: 8px !important;
+    }
+
+    #comparativo .select2-selection__clear {
+        margin-right: 12px;
+    }
+</style>
+<div class="container-fluid py-4">
+
+    <!-- ENCABEZADO -->
+    <div class="sv-page-header mb-4">
+        <h3 class="fw-bold mb-1">
+            <i class="fa-solid fa-clipboard-check me-2 text-primary"></i>
+            Preevaluación de proveedor
+        </h3>
+        <p class="text-muted mb-0">
+            Evaluación inicial o simplificada de proveedores.
+        </p>
+    </div>
+
+    <!-- PROVEEDOR -->
+    <div class="sv-card card mb-4">
+        <div class="card-body">
+            <small class="text-muted text-uppercase fw-semibold">
+                Proveedor
+            </small>
+            <h5 class="fw-bold mb-0">
+                {{ proveedor.razon_social }}
+            </h5>
+        </div>
+    </div>
+
+    <form method="POST" id="formPreevaluacion">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <!-- MODALIDAD -->
+        <div class="sv-card card mb-4">
+            <div class="card-body">
+
+                <h5 class="fw-semibold mb-3">
+                    <i class="fa-solid fa-list-check me-2"></i>
+                    Tipo de evaluación
+                </h5>
+
+                {{ form.tipo_evaluacion|add_class:"form-select" }}
+
+                {% for error in form.tipo_evaluacion.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- EVALUACIÓN SIMPLIFICADA -->
+        <!-- ========================================= -->
+
+        <div id="seccionSimplificada" class="d-none">
+
+            <div class="sv-card card mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0 fw-semibold">
+                        Evaluación simplificada
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- CRITERIO 1 -->
+                    <div class="mb-4">
+
+                        <h6 class="fw-semibold">
+                            1. Cumplimiento de especificaciones
+                        </h6>
+
+                        <p class="text-muted small">
+                            Verificar que el producto cumple con las
+                            especificaciones requeridas.
+                        </p>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.especs_ver|add_class:"form-control" }}
+
+                        {% for error in form.especs_ver.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.especs_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.especs_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <!-- CRITERIO 2 -->
+                    <div class="mb-3">
+
+                        <h6 class="fw-semibold">
+                            2. Comparación de precios
+                        </h6>
+
+                        <p class="text-muted small">
+                            Comparar los precios ofrecidos por el proveedor
+                            con al menos otras dos cotizaciones del mismo
+                            año y de diferentes proveedores.
+                        </p>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.precios_ver|add_class:"form-control" }}
+
+                        {% for error in form.precios_ver.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.precios_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.precios_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================= -->
+        <!-- EVALUACIÓN INICIAL -->
+        <!-- ========================================= -->
+
+        <div id="seccionInicial" class="d-none">
+
+            <!-- COMPRAS CRÍTICAS -->
+            <div class="sv-card card mb-4">
+
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-semibold mb-0">
+                        Criterios de evaluación — Compras críticas
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- CRITERIO 1 -->
+                    <div class="mb-4">
+                        <h6 class="fw-semibold">
+                            1. Verificación del Sistema de Gestión de Calidad
+                        </h6>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.verif_calidad|add_class:"form-control" }}
+
+                        {% for error in form.verif_calidad.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.verif_calidad_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.verif_calidad_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- CRITERIO 2 -->
+                    <div class="mb-4">
+                        <h6 class="fw-semibold">
+                            2. Control en la cadena de suministro
+                        </h6>
+
+                        <label class="form-label">Descripción</label>
+                        {{ form.control_cadena_suministro|add_class:"form-control" }}
+
+                        {% for error in form.control_cadena_suministro.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.control_cadena_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.control_cadena_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- CRITERIO 3 -->
+                    <div>
+                        <h6 class="fw-semibold">
+                            3. Evaluación de la capacidad del proveedor
+                        </h6>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.capacidad_proveedor|add_class:"form-control" }}
+
+                        {% for error in form.capacidad_proveedor.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.capacidad_proveedor_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.capacidad_proveedor_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- COMPRAS NO CRÍTICAS -->
+            <div class="sv-card card mb-4">
+
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-semibold mb-0">
+                        Criterios de evaluación — Compras no críticas
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- CRITERIO 4 -->
+                    <div class="mb-4">
+                        <h6 class="fw-semibold">
+                            1. Cumplimiento del Sistema de Gestión de Calidad
+                        </h6>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.requisitos_sgc_ver|add_class:"form-control" }}
+
+                        {% for error in form.requisitos_sgc_ver.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.sgc_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.sgc_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- CRITERIO 5 -->
+                    <div class="mb-4">
+                        <h6 class="fw-semibold">
+                            2. Cumplimiento de requisitos de compra
+                        </h6>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.eval_compra|add_class:"form-control" }}
+
+                        {% for error in form.eval_compra.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.eval_compra_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.eval_compra_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- CRITERIO 6 -->
+                    <div>
+                        <h6 class="fw-semibold">
+                            3. Evaluación posterior a la entrega
+                        </h6>
+
+                        <label class="form-label">Detalles</label>
+                        {{ form.eval_actividades|add_class:"form-control" }}
+
+                        {% for error in form.eval_actividades.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        <div class="form-check form-switch mt-3">
+                            {{ form.eval_actividades_b|add_class:"form-check-input" }}
+                            <label class="form-check-label"
+                                   for="{{ form.eval_actividades_b.id_for_label }}">
+                                Cumple
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COMPARATIVO -->
+        <div class="sv-card card mb-4">
+            <div class="card-body">
+
+                <h5 class="fw-semibold mb-3">
+                    <i class="fa-solid fa-file-lines me-2"></i>
+                    Comparativo de compras
+                </h5>
+
+                <div id="comparativo" class="sv-input-group input-group mb-3">
+                    <span class="input-group-text">
+                        <i class="fa-solid fa-list"></i>
+                    </span>
+
+                    <div class="form-floating form-floating-group flex-grow-1">
+                        {{ form.comparativo_model|add_class:"form-select" }}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="d-flex justify-content-end gap-2 mb-4">
+
+            <a href="{% url 'preevaluaciones' proveedor.id %}"
+               class="btn btn-outline-secondary">
+                <i class="fa-solid fa-xmark me-1"></i>
+                Cancelar
+            </a>
+
+            <button type="submit"
+                    class="btn btn-success"
+                    id="btnGuardarPreevaluacion">
+                <i class="fa-solid fa-floppy-disk me-1"></i>
+                Guardar preevaluación
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+<!-- CSS Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+
+<!-- JavaScript Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tipo = document.getElementById("id_tipo_evaluacion");
+    const inicial = document.getElementById("seccionInicial");
+    const simplificada = document.getElementById("seccionSimplificada");
+    const form = document.getElementById("formPreevaluacion");
+    const boton = document.getElementById("btnGuardarPreevaluacion");
+
+    if (!tipo || !inicial || !simplificada || !form) return;
+
+    function actualizarSecciones() {
+        inicial.classList.toggle("d-none", tipo.value !== "1");
+        simplificada.classList.toggle("d-none", tipo.value !== "2");
+    }
+
+    tipo.addEventListener("change", actualizarSecciones);
+    actualizarSecciones();
+
+    form.addEventListener("submit", function (event) {
+
+        event.preventDefault();
+
+        if (!form.reportValidity()) return;
+
+        Swal.fire({
+            title: "¿Guardar preevaluación?",
+            text: "Se registrará la evaluación del proveedor.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Sí, guardar",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: "#198754",
+            reverseButtons: true
+        }).then(resultado => {
+
+            if (resultado.isConfirmed) {
+                boton.disabled = true;
+                form.submit();
+            }
+
+        });
+    });
+
+});
+
+$(document).ready(function () {
+    $('#id_comparativo_model').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un comparativo',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection(repo) {
+    var maxLength = 80; // Límite de caracteres
+    var text = repo.text || repo.id;
+    
+    if (text.length > maxLength) {
+        text = text.substring(0, maxLength) + '...';
+    }
+    
+    return text;
+}
+</script>
+
+{% endblock %}

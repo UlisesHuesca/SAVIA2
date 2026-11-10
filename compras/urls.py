@@ -8,11 +8,6 @@ urlpatterns = [
     path('compras/requisiciones_autorizadas', views.requisiciones_autorizadas, name='requisicion-autorizada'), #Aqui dof
     path('compras/requis/<int:pk>/devolver/', views.requis_devolver, name='requis_devolver'),
     path('compras/oc/<int:pk>/', views.oc_modal, name='oc'), #Aquí dof
-    #path('reporte_compras', views.generar_reporte, name='reporte_compras'),
-    #path('verificar_estado/', views.verificar_estado, name='verificar_estado'),
-    #path('clear_task_id/', views.clear_task_id, name='clear_task_id'),
-    #path('verificar_estado_producto/', views.verificar_estado_productos, name='verificar_estado_producto'),
-    #path('clear_task_id_producto/', views.clear_task_id_productos, name='clear_task_id_producto'),
     path('update_oc/', views.update_oc, name='update-oc'),
     path('compras/matriz_compras/', views.matriz_oc, name='matriz-compras'), #Matriz compras
     path('compras/upload_facturas/<int:pk>/', views.upload_facturas, name='upload-facturas'),
@@ -61,9 +56,10 @@ urlpatterns = [
     path("compras/<int:compra_id>/pdf/", views.ver_oc_pdf, name="ver_oc_pdf"),
     path("compras/catalogo/", views.catalogo_precios, name="catalogo-precios"),
     path("compras/catalogo/<int:producto_id>/precios/", views.producto_precios_detalle, name="producto-precios-detalle"),
+    
+    #VORDTEC
+    path("preevaluaciones/<int:pk>/", views.preevaluaciones, name="preevaluaciones"),
     path('preevaluacion/<int:pk>/',views.preevaluacion,name='preevaluacion'),
     ]
 
-#if settings.DEBUG:
-#    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_URL)
-#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_URL)
+

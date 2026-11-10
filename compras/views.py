@@ -14,30 +14,29 @@ from django.core.mail import EmailMessage, BadHeaderError
 from django.core.exceptions import ObjectDoesNotExist
 from smtplib import SMTPException
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
 
-
-#from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
 from utils.email_theme import obtener_tema_correo
-from dashboard.models import Inventario, Activo
-from solicitudes.filters import InventoryFilter
-from requisiciones.models import Requis, ArticulosRequisitados
-from user.models import Profile
-from tesoreria.models import Pago, Facturas
-from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
+
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter, ComparativoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Comparativo, Item_Comparativo, Proveedor, Preevaluacion
 from .forms import (CompraForm, ArticuloCompradoForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, 
                     Compra_ComentarioGerForm, RequisDevolucionForm, PreevaluacionForm)
+
+from user.models import Profile
+from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
+from dashboard.models import Inventario, Activo
+from solicitudes.filters import InventoryFilter
+from requisiciones.models import Requis, ArticulosRequisitados
+from requisiciones.views import get_image_base64
 from requisiciones.forms import Articulo_Cancelado_Form
 from requisiciones.filters import RequisFilter
+from tesoreria.models import Pago, Facturas
 from tesoreria.forms import Facturas_Form
-from requisiciones.views import get_image_base64
 
-import pytz
+
 import socket
 
 import json
@@ -795,6 +794,76 @@ def mostrar_comparativo(request, pk):
         }
 
     return render(request, 'compras/mostrar_comparativo.html',context)
+
+# VORDTEC
+@perfil_seleccionado_required
+def preevaluaciones(request, pk):
+
+    proveedor = get_object_or_404(Proveedor, pk=pk)
+
+    evaluaciones = (Preevaluacion.objects.filter(nombre=proveedor)
+        .select_related(
+            "nombre",
+            "tipo_evaluacion",
+            "creado_por",
+            "creado_por__staff",
+            "comparativo_model"
+        )
+        .order_by("-creado_at", "-id")
+    )
+
+    paginator = Paginator(evaluaciones, 15)
+    pagina = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "proveedor": proveedor,
+        "preevaluaciones": pagina,
+        "proveedores_list": pagina,
+    }
+
+    return render(request, "compras/preevaluaciones.html", context)
+
+# VORDTEC
+@perfil_seleccionado_required
+def preevaluacion(request, pk):
+
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = get_object_or_404(Profile, id=pk_profile)
+    proveedor = get_object_or_404(Proveedor,id=pk)
+
+    # Recuperar evaluación pendiente
+    preevaluacion = (Preevaluacion.objects.filter(nombre=proveedor,completo=False).order_by('-id').first())
+
+    # Evitamos crear registros durante una petición GET
+    if request.method == 'POST':
+
+        form = PreevaluacionForm(request.POST, instance=preevaluacion)
+
+        if form.is_valid():
+
+            evaluacion = form.save(commit=False)
+
+            evaluacion.nombre = proveedor
+            evaluacion.creado_por = usuario
+            evaluacion.completo = True
+            evaluacion.modified_at = timezone.now()
+
+            evaluacion.save()
+
+            messages.success(request, 'Has creado la preevaluación con éxito.')
+
+            return redirect('dashboard-proveedores')
+
+    else:
+
+        form = PreevaluacionForm(instance=preevaluacion)
+
+    context = {
+        'proveedor': proveedor,
+        'form': form,
+    }
+
+    return render(request,'compras/preevaluacion.html',context)
 
 
 @perfil_seleccionado_required
@@ -6987,48 +7056,3 @@ def debida_diligencia_create(request):
     })
 
 
-@perfil_seleccionado_required
-def preevaluacion(request, pk):
-
-    pk_profile = request.session.get('selected_profile_id')
-
-    usuario = get_object_or_404(Profile, id=pk_profile)
-
-    proveedor = get_object_or_404(Proveedor,id=pk)
-
-    # Recuperar evaluación pendiente
-    preevaluacion = (Preevaluacion.objects.filter(nombre=proveedor,completo=False).order_by('-id').first())
-
-    # Evitamos crear registros durante una petición GET
-    if request.method == 'POST':
-
-        form = PreevaluacionForm(request.POST, instance=preevaluacion)
-
-        if form.is_valid():
-
-            evaluacion = form.save(commit=False)
-
-            evaluacion.nombre = proveedor
-            evaluacion.creado_por = usuario
-            evaluacion.completo = True
-            evaluacion.modified_at = timezone.now()
-
-            evaluacion.save()
-
-            messages.success(
-                request,
-                'Has creado la preevaluación con éxito.'
-            )
-
-            return redirect('dashboard-proveedores')
-
-    else:
-
-        form = PreevaluacionForm(instance=preevaluacion)
-
-    context = {
-        'proveedor': proveedor,
-        'form': form,
-    }
-
-    return render(request,'compras/preevaluacion.html',context)
