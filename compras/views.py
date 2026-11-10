@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse, Http404
 from django.views.decorators.cache import cache_page
 from django.db import transaction
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField, OuterRef, Subquery, DateTimeField
@@ -24,6 +24,7 @@ from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloComprad
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Comparativo, Item_Comparativo, Proveedor, Preevaluacion
 from .forms import (CompraForm, ArticuloCompradoForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, 
                     Compra_ComentarioGerForm, RequisDevolucionForm, PreevaluacionForm)
+from .preevaluaciones_pdf import (generar_preevaluacion_pdf, generar_preevaluacion_inicial_pdf,)
 
 from user.models import Profile
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
@@ -864,6 +865,35 @@ def preevaluacion(request, pk):
     }
 
     return render(request,'compras/preevaluacion.html',context)
+
+
+
+@perfil_seleccionado_required
+def preevaluacion_pdf(request, pk):
+
+    preevaluacion = get_object_or_404(
+        Preevaluacion.objects.select_related(
+            'nombre',
+            'tipo_evaluacion',
+            'creado_por__staff',
+            'comparativo_model',
+        ),
+        pk=pk,
+        completo=True,
+    )
+
+    tipo = preevaluacion.tipo_evaluacion.nombre if preevaluacion.tipo_evaluacion else None
+
+    if tipo == 'Inicial':
+        buffer = generar_preevaluacion_inicial_pdf(preevaluacion)
+
+    elif tipo == 'Simplificada':
+        buffer = generar_preevaluacion_pdf(preevaluacion)
+
+    else:
+        raise Http404("Tipo de preevaluación no reconocido.")
+
+    return FileResponse(buffer, as_attachment=False, filename=f'Preevaluacion_{preevaluacion.pk}.pdf', content_type='application/pdf')
 
 
 @perfil_seleccionado_required

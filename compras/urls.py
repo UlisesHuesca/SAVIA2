@@ -60,6 +60,7 @@ urlpatterns = [
     #VORDTEC
     path("preevaluaciones/<int:pk>/", views.preevaluaciones, name="preevaluaciones"),
     path('preevaluacion/<int:pk>/',views.preevaluacion,name='preevaluacion'),
+    path('preevaluacion/pdf/<int:pk>/',views.preevaluacion_pdf, name='preevaluacion-pdf'),
     ]
 
 
