@@ -223,8 +223,9 @@
                     <td>
                         <div class="sv-actions">
                             {% if activo %}
+
                             <a class="sv-btn sv-btn-info sv-btn-icon"
-                               href="{% url 'articulos-entrada-activos' compra.id %}"
+                               href="{% url 'articulos-entrada-activos' compra.id %}?origen=activo"
                                title="Registrar entrada" aria-label="Registrar entrada">
                                 <i class="fa-solid fa-box-archive"></i>
                             </a>
@@ -249,7 +250,7 @@
                             </a>
                             {% endif %}
                             <a class="sv-btn sv-btn-success sv-btn-icon"
-                               href="{% url 'productos' compra.id %}"
+                               href="{% url 'productos' compra.id %}?origen={{origen}}"
                                title="Ver productos" aria-label="Ver productos">
                                 <i class="fa-solid fa-box-open"></i>
                             </a>

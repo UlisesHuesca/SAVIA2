@@ -94,6 +94,7 @@ def pendientes_entrada(request):
         'compras':compras,
         'myfilter':myfilter,
         'compras_list':compras_list,
+        'origen':'entrada',
         }
 
     return render(request, 'entradas/pendientes_entrada.html', context)
@@ -217,6 +218,7 @@ def entrada_activos(request):
         'myfilter':myfilter,
         'compras_list':compras_list,
         'activo': True,
+        'origen':'activo',
         }
 
     return render(request, 'entradas/pendientes_entrada.html', context)
@@ -1389,10 +1391,11 @@ def matriz_reportes_calidad(request):
 
 @perfil_seleccionado_required
 def productos(request, pk):
+    
     compra = Compra.objects.get(id=pk)
     articulos_comprados = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False)
     origen = request.GET.get('origen', 'entrada')
-
+    print(origen)
     # Se utiliza una lista controlada de rutas.
     # No se redirige directamente a un valor recibido por GET.
     rutas_regreso = {
@@ -1404,6 +1407,10 @@ def productos(request, pk):
             'url': reverse('entrada-servicios'),
             'texto': 'Regresar a servicios',
         },
+        'activo':{
+            'url': reverse('entrada-activos'),
+            'texto': 'Regresar a activos',
+        }
     }
 
     configuracion_regreso = rutas_regreso.get(
