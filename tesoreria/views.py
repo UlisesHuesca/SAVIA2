@@ -2377,6 +2377,8 @@ def control_documentos(request):
                 elif tipo_documento == "viaticos":
                     pagos = pagos.filter(viatico__isnull=False)
 
+            pagos = pagos.filter(control_documentos = True)
+
             return descargar_documentos_pagos(pagos)
         
         elif 'btnDescargar' in request.POST:
