@@ -3174,7 +3174,7 @@ def generar_archivo_zip(facturas, compra):
     return in_memory_zip, zip_filename
 
 @perfil_seleccionado_required
-@tipo_usuario_requerido('compras','proveedor_externo')
+@tipo_usuario_requerido('compras','proveedor_externo','activos')
 def matriz_facturas_nomodal(request, pk):
     #print('estoy en matriz_facturas_nomodal')
     pk_perfil = request.session.get('selected_profile_id')
