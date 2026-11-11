@@ -75,10 +75,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!modalElement) return;
 
-    const previewTitle = document.getElementById("evidenciaPreviewTitle");
-    const previewFrame = document.getElementById("evidenciaPreviewFrame");
-    const previewImage = document.getElementById("evidenciaPreviewImage");
-    const previewLoading = document.getElementById("evidenciaPreviewLoading");
+    const previewTitle = modalElement.querySelector("#evidenciaPreviewTitle");
+    const previewFrame = modalElement.querySelector("#evidenciaPreviewFrame");
+    const previewImage = modalElement.querySelector("#evidenciaPreviewImage");
+    const previewLoading = modalElement.querySelector("#evidenciaPreviewLoading");
 
     if (!previewFrame || !previewImage) return;
 
