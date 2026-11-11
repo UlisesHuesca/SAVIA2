@@ -3532,7 +3532,7 @@ def render_requisicion_pdf_view(request, pk):
         c.setFillColor(color_estado)
         c.setFont("Helvetica-Bold", 14)
 
-        c.drawString(370, 670, estado)
+        c.drawString(340, 670, estado)
 
         c.setFillColor(black)
 
