@@ -1648,1874 +1648,6 @@ def back_oc(request, pk):
 
     return render(request,'compras/back_oc.html', context)
 
-
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('oc_superintendencia','oc_gerencia')
-def autorizar_oc1(request, pk):
-    pk_perfil = request.session.get('selected_profile_id') 
-    usuario = Profile.objects.get(id = pk_perfil)
-   
-    compra = Compra.objects.get(id = pk)
-    productos = ArticuloComprado.objects.filter(oc=pk)
-    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
-    form = Compra_ComentarioForm()
-
-    if compra.costo_fletes == None:
-        costo_fletes = 0
-    #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
-    #Escenario con dólares
-    if compra.tipo_de_cambio:
-        costo_oc = compra.costo_oc * compra.tipo_de_cambio
-        if compra.costo_fletes:
-            costo_fletes = compra.costo_fletes * compra.tipo_de_cambio
-        else:
-            costo_fletes = 0
-    #Escenario con pesos
-    else:
-        costo_oc = compra.costo_oc
-        if compra.costo_fletes:
-            costo_fletes = compra.costo_fletes
-        else:
-            costo_fletes = 0
-    costo_total = costo_fletes + costo_oc
-    resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
-    try:
-        porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
-    except ZeroDivisionError:
-        porcentaje = "0"
-
-
-    if request.method == 'POST':
-        form = Compra_ComentarioForm(request.POST, instance=compra)
-        if form.is_valid():
-            compra = form.save(commit = False)
-            compra.autorizado1 = True
-            compra.oc_autorizada_por = usuario
-            compra.autorizado_at = datetime.now()
-            campos_actualizados = [
-                'autorizado1',
-                'oc_autorizada_por',
-                'autorizado_at',
-            ]
-
-            #compra.autorizado_hora1 = datetime.now().time()
-            if (usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL")):
-                compra.autorizado2 = True
-                compra.oc_autorizada_por2 = usuario
-                compra.autorizado_at_2 = datetime.now()
-                campos_actualizados.extend([
-                    'autorizado2',
-                    'oc_autorizada_por2',
-                    'autorizado_at_2',
-                ])
-
-            if usuario.distritos.nombre == "Yerod":
-                compra.para_pago = True
-                campos_actualizados.extend(['para_pago'])
-            compra.save(update_fields=campos_actualizados)
-            archivo_oc = attach_oc_pdf(request, compra.id)
-            pdf_antisoborno = attach_antisoborno_pdf(request)
-            pdf_privacidad = attach_aviso_privacidad_pdf(request)
-            pdf_etica = attach_codigo_etica_pdf(request)
-            pdf_politica_proveedor = attach_politica_proveedor(request)
-            static_path = settings.STATIC_ROOT
-            static_path = settings.STATIC_ROOT
-
-            es_savia_negro = bool(compra.req and compra.req.orden and compra.req.orden.distrito and compra.req.orden.distrito.nombre.strip().upper() == "Yerod")
-
-            contexto_base = obtener_tema_correo(static_path, es_savia_negro,)
-
-            nombre_solicitante = (f"{compra.req.orden.staff.staff.staff.first_name} " f"{compra.req.orden.staff.staff.staff.last_name}")
-
-            nombre_creador = (f"{compra.creada_por.staff.staff.first_name} " f"{compra.creada_por.staff.staff.last_name}")
-
-            if compra.oc_autorizada_por:
-                nombre_autorizador = (f"{compra.oc_autorizada_por.staff.staff.first_name} " f"{compra.oc_autorizada_por.staff.staff.last_name}")
-            else:
-                nombre_autorizador = "No disponible"
-
-            contexto_base.update({
-                "compra": compra,
-                "nombre_solicitante": nombre_solicitante,
-                "nombre_creador": nombre_creador,
-                "nombre_autorizador": nombre_autorizador,
-            })
-
-            es_autorizacion_final = (usuario.tipo.subdirector or (usuario.tipo.oc_gerencia and usuario.distritos.nombre == "BRASIL"))
-
-            if es_autorizacion_final:
-                contexto_correo = contexto_base.copy()
-
-                contexto_correo["siguiente_paso"] = ("programación del pago por parte de Tesorería.")
-
-                html_message = render_to_string("emails/compras/compra_autorizada.html", contexto_correo,)
-
-                if compra.cond_de_pago.nombre == "CREDITO":
-                    contexto_proveedor = contexto_base.copy()
-
-                    contexto_proveedor.update({
-                        "contacto_proveedor": (
-                            compra.proveedor.contacto
-                            or "representante del proveedor"
-                        ),
-                        "nombre_proveedor": compra.proveedor.nombre,
-                        "productos_criticos": productos_criticos,
-                    })
-
-                    html_message2 = render_to_string(
-                        "emails/compras/orden_compra_asignada.html",
-                        contexto_proveedor,
-                    )
-
-                    try:
-                        email = EmailMessage(
-                            f"Compra Autorizada {compra.folio}|SAVIA",
-                            body=html_message2,
-                            from_email=settings.DEFAULT_FROM_EMAIL,
-                            to=[compra.creada_por.staff.staff.email,compra.proveedor.email,],
-                            headers={"Content-Type": "text/html",},
-                        )
-                        email.content_subtype = "html"
-                        email.attach(f"OC_folio_{compra.folio}.pdf",archivo_oc,"application/pdf",)
-                        email.attach("Politica_antisoborno.pdf",pdf_antisoborno,"application/pdf",)
-                        email.attach("Aviso_de_privacidad.pdf", pdf_privacidad,"application/pdf",)
-                        email.attach("Codigo_de_etica.pdf", pdf_etica,"application/pdf",)
-                        email.attach("Politica_proveedor.pdf",pdf_politica_proveedor,"application/pdf",)
-
-                        for articulo in productos:
-                            producto = (articulo.producto.producto.articulos.producto.producto)
-
-                            if not producto.critico:
-                                continue
-
-                            try:
-                                requerimientos = (producto.producto_calidad.requerimientos_calidad.all())
-                            except ObjectDoesNotExist:
-                                requerimientos = []
-
-                            contador = 1
-
-                            for requerimiento in requerimientos:
-                                if not requerimiento.url:
-                                    continue
-
-                                archivo_path = requerimiento.url.path
-
-                                extension = os.path.splitext(
-                                    archivo_path
-                                )[1]
-
-                                nombre_archivo = (f"{producto.codigo}_"f"requerimiento_{contador}"f"{extension}")
-
-                                with open(archivo_path,"rb",) as archivo:
-                                    email.attach(nombre_archivo,archivo.read(),)
-
-                                contador += 1
-
-                        email.send()
-
-                    except (BadHeaderError, SMTPException, socket.gaierror,OSError,) as error:
-                        error_message = (
-                            "El correo dirigido al proveedor no fue "
-                            f"enviado debido a un error: {error}"
-                        )
-
-                else:
-                    try:
-                        email = EmailMessage(f"OC Autorizada Gerencia {compra.folio}|"f"RQ: {compra.req.folio} |"f"Sol: {compra.req.orden.folio}",
-                            body=html_message,
-                            from_email=settings.DEFAULT_FROM_EMAIL,
-                            to=[compra.creada_por.staff.staff.email,],
-                            headers={
-                                "Content-Type": "text/html",
-                            },
-                        )
-
-                        email.content_subtype = "html"
-                        email.send()
-
-                        messages.success(request,f"{usuario.staff.staff.first_name} "f"has autorizado la compra {compra.folio}",)
-
-                    except (BadHeaderError,SMTPException,socket.gaierror,) as error:
-                        error_message = (
-                            f"{usuario.staff.staff.first_name} "
-                            f"has autorizado la compra {compra.folio}, "
-                            "pero el correo de notificación no fue "
-                            f"enviado debido a un error: {error}"
-                        )
-
-                        messages.success(request, error_message,)
-
-                    return redirect("autorizacion-oc1")
-
-            else:
-                contexto_correo = contexto_base.copy()
-
-                contexto_correo["siguiente_paso"] = (
-                    "autorización de la orden de compra por "
-                    "Gerencia de Distrito."
-                )
-
-                html_message = render_to_string(
-                    "emails/compras/compra_autorizada.html",
-                    contexto_correo,
-                )
-
-            try:
-                email = EmailMessage(
-                    f"OC Autorizada {compra.folio}|"
-                    f"RQ: {compra.req.folio} |"
-                    f"Sol: {compra.req.orden.folio}",
-                    body=html_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[
-                        compra.req.orden.staff.staff.staff.email,
-                    ],
-                    headers={
-                        "Content-Type": "text/html",
-                    },
-                )
-
-                email.content_subtype = "html"
-                email.send()
-
-            except (
-                BadHeaderError,
-                SMTPException,
-                socket.gaierror,
-            ) as error:
-                error_message = (
-                    "La orden de compra fue autorizada, pero el "
-                    "correo de notificación no fue enviado debido "
-                    f"a un error: {error}"
-                )
-
-                messages.success(
-                    request,
-                    error_message,
-                )
-            
-          
-                
-            return redirect('autorizacion-oc1')
-
-        else:
-            messages.error(request, 'Error al autorizar la compra. Por favor, verifica los datos ingresados.')
-    context={
-        'form':form,
-        'compra':compra,
-        'costo_oc':costo_oc,
-        'productos':productos,
-        'tipo_cambio':compra.tipo_de_cambio,
-        'resta':resta,
-        'porcentaje':porcentaje,
-        'costo_total':costo_total,
-        }
-    
-
-    return render(request, 'compras/autorizar_oc1.html',context)
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('oc_gerencia')
-def autorizacion_oc2(request):
-    pk_perfil = request.session.get('selected_profile_id') 
-    usuario = Profile.objects.get(id = pk_perfil)
-    if usuario.tipo.oc_gerencia == True:
-        compras = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None, req__orden__distrito = usuario.distritos).order_by('-folio')
-    else:
-        compras = Compra.objects.none()
-    
-    myfilter = CompraFilter(request.GET, queryset=compras)
-    compras = myfilter.qs
-    
-    context= {
-        'compras':compras,
-        'myfilter':myfilter,
-        }
-
-    return render(request, 'compras/autorizacion_oc2.html',context)
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('oc_gerencia')
-def autorizar_oc2(request, pk):
-    pk_perfil = request.session.get('selected_profile_id') 
-    usuario = Profile.objects.get(id = pk_perfil)
-    compra = Compra.objects.get(id = pk)
-    productos = ArticuloComprado.objects.filter(oc=pk)
-    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
-    if compra.costo_fletes == None:
-        costo_fletes = 0
-    #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
-
-    if compra.tipo_de_cambio:
-        costo_oc = compra.costo_oc * compra.tipo_de_cambio
-        if compra.costo_fletes:
-            costo_fletes = compra.costo_fletes * compra.tipo_de_cambio
-        else:
-            costo_fletes = 0
-    #Escenario con pesos
-    else:
-        costo_oc = compra.costo_oc
-        if compra.costo_fletes:
-            costo_fletes = compra.costo_fletes
-        else:
-            costo_fletes = 0
-
-    costo_total = costo_fletes + costo_oc
-    resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
-    
-    presupuesto = compra.req.orden.subproyecto.presupuesto or 0 
-    
-    if presupuesto > 0:
-        porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
-    else:
-        porcentaje = "0%"  # Default value when presupuesto is 0 or invalid
-
-    form = Compra_ComentarioGerForm()
-
-   
-    if request.method == 'POST':
-        form = Compra_ComentarioGerForm(request.POST, instance=compra)
-        if form.is_valid():
-            compra = form.save(commit = False)
-            compra.autorizado2 = True
-            compra.oc_autorizada_por2 = usuario
-            compra.autorizado_at_2 = datetime.now()
-            #compra.autorizado_hora2 = datetime.now().time()
-            compra.save()
-            static_path = settings.STATIC_ROOT
-            static_path = settings.STATIC_ROOT
-
-            es_savia_negro = bool(
-                compra.req
-                and compra.req.orden
-                and compra.req.orden.distrito
-                and compra.req.orden.distrito.nombre.strip().upper() == "Yerod"
-            )
-
-            contexto_base = obtener_tema_correo(
-                static_path,
-                es_savia_negro,
-            )
-
-            autorizador_segunda = (
-                compra.oc_autorizada_por2
-                or usuario
-            )
-
-            nombre_autorizador = (
-                f"{autorizador_segunda.staff.staff.first_name} "
-                f"{autorizador_segunda.staff.staff.last_name}"
-            )
-
-            nombre_creador = (
-                f"{compra.creada_por.staff.staff.first_name} "
-                f"{compra.creada_por.staff.staff.last_name}"
-            )
-
-            contexto_base.update({
-                "compra": compra,
-                "nombre_autorizador": nombre_autorizador,
-                "nombre_creador": nombre_creador,
-            })
-
-            es_compra_credito = (
-                compra.cond_de_pago
-                and compra.cond_de_pago.nombre.strip().upper() == "CREDITO"
-            )
-
-            if es_compra_credito:
-                archivo_oc = attach_oc_pdf(
-                    request,
-                    compra.id,
-                )
-
-                pdf_antisoborno = attach_antisoborno_pdf(
-                    request
-                )
-
-                pdf_privacidad = attach_aviso_privacidad_pdf(
-                    request
-                )
-
-                pdf_etica = attach_codigo_etica_pdf(
-                    request
-                )
-
-                pdf_politica_proveedor = (
-                    attach_politica_proveedor(request)
-                )
-
-                avisar_calidad_oc(compra)
-
-                contexto_proveedor = contexto_base.copy()
-
-                contexto_proveedor.update({
-                    "contacto_proveedor": (
-                        compra.proveedor.contacto
-                        or "representante del proveedor"
-                    ),
-                    "nombre_proveedor": compra.proveedor.nombre,
-                    "productos_criticos": productos_criticos,
-                })
-
-                html_message2 = render_to_string(
-                    "emails/compras/orden_compra_asignada.html",
-                    contexto_proveedor,
-                )
-
-                try:
-                    email_proveedor = EmailMessage(
-                        f"Compra Autorizada {compra.folio}|SAVIA",
-                        body=html_message2,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[
-                            compra.creada_por.staff.staff.email,
-                            compra.proveedor.email,
-                        ],
-                        headers={
-                            "Content-Type": "text/html",
-                        },
-                    )
-
-                    email_proveedor.content_subtype = "html"
-
-                    # 1. Orden de compra
-                    email_proveedor.attach(
-                        f"folio_{compra.folio}.pdf",
-                        archivo_oc,
-                        "application/pdf",
-                    )
-
-                    # 2. Política antisoborno
-                    email_proveedor.attach(
-                        "Politica_antisoborno.pdf",
-                        pdf_antisoborno,
-                        "application/pdf",
-                    )
-
-                    # 3. Aviso de privacidad
-                    email_proveedor.attach(
-                        "Aviso_de_privacidad.pdf",
-                        pdf_privacidad,
-                        "application/pdf",
-                    )
-
-                    # 4. Código de ética
-                    email_proveedor.attach(
-                        "Codigo_de_etica.pdf",
-                        pdf_etica,
-                        "application/pdf",
-                    )
-
-                    # 5. Política de proveedor
-                    email_proveedor.attach(
-                        "Politica_proveedor.pdf",
-                        pdf_politica_proveedor,
-                        "application/pdf",
-                    )
-
-                    email_proveedor.send()
-
-                except (
-                    BadHeaderError,
-                    SMTPException,
-                    socket.gaierror,
-                    OSError,
-                ) as error:
-                    messages.warning(
-                        request,
-                        "La orden fue autorizada, pero el correo "
-                        "dirigido al proveedor no fue enviado: "
-                        f"{error}",
-                    )
-
-                siguiente_paso = (
-                    "recepción de la orden de compra por parte de "
-                    "Almacén, debido a que se trata de una compra "
-                    "a crédito."
-                )
-
-            else:
-                siguiente_paso = (
-                    "programación del pago por parte de Tesorería."
-                )
-
-            # Correo interno dirigido a quien creó la orden de compra
-            contexto_interno = contexto_base.copy()
-
-            contexto_interno.update({
-                "nombre_solicitante": nombre_creador,
-                "siguiente_paso": siguiente_paso,
-            })
-
-            html_message = render_to_string(
-                "emails/compras/compra_autorizada.html",
-                contexto_interno,
-            )
-
-            try:
-                email_interno = EmailMessage(
-                    f"OC Autorizada Gerencia {compra.folio}|"
-                    f"RQ: {compra.req.folio} |"
-                    f"Sol: {compra.req.orden.folio}",
-                    body=html_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[
-                        compra.creada_por.staff.staff.email,
-                    ],
-                    headers={
-                        "Content-Type": "text/html",
-                                       },
-                )
-
-                email_interno.content_subtype = "html"
-                email_interno.send()
-
-                messages.success(
-                    request,
-                    f"{usuario.staff.staff.first_name} ha autorizado "
-                    f"la compra {compra.folio}",
-                )
-
-            except (
-                BadHeaderError,
-                SMTPException,
-                socket.gaierror,
-            ) as error:
-                messages.warning(
-                    request,
-                    f"{usuario.staff.staff.first_name} ha autorizado "
-                    f"la compra {compra.folio}, pero el correo interno "
-                    f"no fue enviado debido a un error: {error}",
-                )
-
-            return redirect("autorizacion-oc2")
-          
-
-    context={
-        'form':form,
-        'compra':compra,
-        'costo_oc':costo_oc,
-        'productos':productos,
-        'tipo_cambio':compra.tipo_de_cambio,
-        'resta':resta,
-        'porcentaje':porcentaje,
-        'costo_total':costo_total,
-        }
-
-    return render(request, 'compras/autorizar_oc2.html',context)
-
-def avisar_calidad_oc(compra):
-    """
-    Envía un correo al encargado de calidad del distrito avisando que
-    una OC próxima a llegar contiene productos críticos.
-    """
-    distrito = compra.req.orden.proyecto.distrito  # ajusta según tu modelo
-     # 🔍 Buscar artículos de la OC cuyos productos sean críticos
-    productos_criticos = ArticuloComprado.objects.filter(
-        oc=compra,
-        producto__producto__articulos__producto__producto__critico=True
-    ).distinct()
-    if not productos_criticos.exists():
-        return  # nada que avisar
-
-    encargados = Profile.objects.filter(tipo__calidad=True, distritos=distrito)
-    if not encargados.exists():
-        return
-
-    # Tabla con los productos críticos
-    articulos_html = """
-        <table width="100%" border="1" cellspacing="0" cellpadding="5"
-               style="border-collapse: collapse; font-size: 14px;">
-            <tr style="background-color: #eee;">
-                <th>Nombre</th>
-                <th>Código</th>
-                <th>Unidad</th>
-                <th>Familia</th>
-                <th>Subfamilia</th>
-                <th>Cantidad</th>
-                <th>Requerimientos</th>
-                <th>Comentarios</th>
-            </tr>
-    """
-    for art in productos_criticos:
-        p = art.producto.producto.articulos.producto.producto
-        requerimientos = []
-        if hasattr(p, 'producto_calidad'):  # Verifica que tenga criticidad cargada
-            requerimientos = p.producto_calidad.requerimientos_calidad.all()
-
-        if requerimientos:
-            first_row = True
-            for req in requerimientos:
-                articulos_html += f"""
-                    <tr>
-                        <td>{p.nombre if first_row else ''}</td>
-                        <td>{p.codigo if first_row else ''}</td>
-                        <td>{p.unidad.nombre if first_row and p.unidad else ''}</td>
-                        <td>{p.familia.nombre if first_row and p.familia else ''}</td>
-                        <td>{p.subfamilia.nombre if first_row and p.subfamilia else ''}</td>
-                        <td>{art.cantidad if first_row else ''}</td>
-                        <td>{req.requerimiento.nombre}</td>
-                        <td>{req.comentarios or ''}</td>
-                    </tr>
-                """
-                first_row = False
-        else:
-            articulos_html += f"""
-                <tr>
-                    <td>{p.nombre}</td>
-                    <td>{p.codigo}</td>
-                    <td>{p.unidad.nombre if p.unidad else ''}</td>
-                    <td>{p.familia.nombre if p.familia else ''}</td>
-                    <td>{p.subfamilia.nombre if p.subfamilia else ''}</td>
-                    <td>{art.cantidad}</td>
-                    <td>Sin requerimientos</td>
-                    <td>Sin comentarios</td>
-                </tr>
-            """
-
-    articulos_html += "</table>"
-
-    # Cargar imágenes base64
-    static_path = settings.STATIC_ROOT
-    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-    image_base64 = get_image_base64(img_path)
-    logo_v_base64 = get_image_base64(img_path2)
-
-    # HTML del correo
-    html_message = f"""
-    <html>
-        <head><meta charset="UTF-8"></head>
-        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                <tr>
-                    <td align="center">
-                        <table width="600px" cellspacing="0" cellpadding="0"
-                               style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                            <tr>
-                                <td align="center">
-                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 20px;">
-                                    <p style="font-size: 16px; text-align: justify;">
-                                        Estimado(a) encargado(a) de calidad del distrito <strong>{distrito.nombre}</strong>,
-                                    </p>
-                                    <p style="font-size: 16px; text-align: justify;">
-                                        Está próxima a llegar a almacén una <strong>Orden de Compra</strong> que contiene el siguiente o siguientes productos marcados como <strong>críticos</strong>:
-                                    </p>
-                                    <p style="font-size: 15px; text-align: justify;">
-                                        Folio de OC: <strong>{compra.folio}</strong><br>
-                                        Proveedor: <strong>{compra.proveedor.nombre}</strong>
-                                    </p>
-                                    {articulos_html}
-                                    <p style="text-align: center; margin: 20px 0;">
-                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                    </p>
-                                    <p style="font-size: 13px; color: #777; text-align: justify;">
-                                        Este mensaje ha sido generado automáticamente por <strong>SAVIA 2.0</strong>.
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-    </html>
-    """
-
-    # Enviar correo a cada encargado de calidad
-    for encargado in encargados:
-        try:
-            email = EmailMessage(
-                subject=f"OC próxima a llegar con productos críticos | {compra.folio}",
-                body=html_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[encargado.staff.staff.email],
-                headers={'Content-Type': 'text/html'}
-            )
-            email.content_subtype = "html"  # importante para interpretar como HTML
-            email.send()
-        except Exception as e:
-            print(f"Error enviando correo a {encargado.staff.staff.email}: {e}")
-
-def handle_uploaded_file(file, model_instance, field_name):
-    setattr(model_instance, field_name, file)
-    model_instance.save()
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('comprador')
-def comparativos(request):
-    #creada_por 
-    pk_perfil = request.session.get('selected_profile_id') 
-    usuario = Profile.objects.get(id = pk_perfil)
-    comparativos = Comparativo.objects.filter(completo = True, creada_por__distritos = usuario.distritos).order_by('-id')
-    form = UploadFileForm()
-    error_messages = {}
-
-    myfilter = ComparativoFilter(request.GET, queryset=comparativos)
-    comparativos = myfilter.qs
-
-     #Set up pagination
-    p = Paginator(comparativos, 50)
-    page = request.GET.get('page')
-    comparativos_list = p.get_page(page)
-
-    if request.method == "POST":
-        mi_id = request.POST.get('mi_id')
-        form = UploadFileForm(request.POST or None, request.FILES or None)
-        files = request.FILES.getlist('file')
-        cont = 0
-        if form.is_valid():
-            comparativo = comparativos.get(id=mi_id)
-            for f in files:
-                if cont == 0:
-                    comparativo.cotizacion = files[cont]
-                elif cont == 1:
-                    comparativo.cotizacion2 = files[cont]
-                elif cont == 2:
-                    comparativo.cotizacion3 = files[cont]
-                elif cont == 3:
-                    comparativo.cotizacion4 = files[cont]
-                elif cont == 4:
-                    comparativo.cotizacion5 = files[cont]
-                cont+=1
-                comparativo.save()
-            messages.success(request,f'Entrando {files}')
-            return redirect('comparativos')
-        else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
-
-    
-    context= {
-        'myfilter':myfilter,
-        'error_messages': error_messages,
-        'comparativos':comparativos,
-        'form':form,
-        'comparativos_list':comparativos_list,
-    }
-    return render(request,'compras/comparativos.html', context)
-
-
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('comprador')
-def crear_comparativo(request):
-    #start_time = time.time()  # Tiempo de inicio
-    pk_perfil = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk_perfil)
-    #usuario = colaborador_sel.get(id = pk_perfil)
-    
-    comparativo, created = (Comparativo.objects.filter(Q(nombre__isnull=True) | Q(nombre='')).get_or_create(completo= False, creada_por=usuario))
-    productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
-    error_messages = {}
-    form_item = Item_ComparativoForm()
-    form = ComparativoForm()
-
-    if request.method =='POST':
-        #print("POST KEYS:", list(request.POST.keys()))
-        #print("POST btn_creacion?", "btn_creacion" in request.POST)
-        #print("POST btn_producto?", "btn_producto" in request.POST)
-        if "btn_creacion" in request.POST:
-            form = ComparativoForm(request.POST, request.FILES, instance=comparativo)
-            if form.is_valid():
-                comparativo = form.save(commit=False)
-                comparativo.completo = True
-                comparativo.created_at = date.today()
-                comparativo.creada_por =  usuario
-                comparativo.save()
-                messages.success(request, f'El comparativo {comparativo.id} ha sido creado')
-                return redirect('comparativos')
-            else:
-                for field, errors in form.errors.items():
-                    error_messages[field] = errors.as_text()
-                messages.error(request,f'No está validando {error_messages}' )
-        elif "btn_producto" in request.POST:
-            articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
-            form_item = Item_ComparativoForm(request.POST, instance= articulo)
-            if form_item.is_valid():
-                articulo = form_item.save(commit=False)
-                articulo.completo = True
-                articulo.save()
-                messages.success(request, 'Se ha agregado el artículo exitosamente')
-                return redirect('crear_comparativo')
-            else:
-                for field, errors in form_item.errors.items():
-                    error_messages[field] = errors.as_text()
-                messages.error(request,f'No está validando {error_messages}' )
-        else:
-            post_data = request.POST
-            post_items = [f"{key}: {value}" for key, value in post_data.items()]
-            post_content = ", ".join(post_items)
-            messages.error(request, f"Datos recibidos en POST: {post_content}")
-        
-
-    #end_time = time.time()  # Tiempo de finalización
-    #total_time = end_time - start_time  # Tiempo total de ejecución    
-    
-    context= {
-        'error_messages': error_messages,
-        'productos':productos,
-        'form':form,
-        'form_item':form_item,
-        'comparativo':comparativo,
-        #'total_time': total_time,
-    }
-
-    return render(request, 'compras/crear_comparativo.html', context)
-
-
-
-#Ajax Select2
-def carga_proveedor(request):
-    pk_perfil = request.session.get('selected_profile_id')
-    colaborador_sel = Profile.objects.all()
-    usuario = colaborador_sel.get(id = pk_perfil)
-    term = request.GET.get('term')
-    proveedores = Proveedor_direcciones.objects.filter(
-         Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO") | Q(estatus__nombre="PREAPROBAD"),
-         distrito = usuario.distritos, 
-         nombre__razon_social__icontains = term
-    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda__nombre', 'banco__nombre',)
-    data = list(proveedores)
-    print(proveedores)
-    return JsonResponse(data, safe=False)
-
-def carga_proveedor_comparativo(request):
-    pk_perfil = request.session.get('selected_profile_id')
-    colaborador_sel = Profile.objects.all()
-    usuario = colaborador_sel.get(id = pk_perfil)
-    term = request.GET.get('term')
-    proveedores = Proveedor.objects.filter(razon_social__icontains = term).values('id','razon_social')
-    data = list(proveedores)
-        
-    return JsonResponse(data, safe=False)
-    
-#Ajax Select2
-def carga_productos(request):
-    pk_perfil = request.session.get('selected_profile_id')
-    colaborador_sel = Profile.objects.all()
-    usuario = colaborador_sel.get(id = pk_perfil)
-    term = request.GET.get('term')
-    articulos = Inventario.objects.filter(distrito = usuario.distritos, producto__nombre__icontains = term).values('id','producto__nombre')
-    
-    #data = [{"id": item['id'], "text": item['producto__nombre']} for item in articulos]
-    data = list(articulos)
-        
-    return JsonResponse(data, safe=False)
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
-def editar_comparativo(request, pk):
-    pk_perfil = request.session.get('selected_profile_id')
-   
-    usuario = Profile.objects.get(id = pk_perfil)
-    
-    comparativo = Comparativo.objects.get(id=pk)
-
-    productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
-    proveedores = Proveedor_direcciones.objects.all()
-    articulos = Inventario.objects.all()
-    form_item = Item_ComparativoForm()
-    form = ComparativoForm(instance = comparativo)
-
-    if request.method =='POST':
-        if "btn_agregar" in request.POST:
-            print(request.POST)
-            form = ComparativoForm(request.POST, request.FILES, instance = comparativo)
-            #abrev= usuario.distrito.abreviado
-            if form.is_valid():
-                comparativo = form.save(commit=False)
-                comparativo.completo = True
-                comparativo.created_at = date.today()
-                #comparativo.created_at_time = datetime.now().time()
-                comparativo.creado_por =  usuario
-                comparativo.save()
-
-                # Ahora sigues trabajando sobre el nuevo comparativo
-                messages.success(request, f'Ha sido creado un nuevo comparativo: {comparativo.id}')
-                return redirect('comparativos')
-        if "btn_producto" in request.POST:
-            articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
-            #producto_id = request.POST.get('producto')
-            #producto = Inventario.objects.filter(id = producto_id)
-            #form_item.fields['producto'].queryset = producto
-            form_item = Item_ComparativoForm(request.POST, instance=articulo)
-            if form_item.is_valid():
-                articulo = form_item.save(commit=False)
-                articulo.completo = True
-                articulo.save()
-                messages.success(request, 'Se ha agregado el artículo exitosamente')
-                return redirect('editar-comparativo')
-        
-    context= {
-        'productos':productos,
-        'form':form,
-        'form_item':form_item,
-        'articulos':articulos,
-        'comparativo':comparativo,
-        'proveedores':proveedores,
-    }
-
-    return render(request, 'compras/actualizar_comparativo.html', context)
-
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
-def clonar_comparativo(request, pk):
-    usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
-    with transaction.atomic():
-        original = Comparativo.objects.get(id=pk)
-
-        # 1. Crear nuevo comparativo basado en el original
-        nuevo = Comparativo.objects.get(pk=pk)
-        nuevo.pk = None  # esto crea un nuevo registro
-        nuevo.completo = False
-        nuevo.created_at = date.today()
-        nuevo.creada_por = usuario
-        nuevo.save()
-
-        # 2. Copiar productos del original
-        productos_originales = Item_Comparativo.objects.filter(
-            comparativo=original,
-            completo=True
-        )
-
-    for item in productos_originales:
-        item.pk = None
-        item.comparativo = nuevo
-        item.completo = True
-        item.save()
-
-    messages.success(
-        request,
-        f"El comparativo {nuevo.id} fue creado basado en el comparativo {original.id}"
-    )
-
-    # 3. Redirigir al nuevo
-    return redirect('editar-comparativo', pk=nuevo.id)
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
-def articulos_comparativo(request, pk):
-    articulos = Item_Comparativo.objects.filter(comparativo__id = pk , completo = True)
-
-    context= {
-        'articulos':articulos,
-    }
-    return render(request, 'compras/articulos_comparativo.html', context)
-
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
-def articulo_comparativo_delete(request, pk):
-   
-    articulo = Item_Comparativo.objects.get(id=pk)
-    comparativo = articulo.comparativo.id
-   
-    messages.success(request,f'El articulo ha sido eliminado exitosamente')
-    articulo.delete()
-
-    return redirect('crear_comparativo')
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
-def historico_articulos_compras(request):
-    registros = ArticuloComprado.history.all()
-
-    myfilter = HistoricalArticuloCompradoFilter(request.GET, queryset=registros)
-    registros = myfilter.qs
-
-    #Set up pagination
-    p = Paginator(registros, 30)
-    page = request.GET.get('page')
-    registros_list = p.get_page(page)
-
-    context = {
-        'registros_list':registros_list,
-        'myfilter':myfilter,
-        }
-
-    return render(request,'compras/historico_articulos_comprados.html',context)
-
-
-@perfil_seleccionado_required
-@tipo_usuario_requerido('compras')
-def historico_compras(request):
-    registros = Compra.history.all()
-    myfilter = HistoricalCompraFilter(request.GET, queryset=registros)
-    registros = myfilter.qs
-    #Set up pagination
-    p = Paginator(registros, 30)
-    page = request.GET.get('page')
-    registros_list = p.get_page(page)
-    
-    context = {
-        'registros_list':registros_list,
-        'myfilter':myfilter,
-        }
-    return render(request,'compras/historico_compras.html',context)
-
-@perfil_seleccionado_required
-def descargar_pdf(request, pk):
-    compra = get_object_or_404(Compra, id=pk)
-    if compra.req.orden.distrito.nombre != "BRASIL":
-        buf = generar_pdf_nueva(compra)  # tu función
-    else:
-        buf = generar_pdf_brasil(compra)
-    return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
-
-@xframe_options_sameorigin
-def ver_oc_pdf(request, compra_id):
-    compra = get_object_or_404(Compra, pk=compra_id)
-    if compra.req.orden.distrito.nombre != "BRASIL":
-        buf = generar_pdf_nueva(compra)  # tu función
-    else:
-        buf = generar_pdf_brasil(compra)  # función específica para Brasil
-    filename = f"OC_{compra.folio}.pdf"
-
-    resp = FileResponse(buf, content_type="application/pdf")
-    resp["Content-Disposition"] = f'inline; filename="{filename}"'
-    return resp
-
-
-def attach_oc_pdf(request, pk):
-    compra = get_object_or_404(Compra, pk=pk)
-    if compra.req.orden.distrito.nombre != "BRASIL":
-        buf = generar_pdf_nueva(compra)  # tu función
-    else:
-        buf = generar_pdf_brasil(compra) 
-  
-
-    return buf.getvalue()
-
-def attach_politica_proveedor(request):
-    #compra = get_object_or_404(Compra, id=pk)
-    buf = generar_politica_proveedores()
-
-    return buf.getvalue()
-
-@perfil_seleccionado_required
-def descargar_antisoborno_pdf(request):
-    buf = generar_politica_antisoborno()
-    return FileResponse(buf, as_attachment=True, filename='Política_Antisoborno' +'.pdf')
-
-@perfil_seleccionado_required
-def descargar_proveedores_pdf(request):
-    buf = generar_politica_proveedores()
-    return FileResponse(buf, as_attachment=True, filename='Política_Proveedores' +'.pdf')
-
-def attach_antisoborno_pdf(request):
-    buf = generar_politica_antisoborno()
-    return buf.getvalue()
-
-@perfil_seleccionado_required
-def descargar_codigo_etica_pdf(request):
-    buf = generar_codigo_etica()
-    return FileResponse(buf, as_attachment=True, filename='Código_ética' +'.pdf')
-
-def attach_codigo_etica_pdf(request):
-    buf = generar_codigo_etica()
-    return buf.getvalue()
-
-@perfil_seleccionado_required
-def descargar_aviso_privacidad_pdf(request):
-    buf = generar_aviso_privacidad()
-    return FileResponse(buf, as_attachment=True, filename='Aviso_de_Privacidad' +'.pdf')
-
-def attach_aviso_privacidad_pdf(request):
-    buf = generar_aviso_privacidad()
-    return buf.getvalue()
-
-
-
-def wrap_text_to_fit(text, width, style):
-    # Determinar la anchura máxima del texto que cabe en la columna
-    words = text.split()
-    lines = []
-    line = []
-
-    for word in words:
-        # Comprueba si agregar la palabra excedería la longitud de la línea
-        test_line = ' '.join(line + [word])
-        if stringWidth(test_line, style.fontName, style.fontSize) > width:
-            # Si la línea es demasiado larga, guarda la línea actual y comienza una nueva
-            lines.append(' '.join(line))
-            line = [word]
-        else:
-            line.append(word)
-    lines.append(' '.join(line))  # Añade la última línea
-    wrapped_text = '\n'.join(lines)
-    return wrapped_text
-
-
-def generar_pdf_brasil(compra):
-    #Configuration of the PDF object
-    buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=letter)
-    productos = ArticuloComprado.objects.filter(oc=compra.id)
-
-    # Define estilos para las tablas (antes de usarlos)
-    styles = getSampleStyleSheet()
-    style_desc = styles["BodyText"]
-    style_desc.wordWrap = 'CJK'
-    style_desc.fontSize = 6
-    style_desc.leading = 8
-
-    # Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
-    rojo = Color(0.59375, 0.05859375, 0.05859375)
-    gris_legal = Color(0.5, 0.5, 0.5)
-
-    #def dibujar_pie_pagina_legal(c_obj):
-    #    texto_legal = """Este documento está protegido por derechos de autor y contiene información confidencial, ya sea patentable o no, propiedad de Vordcab. 
-    #    Se deposita en los destinatarios de este documento restricciones de confidencialidad, con el entendimiento de que ni esta documentación ni la información 
-    #    contenida allí se reproducirán, utilizarán ni divulgarán, en forma total ni parcial para ningún otro propósito que no sea el autorizado específicamente por Vordcab."""
-        
-    #    style_legal = ParagraphStyle('legal_footer', parent=styles['Normal'], fontSize=5, textColor=gris_legal, alignment=TA_CENTER, leading=6)
-    #    p_legal = Paragraph(texto_legal, style_legal)
-        
-    #    w_legal, h_legal = p_legal.wrap(550, 50)
-    #    p_legal.drawOn(c_obj, 30, 20) # Posición en el pie de página
-
-     # 3. Crear función interna dibujar_encabezado(canvas_obj) para reutilizar.
-    def dibujar_encabezado(c_obj):
-        c_obj.setFillColor(black)
-        c_obj.setLineWidth(.2)
-        
-        # Definir anchos de columnas basados en porcentajes del ancho total (530 puntos)
-        total_width = 530
-        col_widths = [
-            total_width * 0.15,  # Logo / Num Doc
-            total_width * 0.20,  # Clasificación
-            total_width * 0.10,  # Nivel
-            total_width * 0.10,  # Idioma
-            total_width * 0.10,  # Revisión
-            total_width * 0.15,  # Fecha Emisión
-            total_width * 0.20   # Fecha Rev
-        ]
-
-        # Preparar contenido de la tabla
-        # Fila 1: Logo, Título, Aprobación
-        
-        # Logo
-        logo_path = 'static/images/logo_vordcab.jpg'
-        if os.path.exists(logo_path):
-            logo_img = Image(logo_path, width=2*cm, height=1*cm)
-            logo_img.hAlign = 'CENTER'
-        else:
-            logo_img = "LOGO"
-
-
-    # Estilos de párrafo para celdas
-        #style_center = ParagraphStyle('header_center', parent=styles['Normal'], alignment=TA_CENTER, fontSize=8)
-        style_center_bold = ParagraphStyle('header_center_bold', parent=styles['Normal'], alignment=TA_CENTER, fontSize=14, fontName='Helvetica-Bold', textColor=white)
-        style_center_small = ParagraphStyle(
-            'header_center_small', 
-            parent=styles['Normal'], 
-            alignment=TA_CENTER, 
-            fontSize=7,
-            leading = 8.4
-            )
-        
-        # Contenido Fila 1
-        titulo = Paragraph("Ordem de Compra", style_center_bold)
-        prep_por = Paragraph("Preparado por:<br/>SUPT. DE ADQUISICIONES", style_center_small)
-        aprobacion = Paragraph("Aprovação:<br/>SUBD RM", style_center_small)
-        
-        # Contenido Fila 2
-        num_doc = Paragraph("Número de documento<br/>SEOV-ADQ-N4-01.02", style_center_small)
-        clasif = Paragraph("Clasificação do documento<br/>Não Controlado", style_center_small)
-        nivel = Paragraph("Nivel do documento<br/>N5", style_center_small)
-        idioma = Paragraph("Lingua<br/>Portuguesa", style_center_small)
-        revision = Paragraph("Revisão No.<br/>001", style_center_small)
-        fecha_em = Paragraph("Data de Emissão<br/>13/11/2017", style_center_small)
-        fecha_rev = Paragraph("Data da última revisão<br/>21/11/2025", style_center_small)
-
-        data_header = [
-            [logo_img, titulo, '', '', '', prep_por, aprobacion],
-            [num_doc, clasif, nivel, idioma, revision, fecha_em, fecha_rev]
-        ]
-
-        # Crear tabla
-        t_header = Table(data_header, colWidths=col_widths)
-        
-        # Estilos de la tabla
-        t_header.setStyle(TableStyle([
-            # Fila 1
-            ('SPAN', (1, 0), (4, 0)),  # Título ocupa cols 1-4 (indices 0-based: 1,2,3,4 -> 5 columnas?? No, cols 2,3,4,5 son indices 1,2,3,4)
-            # Espera, indices: 0=Logo, 1=Col2, 2=Col3, 3=Col4, 4=Col5, 5=Col6, 6=Col7
-            # Title spans cols 2,3,4,5 -> Indices 1, 2, 3, 4. So SPAN (1,0) to (4,0).
-            
-            ('BACKGROUND', (1, 0), (4, 0), prussian_blue), # Fondo azul para título
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 0.5, black),
-            
-            # Ajustes específicos
-            ('LEFTPADDING', (0, 0), (-1, -1), 2),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-        ]))
-
-        # Dibujar tabla
-        w, h = t_header.wrap(total_width, 100) # Altura aproximada
-        t_header.drawOn(c_obj, 30, 710) # Posición Y ajustada (bajado de 730 a 710)
-
-    
-
-
-
-
-    # Dibujar encabezado en la primera página
-    dibujar_encabezado(c)
-
-
-     # --- SECCIÓN PRINCIPAL DEL FORMULARIO ---
-    # Definir las posiciones para las columnas principales con mejor distribución
-    col_inicio = 30
-    col_total_ancho = 530  # Aproximadamente el ancho disponible
-
-    # Dividir en 2 columnas principales (cada panel de la fila 1 y 2)
-    col_ancho = col_total_ancho // 2 - 5  # Aproximadamente 260 cada una con separación
-    col_separacion = 10
-
-    # Coordenadas Y para las secciones principales
-    seccion_inicio = 700
-    seccion_alto = 100  # Ajustable según contenido
-
-    # Fila 1: ORDEN DE COMPRA Y DATOS DEL PROVEEDOR
-    # Panel Izquierdo: Orden de compra (Etiqueta centrada en fondo azul oscuro)
-    panel_inicio_y = seccion_inicio - 25
-    c.setFillColor(prussian_blue)
-    c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
-    c.setFillColor(white)
-    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño para evitar superposición
-    c.drawCentredString(col_inicio + col_ancho//2, panel_inicio_y + 7, 'Dados do documento')
-
-    # Contenido del panel izquierdo
-    c.setFillColor(black)
-    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño para más campos
-    campo_y = panel_inicio_y - 8  # Espaciado reducido
-    c.drawString(col_inicio + 3, campo_y, 'N° da compra:')
-    c.drawString(col_inicio + 80,campo_y, str(compra.folio))
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Data de emissão:')
-    c.drawString(col_inicio + 80, campo_y, compra.created_at.strftime("%d/%m/%Y"))
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Processo:')
-    c.drawString(col_inicio + 80, campo_y, compra.tipo_contratacion.abreviatura if compra.tipo_contratacion else 'NA')
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Elaborado por:')
-    c.drawString(col_inicio + 80, campo_y,compra.creada_por.staff.staff.first_name + ' ' +compra.creada_por.staff.staff.last_name)
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Aut. Sptte.:')
-    if compra.autorizado1:
-        c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por.staff.staff.first_name + ' ' +compra.oc_autorizada_por.staff.staff.last_name)
-    else:
-        c.setFont('Helvetica-Bold', 10)
-        c.drawString(col_inicio + 80, campo_y, 'NÃO AUTORIZADA')
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Aut. Gerente:')
-    if compra.autorizado2:
-        c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por2.staff.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.staff.last_name)
-    else:
-        c.setFont('Helvetica-Bold', 10)
-        c.drawString(col_inicio + 80, campo_y, 'NÃO AUTORIZADA')
-    
-    # Panel Derecho: Datos del proveedor (Etiqueta centrada en fondo azul oscuro)
-    panel_derecho_inicio = col_inicio + col_ancho + col_separacion
-    c.setFillColor(prussian_blue)
-    c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
-    c.setFillColor(white)
-    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
-    c.drawCentredString(panel_derecho_inicio + col_ancho//2, panel_inicio_y + 7, 'Dados do fornecedor')
-
-    # Contenido del panel derecho
-    c.setFillColor(black)
-    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
-    campo_y = panel_inicio_y - 8
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Nome:')
-   
-    
-    codigo_banco = compra.proveedor.convenio if compra.proveedor.convenio else 'NA' #El convenio es el Código de Banco para Brasil
-    agencia_banco = compra.proveedor.swift if compra.proveedor.swift else 'NA' #El swift es la Sucursal para Brasil 
-    chave_pix = compra.proveedor.spid if compra.proveedor.spid else 'NA' #El spid es la Chave Pix para Brasil
-
-
-    c.drawString(panel_derecho_inicio + 60,campo_y, compra.proveedor.nombre.razon_social)
-    c.drawString(panel_derecho_inicio + 60,campo_y- 24, compra.proveedor.banco.nombre)
-    c.drawString(panel_derecho_inicio + 200,campo_y-24, codigo_banco) 
-    c.drawString(panel_derecho_inicio + 60,campo_y-36, agencia_banco) 
-    
-    c.drawString(panel_derecho_inicio + 60,campo_y- 48, compra.proveedor.cuenta)
-    
-    c.drawString(panel_derecho_inicio + 60,campo_y- 60, chave_pix)
-    c.drawString(panel_derecho_inicio + 60,campo_y-72, compra.proveedor.contacto)
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'CNPJ/CPF:')
-    c.drawString(panel_derecho_inicio + 60, campo_y, compra.proveedor.nombre.rfc)
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Banco:')
-    c.drawString(panel_derecho_inicio + 150, campo_y, 'Cód. banco:') 
-    
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Agência:')
-    
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Conta:')
-   
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Chave Pix:')
-
-   
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Contato:') # <<< este campo no se renderiza
-   
-    # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
-    # Reducir el espacio entre filas para acercar las secciones
-   
-    espacio_entre_filas = 110  # Aumentado de 80 a 110 para evitar solapamiento con 'Aut. Gerente'
-    panel_inicio_y = panel_inicio_y - espacio_entre_filas  # Mayor separación
-
-    # Panel Izquierdo: Trazabilidad/ Datos de requisición (Etiqueta centrada en fondo azul oscuro)
-    c.setFillColor(prussian_blue)
-    c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
-    c.setFillColor(white)
-    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
-    c.drawCentredString(col_inicio + col_ancho//2, panel_inicio_y + 7, 'Rastreabilidade/ Dados da requisição')
-
-    # Contenido del panel izquierdo
-    c.setFillColor(black)
-    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
-    campo_y = panel_inicio_y - 8
-    c.drawString(col_inicio + 3, campo_y, 'Projeto:')
-    c.drawString(col_inicio + 80, campo_y,compra.req.orden.proyecto.nombre)
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Subprojeto:')
-    c.drawString(col_inicio + 80, campo_y,compra.req.orden.subproyecto.nombre)
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'N° da requisição:')
-    c.drawString(col_inicio + 80, campo_y, str(compra.req.folio))
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Data de autorização:')
-    c.drawString(col_inicio + 80, campo_y,compra.req.orden.approved_at.strftime("%d/%m/%Y"))
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Solicitado por:')
-    c.drawString(col_inicio + 80, campo_y, compra.req.orden.staff.staff.staff.first_name +' '+ compra.req.orden.staff.staff.staff.last_name)
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Ativo Fixo:')
-    try:
-        if compra.req.orden.activo is not None:
-            eco_unidad = compra.req.orden.activo.eco_unidad
-            descripcion = compra.req.orden.activo.descripcion
-            serie = compra.req.orden.activo.serie
-            c.drawString(col_inicio + 80, campo_y, f'{eco_unidad} {descripcion}')
-            c.drawString(col_inicio + 80, campo_y - 12, serie)
-        else:
-            c.drawString(col_inicio + 80, campo_y, 'NA')
-            c.drawString(col_inicio + 80, campo_y - 12 , 'NA')
-    except Activo.DoesNotExist:
-        c.drawString(col_inicio + 80, campo_y, 'NA')
-        c.drawString(col_inicio + 80, campo_y - 12, 'NA')
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'N° de serie:')
-    # c.line(col_inicio + 55, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
-
-    campo_y -= 12
-    c.drawString(col_inicio + 3, campo_y, 'Comentários:')
-    #Comentario de solicitud
-    if compra.comentario_solicitud:
-        paragraph_content = compra.req.orden.comentario
-    else:
-        paragraph_content = "NA" 
-
-    styles = getSampleStyleSheet()
-    base = styles["Normal"]
-    base.fontSize = 6
-    #styleN.color = prussian_blue
-    base.leading = 6  # Espaciado entre líneas
-    styleN = ParagraphStyle('Justicado', parent=base, alignment=TA_JUSTIFY)
-
-    if paragraph_content is None:
-        paragraph_content = " "    
-    conditional_paragraph = Paragraph(paragraph_content, styleN)
-
-    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
-    # Asumiendo 'width' y 'height' ya están definidos como antes
-    new_frame = Frame(col_inicio + 74, campo_y - 185 , 200, 200, id='conditional_frame')
-    
-    # Agregar el párrafo al nuevo marco
-    new_frame.addFromList([conditional_paragraph], c)
-
-    # Panel Derecho: Términos y condiciones (Etiqueta centrada en fondo azul oscuro)
-    c.setFillColor(prussian_blue)
-    c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
-    c.setFillColor(white)
-    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
-    c.drawCentredString(panel_derecho_inicio + col_ancho//2, panel_inicio_y + 7, 'Termos e condições')
-
-    # Contenido del panel derecho
-    c.setFillColor(black)
-    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
-    campo_y = panel_inicio_y - 8
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Condição de pagamento:')
-    c.drawString(panel_derecho_inicio + 90, campo_y, compra.cond_de_pago.nombre)
-    
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Prazo de Crédito:')
-    if compra.dias_de_credito:
-        c.drawString(panel_derecho_inicio + 90, campo_y, str(compra.dias_de_credito) + ' días')
-    else:
-        c.drawString(panel_derecho_inicio + 90, campo_y, 'Não Especificado')
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Moeda:')
-    c.drawString(panel_derecho_inicio + 90, campo_y,compra.moneda.nombre)
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Finalidade da nota fiscal:')
-    c.drawString(panel_derecho_inicio + 90, campo_y, compra.uso_del_cfdi.descripcion)
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Enviar factura para:')
-    c.drawString(panel_derecho_inicio + 90,campo_y, compra.creada_por.staff.staff.email)
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Prazo de entrega:')
-    if compra.dias_de_entrega:
-        c.drawString(panel_derecho_inicio + 90, campo_y, str(compra.dias_de_entrega)+' '+'días hábiles')
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Local de entrega:')
-    # c.line(panel_derecho_inicio + 70, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
-
-    campo_y -= 12
-    c.drawString(panel_derecho_inicio + 3, campo_y, 'Comentários:')
-    if compra.opciones_condiciones is not None:
-        options_conditions = compra.opciones_condiciones
-    else:
-        options_conditions = "NA"
-
-    if options_conditions is None:
-        options_conditions = " "    
-    conditional_paragraph = Paragraph(options_conditions, styleN)
-
-    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
-    # Asumiendo 'width' y 'height' ya están definidos como antes
-    new_frame = Frame(col_inicio + 340, campo_y - 185 , 200, 200, id='conditional_frame')
-    
-    # Agregar el párrafo al nuevo marco
-    new_frame.addFromList([conditional_paragraph], c)
-
-    # --- SECCIÓN NOTA IMPORTANTE ---
-    # Se calcula la posición Y para la nota, debajo de los paneles de contenido.
-    nota_y_inicio = panel_inicio_y - 100 # Ajustado para bajar la nota
-    
-    # Define styles for the note
-    style_nota_titulo = ParagraphStyle('nota_titulo', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, leading=10)
-    style_nota_cuerpo = ParagraphStyle('nota_cuerpo', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_JUSTIFY)
-
-    # Create Paragraphs for the note
-    #titulo_texto = "<strong>IMPORTANTE: Requisito de Acceso para Personal Externo</strong>"
-    #cuerpo_texto = """
-    #Todo pessoal externo (fornecedores, contratados e subcontratatados) só poderá ingressar para realizar
-    #trabalhos o serviços nas instalações do GRUPO VORDCAB apresentando sua constancia de vigencia
-    #de derechos del IMSS con una antigüedad no mayor a 30 días naturales a partir de su fecha de emisión.
-    #"""
-    #titulo_p = Paragraph(titulo_texto, style_nota_titulo)
-    #cuerpo_p = Paragraph(cuerpo_texto, style_nota_cuerpo)
-
-    # Create and draw a Frame to hold the note content with a border
-    #elementos_nota = [titulo_p, Spacer(1, 4), cuerpo_p]
-    #nota_frame = Frame(col_inicio, nota_y_inicio - 65, col_total_ancho, 45, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=0)
-    #nota_frame.addFromList(elementos_nota, c)
-
-
-    # NUEVA SECCIÓN: TABLA DE PARTIDAS - Colocada debajo de la nota
-    # La posición de la tabla ahora se calcula en relación a la nueva posición de la nota.
-
-    tabla_inicio_y = nota_y_inicio - 74  # Ajusta este valor según el espacio que desees entre la nota y la tabla
-
-    # Sección de la tabla de productos
-    data = []
-    data.append(['''Código''', '''Produto / Serviço''', '''Marca''','''Qtd.''', '''Uni.''', '''P. U.''', '''Valor total'''])
-
-    for producto in productos:
-        importe = producto.precio_unitario * producto.cantidad
-        importe_rounded = round(importe, 4)
-        descripcion = Paragraph(producto.producto.producto.articulos.producto.producto.nombre, style_desc)
-        marca = producto.marca if producto.marca else 'NR' 
-        precio_unitario = f"{producto.precio_unitario:,.4f}"
-        data.append([
-            producto.producto.producto.articulos.producto.producto.codigo,
-            descripcion,
-            marca,
-            producto.cantidad,
-            producto.producto.producto.articulos.producto.producto.unidad,
-            precio_unitario,
-            f"{importe_rounded:,.2f}"
-        ])
-
-    c.setFillColor(black)
-    c.setFont('Helvetica', 8)
-
-    # Dibujar la tabla de productos en la nueva ubicación
-    table = Table(data, colWidths=[1.2 * cm, 8 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 2.5 * cm])
-    table_style = TableStyle([  # estilos de la tabla
-        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
-        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        # ENCABEZADO
-        ('TEXTCOLOR', (0, 0), (-1, 0), white),
-        ('FONTSIZE', (0, 0), (-1, 0), 8),
-        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
-        # CUERPO
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('FONTSIZE', (0, 1), (-1, -1), 6),
-    ])
-    
-    row_first_page = 14
-    rows_other_pages = 25
-    #table_y_first = 125   # ajusta 1 vez viendo el PDF
-    table_y_other = 680  # ajusta 1 vez viendo el PDF
-
-    
-    table.setStyle(table_style)
-    header = data[:1]
-    body = data[1:]
-
-     # --- PIE DE PÁGINA FIJO ---
-    footer_y = 120  # Posición Y fija para el inicio del pie de página
-
-
-    c.setLineWidth(1)
-    c.line(20, footer_y, 585, footer_y)  # Línea divisoria del pie de página
-
-    # Sección Izquierda: Total con letra
-    c.setFillColor(black)
-    c.setFont('Helvetica-Bold', 9)
-    c.drawString(30, footer_y - 20, 'Valor por extenso:')
-    
-    c.setFont('Helvetica', 8)
-    
-    def convertir_a_reales(valor):
-        partes = f"{valor:.2f}".split(".")
-        reales = num2words(int(partes[0]), lang='pt_BR')
-        centavos = num2words(int(partes[1]), lang='pt_BR')
-        return f"{reales} reais e {centavos} centavos"
-
-    total_en_letra = ""
-    if compra.moneda.nombre == "PESOS":
-        total_en_letra = num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN')
-    elif compra.moneda.nombre == "DOLARES":
-        total_en_letra = num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='USD')
-    elif compra.moneda.nombre == "REAIS":
-        total_en_letra = convertir_a_reales(compra.costo_plus_adicionales)
-    
-    # Usar Paragraph para el texto con ajuste de línea
-    style_letra = ParagraphStyle('total_letra', parent=styles['Normal'], fontSize=8, leading=10)
-    p_letra = Paragraph(total_en_letra.upper(), style_letra)
-    
-    # Dibujar el párrafo en un Frame para controlar el ancho
-    frame_letra = Frame(30, footer_y - 70, 350, 50, id='frame_letra', showBoundary=0)
-    frame_letra.addFromList([p_letra], c)
-
-    subtotal = compra.costo_oc - compra.costo_iva
-    # Sección Derecha: Totales numéricos
-    montos_align_x = 570
-
-    # Sub Total
-    c.setFont('Helvetica-Bold', 9)
-    c.drawRightString(montos_align_x - 80, footer_y - 20, 'Subtotal:')
-    c.setFont('Helvetica', 9)
-    c.drawRightString(montos_align_x, footer_y - 20, f"${subtotal:,.2f}")
-    # IVA
-    c.setFont('Helvetica-Bold', 9)
-    #c.drawRightString(montos_align_x - 80, footer_y - 30, 'IVA:')
-    #c.setFont('Helvetica', 9)
-    #c.drawRightString(montos_align_x, footer_y - 30, f"${compra.costo_iva:,.2f}")
-    #c.setFont('Helvetica-Bold', 9)
-    c.drawRightString(montos_align_x - 80, footer_y - 40,'Valor líquido:')
-    costo_oc =  format(float(compra.costo_oc), ',.2f')
-    c.drawRightString(montos_align_x, footer_y - 40,'$' + str(costo_oc))
-    
-    
-    importe_neto = compra.costo_oc
-    if compra.impuestos:
-        subtotal = subtotal #- compra.impuestos
-        c.setFillColor(black)
-        
-        #c.drawRightString(montos_align,170,'Impuestos Adicionales:')
-        c.setFont('Helvetica', 9)
-        costo_impuestos = format(float(compra.impuestos), ',.2f')
-        c.drawRightString(montos_align_x, footer_y -60, '$' + str(costo_impuestos))
-        c.setFont('Helvetica-Bold',9)
-        c.drawRightString(montos_align_x- 80, footer_y -60, 'Impostos:')
-        #importe_neto = importe_neto + compra.impuestos
-    if compra.impuestos and compra.retencion:
-        subtotal = subtotal #+ compra.retencion
-        costo_retencion = format(float(compra.retencion), ',.2f')
-        c.setFont('Helvetica', 9)
-        c.drawRightString(montos_align_x, footer_y -50, '$' + str(costo_retencion))
-        c.setFont('Helvetica-Bold',9)
-        c.drawRightString(montos_align_x - 80, footer_y -50, 'Retención:')
-    elif compra.retencion:
-        subtotal = subtotal #+ compra.retencion
-        costo_retencion = format(float(compra.retencion), ',.2f')
-        c.setFont('Helvetica', 9)
-        c.drawRightString(montos_align_x, footer_y - 50, '$' + str(costo_retencion))
-        c.setFont('Helvetica-Bold',9)
-        c.drawRightString(montos_align_x - 80, footer_y - 50, 'Retención:')
-        #importe_neto = importe_neto - compra.retencion
-   
-       
-   
-
-    if compra.costo_fletes:
-        importe_neto = importe_neto + compra.costo_fletes
-        c.setFont('Helvetica-Bold',9)
-        c.drawRightString(montos_align_x - 80,footer_y - 70,'Costo fletes:')
-        c.setFont('Helvetica', 9)
-        costo_fletes = format(float(compra.costo_fletes), ',.2f')
-        c.drawRightString(montos_align_x,footer_y - 70,'$' + str(costo_fletes))
-        #c.drawRightString(montos_align_x + 90,170,'$ ' + str(total))
-
-
-    # Total (resaltado en azul)
-    c.setFillColor(prussian_blue)
-    c.setFont('Helvetica-Bold', 11)
-    c.drawRightString(montos_align_x - 80, footer_y - 80, 'Valor Total:')
-    total =  format(float(compra.costo_plus_adicionales), ',.2f')
-    c.drawRightString(montos_align_x, footer_y - 80, str(total))
-
-    c.setFillColor(black)
-    width, height = letter
-
-    # Use the same style from earlier
-    styleN = getSampleStyleSheet()["BodyText"]
-    styleN.fontSize = 6
-    #dibujar_pie_pagina_legal(c)
-
-   
-
-   
-
-    #=============== Página 1: Solo las primeras 15 filas ==================
-    first_chunk = body[:row_first_page]
-    first_page_data = header + first_chunk
-
-    first_table = Table(first_page_data, colWidths=[1.2 * cm, 11 * cm, 2*cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-    first_table.setStyle(table_style)
-    first_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-    w, h = first_table.wrap(0, 0)     # h = altura real de esa tabla (con paragraphs)
-
-    table_top = tabla_inicio_y        # ESTE sí es tu "inicio" debajo de la nota
-    table_bottom = table_top - h      # convierto TOP -> BOTTOM
-
-    first_table.drawOn(c, 30, table_bottom)
-
-    remaining = body[row_first_page:]
-    #=============== Páginas siguientes: 25 filas por página ==================
-    while remaining:
-        c.showPage()
-
-        dibujar_encabezado(c)  # Redibujar el encabezado en cada nueva página
-        #dibujar_pie_pagina_legal(c)  # Agregar el pie de página legal en cada página
-
-        chunk = remaining[:rows_other_pages]
-        remaining = remaining[rows_other_pages:]
-
-
-        page_data = header + chunk
-        t = Table(page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-        t.setStyle(table_style)
-        w, h = t.wrap(0, 0)               # altura real de esta tabla
-        t.drawOn(c, 30, table_y_other - h)  # <-- AQUÍ está la corrección
-
-     # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
-    rows_cal = []   # solo filas con requerimientos
-
-    # (opcional) deduplicar por producto si la OC puede traer el mismo producto varias veces
-    vistos = set()
-
-    for ac in productos: 
-        try:
-            base_product = ac.producto.producto.articulos.producto.producto
-        except Exception:
-            continue
-        if not base_product:
-            continue
-
-        # (opcional) evita duplicados por Product
-        if getattr(base_product, 'id', None) in vistos:
-            continue
-        vistos.add(base_product.id)
-
-        # intenta tomar el OneToOne
-        try:
-            producto_calidad = base_product.producto_calidad
-        except:  # Using generic exception for mock data instead of Producto_Calidad.DoesNotExist
-            continue
-
-        if not producto_calidad:
-            continue
-
-        reqs = producto_calidad.requerimientos_calidad.select_related('requerimiento').all()
-        if not reqs:
-            continue
-
-        codigo = base_product.codigo
-        desc_par = Paragraph(base_product.nombre or '', style_desc)
-
-        for req in reqs:
-            req_nombre = req.requerimiento.nombre if req.requerimiento else ''
-            comentario = req.comentarios or ''
-            req_par = Paragraph(req_nombre or '', style_desc)
-            com_par = Paragraph(comentario or '', style_desc)
-            rows_cal.append([codigo, desc_par, req_par, com_par])
-     # Si no hay nada que mostrar, NO crear la hoja
-    
-    if rows_cal:
-    # Dibujar pie de página legal en la primera página
-    
-    
-       
-        c.showPage()
-        dibujar_encabezado(c) # encabezado hoja
-        c.setFont('Helvetica', 12)
-        c.setFillColor(prussian_blue)
-        c.rect(20, 650, 565, 24, fill=True, stroke=False)
-        c.setFillColor(white)
-        c.setFont('Helvetica-Bold', 13)
-        c.drawCentredString(300, 656, 'Requerimientos de Calidad por Producto')
-
-        data_cal = [['Código', 'Producto', 'Requerimiento Calidad', 'Comentario']]
-        data_cal.extend(rows_cal)
-
-        col_widths = [2*cm, 8.0*cm, 5*cm, 5.0*cm]
-        tabla_cal = Table(data_cal, colWidths=col_widths, hAlign='LEFT')
-        tabla_cal.setStyle(TableStyle([
-            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-            ('BOX',       (0,0), (-1,-1), 0.50, colors.black),
-            ('VALIGN',    (0,0), (-1,-1), 'MIDDLE'),
-            ('BACKGROUND',(0,0), (-1,0),  prussian_blue),
-            ('TEXTCOLOR', (0,0), (-1,0),  colors.white),
-            ('FONTSIZE',  (0,0), (-1,0),  9),
-            ('FONTSIZE',  (0,1), (-1,-1), 8),
-        ]))
-
-        tabla_cal.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        tabla_cal.drawOn(c, 20, 600 - min(520, len(data_cal)*16))
-    
-        #dibujar_pie_pagina_legal(c)
-
-    # Calcular la altura de la tabla para posicionarla adecuadamente
-    #table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-    
-
-    # Posicionar la tabla más abajo para evitar superposición
-    #table_y = tabla_inicio_y - (len(data) * 18)  # Ajustar la posición basado en el número de filas
-
-    # Asegurarse de que la tabla no se posicione demasiado abajo
-    #if table_y < 200:  # Si la tabla se va muy abajo, ajustar
-    #    table_y = 400 - (len(data) * 18)
-
-    #table.drawOn(c, 20, table_y)
-
-   
-
-    #c.showPage()
-    # ------------ FIN NUEVA HOJA ------------------------------------------------
-    # ------------ PRINCIPIO DE HOJA DE CONTRATO ---------------------------------
-    # Dibujar encabezado
-    #dibujar_encabezado(c)
-    
-    # Texto personalizado
-    #texto_personalizado = """
-    #<b>CONTRATO QUE REGULA LA RELACIÓN COMERCIAL, CONFORME A LA PRESENTE ORDEN DE COMPRA/SERVICIOS</b>
-
-    #<br/><br/>
-
-    #<b>PRIMERA. OBJETO.</b>
-
-    #____________ (“PROVEEDOR”), se obliga a entregar a GRUPO VORDCAB, S.A. DE C.V., (“VORDCAB”) los servicios, y/o productos, conforme a la presente orden de compra/servicio, en la forma, términos y condiciones establecidos en este documento, así como en los convenios, contratos o acuerdos comerciales, que se celebren posteriormente y que se encuentren relacionados entre las partes, por su propio derecho o a través de sus representantes en su caso, en los cuales se establecerán aquellas obligaciones y derechos que no se encuentren contemplados en la presente. 
-
-    #Para efectos del presente contrato, se entenderá por Orden de Compra o de Servicios, el documento emitido por VORDCAB y dirigido al “PROVEEDOR”, de forma escrita, impresa o por medios electrónicos, para requerir los servicios y/o productos que este último deberá entregar a “VORDCAB”, misma que contiene la cantidad, precio, fecha y lugar de entrega, condiciones de pago y otras condiciones de compra acordadas previamente por las partes mediante la cotización correspondiente, aceptando el “PROVEEDOR” dichas condiciones, mediante la firma por su propio derecho, o a través de sus representantes, comisionistas, delegados, encargados comerciales, gerentes o cualquier persona relacionada a la negociación, y que será vinculante jurídicamente y válido legítimamente para las partes, por lo que acepta el PRESTADOR de conformidad y manifiesta conocer el alcance del mismo. 
-
-    #El “PROVEEDOR” únicamente podrá prestar aquellos servicios que no estén contenidos dentro de una Orden de compra/servicios, cuando estos sean de flagrante necesidad para prestar los servicios requeridos, y estrictamente con previa autorización por escrito de “VORDCAB”.
-
-    #<b>SEGUNDA. FIRMA ELECTRÓNICA.</b>
-
-    #De acuerdo con la cláusula anterior, las Partes acuerdan que la presente orden de compra/servicios, y cualquier documento que se firme en relación con la misma, puede ser suscrito electrónicamente y el uso por una Parte de una Firma Electrónica será, para los efectos de validez, exigibilidad y admisibilidad, evidencia concluyente de la intención de esa Parte de estar legalmente obligada como si dicha firma hubiera sido escrita a mano.
-    
-    #<b>TERCERA. CONTRAPRESTACIÓN.</b>
-
-    #Las Partes acuerdan que la contraprestación que “VORDCAB” pagará al “PROVEEDOR” por la ejecución del Servicio o los productos solicitados en la presente orden de compra/servicios, de acuerdo con la cotización correspondiente, serán aquellas que se especifiquen en las mismas, más el impuesto al valor agregado correspondiente, así como cualquier otro impuesto aplicable (la “Contraprestación”) según el tipo de Servicio que se ejecute o producto que se entregue, o cualquier otra consideración establecida en la orden de compra o de servicio, por lo que el “PROVEEDOR” se obliga a entregar la factura cumpliendo todos los requisitos legales para tales efectos. Asimismo, se considera como contraprestación, cualquier cantidad erogada por “VORDCAB” para el cumplimiento de las obligaciones a cargo del “PROVEEDOR” derivadas del presente contrato, y que sean necesarias e indispensables para el cumplimiento de los Servicios o entrega de productos.
-
-    #<b>CUARTA. IMPUESTOS.</b>
-
-    #Cada una de las partes pagará los impuestos que le corresponden de conformidad con la legislación fiscal vigente. En caso de que el “PROVEEDOR” importe productos y/o mercancías provenientes del extranjero, este será el único responsable del pago en forma correcta de las tarifas y clasificaciones arancelarias, así como del cumplimiento de las disposiciones fiscales y aduaneras vigentes, entregando a “VORDCAB” toda aquella documentación relacionada. Asimismo, el “PROVEEDOR” deberá indicar en la factura que entregue a “VORDCAB”, el número de pedimento aduanal correspondiente, en su caso.
-
-    #<b>QUINTA. VIGENCIA.</b>
-
-    #Las partes convienen que la vigencia del presente contrato será por tiempo indefinido, a partir de la fecha de su firma, hasta concluir con la prestación de los servicios o la entrega de los productos, según corresponda, a entera satisfacción de “VORDCAB”. Asimismo, las partes podrán darlo por terminado previa notificación por escrito a la otra parte, con 30 (treinta) días de anticipación, siempre y cuando hayan sido cumplidas todas y cada una de sus obligaciones.
-
-    #<b>SEXTA. RESPONSABILIDADES.</b>
-
-    #Las partes acuerdan que el “PROVEEDOR” deberá indemnizar y sacar en paz y a salvo a “VORDCAB”, subsidiarias, filiales, partes relacionadas accionistas, empleados, delegados, comisionistas, y representantes, de cualquier contingencia legal que se suscite en virtud de la prestación de los servicios o entrega de productos, en términos de la presente orden de compra/servicios. Para todos los efectos de este contrato, el “PROVEEDOR” se considera como contratista independiente y como tal, no existe relación laboral alguna ni sustitución patronal entre “VORDCAB” y los empleados, trabajadores, o cualquier persona relacionada con el “PROVEEDOR”. 
-
-    #<b>SÉPTIMA. INFORMACIÓN CONFIDENCIAL.</b>
-
-    #El “PROVEEDOR” se obliga a no revelar o divulgar la información a la que haya tenido acceso derivado del presente, en virtud de ser considerada como confidencial. Para efectos de este contrato, se entenderá por información confidencial, toda aquella información verbal, escrita y gráfica, así como la documentación recibida u obtenida por cualquier medio, a partir de esta fecha o con anterioridad entre las partes, y la que se reciba u obtenga en el futuro.
-
-    #<b>OCTAVA. GARANTÍAS.</b>
-
-    #El “PROVEEDOR” garantiza los servicios y/o productos que entrega a “VORDCAB”, respecto de cualquier negligencia, defecto de fabricación, falla, o por cualquier caso que impida la utilización de los productos o que esté relacionado con el servicio, obligándose a reponer el mismo o producto que no cumpla con las características o la calidad requerida en favor de “VORDCAB”, y en su caso, indemnizar o restituir a “VORDCAB” cualquier gasto que haya erogado por dichas fallas en los servicios o productos, en un plazo que no deberá exceder de 10 (DIEZ) días naturales posteriores a la notificación que realice “VORDCAB” a el “PROVEEDOR”. 
-
-    #<b>DÉCIMA SEXTA. LEGISLACIÓN APLICABLE, JURISDICCIÓN Y COMPETENCIA.</b>
-
-    #Las partes convienen en que para todo lo no previsto por el presente contrato, se estará a lo dispuesto en el Código de Comercio y en el Código Civil vigente para el Estado de Veracruz, como disposiciones supletorias a la voluntad de las partes contratantes. Para cualquier disputa, necesidad de interpretación, controversia o reclamación que surja con relación a este contrato o a la violación del mismo, las partes se someten irrevocablemente a la jurisdicción y competencia de los tribunales del fuero común ubicados en la ciudad de Xalapa, Veracruz, renunciando expresamente a cualquier otro fuero que pudiera corresponderles por razón de su domicilio presente o futuro, o por cualquier otra causa.
-    #"""
-    
-    #style_personalizado = ParagraphStyle('personalizado', parent=styles['Normal'], fontSize=8, leading=12, alignment=TA_JUSTIFY)
-    #p_personalizado = Paragraph(texto_personalizado, style_personalizado)
-    
-    #w_pers, h_pers = p_personalizado.wrap(530, 600)
-    #p_personalizado.drawOn(c, 30, 680 - h_pers) # Posicionado debajo del encabezado
-    
-    # Dibujar pie de página legal
-    #dibujar_pie_pagina_legal(c)
-    
-    #c.showPage()
-    # ------------ FIN NUEVA HOJA ------------------------------------------------
-
-
-    c.save()
-    buf.seek(0)
-    return buf
-
-
 def generar_pdf_nueva(compra):
     #Configuration of the PDF object
     buf = io.BytesIO()
@@ -4840,8 +2972,1812 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
     return FileResponse(buf, as_attachment=False, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf', content_type='application/pdf')
 
 
+def generar_pdf_brasil(compra):
+    #Configuration of the PDF object
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    productos = ArticuloComprado.objects.filter(oc=compra.id)
+
+    # Define estilos para las tablas (antes de usarlos)
+    styles = getSampleStyleSheet()
+    style_desc = styles["BodyText"]
+    style_desc.wordWrap = 'CJK'
+    style_desc.fontSize = 6
+    style_desc.leading = 8
+
+    # Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    gris_legal = Color(0.5, 0.5, 0.5)
+
+    #def dibujar_pie_pagina_legal(c_obj):
+    #    texto_legal = """Este documento está protegido por derechos de autor y contiene información confidencial, ya sea patentable o no, propiedad de Vordcab. 
+    #    Se deposita en los destinatarios de este documento restricciones de confidencialidad, con el entendimiento de que ni esta documentación ni la información 
+    #    contenida allí se reproducirán, utilizarán ni divulgarán, en forma total ni parcial para ningún otro propósito que no sea el autorizado específicamente por Vordcab."""
+        
+    #    style_legal = ParagraphStyle('legal_footer', parent=styles['Normal'], fontSize=5, textColor=gris_legal, alignment=TA_CENTER, leading=6)
+    #    p_legal = Paragraph(texto_legal, style_legal)
+        
+    #    w_legal, h_legal = p_legal.wrap(550, 50)
+    #    p_legal.drawOn(c_obj, 30, 20) # Posición en el pie de página
+
+     # 3. Crear función interna dibujar_encabezado(canvas_obj) para reutilizar.
+    def dibujar_encabezado(c_obj):
+        c_obj.setFillColor(black)
+        c_obj.setLineWidth(.2)
+        
+        # Definir anchos de columnas basados en porcentajes del ancho total (530 puntos)
+        total_width = 530
+        col_widths = [
+            total_width * 0.15,  # Logo / Num Doc
+            total_width * 0.20,  # Clasificación
+            total_width * 0.10,  # Nivel
+            total_width * 0.10,  # Idioma
+            total_width * 0.10,  # Revisión
+            total_width * 0.15,  # Fecha Emisión
+            total_width * 0.20   # Fecha Rev
+        ]
+
+        # Preparar contenido de la tabla
+        # Fila 1: Logo, Título, Aprobación
+        
+        # Logo
+        logo_path = 'static/images/logo_vordcab.jpg'
+        if os.path.exists(logo_path):
+            logo_img = Image(logo_path, width=2*cm, height=1*cm)
+            logo_img.hAlign = 'CENTER'
+        else:
+            logo_img = "LOGO"
 
 
+    # Estilos de párrafo para celdas
+        #style_center = ParagraphStyle('header_center', parent=styles['Normal'], alignment=TA_CENTER, fontSize=8)
+        style_center_bold = ParagraphStyle('header_center_bold', parent=styles['Normal'], alignment=TA_CENTER, fontSize=14, fontName='Helvetica-Bold', textColor=white)
+        style_center_small = ParagraphStyle(
+            'header_center_small', 
+            parent=styles['Normal'], 
+            alignment=TA_CENTER, 
+            fontSize=7,
+            leading = 8.4
+            )
+        
+        # Contenido Fila 1
+        titulo = Paragraph("Ordem de Compra", style_center_bold)
+        prep_por = Paragraph("Preparado por:<br/>SUPT. DE ADQUISICIONES", style_center_small)
+        aprobacion = Paragraph("Aprovação:<br/>SUBD RM", style_center_small)
+        
+        # Contenido Fila 2
+        num_doc = Paragraph("Número de documento<br/>SEOV-ADQ-N4-01.02", style_center_small)
+        clasif = Paragraph("Clasificação do documento<br/>Não Controlado", style_center_small)
+        nivel = Paragraph("Nivel do documento<br/>N5", style_center_small)
+        idioma = Paragraph("Lingua<br/>Portuguesa", style_center_small)
+        revision = Paragraph("Revisão No.<br/>001", style_center_small)
+        fecha_em = Paragraph("Data de Emissão<br/>13/11/2017", style_center_small)
+        fecha_rev = Paragraph("Data da última revisão<br/>21/11/2025", style_center_small)
+
+        data_header = [
+            [logo_img, titulo, '', '', '', prep_por, aprobacion],
+            [num_doc, clasif, nivel, idioma, revision, fecha_em, fecha_rev]
+        ]
+
+        # Crear tabla
+        t_header = Table(data_header, colWidths=col_widths)
+        
+        # Estilos de la tabla
+        t_header.setStyle(TableStyle([
+            # Fila 1
+            ('SPAN', (1, 0), (4, 0)),  # Título ocupa cols 1-4 (indices 0-based: 1,2,3,4 -> 5 columnas?? No, cols 2,3,4,5 son indices 1,2,3,4)
+            # Espera, indices: 0=Logo, 1=Col2, 2=Col3, 3=Col4, 4=Col5, 5=Col6, 6=Col7
+            # Title spans cols 2,3,4,5 -> Indices 1, 2, 3, 4. So SPAN (1,0) to (4,0).
+            
+            ('BACKGROUND', (1, 0), (4, 0), prussian_blue), # Fondo azul para título
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, black),
+            
+            # Ajustes específicos
+            ('LEFTPADDING', (0, 0), (-1, -1), 2),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ]))
+
+        # Dibujar tabla
+        w, h = t_header.wrap(total_width, 100) # Altura aproximada
+        t_header.drawOn(c_obj, 30, 710) # Posición Y ajustada (bajado de 730 a 710)
+
+    
+
+
+
+
+    # Dibujar encabezado en la primera página
+    dibujar_encabezado(c)
+
+
+     # --- SECCIÓN PRINCIPAL DEL FORMULARIO ---
+    # Definir las posiciones para las columnas principales con mejor distribución
+    col_inicio = 30
+    col_total_ancho = 530  # Aproximadamente el ancho disponible
+
+    # Dividir en 2 columnas principales (cada panel de la fila 1 y 2)
+    col_ancho = col_total_ancho // 2 - 5  # Aproximadamente 260 cada una con separación
+    col_separacion = 10
+
+    # Coordenadas Y para las secciones principales
+    seccion_inicio = 700
+    seccion_alto = 100  # Ajustable según contenido
+
+    # Fila 1: ORDEN DE COMPRA Y DATOS DEL PROVEEDOR
+    # Panel Izquierdo: Orden de compra (Etiqueta centrada en fondo azul oscuro)
+    panel_inicio_y = seccion_inicio - 25
+    c.setFillColor(prussian_blue)
+    c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño para evitar superposición
+    c.drawCentredString(col_inicio + col_ancho//2, panel_inicio_y + 7, 'Dados do documento')
+
+    # Contenido del panel izquierdo
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño para más campos
+    campo_y = panel_inicio_y - 8  # Espaciado reducido
+    c.drawString(col_inicio + 3, campo_y, 'N° da compra:')
+    c.drawString(col_inicio + 80,campo_y, str(compra.folio))
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Data de emissão:')
+    c.drawString(col_inicio + 80, campo_y, compra.created_at.strftime("%d/%m/%Y"))
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Processo:')
+    c.drawString(col_inicio + 80, campo_y, compra.tipo_contratacion.abreviatura if compra.tipo_contratacion else 'NA')
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Elaborado por:')
+    c.drawString(col_inicio + 80, campo_y,compra.creada_por.staff.staff.first_name + ' ' +compra.creada_por.staff.staff.last_name)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Aut. Sptte.:')
+    if compra.autorizado1:
+        c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por.staff.staff.first_name + ' ' +compra.oc_autorizada_por.staff.staff.last_name)
+    else:
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(col_inicio + 80, campo_y, 'NÃO AUTORIZADA')
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Aut. Gerente:')
+    if compra.autorizado2:
+        c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por2.staff.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.staff.last_name)
+    else:
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(col_inicio + 80, campo_y, 'NÃO AUTORIZADA')
+    
+    # Panel Derecho: Datos del proveedor (Etiqueta centrada en fondo azul oscuro)
+    panel_derecho_inicio = col_inicio + col_ancho + col_separacion
+    c.setFillColor(prussian_blue)
+    c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
+    c.drawCentredString(panel_derecho_inicio + col_ancho//2, panel_inicio_y + 7, 'Dados do fornecedor')
+
+    # Contenido del panel derecho
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
+    campo_y = panel_inicio_y - 8
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Nome:')
+   
+    
+    codigo_banco = compra.proveedor.convenio if compra.proveedor.convenio else 'NA' #El convenio es el Código de Banco para Brasil
+    agencia_banco = compra.proveedor.swift if compra.proveedor.swift else 'NA' #El swift es la Sucursal para Brasil 
+    chave_pix = compra.proveedor.spid if compra.proveedor.spid else 'NA' #El spid es la Chave Pix para Brasil
+
+
+    c.drawString(panel_derecho_inicio + 60,campo_y, compra.proveedor.nombre.razon_social)
+    c.drawString(panel_derecho_inicio + 60,campo_y- 24, compra.proveedor.banco.nombre)
+    c.drawString(panel_derecho_inicio + 200,campo_y-24, codigo_banco) 
+    c.drawString(panel_derecho_inicio + 60,campo_y-36, agencia_banco) 
+    
+    c.drawString(panel_derecho_inicio + 60,campo_y- 48, compra.proveedor.cuenta)
+    
+    c.drawString(panel_derecho_inicio + 60,campo_y- 60, chave_pix)
+    c.drawString(panel_derecho_inicio + 60,campo_y-72, compra.proveedor.contacto)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'CNPJ/CPF:')
+    c.drawString(panel_derecho_inicio + 60, campo_y, compra.proveedor.nombre.rfc)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Banco:')
+    c.drawString(panel_derecho_inicio + 150, campo_y, 'Cód. banco:') 
+    
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Agência:')
+    
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Conta:')
+   
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Chave Pix:')
+
+   
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Contato:') # <<< este campo no se renderiza
+   
+    # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
+    # Reducir el espacio entre filas para acercar las secciones
+   
+    espacio_entre_filas = 110  # Aumentado de 80 a 110 para evitar solapamiento con 'Aut. Gerente'
+    panel_inicio_y = panel_inicio_y - espacio_entre_filas  # Mayor separación
+
+    # Panel Izquierdo: Trazabilidad/ Datos de requisición (Etiqueta centrada en fondo azul oscuro)
+    c.setFillColor(prussian_blue)
+    c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
+    c.drawCentredString(col_inicio + col_ancho//2, panel_inicio_y + 7, 'Rastreabilidade/ Dados da requisição')
+
+    # Contenido del panel izquierdo
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
+    campo_y = panel_inicio_y - 8
+    c.drawString(col_inicio + 3, campo_y, 'Projeto:')
+    c.drawString(col_inicio + 80, campo_y,compra.req.orden.proyecto.nombre)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Subprojeto:')
+    c.drawString(col_inicio + 80, campo_y,compra.req.orden.subproyecto.nombre)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'N° da requisição:')
+    c.drawString(col_inicio + 80, campo_y, str(compra.req.folio))
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Data de autorização:')
+    c.drawString(col_inicio + 80, campo_y,compra.req.orden.approved_at.strftime("%d/%m/%Y"))
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Solicitado por:')
+    c.drawString(col_inicio + 80, campo_y, compra.req.orden.staff.staff.staff.first_name +' '+ compra.req.orden.staff.staff.staff.last_name)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Ativo Fixo:')
+    try:
+        if compra.req.orden.activo is not None:
+            eco_unidad = compra.req.orden.activo.eco_unidad
+            descripcion = compra.req.orden.activo.descripcion
+            serie = compra.req.orden.activo.serie
+            c.drawString(col_inicio + 80, campo_y, f'{eco_unidad} {descripcion}')
+            c.drawString(col_inicio + 80, campo_y - 12, serie)
+        else:
+            c.drawString(col_inicio + 80, campo_y, 'NA')
+            c.drawString(col_inicio + 80, campo_y - 12 , 'NA')
+    except Activo.DoesNotExist:
+        c.drawString(col_inicio + 80, campo_y, 'NA')
+        c.drawString(col_inicio + 80, campo_y - 12, 'NA')
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'N° de serie:')
+    # c.line(col_inicio + 55, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Comentários:')
+    #Comentario de solicitud
+    if compra.comentario_solicitud:
+        paragraph_content = compra.req.orden.comentario
+    else:
+        paragraph_content = "NA" 
+
+    styles = getSampleStyleSheet()
+    base = styles["Normal"]
+    base.fontSize = 6
+    #styleN.color = prussian_blue
+    base.leading = 6  # Espaciado entre líneas
+    styleN = ParagraphStyle('Justicado', parent=base, alignment=TA_JUSTIFY)
+
+    if paragraph_content is None:
+        paragraph_content = " "    
+    conditional_paragraph = Paragraph(paragraph_content, styleN)
+
+    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
+    # Asumiendo 'width' y 'height' ya están definidos como antes
+    new_frame = Frame(col_inicio + 74, campo_y - 185 , 200, 200, id='conditional_frame')
+    
+    # Agregar el párrafo al nuevo marco
+    new_frame.addFromList([conditional_paragraph], c)
+
+    # Panel Derecho: Términos y condiciones (Etiqueta centrada en fondo azul oscuro)
+    c.setFillColor(prussian_blue)
+    c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
+    c.drawCentredString(panel_derecho_inicio + col_ancho//2, panel_inicio_y + 7, 'Termos e condições')
+
+    # Contenido del panel derecho
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
+    campo_y = panel_inicio_y - 8
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Condição de pagamento:')
+    c.drawString(panel_derecho_inicio + 90, campo_y, compra.cond_de_pago.nombre)
+    
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Prazo de Crédito:')
+    if compra.dias_de_credito:
+        c.drawString(panel_derecho_inicio + 90, campo_y, str(compra.dias_de_credito) + ' días')
+    else:
+        c.drawString(panel_derecho_inicio + 90, campo_y, 'Não Especificado')
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Moeda:')
+    c.drawString(panel_derecho_inicio + 90, campo_y,compra.moneda.nombre)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Finalidade da nota fiscal:')
+    c.drawString(panel_derecho_inicio + 90, campo_y, compra.uso_del_cfdi.descripcion)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Enviar factura para:')
+    c.drawString(panel_derecho_inicio + 90,campo_y, compra.creada_por.staff.staff.email)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Prazo de entrega:')
+    if compra.dias_de_entrega:
+        c.drawString(panel_derecho_inicio + 90, campo_y, str(compra.dias_de_entrega)+' '+'días hábiles')
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Local de entrega:')
+    # c.line(panel_derecho_inicio + 70, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Comentários:')
+    if compra.opciones_condiciones is not None:
+        options_conditions = compra.opciones_condiciones
+    else:
+        options_conditions = "NA"
+
+    if options_conditions is None:
+        options_conditions = " "    
+    conditional_paragraph = Paragraph(options_conditions, styleN)
+
+    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
+    # Asumiendo 'width' y 'height' ya están definidos como antes
+    new_frame = Frame(col_inicio + 340, campo_y - 185 , 200, 200, id='conditional_frame')
+    
+    # Agregar el párrafo al nuevo marco
+    new_frame.addFromList([conditional_paragraph], c)
+
+    # --- SECCIÓN NOTA IMPORTANTE ---
+    # Se calcula la posición Y para la nota, debajo de los paneles de contenido.
+    nota_y_inicio = panel_inicio_y - 100 # Ajustado para bajar la nota
+    
+    # Define styles for the note
+    style_nota_titulo = ParagraphStyle('nota_titulo', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, leading=10)
+    style_nota_cuerpo = ParagraphStyle('nota_cuerpo', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_JUSTIFY)
+
+    # Create Paragraphs for the note
+    #titulo_texto = "<strong>IMPORTANTE: Requisito de Acceso para Personal Externo</strong>"
+    #cuerpo_texto = """
+    #Todo pessoal externo (fornecedores, contratados e subcontratatados) só poderá ingressar para realizar
+    #trabalhos o serviços nas instalações do GRUPO VORDCAB apresentando sua constancia de vigencia
+    #de derechos del IMSS con una antigüedad no mayor a 30 días naturales a partir de su fecha de emisión.
+    #"""
+    #titulo_p = Paragraph(titulo_texto, style_nota_titulo)
+    #cuerpo_p = Paragraph(cuerpo_texto, style_nota_cuerpo)
+
+    # Create and draw a Frame to hold the note content with a border
+    #elementos_nota = [titulo_p, Spacer(1, 4), cuerpo_p]
+    #nota_frame = Frame(col_inicio, nota_y_inicio - 65, col_total_ancho, 45, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=0)
+    #nota_frame.addFromList(elementos_nota, c)
+
+
+    # NUEVA SECCIÓN: TABLA DE PARTIDAS - Colocada debajo de la nota
+    # La posición de la tabla ahora se calcula en relación a la nueva posición de la nota.
+
+    tabla_inicio_y = nota_y_inicio - 74  # Ajusta este valor según el espacio que desees entre la nota y la tabla
+
+    # Sección de la tabla de productos
+    data = []
+    data.append(['''Código''', '''Produto / Serviço''', '''Marca''','''Qtd.''', '''Uni.''', '''P. U.''', '''Valor total'''])
+
+    for producto in productos:
+        importe = producto.precio_unitario * producto.cantidad
+        importe_rounded = round(importe, 4)
+        descripcion = Paragraph(producto.producto.producto.articulos.producto.producto.nombre, style_desc)
+        marca = producto.marca if producto.marca else 'NR' 
+        precio_unitario = f"{producto.precio_unitario:,.4f}"
+        data.append([
+            producto.producto.producto.articulos.producto.producto.codigo,
+            descripcion,
+            marca,
+            producto.cantidad,
+            producto.producto.producto.articulos.producto.producto.unidad,
+            precio_unitario,
+            f"{importe_rounded:,.2f}"
+        ])
+
+    c.setFillColor(black)
+    c.setFont('Helvetica', 8)
+
+    # Dibujar la tabla de productos en la nueva ubicación
+    table = Table(data, colWidths=[1.2 * cm, 8 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 2.5 * cm])
+    table_style = TableStyle([  # estilos de la tabla
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        # ENCABEZADO
+        ('TEXTCOLOR', (0, 0), (-1, 0), white),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        # CUERPO
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 6),
+    ])
+    
+    row_first_page = 14
+    rows_other_pages = 25
+    #table_y_first = 125   # ajusta 1 vez viendo el PDF
+    table_y_other = 680  # ajusta 1 vez viendo el PDF
+
+    
+    table.setStyle(table_style)
+    header = data[:1]
+    body = data[1:]
+
+     # --- PIE DE PÁGINA FIJO ---
+    footer_y = 120  # Posición Y fija para el inicio del pie de página
+
+
+    c.setLineWidth(1)
+    c.line(20, footer_y, 585, footer_y)  # Línea divisoria del pie de página
+
+    # Sección Izquierda: Total con letra
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold', 9)
+    c.drawString(30, footer_y - 20, 'Valor por extenso:')
+    
+    c.setFont('Helvetica', 8)
+    
+    def convertir_a_reales(valor):
+        partes = f"{valor:.2f}".split(".")
+        reales = num2words(int(partes[0]), lang='pt_BR')
+        centavos = num2words(int(partes[1]), lang='pt_BR')
+        return f"{reales} reais e {centavos} centavos"
+
+    total_en_letra = ""
+    if compra.moneda.nombre == "PESOS":
+        total_en_letra = num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN')
+    elif compra.moneda.nombre == "DOLARES":
+        total_en_letra = num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='USD')
+    elif compra.moneda.nombre == "REAIS":
+        total_en_letra = convertir_a_reales(compra.costo_plus_adicionales)
+    
+    # Usar Paragraph para el texto con ajuste de línea
+    style_letra = ParagraphStyle('total_letra', parent=styles['Normal'], fontSize=8, leading=10)
+    p_letra = Paragraph(total_en_letra.upper(), style_letra)
+    
+    # Dibujar el párrafo en un Frame para controlar el ancho
+    frame_letra = Frame(30, footer_y - 70, 350, 50, id='frame_letra', showBoundary=0)
+    frame_letra.addFromList([p_letra], c)
+
+    subtotal = compra.costo_oc - compra.costo_iva
+    # Sección Derecha: Totales numéricos
+    montos_align_x = 570
+
+    # Sub Total
+    c.setFont('Helvetica-Bold', 9)
+    c.drawRightString(montos_align_x - 80, footer_y - 20, 'Subtotal:')
+    c.setFont('Helvetica', 9)
+    c.drawRightString(montos_align_x, footer_y - 20, f"${subtotal:,.2f}")
+    # IVA
+    c.setFont('Helvetica-Bold', 9)
+    #c.drawRightString(montos_align_x - 80, footer_y - 30, 'IVA:')
+    #c.setFont('Helvetica', 9)
+    #c.drawRightString(montos_align_x, footer_y - 30, f"${compra.costo_iva:,.2f}")
+    #c.setFont('Helvetica-Bold', 9)
+    c.drawRightString(montos_align_x - 80, footer_y - 40,'Valor líquido:')
+    costo_oc =  format(float(compra.costo_oc), ',.2f')
+    c.drawRightString(montos_align_x, footer_y - 40,'$' + str(costo_oc))
+    
+    
+    importe_neto = compra.costo_oc
+    if compra.impuestos:
+        subtotal = subtotal #- compra.impuestos
+        c.setFillColor(black)
+        
+        #c.drawRightString(montos_align,170,'Impuestos Adicionales:')
+        c.setFont('Helvetica', 9)
+        costo_impuestos = format(float(compra.impuestos), ',.2f')
+        c.drawRightString(montos_align_x, footer_y -60, '$' + str(costo_impuestos))
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align_x- 80, footer_y -60, 'Impostos:')
+        #importe_neto = importe_neto + compra.impuestos
+    if compra.impuestos and compra.retencion:
+        subtotal = subtotal #+ compra.retencion
+        costo_retencion = format(float(compra.retencion), ',.2f')
+        c.setFont('Helvetica', 9)
+        c.drawRightString(montos_align_x, footer_y -50, '$' + str(costo_retencion))
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align_x - 80, footer_y -50, 'Retención:')
+    elif compra.retencion:
+        subtotal = subtotal #+ compra.retencion
+        costo_retencion = format(float(compra.retencion), ',.2f')
+        c.setFont('Helvetica', 9)
+        c.drawRightString(montos_align_x, footer_y - 50, '$' + str(costo_retencion))
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align_x - 80, footer_y - 50, 'Retención:')
+        #importe_neto = importe_neto - compra.retencion
+   
+       
+   
+
+    if compra.costo_fletes:
+        importe_neto = importe_neto + compra.costo_fletes
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align_x - 80,footer_y - 70,'Costo fletes:')
+        c.setFont('Helvetica', 9)
+        costo_fletes = format(float(compra.costo_fletes), ',.2f')
+        c.drawRightString(montos_align_x,footer_y - 70,'$' + str(costo_fletes))
+        #c.drawRightString(montos_align_x + 90,170,'$ ' + str(total))
+
+
+    # Total (resaltado en azul)
+    c.setFillColor(prussian_blue)
+    c.setFont('Helvetica-Bold', 11)
+    c.drawRightString(montos_align_x - 80, footer_y - 80, 'Valor Total:')
+    total =  format(float(compra.costo_plus_adicionales), ',.2f')
+    c.drawRightString(montos_align_x, footer_y - 80, str(total))
+
+    c.setFillColor(black)
+    width, height = letter
+
+    # Use the same style from earlier
+    styleN = getSampleStyleSheet()["BodyText"]
+    styleN.fontSize = 6
+    #dibujar_pie_pagina_legal(c)
+
+   
+
+   
+
+    #=============== Página 1: Solo las primeras 15 filas ==================
+    first_chunk = body[:row_first_page]
+    first_page_data = header + first_chunk
+
+    first_table = Table(first_page_data, colWidths=[1.2 * cm, 11 * cm, 2*cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+    first_table.setStyle(table_style)
+    first_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+    w, h = first_table.wrap(0, 0)     # h = altura real de esa tabla (con paragraphs)
+
+    table_top = tabla_inicio_y        # ESTE sí es tu "inicio" debajo de la nota
+    table_bottom = table_top - h      # convierto TOP -> BOTTOM
+
+    first_table.drawOn(c, 30, table_bottom)
+
+    remaining = body[row_first_page:]
+    #=============== Páginas siguientes: 25 filas por página ==================
+    while remaining:
+        c.showPage()
+
+        dibujar_encabezado(c)  # Redibujar el encabezado en cada nueva página
+        #dibujar_pie_pagina_legal(c)  # Agregar el pie de página legal en cada página
+
+        chunk = remaining[:rows_other_pages]
+        remaining = remaining[rows_other_pages:]
+
+
+        page_data = header + chunk
+        t = Table(page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        t.setStyle(table_style)
+        w, h = t.wrap(0, 0)               # altura real de esta tabla
+        t.drawOn(c, 30, table_y_other - h)  # <-- AQUÍ está la corrección
+
+     # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
+    rows_cal = []   # solo filas con requerimientos
+
+    # (opcional) deduplicar por producto si la OC puede traer el mismo producto varias veces
+    vistos = set()
+
+    for ac in productos: 
+        try:
+            base_product = ac.producto.producto.articulos.producto.producto
+        except Exception:
+            continue
+        if not base_product:
+            continue
+
+        # (opcional) evita duplicados por Product
+        if getattr(base_product, 'id', None) in vistos:
+            continue
+        vistos.add(base_product.id)
+
+        # intenta tomar el OneToOne
+        try:
+            producto_calidad = base_product.producto_calidad
+        except:  # Using generic exception for mock data instead of Producto_Calidad.DoesNotExist
+            continue
+
+        if not producto_calidad:
+            continue
+
+        reqs = producto_calidad.requerimientos_calidad.select_related('requerimiento').all()
+        if not reqs:
+            continue
+
+        codigo = base_product.codigo
+        desc_par = Paragraph(base_product.nombre or '', style_desc)
+
+        for req in reqs:
+            req_nombre = req.requerimiento.nombre if req.requerimiento else ''
+            comentario = req.comentarios or ''
+            req_par = Paragraph(req_nombre or '', style_desc)
+            com_par = Paragraph(comentario or '', style_desc)
+            rows_cal.append([codigo, desc_par, req_par, com_par])
+     # Si no hay nada que mostrar, NO crear la hoja
+    
+    if rows_cal:
+    # Dibujar pie de página legal en la primera página
+    
+    
+       
+        c.showPage()
+        dibujar_encabezado(c) # encabezado hoja
+        c.setFont('Helvetica', 12)
+        c.setFillColor(prussian_blue)
+        c.rect(20, 650, 565, 24, fill=True, stroke=False)
+        c.setFillColor(white)
+        c.setFont('Helvetica-Bold', 13)
+        c.drawCentredString(300, 656, 'Requerimientos de Calidad por Producto')
+
+        data_cal = [['Código', 'Producto', 'Requerimiento Calidad', 'Comentario']]
+        data_cal.extend(rows_cal)
+
+        col_widths = [2*cm, 8.0*cm, 5*cm, 5.0*cm]
+        tabla_cal = Table(data_cal, colWidths=col_widths, hAlign='LEFT')
+        tabla_cal.setStyle(TableStyle([
+            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+            ('BOX',       (0,0), (-1,-1), 0.50, colors.black),
+            ('VALIGN',    (0,0), (-1,-1), 'MIDDLE'),
+            ('BACKGROUND',(0,0), (-1,0),  prussian_blue),
+            ('TEXTCOLOR', (0,0), (-1,0),  colors.white),
+            ('FONTSIZE',  (0,0), (-1,0),  9),
+            ('FONTSIZE',  (0,1), (-1,-1), 8),
+        ]))
+
+        tabla_cal.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        tabla_cal.drawOn(c, 20, 600 - min(520, len(data_cal)*16))
+    
+        #dibujar_pie_pagina_legal(c)
+
+    # Calcular la altura de la tabla para posicionarla adecuadamente
+    #table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+    
+
+    # Posicionar la tabla más abajo para evitar superposición
+    #table_y = tabla_inicio_y - (len(data) * 18)  # Ajustar la posición basado en el número de filas
+
+    # Asegurarse de que la tabla no se posicione demasiado abajo
+    #if table_y < 200:  # Si la tabla se va muy abajo, ajustar
+    #    table_y = 400 - (len(data) * 18)
+
+    #table.drawOn(c, 20, table_y)
+
+   
+
+    #c.showPage()
+    # ------------ FIN NUEVA HOJA ------------------------------------------------
+    # ------------ PRINCIPIO DE HOJA DE CONTRATO ---------------------------------
+    # Dibujar encabezado
+    #dibujar_encabezado(c)
+    
+    # Texto personalizado
+    #texto_personalizado = """
+    #<b>CONTRATO QUE REGULA LA RELACIÓN COMERCIAL, CONFORME A LA PRESENTE ORDEN DE COMPRA/SERVICIOS</b>
+
+    #<br/><br/>
+
+    #<b>PRIMERA. OBJETO.</b>
+
+    #____________ (“PROVEEDOR”), se obliga a entregar a GRUPO VORDCAB, S.A. DE C.V., (“VORDCAB”) los servicios, y/o productos, conforme a la presente orden de compra/servicio, en la forma, términos y condiciones establecidos en este documento, así como en los convenios, contratos o acuerdos comerciales, que se celebren posteriormente y que se encuentren relacionados entre las partes, por su propio derecho o a través de sus representantes en su caso, en los cuales se establecerán aquellas obligaciones y derechos que no se encuentren contemplados en la presente. 
+
+    #Para efectos del presente contrato, se entenderá por Orden de Compra o de Servicios, el documento emitido por VORDCAB y dirigido al “PROVEEDOR”, de forma escrita, impresa o por medios electrónicos, para requerir los servicios y/o productos que este último deberá entregar a “VORDCAB”, misma que contiene la cantidad, precio, fecha y lugar de entrega, condiciones de pago y otras condiciones de compra acordadas previamente por las partes mediante la cotización correspondiente, aceptando el “PROVEEDOR” dichas condiciones, mediante la firma por su propio derecho, o a través de sus representantes, comisionistas, delegados, encargados comerciales, gerentes o cualquier persona relacionada a la negociación, y que será vinculante jurídicamente y válido legítimamente para las partes, por lo que acepta el PRESTADOR de conformidad y manifiesta conocer el alcance del mismo. 
+
+    #El “PROVEEDOR” únicamente podrá prestar aquellos servicios que no estén contenidos dentro de una Orden de compra/servicios, cuando estos sean de flagrante necesidad para prestar los servicios requeridos, y estrictamente con previa autorización por escrito de “VORDCAB”.
+
+    #<b>SEGUNDA. FIRMA ELECTRÓNICA.</b>
+
+    #De acuerdo con la cláusula anterior, las Partes acuerdan que la presente orden de compra/servicios, y cualquier documento que se firme en relación con la misma, puede ser suscrito electrónicamente y el uso por una Parte de una Firma Electrónica será, para los efectos de validez, exigibilidad y admisibilidad, evidencia concluyente de la intención de esa Parte de estar legalmente obligada como si dicha firma hubiera sido escrita a mano.
+    
+    #<b>TERCERA. CONTRAPRESTACIÓN.</b>
+
+    #Las Partes acuerdan que la contraprestación que “VORDCAB” pagará al “PROVEEDOR” por la ejecución del Servicio o los productos solicitados en la presente orden de compra/servicios, de acuerdo con la cotización correspondiente, serán aquellas que se especifiquen en las mismas, más el impuesto al valor agregado correspondiente, así como cualquier otro impuesto aplicable (la “Contraprestación”) según el tipo de Servicio que se ejecute o producto que se entregue, o cualquier otra consideración establecida en la orden de compra o de servicio, por lo que el “PROVEEDOR” se obliga a entregar la factura cumpliendo todos los requisitos legales para tales efectos. Asimismo, se considera como contraprestación, cualquier cantidad erogada por “VORDCAB” para el cumplimiento de las obligaciones a cargo del “PROVEEDOR” derivadas del presente contrato, y que sean necesarias e indispensables para el cumplimiento de los Servicios o entrega de productos.
+
+    #<b>CUARTA. IMPUESTOS.</b>
+
+    #Cada una de las partes pagará los impuestos que le corresponden de conformidad con la legislación fiscal vigente. En caso de que el “PROVEEDOR” importe productos y/o mercancías provenientes del extranjero, este será el único responsable del pago en forma correcta de las tarifas y clasificaciones arancelarias, así como del cumplimiento de las disposiciones fiscales y aduaneras vigentes, entregando a “VORDCAB” toda aquella documentación relacionada. Asimismo, el “PROVEEDOR” deberá indicar en la factura que entregue a “VORDCAB”, el número de pedimento aduanal correspondiente, en su caso.
+
+    #<b>QUINTA. VIGENCIA.</b>
+
+    #Las partes convienen que la vigencia del presente contrato será por tiempo indefinido, a partir de la fecha de su firma, hasta concluir con la prestación de los servicios o la entrega de los productos, según corresponda, a entera satisfacción de “VORDCAB”. Asimismo, las partes podrán darlo por terminado previa notificación por escrito a la otra parte, con 30 (treinta) días de anticipación, siempre y cuando hayan sido cumplidas todas y cada una de sus obligaciones.
+
+    #<b>SEXTA. RESPONSABILIDADES.</b>
+
+    #Las partes acuerdan que el “PROVEEDOR” deberá indemnizar y sacar en paz y a salvo a “VORDCAB”, subsidiarias, filiales, partes relacionadas accionistas, empleados, delegados, comisionistas, y representantes, de cualquier contingencia legal que se suscite en virtud de la prestación de los servicios o entrega de productos, en términos de la presente orden de compra/servicios. Para todos los efectos de este contrato, el “PROVEEDOR” se considera como contratista independiente y como tal, no existe relación laboral alguna ni sustitución patronal entre “VORDCAB” y los empleados, trabajadores, o cualquier persona relacionada con el “PROVEEDOR”. 
+
+    #<b>SÉPTIMA. INFORMACIÓN CONFIDENCIAL.</b>
+
+    #El “PROVEEDOR” se obliga a no revelar o divulgar la información a la que haya tenido acceso derivado del presente, en virtud de ser considerada como confidencial. Para efectos de este contrato, se entenderá por información confidencial, toda aquella información verbal, escrita y gráfica, así como la documentación recibida u obtenida por cualquier medio, a partir de esta fecha o con anterioridad entre las partes, y la que se reciba u obtenga en el futuro.
+
+    #<b>OCTAVA. GARANTÍAS.</b>
+
+    #El “PROVEEDOR” garantiza los servicios y/o productos que entrega a “VORDCAB”, respecto de cualquier negligencia, defecto de fabricación, falla, o por cualquier caso que impida la utilización de los productos o que esté relacionado con el servicio, obligándose a reponer el mismo o producto que no cumpla con las características o la calidad requerida en favor de “VORDCAB”, y en su caso, indemnizar o restituir a “VORDCAB” cualquier gasto que haya erogado por dichas fallas en los servicios o productos, en un plazo que no deberá exceder de 10 (DIEZ) días naturales posteriores a la notificación que realice “VORDCAB” a el “PROVEEDOR”. 
+
+    #<b>DÉCIMA SEXTA. LEGISLACIÓN APLICABLE, JURISDICCIÓN Y COMPETENCIA.</b>
+
+    #Las partes convienen en que para todo lo no previsto por el presente contrato, se estará a lo dispuesto en el Código de Comercio y en el Código Civil vigente para el Estado de Veracruz, como disposiciones supletorias a la voluntad de las partes contratantes. Para cualquier disputa, necesidad de interpretación, controversia o reclamación que surja con relación a este contrato o a la violación del mismo, las partes se someten irrevocablemente a la jurisdicción y competencia de los tribunales del fuero común ubicados en la ciudad de Xalapa, Veracruz, renunciando expresamente a cualquier otro fuero que pudiera corresponderles por razón de su domicilio presente o futuro, o por cualquier otra causa.
+    #"""
+    
+    #style_personalizado = ParagraphStyle('personalizado', parent=styles['Normal'], fontSize=8, leading=12, alignment=TA_JUSTIFY)
+    #p_personalizado = Paragraph(texto_personalizado, style_personalizado)
+    
+    #w_pers, h_pers = p_personalizado.wrap(530, 600)
+    #p_personalizado.drawOn(c, 30, 680 - h_pers) # Posicionado debajo del encabezado
+    
+    # Dibujar pie de página legal
+    #dibujar_pie_pagina_legal(c)
+    
+    #c.showPage()
+    # ------------ FIN NUEVA HOJA ------------------------------------------------
+
+
+    c.save()
+    buf.seek(0)
+    return buf
+
+
+def attach_oc_pdf(request, pk):
+    compra = get_object_or_404(Compra, pk=pk)
+    if compra.req.orden.distrito.nombre != "BRASIL":
+        buf = generar_pdf_nueva(compra)  # tu función
+    else:
+        buf = generar_pdf_brasil(compra) 
+  
+
+    return buf.getvalue()
+
+def attach_politica_proveedor(request):
+    #compra = get_object_or_404(Compra, id=pk)
+    buf = generar_politica_proveedores()
+
+    return buf.getvalue()
+
+@perfil_seleccionado_required
+def descargar_antisoborno_pdf(request):
+    buf = generar_politica_antisoborno()
+    return FileResponse(buf, as_attachment=True, filename='Política_Antisoborno' +'.pdf')
+
+@perfil_seleccionado_required
+def descargar_proveedores_pdf(request):
+    buf = generar_politica_proveedores()
+    return FileResponse(buf, as_attachment=True, filename='Política_Proveedores' +'.pdf')
+
+def attach_antisoborno_pdf(request):
+    buf = generar_politica_antisoborno()
+    return buf.getvalue()
+
+@perfil_seleccionado_required
+def descargar_codigo_etica_pdf(request):
+    buf = generar_codigo_etica()
+    return FileResponse(buf, as_attachment=True, filename='Código_ética' +'.pdf')
+
+def attach_codigo_etica_pdf(request):
+    buf = generar_codigo_etica()
+    return buf.getvalue()
+
+@perfil_seleccionado_required
+def descargar_aviso_privacidad_pdf(request):
+    buf = generar_aviso_privacidad()
+    return FileResponse(buf, as_attachment=True, filename='Aviso_de_Privacidad' +'.pdf')
+
+def attach_aviso_privacidad_pdf(request):
+    buf = generar_aviso_privacidad()
+    return buf.getvalue()
+
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('oc_superintendencia','oc_gerencia')
+def autorizar_oc1(request, pk):
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+   
+    compra = Compra.objects.get(id = pk)
+    productos = ArticuloComprado.objects.filter(oc=compra)
+    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
+    form = Compra_ComentarioForm()
+
+    if compra.costo_fletes == None:
+        costo_fletes = 0
+    #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
+    #Escenario con dólares
+    if compra.tipo_de_cambio:
+        costo_oc = compra.costo_oc * compra.tipo_de_cambio
+        if compra.costo_fletes:
+            costo_fletes = compra.costo_fletes * compra.tipo_de_cambio
+        else:
+            costo_fletes = 0
+    #Escenario con pesos
+    else:
+        costo_oc = compra.costo_oc
+        if compra.costo_fletes:
+            costo_fletes = compra.costo_fletes
+        else:
+            costo_fletes = 0
+    costo_total = costo_fletes + costo_oc
+    resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
+    try:
+        porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    except ZeroDivisionError:
+        porcentaje = "0"
+
+
+    if request.method == 'POST':
+        form = Compra_ComentarioForm(request.POST, instance=compra)
+        if form.is_valid():
+            compra = form.save(commit = False)
+            compra.autorizado1 = True
+            compra.oc_autorizada_por = usuario
+            compra.autorizado_at = datetime.now()
+            campos_actualizados = [
+                'autorizado1',
+                'oc_autorizada_por',
+                'autorizado_at',
+            ]
+
+            #compra.autorizado_hora1 = datetime.now().time()
+            if (usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL")):
+                compra.autorizado2 = True
+                compra.oc_autorizada_por2 = usuario
+                compra.autorizado_at_2 = datetime.now()
+                campos_actualizados.extend([
+                    'autorizado2',
+                    'oc_autorizada_por2',
+                    'autorizado_at_2',
+                ])
+
+            if usuario.distritos.nombre == "Yerod":
+                compra.para_pago = True
+                campos_actualizados.extend(['para_pago'])
+            compra.save(update_fields=campos_actualizados)
+            archivo_oc = attach_oc_pdf(request, compra.id)
+            pdf_antisoborno = attach_antisoborno_pdf(request)
+            pdf_privacidad = attach_aviso_privacidad_pdf(request)
+            pdf_etica = attach_codigo_etica_pdf(request)
+            pdf_politica_proveedor = attach_politica_proveedor(request)
+            static_path = settings.STATIC_ROOT
+            static_path = settings.STATIC_ROOT
+
+            es_savia_negro = bool(compra.req and compra.req.orden and compra.req.orden.distrito and compra.req.orden.distrito.nombre.strip().upper() == "Yerod")
+
+            contexto_base = obtener_tema_correo(static_path, es_savia_negro,)
+
+            nombre_solicitante = (f"{compra.req.orden.staff.staff.staff.first_name} " f"{compra.req.orden.staff.staff.staff.last_name}")
+
+            nombre_creador = (f"{compra.creada_por.staff.staff.first_name} " f"{compra.creada_por.staff.staff.last_name}")
+
+            if compra.oc_autorizada_por:
+                nombre_autorizador = (f"{compra.oc_autorizada_por.staff.staff.first_name} " f"{compra.oc_autorizada_por.staff.staff.last_name}")
+            else:
+                nombre_autorizador = "No disponible"
+
+            contexto_base.update({
+                "compra": compra,
+                "nombre_solicitante": nombre_solicitante,
+                "nombre_creador": nombre_creador,
+                "nombre_autorizador": nombre_autorizador,
+            })
+
+            es_autorizacion_final = (usuario.tipo.subdirector or (usuario.tipo.oc_gerencia and usuario.distritos.nombre == "BRASIL"))
+
+            if es_autorizacion_final:
+                contexto_correo = contexto_base.copy()
+
+                contexto_correo["siguiente_paso"] = ("programación del pago por parte de Tesorería.")
+
+                html_message = render_to_string("emails/compras/compra_autorizada.html", contexto_correo,)
+
+                if compra.cond_de_pago.nombre == "CREDITO":
+                    contexto_proveedor = contexto_base.copy()
+
+                    contexto_proveedor.update({
+                        "contacto_proveedor": (
+                            compra.proveedor.contacto
+                            or "representante del proveedor"
+                        ),
+                        "nombre_proveedor": compra.proveedor.nombre,
+                        "productos_criticos": productos_criticos,
+                    })
+
+                    html_message2 = render_to_string(
+                        "emails/compras/orden_compra_asignada.html",
+                        contexto_proveedor,
+                    )
+
+                    try:
+                        email = EmailMessage(
+                            f"Compra Autorizada {compra.folio}|SAVIA",
+                            body=html_message2,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[compra.creada_por.staff.staff.email,compra.proveedor.email,],
+                            headers={"Content-Type": "text/html",},
+                        )
+                        email.content_subtype = "html"
+                        email.attach(f"OC_folio_{compra.folio}.pdf",archivo_oc,"application/pdf",)
+                        email.attach("Politica_antisoborno.pdf",pdf_antisoborno,"application/pdf",)
+                        email.attach("Aviso_de_privacidad.pdf", pdf_privacidad,"application/pdf",)
+                        email.attach("Codigo_de_etica.pdf", pdf_etica,"application/pdf",)
+                        email.attach("Politica_proveedor.pdf",pdf_politica_proveedor,"application/pdf",)
+
+                        for articulo in productos:
+                            producto = (articulo.producto.producto.articulos.producto.producto)
+
+                            if not producto.critico:
+                                continue
+
+                            try:
+                                requerimientos = (producto.producto_calidad.requerimientos_calidad.all())
+                            except ObjectDoesNotExist:
+                                requerimientos = []
+
+                            contador = 1
+
+                            for requerimiento in requerimientos:
+                                if not requerimiento.url:
+                                    continue
+
+                                archivo_path = requerimiento.url.path
+
+                                extension = os.path.splitext(
+                                    archivo_path
+                                )[1]
+
+                                nombre_archivo = (f"{producto.codigo}_"f"requerimiento_{contador}"f"{extension}")
+
+                                with open(archivo_path,"rb",) as archivo:
+                                    email.attach(nombre_archivo,archivo.read(),)
+
+                                contador += 1
+
+                        email.send()
+
+                    except (BadHeaderError, SMTPException, socket.gaierror,OSError,) as error:
+                        error_message = (f"El correo dirigido al proveedor no fue enviado debido a un error: {error}")
+
+                else:
+                    try:
+                        email = EmailMessage(f"OC Autorizada Gerencia {compra.folio}|"f"RQ: {compra.req.folio} |"f"Sol: {compra.req.orden.folio}",
+                            body=html_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[compra.creada_por.staff.staff.email,],
+                            headers={
+                                "Content-Type": "text/html",
+                            },
+                        )
+
+                        email.content_subtype = "html"
+                        email.send()
+
+                        messages.success(request,f"{usuario.staff.staff.first_name} "f"has autorizado la compra {compra.folio}",)
+
+                    except (BadHeaderError,SMTPException,socket.gaierror,) as error:
+                        error_message = (
+                            f"{usuario.staff.staff.first_name} "
+                            f"has autorizado la compra {compra.folio}, "
+                            "pero el correo de notificación no fue "
+                            f"enviado debido a un error: {error}"
+                        )
+
+                        messages.success(request, error_message,)
+
+                    return redirect("autorizacion-oc1")
+
+            else:
+                contexto_correo = contexto_base.copy()
+
+                contexto_correo["siguiente_paso"] = (
+                    "autorización de la orden de compra por "
+                    "Gerencia de Distrito."
+                )
+
+                html_message = render_to_string(
+                    "emails/compras/compra_autorizada.html",
+                    contexto_correo,
+                )
+
+            try:
+                email = EmailMessage(
+                    f"OC Autorizada {compra.folio}|"
+                    f"RQ: {compra.req.folio} |"
+                    f"Sol: {compra.req.orden.folio}",
+                    body=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[
+                        compra.req.orden.staff.staff.staff.email,
+                    ],
+                    headers={
+                        "Content-Type": "text/html",
+                    },
+                )
+
+                email.content_subtype = "html"
+                email.send()
+
+            except (BadHeaderError, SMTPException, socket.gaierror,) as error:
+                error_message = (f"La orden de compra fue autorizada, pero el correo de notificación no fue enviado debido a un error: {error}")
+
+                messages.success(request,error_message,)
+            
+          
+                
+            return redirect('autorizacion-oc1')
+
+        else:
+            messages.error(request, 'Error al autorizar la compra. Por favor, verifica los datos ingresados.')
+
+    context={
+        'form':form,
+        'compra':compra,
+        'costo_oc':costo_oc,
+        'productos':productos,
+        'tipo_cambio':compra.tipo_de_cambio,
+        'resta':resta,
+        'porcentaje':porcentaje,
+        'costo_total':costo_total,
+        }
+    
+
+    return render(request, 'compras/autorizar_oc1.html',context)
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('oc_gerencia')
+def autorizacion_oc2(request):
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    if usuario.tipo.oc_gerencia == True:
+        compras = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None, req__orden__distrito = usuario.distritos).order_by('-folio')
+    else:
+        compras = Compra.objects.none()
+    
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+    
+    context= {
+        'compras':compras,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'compras/autorizacion_oc2.html',context)
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('oc_gerencia')
+def autorizar_oc2(request, pk):
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    compra = Compra.objects.get(id = pk)
+    productos = ArticuloComprado.objects.filter(oc=pk)
+    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
+    if compra.costo_fletes == None:
+        costo_fletes = 0
+    #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
+
+    if compra.tipo_de_cambio:
+        costo_oc = compra.costo_oc * compra.tipo_de_cambio
+        if compra.costo_fletes:
+            costo_fletes = compra.costo_fletes * compra.tipo_de_cambio
+        else:
+            costo_fletes = 0
+    #Escenario con pesos
+    else:
+        costo_oc = compra.costo_oc
+        if compra.costo_fletes:
+            costo_fletes = compra.costo_fletes
+        else:
+            costo_fletes = 0
+
+    costo_total = costo_fletes + costo_oc
+    resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
+    
+    presupuesto = compra.req.orden.subproyecto.presupuesto or 0 
+    
+    if presupuesto > 0:
+        porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
+    else:
+        porcentaje = "0%"  # Default value when presupuesto is 0 or invalid
+
+    form = Compra_ComentarioGerForm()
+
+   
+    if request.method == 'POST':
+        form = Compra_ComentarioGerForm(request.POST, instance=compra)
+        if form.is_valid():
+            compra = form.save(commit = False)
+            compra.autorizado2 = True
+            compra.oc_autorizada_por2 = usuario
+            compra.autorizado_at_2 = datetime.now()
+            #compra.autorizado_hora2 = datetime.now().time()
+            compra.save()
+            static_path = settings.STATIC_ROOT
+            static_path = settings.STATIC_ROOT
+
+            es_savia_negro = bool(compra.req and compra.req.orden and compra.req.orden.distrito and compra.req.orden.distrito.nombre.strip().upper() == "Yerod")
+
+            contexto_base = obtener_tema_correo(
+                static_path,
+                es_savia_negro,
+            )
+
+            autorizador_segunda = (
+                compra.oc_autorizada_por2
+                or usuario
+            )
+
+            nombre_autorizador = (
+                f"{autorizador_segunda.staff.staff.first_name} "
+                f"{autorizador_segunda.staff.staff.last_name}"
+            )
+
+            nombre_creador = (
+                f"{compra.creada_por.staff.staff.first_name} "
+                f"{compra.creada_por.staff.staff.last_name}"
+            )
+
+            contexto_base.update({
+                "compra": compra,
+                "nombre_autorizador": nombre_autorizador,
+                "nombre_creador": nombre_creador,
+            })
+
+            es_compra_credito = (compra.cond_de_pago and compra.cond_de_pago.nombre.strip().upper() == "CREDITO")
+
+            if es_compra_credito:
+                archivo_oc = attach_oc_pdf(
+                    request,
+                    compra.id,
+                )
+
+                pdf_antisoborno = attach_antisoborno_pdf(
+                    request
+                )
+
+                pdf_privacidad = attach_aviso_privacidad_pdf(
+                    request
+                )
+
+                pdf_etica = attach_codigo_etica_pdf(
+                    request
+                )
+
+                pdf_politica_proveedor = (
+                    attach_politica_proveedor(request)
+                )
+
+                avisar_calidad_oc(compra)
+
+                contexto_proveedor = contexto_base.copy()
+
+                contexto_proveedor.update({
+                    "contacto_proveedor": (
+                        compra.proveedor.contacto
+                        or "representante del proveedor"
+                    ),
+                    "nombre_proveedor": compra.proveedor.nombre,
+                    "productos_criticos": productos_criticos,
+                })
+
+                html_message2 = render_to_string(
+                    "emails/compras/orden_compra_asignada.html",
+                    contexto_proveedor,
+                )
+
+                try:
+                    email_proveedor = EmailMessage(
+                        f"Compra Autorizada {compra.folio}|SAVIA",
+                        body=html_message2,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[
+                            compra.creada_por.staff.staff.email,
+                            compra.proveedor.email,
+                        ],
+                        headers={
+                            "Content-Type": "text/html",
+                        },
+                    )
+
+                    email_proveedor.content_subtype = "html"
+                    # 1. Orden de compra
+                    email_proveedor.attach(f"folio_{compra.folio}.pdf", archivo_oc, "application/pdf",)
+                    # 2. Política antisoborno
+                    email_proveedor.attach("Politica_antisoborno.pdf", pdf_antisoborno, "application/pdf",)
+                    # 3. Aviso de privacidad
+                    email_proveedor.attach("Aviso_de_privacidad.pdf", pdf_privacidad, "application/pdf",)
+                    # 4. Código de ética
+                    email_proveedor.attach("Codigo_de_etica.pdf", pdf_etica, "application/pdf",)
+
+                    # 5. Política de proveedor
+                    email_proveedor.attach("Politica_proveedor.pdf", pdf_politica_proveedor, "application/pdf",)
+
+                    email_proveedor.send()
+
+                except (BadHeaderError, SMTPException, socket.gaierror, OSError,) as error:
+                    messages.warning(request,f"La orden fue autorizada, pero el correo dirigido al proveedor no fue enviado: {error}",)
+
+                siguiente_paso = ("recepción de la orden de compra por parte de Almacén, debido a que se trata de una compra a crédito.")
+
+            else:
+                siguiente_paso = ("programación del pago por parte de Tesorería.")
+
+            # Correo interno dirigido a quien creó la orden de compra
+            contexto_interno = contexto_base.copy()
+
+            contexto_interno.update({
+                "nombre_solicitante": nombre_creador,
+                "siguiente_paso": siguiente_paso,
+            })
+
+            html_message = render_to_string(
+                "emails/compras/compra_autorizada.html",
+                contexto_interno,
+            )
+
+            try:
+                email_interno = EmailMessage(
+                    f"OC Autorizada Gerencia {compra.folio}|"
+                    f"RQ: {compra.req.folio} |"
+                    f"Sol: {compra.req.orden.folio}",
+                    body=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[
+                        compra.creada_por.staff.staff.email,
+                    ],
+                    headers={
+                        "Content-Type": "text/html",
+                                       },
+                )
+
+                email_interno.content_subtype = "html"
+                email_interno.send()
+
+                messages.success(
+                    request,
+                    f"{usuario.staff.staff.first_name} ha autorizado "
+                    f"la compra {compra.folio}",
+                )
+
+            except (
+                BadHeaderError,
+                SMTPException,
+                socket.gaierror,
+            ) as error:
+                messages.warning(
+                    request,
+                    f"{usuario.staff.staff.first_name} ha autorizado "
+                    f"la compra {compra.folio}, pero el correo interno "
+                    f"no fue enviado debido a un error: {error}",
+                )
+
+            return redirect("autorizacion-oc2")
+          
+
+    context={
+        'form':form,
+        'compra':compra,
+        'costo_oc':costo_oc,
+        'productos':productos,
+        'tipo_cambio':compra.tipo_de_cambio,
+        'resta':resta,
+        'porcentaje':porcentaje,
+        'costo_total':costo_total,
+        }
+
+    return render(request, 'compras/autorizar_oc2.html',context)
+
+def avisar_calidad_oc(compra):
+    """
+    Envía un correo al encargado de calidad del distrito avisando que
+    una OC próxima a llegar contiene productos críticos.
+    """
+    distrito = compra.req.orden.proyecto.distrito  # ajusta según tu modelo
+     # 🔍 Buscar artículos de la OC cuyos productos sean críticos
+    productos_criticos = ArticuloComprado.objects.filter(
+        oc=compra,
+        producto__producto__articulos__producto__producto__critico=True
+    ).distinct()
+    if not productos_criticos.exists():
+        return  # nada que avisar
+
+    encargados = Profile.objects.filter(tipo__calidad=True, distritos=distrito)
+    if not encargados.exists():
+        return
+
+    # Tabla con los productos críticos
+    articulos_html = """
+        <table width="100%" border="1" cellspacing="0" cellpadding="5"
+               style="border-collapse: collapse; font-size: 14px;">
+            <tr style="background-color: #eee;">
+                <th>Nombre</th>
+                <th>Código</th>
+                <th>Unidad</th>
+                <th>Familia</th>
+                <th>Subfamilia</th>
+                <th>Cantidad</th>
+                <th>Requerimientos</th>
+                <th>Comentarios</th>
+            </tr>
+    """
+    for art in productos_criticos:
+        p = art.producto.producto.articulos.producto.producto
+        requerimientos = []
+        if hasattr(p, 'producto_calidad'):  # Verifica que tenga criticidad cargada
+            requerimientos = p.producto_calidad.requerimientos_calidad.all()
+
+        if requerimientos:
+            first_row = True
+            for req in requerimientos:
+                articulos_html += f"""
+                    <tr>
+                        <td>{p.nombre if first_row else ''}</td>
+                        <td>{p.codigo if first_row else ''}</td>
+                        <td>{p.unidad.nombre if first_row and p.unidad else ''}</td>
+                        <td>{p.familia.nombre if first_row and p.familia else ''}</td>
+                        <td>{p.subfamilia.nombre if first_row and p.subfamilia else ''}</td>
+                        <td>{art.cantidad if first_row else ''}</td>
+                        <td>{req.requerimiento.nombre}</td>
+                        <td>{req.comentarios or ''}</td>
+                    </tr>
+                """
+                first_row = False
+        else:
+            articulos_html += f"""
+                <tr>
+                    <td>{p.nombre}</td>
+                    <td>{p.codigo}</td>
+                    <td>{p.unidad.nombre if p.unidad else ''}</td>
+                    <td>{p.familia.nombre if p.familia else ''}</td>
+                    <td>{p.subfamilia.nombre if p.subfamilia else ''}</td>
+                    <td>{art.cantidad}</td>
+                    <td>Sin requerimientos</td>
+                    <td>Sin comentarios</td>
+                </tr>
+            """
+
+    articulos_html += "</table>"
+
+    # Cargar imágenes base64
+    static_path = settings.STATIC_ROOT
+    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+    image_base64 = get_image_base64(img_path)
+    logo_v_base64 = get_image_base64(img_path2)
+
+    # HTML del correo
+    html_message = f"""
+    <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600px" cellspacing="0" cellpadding="0"
+                               style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                            <tr>
+                                <td align="center">
+                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Estimado(a) encargado(a) de calidad del distrito <strong>{distrito.nombre}</strong>,
+                                    </p>
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Está próxima a llegar a almacén una <strong>Orden de Compra</strong> que contiene el siguiente o siguientes productos marcados como <strong>críticos</strong>:
+                                    </p>
+                                    <p style="font-size: 15px; text-align: justify;">
+                                        Folio de OC: <strong>{compra.folio}</strong><br>
+                                        Proveedor: <strong>{compra.proveedor.nombre}</strong>
+                                    </p>
+                                    {articulos_html}
+                                    <p style="text-align: center; margin: 20px 0;">
+                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                    </p>
+                                    <p style="font-size: 13px; color: #777; text-align: justify;">
+                                        Este mensaje ha sido generado automáticamente por <strong>SAVIA 2.0</strong>.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+    """
+
+    # Enviar correo a cada encargado de calidad
+    for encargado in encargados:
+        try:
+            email = EmailMessage(
+                subject=f"OC próxima a llegar con productos críticos | {compra.folio}",
+                body=html_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[encargado.staff.staff.email],
+                headers={'Content-Type': 'text/html'}
+            )
+            email.content_subtype = "html"  # importante para interpretar como HTML
+            email.send()
+        except Exception as e:
+            print(f"Error enviando correo a {encargado.staff.staff.email}: {e}")
+
+def handle_uploaded_file(file, model_instance, field_name):
+    setattr(model_instance, field_name, file)
+    model_instance.save()
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('comprador')
+def comparativos(request):
+    #creada_por 
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    comparativos = Comparativo.objects.filter(completo = True, creada_por__distritos = usuario.distritos).order_by('-id')
+    form = UploadFileForm()
+    error_messages = {}
+
+    myfilter = ComparativoFilter(request.GET, queryset=comparativos)
+    comparativos = myfilter.qs
+
+     #Set up pagination
+    p = Paginator(comparativos, 50)
+    page = request.GET.get('page')
+    comparativos_list = p.get_page(page)
+
+    if request.method == "POST":
+        mi_id = request.POST.get('mi_id')
+        form = UploadFileForm(request.POST or None, request.FILES or None)
+        files = request.FILES.getlist('file')
+        cont = 0
+        if form.is_valid():
+            comparativo = comparativos.get(id=mi_id)
+            for f in files:
+                if cont == 0:
+                    comparativo.cotizacion = files[cont]
+                elif cont == 1:
+                    comparativo.cotizacion2 = files[cont]
+                elif cont == 2:
+                    comparativo.cotizacion3 = files[cont]
+                elif cont == 3:
+                    comparativo.cotizacion4 = files[cont]
+                elif cont == 4:
+                    comparativo.cotizacion5 = files[cont]
+                cont+=1
+                comparativo.save()
+            messages.success(request,f'Entrando {files}')
+            return redirect('comparativos')
+        else:
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
+
+    
+    context= {
+        'myfilter':myfilter,
+        'error_messages': error_messages,
+        'comparativos':comparativos,
+        'form':form,
+        'comparativos_list':comparativos_list,
+    }
+    return render(request,'compras/comparativos.html', context)
+
+
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('comprador')
+def crear_comparativo(request):
+    #start_time = time.time()  # Tiempo de inicio
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    #usuario = colaborador_sel.get(id = pk_perfil)
+    
+    comparativo, created = (Comparativo.objects.filter(Q(nombre__isnull=True) | Q(nombre='')).get_or_create(completo= False, creada_por=usuario))
+    productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
+    error_messages = {}
+    form_item = Item_ComparativoForm()
+    form = ComparativoForm()
+
+    if request.method =='POST':
+        #print("POST KEYS:", list(request.POST.keys()))
+        #print("POST btn_creacion?", "btn_creacion" in request.POST)
+        #print("POST btn_producto?", "btn_producto" in request.POST)
+        if "btn_creacion" in request.POST:
+            form = ComparativoForm(request.POST, request.FILES, instance=comparativo)
+            if form.is_valid():
+                comparativo = form.save(commit=False)
+                comparativo.completo = True
+                comparativo.created_at = date.today()
+                comparativo.creada_por =  usuario
+                comparativo.save()
+                messages.success(request, f'El comparativo {comparativo.id} ha sido creado')
+                return redirect('comparativos')
+            else:
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
+                messages.error(request,f'No está validando {error_messages}' )
+        elif "btn_producto" in request.POST:
+            articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
+            form_item = Item_ComparativoForm(request.POST, instance= articulo)
+            if form_item.is_valid():
+                articulo = form_item.save(commit=False)
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'Se ha agregado el artículo exitosamente')
+                return redirect('crear_comparativo')
+            else:
+                for field, errors in form_item.errors.items():
+                    error_messages[field] = errors.as_text()
+                messages.error(request,f'No está validando {error_messages}' )
+        else:
+            post_data = request.POST
+            post_items = [f"{key}: {value}" for key, value in post_data.items()]
+            post_content = ", ".join(post_items)
+            messages.error(request, f"Datos recibidos en POST: {post_content}")
+        
+
+    #end_time = time.time()  # Tiempo de finalización
+    #total_time = end_time - start_time  # Tiempo total de ejecución    
+    
+    context= {
+        'error_messages': error_messages,
+        'productos':productos,
+        'form':form,
+        'form_item':form_item,
+        'comparativo':comparativo,
+        #'total_time': total_time,
+    }
+
+    return render(request, 'compras/crear_comparativo.html', context)
+
+
+
+#Ajax Select2
+def carga_proveedor(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    colaborador_sel = Profile.objects.all()
+    usuario = colaborador_sel.get(id = pk_perfil)
+    term = request.GET.get('term')
+    proveedores = Proveedor_direcciones.objects.filter(
+         Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO") | Q(estatus__nombre="PREAPROBAD"),
+         distrito = usuario.distritos, 
+         nombre__razon_social__icontains = term
+    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda__nombre', 'banco__nombre',)
+    data = list(proveedores)
+    print(proveedores)
+    return JsonResponse(data, safe=False)
+
+def carga_proveedor_comparativo(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    colaborador_sel = Profile.objects.all()
+    usuario = colaborador_sel.get(id = pk_perfil)
+    term = request.GET.get('term')
+    proveedores = Proveedor.objects.filter(razon_social__icontains = term).values('id','razon_social')
+    data = list(proveedores)
+        
+    return JsonResponse(data, safe=False)
+    
+#Ajax Select2
+def carga_productos(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    colaborador_sel = Profile.objects.all()
+    usuario = colaborador_sel.get(id = pk_perfil)
+    term = request.GET.get('term')
+    articulos = Inventario.objects.filter(distrito = usuario.distritos, producto__nombre__icontains = term).values('id','producto__nombre')
+    
+    #data = [{"id": item['id'], "text": item['producto__nombre']} for item in articulos]
+    data = list(articulos)
+        
+    return JsonResponse(data, safe=False)
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
+def editar_comparativo(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+   
+    usuario = Profile.objects.get(id = pk_perfil)
+    
+    comparativo = Comparativo.objects.get(id=pk)
+
+    productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
+    proveedores = Proveedor_direcciones.objects.all()
+    articulos = Inventario.objects.all()
+    form_item = Item_ComparativoForm()
+    form = ComparativoForm(instance = comparativo)
+
+    if request.method =='POST':
+        if "btn_agregar" in request.POST:
+            print(request.POST)
+            form = ComparativoForm(request.POST, request.FILES, instance = comparativo)
+            #abrev= usuario.distrito.abreviado
+            if form.is_valid():
+                comparativo = form.save(commit=False)
+                comparativo.completo = True
+                comparativo.created_at = date.today()
+                #comparativo.created_at_time = datetime.now().time()
+                comparativo.creado_por =  usuario
+                comparativo.save()
+
+                # Ahora sigues trabajando sobre el nuevo comparativo
+                messages.success(request, f'Ha sido creado un nuevo comparativo: {comparativo.id}')
+                return redirect('comparativos')
+        if "btn_producto" in request.POST:
+            articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
+            #producto_id = request.POST.get('producto')
+            #producto = Inventario.objects.filter(id = producto_id)
+            #form_item.fields['producto'].queryset = producto
+            form_item = Item_ComparativoForm(request.POST, instance=articulo)
+            if form_item.is_valid():
+                articulo = form_item.save(commit=False)
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'Se ha agregado el artículo exitosamente')
+                return redirect('editar-comparativo')
+        
+    context= {
+        'productos':productos,
+        'form':form,
+        'form_item':form_item,
+        'articulos':articulos,
+        'comparativo':comparativo,
+        'proveedores':proveedores,
+    }
+
+    return render(request, 'compras/actualizar_comparativo.html', context)
+
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
+def clonar_comparativo(request, pk):
+    usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
+    with transaction.atomic():
+        original = Comparativo.objects.get(id=pk)
+
+        # 1. Crear nuevo comparativo basado en el original
+        nuevo = Comparativo.objects.get(pk=pk)
+        nuevo.pk = None  # esto crea un nuevo registro
+        nuevo.completo = False
+        nuevo.created_at = date.today()
+        nuevo.creada_por = usuario
+        nuevo.save()
+
+        # 2. Copiar productos del original
+        productos_originales = Item_Comparativo.objects.filter(
+            comparativo=original,
+            completo=True
+        )
+
+    for item in productos_originales:
+        item.pk = None
+        item.comparativo = nuevo
+        item.completo = True
+        item.save()
+
+    messages.success(
+        request,
+        f"El comparativo {nuevo.id} fue creado basado en el comparativo {original.id}"
+    )
+
+    # 3. Redirigir al nuevo
+    return redirect('editar-comparativo', pk=nuevo.id)
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
+def articulos_comparativo(request, pk):
+    articulos = Item_Comparativo.objects.filter(comparativo__id = pk , completo = True)
+
+    context= {
+        'articulos':articulos,
+    }
+    return render(request, 'compras/articulos_comparativo.html', context)
+
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
+def articulo_comparativo_delete(request, pk):
+   
+    articulo = Item_Comparativo.objects.get(id=pk)
+    comparativo = articulo.comparativo.id
+   
+    messages.success(request,f'El articulo ha sido eliminado exitosamente')
+    articulo.delete()
+
+    return redirect('crear_comparativo')
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
+def historico_articulos_compras(request):
+    registros = ArticuloComprado.history.all()
+
+    myfilter = HistoricalArticuloCompradoFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
+    context = {
+        'registros_list':registros_list,
+        'myfilter':myfilter,
+        }
+
+    return render(request,'compras/historico_articulos_comprados.html',context)
+
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('compras')
+def historico_compras(request):
+    registros = Compra.history.all()
+    myfilter = HistoricalCompraFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+    
+    context = {
+        'registros_list':registros_list,
+        'myfilter':myfilter,
+        }
+    return render(request,'compras/historico_compras.html',context)
+
+@perfil_seleccionado_required
+def descargar_pdf(request, pk):
+    compra = get_object_or_404(Compra, id=pk)
+    if compra.req.orden.distrito.nombre != "BRASIL":
+        buf = generar_pdf_nueva(compra)  # tu función
+    else:
+        buf = generar_pdf_brasil(compra)
+    return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
+
+@xframe_options_sameorigin
+def ver_oc_pdf(request, compra_id):
+    compra = get_object_or_404(Compra, pk=compra_id)
+    if compra.req.orden.distrito.nombre != "BRASIL":
+        buf = generar_pdf_nueva(compra)  # tu función
+    else:
+        buf = generar_pdf_brasil(compra)  # función específica para Brasil
+    filename = f"OC_{compra.folio}.pdf"
+
+    resp = FileResponse(buf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
+
+
+
+
+
+
+def wrap_text_to_fit(text, width, style):
+    # Determinar la anchura máxima del texto que cabe en la columna
+    words = text.split()
+    lines = []
+    line = []
+
+    for word in words:
+        # Comprueba si agregar la palabra excedería la longitud de la línea
+        test_line = ' '.join(line + [word])
+        if stringWidth(test_line, style.fontName, style.fontSize) > width:
+            # Si la línea es demasiado larga, guarda la línea actual y comienza una nueva
+            lines.append(' '.join(line))
+            line = [word]
+        else:
+            line.append(word)
+    lines.append(' '.join(line))  # Añade la última línea
+    wrapped_text = '\n'.join(lines)
+    return wrapped_text
 
 
 
