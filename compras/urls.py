@@ -58,6 +58,9 @@ urlpatterns = [
     path("compras/catalogo/<int:producto_id>/precios/", views.producto_precios_detalle, name="producto-precios-detalle"),
     
     #VORDTEC
+    path('compras/autorizacion_preevaluaciones', views.autorizacion_preevaluacion, name='autorizacion-preevaluacion'),
+    path('compras/autorizar_preevaluacion/<int:pk>', views.autorizar_preevaluacion, name='autorizar-preevaluacion'),
+    path('compras/cancelar_preevaluacion/<int:pk>', views.cancelar_preevaluacion, name='cancelar-preevaluacion'),
     path("preevaluaciones/<int:pk>/", views.preevaluaciones, name="preevaluaciones"),
     path('preevaluacion/<int:pk>/',views.preevaluacion,name='preevaluacion'),
     path('preevaluacion/pdf/<int:pk>/',views.preevaluacion_pdf, name='preevaluacion-pdf'),

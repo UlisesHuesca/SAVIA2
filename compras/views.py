@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse, Http404
 from django.views.decorators.cache import cache_page
 from django.db import transaction
@@ -21,7 +22,7 @@ from django.template.loader import render_to_string
 from utils.email_theme import obtener_tema_correo
 
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter, ComparativoFilter
-from .models import ArticuloComprado, Compra, Proveedor_direcciones, Comparativo, Item_Comparativo, Proveedor, Preevaluacion
+from .models import ArticuloComprado, Compra, Proveedor_direcciones, Comparativo, Item_Comparativo, Proveedor, Preevaluacion, Estatus_proveedor
 from .forms import (CompraForm, ArticuloCompradoForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, 
                     Compra_ComentarioGerForm, RequisDevolucionForm, PreevaluacionForm)
 from .preevaluaciones_pdf import (generar_preevaluacion_pdf, generar_preevaluacion_inicial_pdf,)
@@ -784,6 +785,8 @@ def oc_modal(request, pk):
 
 @perfil_seleccionado_required
 def mostrar_comparativo(request, pk):
+   
+   
     compra = Compra.objects.get(id=pk)
     comparativo = Comparativo.objects.get(id=compra.comparativo_model.id)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo)
@@ -871,16 +874,7 @@ def preevaluacion(request, pk):
 @perfil_seleccionado_required
 def preevaluacion_pdf(request, pk):
 
-    preevaluacion = get_object_or_404(
-        Preevaluacion.objects.select_related(
-            'nombre',
-            'tipo_evaluacion',
-            'creado_por__staff',
-            'comparativo_model',
-        ),
-        pk=pk,
-        completo=True,
-    )
+    preevaluacion = get_object_or_404(Preevaluacion.objects.select_related('nombre', 'tipo_evaluacion', 'creado_por__staff', 'comparativo_model',), pk=pk, completo=True,)
 
     tipo = preevaluacion.tipo_evaluacion.nombre if preevaluacion.tipo_evaluacion else None
 
@@ -894,6 +888,194 @@ def preevaluacion_pdf(request, pk):
         raise Http404("Tipo de preevaluación no reconocido.")
 
     return FileResponse(buffer, as_attachment=False, filename=f'Preevaluacion_{preevaluacion.pk}.pdf', content_type='application/pdf')
+
+
+
+@perfil_seleccionado_required
+def autorizacion_preevaluacion(request):
+
+    preevaluaciones = (Preevaluacion.objects.filter(completo=True, resultado__isnull=True)
+        .select_related(
+            'nombre',
+            'tipo_evaluacion',
+            'criticidad',
+            'creado_por__staff'
+        )
+        .order_by('-creado_at')
+    )
+
+    context = {
+        'preevaluaciones': preevaluaciones,
+    }
+
+    return render(request,'compras/matriz_autorizacion_preevaluacion.html', context)
+
+
+
+@perfil_seleccionado_required
+def autorizar_preevaluacion(request, pk):
+    print("Método:", request.method)
+    print("POST:", request.POST)
+    # =========================================================
+    # 1. CONSULTAR PREEVALUACIÓN
+    # =========================================================
+
+    preevaluacion = get_object_or_404(Preevaluacion.objects.select_related( 'nombre', 'tipo_evaluacion', 'criticidad', 'creado_por', 'comparativo_model'), pk=pk, completo=True)
+
+    # =========================================================
+    # 2. VALIDAR SI YA FUE PROCESADA
+    # =========================================================
+
+    if preevaluacion.resultado is not None:
+
+        messages.warning(request, f'La preevaluación {preevaluacion.pk} ya fue procesada.')
+
+        return redirect('autorizacion-preevaluacion')
+
+    # =========================================================
+    # 3. PROCESAR AUTORIZACIÓN
+    # =========================================================
+
+    if request.method == 'POST':
+
+        if 'btn_autorizar' not in request.POST:
+            messages.error(request, 'No se recibió una solicitud de autorización válida.')
+            return redirect('autorizacion-preevaluacion')
+
+        print('si')
+        with transaction.atomic():
+            # Bloquear registro durante la autorización.
+            # Se consulta nuevamente para evitar autorizaciones
+            # simultáneas por distintos usuarios.
+
+            preevaluacion = get_object_or_404(Preevaluacion.objects.select_for_update(),pk=pk, completo=True)
+
+            if preevaluacion.resultado is not None:
+
+                messages.warning(request, f'La preevaluación {preevaluacion.pk} ya fue procesada por otro usuario.')
+
+                return redirect('autorizacion-preevaluacion')
+
+            # =================================================
+            # 4. OBTENER ESTATUS DE AUTORIZACIÓN
+            # =================================================
+            estatus_autorizado = get_object_or_404(Estatus_proveedor, nombre = "APROBADO")
+
+            # =================================================
+            # 5. OBTENER DIRECCIONES ELEGIBLES
+            # =================================================
+
+
+            direcciones_prov = (Proveedor_direcciones.objects.filter( nombre_id=preevaluacion.nombre_id, completo=True)
+                .filter(
+                    Q(estatus__isnull=True) |
+                    Q(estatus_id=2)
+                )
+            )
+
+            # =================================================
+            # 6. ACTUALIZAR ESTATUS DE DIRECCIONES
+            # =================================================
+
+            direcciones_actualizadas = 0
+
+            for direccion in direcciones_prov:
+
+                direccion.estatus = estatus_autorizado
+                direccion.save(update_fields=['estatus'])
+
+                direcciones_actualizadas += 1
+
+            # =================================================
+            # 7. AUTORIZAR PREEVALUACIÓN
+            # =================================================
+
+            preevaluacion.resultado = True
+            preevaluacion.save(update_fields=['resultado'])
+
+        # =====================================================
+        # 8. MENSAJE DE CONFIRMACIÓN
+        # =====================================================
+
+        messages.success(
+            request,
+            (
+                f'La preevaluación {preevaluacion.pk} '
+                f'ha sido autorizada correctamente. '
+                f'Se actualizaron {direcciones_actualizadas} '
+                f'direcciones del proveedor.'
+            )
+        )
+
+        return redirect('autorizacion-preevaluacion')
+
+    # =========================================================
+    # 9. MOSTRAR PANTALLA DE REVISIÓN (GET)
+    # =========================================================
+
+
+
+
+
+@perfil_seleccionado_required
+def cancelar_preevaluacion(request, pk):
+
+    # =========================================================
+    # 1. CONSULTAR PREEVALUACIÓN
+    # =========================================================
+
+    preevaluacion = get_object_or_404(Preevaluacion.objects.select_related('nombre', 'tipo_evaluacion', 'criticidad', 'creado_por__staff', 'comparativo_model'), pk=pk, completo=True)
+
+    # =========================================================
+    # 2. VALIDAR SI YA FUE PROCESADA
+    # =========================================================
+
+    if preevaluacion.resultado is not None:
+
+        messages.warning(request, f'La preevaluación {preevaluacion.pk} ya fue procesada.')
+        return redirect('autorizacion-preevaluacion')
+
+    # =========================================================
+    # 3. PROCESAR RECHAZO
+    # =========================================================
+
+    if request.method == 'POST':
+
+        if 'btn_autorizar' not in request.POST:
+
+            messages.error(request, 'No se recibió una solicitud de rechazo válida.')
+
+            return redirect('autorizacion-preevaluacion')
+
+        with transaction.atomic():
+
+            preevaluacion = get_object_or_404(Preevaluacion.objects.select_for_update(), pk=pk, completo=True)
+
+            # Evitar doble procesamiento.
+            if preevaluacion.resultado is not None:
+
+                messages.warning(request, f'La preevaluación {preevaluacion.pk} ya fue procesada por otro usuario.')
+
+                return redirect('autorizacion-preevaluacion')
+
+            # =================================================
+            # 4. REGISTRAR RECHAZO
+            # =================================================
+
+            preevaluacion.resultado = False
+
+            preevaluacion.save(
+                update_fields=['resultado']
+            )
+
+        # =====================================================
+        # 5. CONFIRMACIÓN
+        # =====================================================
+
+        messages.success(request, f'La preevaluación {preevaluacion.pk} ha sido rechazada correctamente.')
+
+        return redirect('autorizacion-preevaluacion')
+
 
 
 @perfil_seleccionado_required
@@ -6425,9 +6607,14 @@ solicitado por autoridades competentes.<br/>
     return buf 
 
 def pdf_formato_comparativo(request, pk):
-    # Aquí va el código para generar el PDF
-    compra = Compra.objects.get(id = pk)
-    comparativo = Comparativo.objects.get(id = compra.comparativo_model.id)
+    origen = request.GET.get('origen', None)
+    print('origen:',origen)
+    if origen == 'preevaluacion':
+        comparativo = Comparativo.objects.get(id = pk)
+    else:
+        compra = Compra.objects.get(id = pk)
+        comparativo = Comparativo.objects.get(id = compra.comparativo_model.id)
+    
     productos = Item_Comparativo.objects.filter(comparativo=comparativo)
 
 
@@ -6586,18 +6773,23 @@ def pdf_formato_comparativo(request, pk):
     c.drawString(470, 100, "Superintendente")
     c.line(430, 110, 560, 110)
     #Nombres
-    if compra.oc_autorizada_por:
-        autorizado1 = str(compra.oc_autorizada_por.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por.staff.staff.last_name)
-    else:
-        autorizado1 = ''
-    if compra.creada_por:
-        comprador = str(compra.creada_por.staff.staff.first_name) + ' ' + str(compra.creada_por.staff.staff.last_name)
-    else:
+    if origen == "preevaluacion":
+        autorizado1 = '' 
         comprador = ''
-    if compra.oc_autorizada_por2:
-        autorizado2 = str(compra.oc_autorizada_por2.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por2.staff.staff.last_name)
-    else:
         autorizado2 = ''
+    else:
+        if compra.oc_autorizada_por:
+            autorizado1 = str(compra.oc_autorizada_por.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por.staff.staff.last_name)
+        else:
+            autorizado1 = ''
+        if compra.creada_por:
+            comprador = str(compra.creada_por.staff.staff.first_name) + ' ' + str(compra.creada_por.staff.staff.last_name)
+        else:
+            comprador = ''
+        if compra.oc_autorizada_por2:
+            autorizado2 = str(compra.oc_autorizada_por2.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por2.staff.staff.last_name)
+        else:
+            autorizado2 = ''
     c.drawCentredString(140, 115, autorizado2)
     c.drawCentredString(305, 115, comprador)
     c.drawCentredString(490, 115, autorizado1)
@@ -6697,7 +6889,7 @@ def pdf_formato_comparativo(request, pk):
     c.showPage()
     c.save()
     buf.seek(0)
-    return FileResponse(buf, as_attachment=True, filename=f'Comparativo_{pk}.pdf')
+    return FileResponse(buf, as_attachment=False, filename=f'Comparativo_{pk}.pdf')
 
 
 def ver_politica_pdf(request):

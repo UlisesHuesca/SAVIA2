@@ -1,10 +1,13 @@
 from django.contrib import admin
 from .models import (
     Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_pago, Moneda, Estado, Comparativo, 
-    Item_Comparativo, DocumentosProveedor, TipoPrioridad, Responsable_Interaccion, Tipo_contrato, Evidencia, CategoriaEvidencia)
+    Item_Comparativo, DocumentosProveedor, TipoPrioridad, Responsable_Interaccion, Tipo_contrato, Evidencia, CategoriaEvidencia, Preevaluacion)
 class Tipo_contrato_Admin(admin.ModelAdmin):
     list_display = ('id','nombre','abreviatura')
     #search_fields = ['nombre','abreviatura']
+
+class Preevaluacion_Admin(admin.ModelAdmin):
+    raw_id_fields = ('nombre','creado_por','comparativo_model')
 
 class CompraAdmin(admin.ModelAdmin):
     list_display = ('id','folio', 'req','proveedor','oc_autorizada_por2','cond_de_pago','autorizado1','autorizado2')
@@ -81,4 +84,6 @@ admin.site.register(Tipo_contrato, Tipo_contrato_Admin)
 admin.site.register(Evidencia)
 
 admin.site.register(CategoriaEvidencia)
+
+admin.site.register(Preevaluacion, Preevaluacion_Admin)
 

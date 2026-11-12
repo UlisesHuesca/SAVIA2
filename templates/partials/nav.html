@@ -1043,6 +1043,11 @@ button.sv-navbar-icon-link {
                                     {% endif %}
                                  </a>   
                             {% endif %}
+                            <a class="dropdown-item" href="{% url 'autorizacion-preevaluacion' %}">Autorización Preevaluación
+                                {% if conteo_preevaluacion > 0 %}
+                                <span class="badge bg-danger">({{conteo_preevaluacion}})</span>
+                                {% endif %}
+                            </a>
 
 
                             

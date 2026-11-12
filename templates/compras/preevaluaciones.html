@@ -149,7 +149,7 @@
                                             {{ item.comparativo_model.nombre|default:"Comparativo" }}
                                         </span>
 
-                                        <a href="{% url 'comparativas-pdf' item.comparativo_model.id %}"
+                                        <a href="{% url 'pdf_comparativo' item.comparativo_model.id %}?origen=preevaluacion"
                                            class="btn btn-sm btn-outline-danger"
                                            target="_blank"
                                            rel="noopener noreferrer"

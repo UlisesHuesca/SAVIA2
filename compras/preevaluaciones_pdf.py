@@ -23,9 +23,8 @@ def _texto(valor):
 def _nombre_perfil(perfil):
     if not perfil or not getattr(perfil, 'staff', None):
         return 'No registrado'
-    nombre = perfil.staff.get_full_name().strip()
-    return nombre or perfil.staff.get_username()
-
+    nombre = str(perfil.staff.staff.first_name) + ' ' + str(perfil.staff.staff.last_name)
+    return nombre
 
 def _configuracion(evaluacion):
     tipo = getattr(getattr(evaluacion, 'tipo_evaluacion', None), 'nombre', None)

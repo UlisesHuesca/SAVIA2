@@ -1,0 +1,489 @@
+
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Autorización de preevaluaciones{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- ENCABEZADO -->
+    <div class="sv-page-header mb-4">
+        <div>
+            <h1 class="sv-page-title">
+                <i class="fa-solid fa-clipboard-check me-2"></i>
+                Autorización de preevaluaciones
+            </h1>
+            <p class="sv-page-subtitle mb-0">
+                Revisión y autorización de evaluaciones iniciales de proveedores.
+            </p>
+        </div>
+    </div>
+
+    <!-- TARJETA PRINCIPAL -->
+    <div class="sv-card">
+
+        <div class="sv-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <h2 class="sv-card-title mb-1">
+                    <i class="fa-solid fa-list-check me-2"></i>
+                    Evaluaciones pendientes
+                </h2>
+                <span class="sv-card-subtitle">
+                    Preevaluaciones completas pendientes de resolución
+                </span>
+            </div>
+
+            <span class="badge bg-warning text-dark">
+                {{ preevaluaciones|length }} pendientes
+            </span>
+        </div>
+
+        <div class="sv-card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table sv-table align-middle mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>Folio</th>
+                            <th>Proveedor</th>
+                            <th>Fecha</th>
+                            <th>Tipo de evaluación</th>
+                            <th>Realizada por</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in preevaluaciones %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">
+                                    {{ item.id }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="fw-semibold">
+                                    {{ item.nombre.razon_social }}
+                                </div>
+                                <small class="text-muted">
+                                    Proveedor #{{ item.nombre_id }}
+                                </small>
+                            </td>
+
+                            <td class="text-nowrap">
+                                {{ item.modified_at|date:"d/m/Y" }}
+                                <div class="small text-muted">
+                                    {{ item.modified_at|date:"H:i" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ item.tipo_evaluacion.nombre|default:"Sin tipo" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if item.creado_por and item.creado_por.staff %}
+                                    {{ item.creado_por.staff }}
+                                {% else %}
+                                    <span class="text-muted">No disponible</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-center align-items-center flex-wrap gap-2">
+
+                                    <!-- PDF DE PREEVALUACIÓN -->
+                                    <a
+                                        class="sv-btn sv-btn-info sv-btn-icon"
+                                        href="{% url 'preevaluacion-pdf' item.id %}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Ver PDF de preevaluación"
+                                        aria-label="Ver PDF de preevaluación">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </a>
+
+                                    
+                                    
+                                    <!-- AUTORIZAR -->
+                                    <button
+                                        type="button"
+                                        class="sv-btn sv-btn-success sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalResolverPreevaluacion"
+                                        data-accion="autorizar"
+                                        data-folio="{{ item.id }}"
+                                        data-proveedor="{{ item.nombre.razon_social }}"
+                                        data-tipo="{{ item.tipo_evaluacion.nombre }}"
+                                        data-url="{% url 'autorizar-preevaluacion' item.id %}"
+                                        title="Autorizar preevaluación"
+                                        aria-label="Autorizar preevaluación">
+
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+
+                                    <!-- RECHAZAR -->
+                                    <button
+                                        type="button"
+                                        class="sv-btn sv-btn-danger sv-btn-icon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalResolverPreevaluacion"
+                                        data-accion="rechazar"
+                                        data-folio="{{ item.id }}"
+                                        data-proveedor="{{ item.nombre.razon_social }}"
+                                        data-tipo="{{ item.tipo_evaluacion.nombre }}"
+                                        data-url="{% url 'cancelar-preevaluacion' item.id %}"
+                                        title="Rechazar preevaluación"
+                                        aria-label="Rechazar preevaluación">
+
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+
+
+                                    
+
+                                
+
+                                    {% if item.comparativo_model %}
+
+
+                                    <!-- PDF COMPARATIVO -->
+                                    <button
+                                        type="button"
+                                        class="sv-btn sv-btn-secondary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#comparativoPreviewModal"
+                                        data-pdf-url="{% url 'pdf_comparativo' item.comparativo_model.id %}?origen=preevaluacion"
+                                        title="Consultar comparativo">
+
+                                        <i class="fa-solid fa-scale-balanced me-2"></i>
+                                        Consultar comparativo
+                                    </button>
+                                    {% endif %}
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="6">
+                                <div class="sv-empty-state text-center py-5">
+                                    <i class="fa-solid fa-circle-check fa-3x text-success mb-3"></i>
+                                    <h3 class="sv-empty-title">
+                                        No hay preevaluaciones pendientes
+                                    </h3>
+                                    <p class="sv-empty-text">
+                                        Todas las preevaluaciones registradas han sido procesadas.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade"
+     id="comparativoPreviewModal"
+     tabindex="-1"
+     aria-labelledby="comparativoPreviewTitle"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+                <h2 class="modal-title fs-5"
+                    id="comparativoPreviewTitle">
+                    <i class="fa-solid fa-scale-balanced me-2"></i>
+                    Comparativo de proveedores
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body p-0">
+
+                <iframe
+                    id="comparativoPreviewFrame"
+                    title="Vista previa del comparativo"
+                    style="width:100%; height:75vh; border:0;"
+                    src="about:blank">
+                </iframe>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <a id="comparativoAbrirPdf"
+                   href="#"
+                   target="_blank"
+                   rel="noopener"
+                   class="sv-btn sv-btn-info">
+                    <i class="fa-solid fa-up-right-from-square me-2"></i>
+                    Abrir PDF
+                </a>
+
+                <button type="button"
+                        class="sv-btn sv-btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     MODAL AUTORIZAR / RECHAZAR PREEVALUACIÓN
+========================================================== -->
+<div class="modal fade"
+     id="modalResolverPreevaluacion"
+     tabindex="-1"
+     aria-labelledby="modalResolverPreevaluacionTitulo"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content sv-modal">
+
+            <div class="modal-header">
+
+                <h2 class="modal-title fs-5"
+                    id="modalResolverPreevaluacionTitulo">
+                    Resolver preevaluación
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <div class="sv-empty-text mb-1">
+                        Proveedor
+                    </div>
+
+                    <h5 class="fw-semibold mb-2"
+                        id="modalPreevaluacionProveedor">
+                    </h5>
+
+                    <span class="badge bg-light text-dark border"
+                          id="modalPreevaluacionTipo">
+                    </span>
+                </div>
+
+                <hr>
+
+                <p class="fw-semibold mb-2"
+                   id="modalPreevaluacionPregunta">
+                </p>
+
+                <p class="sv-empty-text mb-0"
+                   id="modalPreevaluacionDescripcion">
+                </p>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="sv-btn sv-btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <form method="post"
+                      id="formResolverPreevaluacion"
+                      class="m-0">
+
+                    {% csrf_token %}
+
+                    <input type="hidden"
+                           name="btn_autorizar"
+                           value="1">
+
+                    <button type="submit"
+                            id="btnConfirmarPreevaluacion"
+                            class="sv-btn sv-btn-success">
+                        Confirmar
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+
+    
+document.addEventListener("DOMContentLoaded", function () {
+
+    const modal = document.getElementById("comparativoPreviewModal");
+    const frame = document.getElementById("comparativoPreviewFrame");
+    const abrirPdf = document.getElementById("comparativoAbrirPdf");
+
+    if (!modal || !frame || !abrirPdf) return;
+
+    modal.addEventListener("show.bs.modal", function (event) {
+
+        const boton = event.relatedTarget;
+        const url = boton?.dataset.pdfUrl;
+
+        if (!url) return;
+
+        frame.src = url;
+        abrirPdf.href = url;
+
+    });
+
+    modal.addEventListener("hidden.bs.modal", function () {
+
+        frame.src = "about:blank";
+        abrirPdf.href = "#";
+
+    });
+
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const modal = document.getElementById(
+        "modalResolverPreevaluacion"
+    );
+
+    const formulario = document.getElementById(
+        "formResolverPreevaluacion"
+    );
+
+    const titulo = document.getElementById(
+        "modalResolverPreevaluacionTitulo"
+    );
+
+    const proveedor = document.getElementById(
+        "modalPreevaluacionProveedor"
+    );
+
+    const tipo = document.getElementById(
+        "modalPreevaluacionTipo"
+    );
+
+    const pregunta = document.getElementById(
+        "modalPreevaluacionPregunta"
+    );
+
+    const descripcion = document.getElementById(
+        "modalPreevaluacionDescripcion"
+    );
+
+    const botonConfirmar = document.getElementById(
+        "btnConfirmarPreevaluacion"
+    );
+
+    if (!modal || !formulario) return;
+
+    modal.addEventListener("show.bs.modal", function (event) {
+
+        const boton = event.relatedTarget;
+
+        if (!boton) return;
+
+        const accion = boton.dataset.accion;
+        const folio = boton.dataset.folio;
+        const url = boton.dataset.url;
+
+        if (!url || !["autorizar", "rechazar"].includes(accion)) {
+            event.preventDefault();
+            return;
+        }
+
+        // Configurar formulario.
+        formulario.action = url;
+        botonConfirmar.disabled = false;
+
+        // Información general.
+        proveedor.textContent = boton.dataset.proveedor || "";
+        tipo.textContent = boton.dataset.tipo || "";
+
+        if (accion === "autorizar") {
+
+            titulo.textContent = `Autorizar preevaluación #${folio}`;
+
+            pregunta.textContent =
+                "¿Deseas autorizar esta preevaluación?";
+
+            descripcion.textContent =
+                "La autorización quedará registrada y podrán actualizarse las direcciones elegibles del proveedor.";
+
+            botonConfirmar.className =
+                "sv-btn sv-btn-success";
+
+            botonConfirmar.innerHTML =
+                '<i class="fa-solid fa-check me-2"></i> Autorizar';
+
+        } else {
+
+            titulo.textContent = `Rechazar preevaluación #${folio}`;
+
+            pregunta.textContent =
+                "¿Deseas rechazar esta preevaluación?";
+
+            descripcion.textContent =
+                "La preevaluación quedará registrada como rechazada. No se modificarán las direcciones del proveedor.";
+
+            botonConfirmar.className =
+                "sv-btn sv-btn-danger";
+
+            botonConfirmar.innerHTML =
+                '<i class="fa-solid fa-xmark me-2"></i> Rechazar';
+
+        }
+
+    });
+
+    // Evitar doble envío del formulario.
+    formulario.addEventListener("submit", function () {
+
+        botonConfirmar.disabled = true;
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
