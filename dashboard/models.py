@@ -1,20 +1,13 @@
 from django.db import models
-# De django.contrib.auth.models estamos importando el modelo de usuarios de la administration
+from django.db.models import Q
 from user.models import Distrito, Profile, Almacen, Pais
 from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector,Pozo
-#from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
-#from django.db.models.functions import TruncDate
 
 # Create your models here.
-
-#class Sector(models.Model):
-#    nombre = models.CharField(max_length=25, null=True, unique=True)
-#    status = models.BooleanField(default=False)
-
 
 class Familia(models.Model):
     nombre = models.CharField(max_length=25, null=True, unique=True)
@@ -651,11 +644,194 @@ class ArticulosparaSurtir(models.Model):
     def __str__(self):
         return f'{self.articulos} - {self.cantidad} - {self.cantidad_requisitar}'
     
-#class UnidadTB(models.Model):
-#    IDUNIDADMEDIDA = models.AutoField(primary_key=True)
-#    NOMBRE = models.CharField(max_length=20)
-    # ... otros campos que existen en la tabla bancos_tb ...
 
-#    class Meta:
-#        managed = False
-#        db_table = 'unidadesmedidatb'
+# 1. CATÁLOGO MAESTRO DE PRODUCTOS TERMINADO
+class ProductoTerminado(models.Model):
+
+    class Tipo(models.TextChoices):
+        EQUIPO = "EQUIPO", "Equipo"
+        SUBCOMPONENTE = "SUBCOMPONENTE", "Subcomponente"
+        PIEZA = "PIEZA", "Pieza"
+
+    producto = models.OneToOneField(Product, on_delete=models.PROTECT, related_name="producto_terminado")
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+    descripcion_fabricacion = models.TextField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.producto} - {self.get_tipo_display()}"
+
+    class Meta:
+        verbose_name = "Producto terminado"
+        verbose_name_plural = "Productos terminados"
+        ordering = ["id"]
+
+
+# COMPOSICIÓN / LISTA DE MATERIALES (BOM)
+class ComponenteProductoTerminado(models.Model):
+    producto_padre = models.ForeignKey(ProductoTerminado, on_delete=models.CASCADE,related_name="componentes")
+    producto_hijo = models.ForeignKey(ProductoTerminado, on_delete=models.PROTECT, null=True, blank=True, related_name="utilizado_en")
+    material = models.ForeignKey(Product,on_delete=models.PROTECT, null=True, blank=True, related_name="materiales_fabricacion")
+    cantidad = models.DecimalField(max_digits=14, decimal_places=4)
+    comentario = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Componente de producto terminado"
+        verbose_name_plural = "Componentes de productos terminados"
+
+        constraints = [
+            models.CheckConstraint(check=(Q(producto_hijo__isnull=False, material__isnull=True)|Q(producto_hijo__isnull=True,material__isnull=False)),name="bom_hijo_o_material"),
+
+            models.CheckConstraint(check=Q(cantidad__gt=0), name="bom_cantidad_positiva"),
+
+            models.CheckConstraint(check=(Q(producto_hijo__isnull=True)|~Q(producto_padre_id=models.F("producto_hijo_id"))),name="bom_sin_autorreferencia"),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        if bool(self.producto_hijo_id) == bool(self.material_id):
+            raise ValidationError("Selecciona un producto hijo o un material, pero no ambos.")
+
+        if self.cantidad is not None and self.cantidad <= 0:
+            raise ValidationError({"cantidad": "La cantidad debe ser mayor que cero."})
+
+        if not self.producto_padre_id:
+            return
+
+        padre = self.producto_padre
+
+        # Los materiales directos están permitidos
+        # en los tres niveles de fabricación.
+        if self.material_id:
+            return
+
+        if not self.producto_hijo_id:
+            return
+
+        hijo = self.producto_hijo
+
+        if padre.pk == hijo.pk:
+            raise ValidationError("Un producto no puede contenerse a sí mismo.")
+
+        tipos_permitidos = {
+            ProductoTerminado.Tipo.EQUIPO: {
+                ProductoTerminado.Tipo.SUBCOMPONENTE,
+                ProductoTerminado.Tipo.PIEZA,
+            },
+            ProductoTerminado.Tipo.SUBCOMPONENTE: {
+                ProductoTerminado.Tipo.PIEZA,
+            },
+            ProductoTerminado.Tipo.PIEZA: set(),
+        }
+
+        if hijo.tipo not in tipos_permitidos.get(padre.tipo, set()):
+            raise ValidationError(
+                f"Un producto de tipo {padre.get_tipo_display()} no puede contener otro de tipo {hijo.get_tipo_display()}.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        elemento = self.producto_hijo or self.material
+        return f"{self.producto_padre} → {elemento} ({self.cantidad})"
+
+
+class UnidadFabricada(models.Model):
+
+    class Estatus(models.TextChoices):
+        EN_PROCESO = "EN_PROCESO", "En fabricación"
+        DISPONIBLE = "DISPONIBLE", "Disponible en almacén"
+        ENSAMBLADA = "ENSAMBLADA", "Ensamblada"
+        SURTIDA = "SURTIDA", "Surtida / Entregada"
+
+    producto_terminado = models.ForeignKey(ProductoTerminado, on_delete=models.PROTECT,related_name="unidades_fabricadas")
+    numero_serie = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    estatus = models.CharField(max_length=20, choices=Estatus.choices, default=Estatus.EN_PROCESO, db_index=True)
+    unidad_padre = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True, related_name="unidades_ensambladas")
+    fecha_fabricacion = models.DateTimeField(null=True, blank=True)
+    fecha_surtido = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return (
+            f"{self.producto_terminado} - {self.numero_serie or self.pk} - {self.get_estatus_display()}")
+
+    class Meta:
+        verbose_name = "Unidad fabricada"
+        verbose_name_plural = "Unidades fabricadas"
+        ordering = ["-id"]
+
+# SOLICITUD DE PRODUCTOS TERMINADOS
+class Solicitud_Producto_Terminado(models.Model):
+
+    folio = models.IntegerField(null=True, blank=True)
+    staff = models.ForeignKey(Profile, on_delete=models.PROTECT, null=True)
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.PROTECT, null=True)
+    subproyecto = models.ForeignKey(Subproyecto, on_delete=models.PROTECT, null=True)
+    complete = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    comentario = models.TextField(max_length=200, null=True, blank=True)
+    concluida = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Solicitud {self.folio or self.pk}"
+
+    class Meta:
+        verbose_name = "Solicitud de producto terminado"
+        verbose_name_plural = "Solicitudes de productos terminados"
+        ordering = ["-id"]
+
+
+# DETALLE DE SOLICITUD
+class Productos_Solicitud_Terminado(models.Model):
+    # Conservamos la relación original para poder
+    # representar estructuras operativas padre-hijo.
+    principal = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="componentes")
+    serie = models.CharField(max_length=20, null=True, blank=True, unique=True)
+    producto_terminado = models.ForeignKey(ProductoTerminado, on_delete=models.PROTECT, related_name="solicitudes")
+    solicitud = models.ForeignKey(Solicitud_Producto_Terminado, on_delete=models.CASCADE, related_name="productos")
+    precio = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    comentario = models.TextField(max_length=100, null=True, blank=True)
+    complete = models.BooleanField(default=False)
+    validado = models.BooleanField(null=True, blank=True)
+    cliente = models.TextField(max_length=100, null=True, blank=True)
+    destino = models.TextField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Producto solicitado"
+        verbose_name_plural = "Productos solicitados"
+
+        constraints = [
+            models.CheckConstraint(check=Q(cantidad__gt=0), name="solicitud_pt_cantidad_positiva"),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        if self.principal_id:
+            if self.pk and self.principal_id == self.pk:
+                raise ValidationError({"principal": "Un registro no puede ser su propio padre."})
+
+            if (self.solicitud_id and self.principal.solicitud_id != self.solicitud_id):
+                raise ValidationError({
+                    "principal": ("El producto principal debe pertenecer a la misma solicitud.")
+                })
+
+        if self.cantidad is not None and self.cantidad <= 0:
+            raise ValidationError({
+                "cantidad": "La cantidad debe ser mayor que cero."
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return (f"{self.pk} - {self.producto_terminado} - Solicitud {self.solicitud_id}")

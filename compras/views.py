@@ -951,9 +951,7 @@ def autorizar_preevaluacion(request, pk):
             preevaluacion = get_object_or_404(Preevaluacion.objects.select_for_update(),pk=pk, completo=True)
 
             if preevaluacion.resultado is not None:
-
                 messages.warning(request, f'La preevaluación {preevaluacion.pk} ya fue procesada por otro usuario.')
-
                 return redirect('autorizacion-preevaluacion')
 
             # =================================================
@@ -964,19 +962,11 @@ def autorizar_preevaluacion(request, pk):
             # =================================================
             # 5. OBTENER DIRECCIONES ELEGIBLES
             # =================================================
-
-
             direcciones_prov = (Proveedor_direcciones.objects.filter( nombre_id=preevaluacion.nombre_id, completo=True)
-                .filter(
-                    Q(estatus__isnull=True) |
-                    Q(estatus_id=2)
-                )
-            )
-
+                .filter(Q(estatus__isnull=True) | Q(estatus_id=2)))
             # =================================================
             # 6. ACTUALIZAR ESTATUS DE DIRECCIONES
             # =================================================
-
             direcciones_actualizadas = 0
 
             for direccion in direcciones_prov:
@@ -997,24 +987,9 @@ def autorizar_preevaluacion(request, pk):
         # 8. MENSAJE DE CONFIRMACIÓN
         # =====================================================
 
-        messages.success(
-            request,
-            (
-                f'La preevaluación {preevaluacion.pk} '
-                f'ha sido autorizada correctamente. '
-                f'Se actualizaron {direcciones_actualizadas} '
-                f'direcciones del proveedor.'
-            )
-        )
+        messages.success(request,(f'La preevaluación {preevaluacion.pk} ha sido autorizada correctamente.Se actualizaron {direcciones_actualizadas} direcciones del proveedor.'))
 
         return redirect('autorizacion-preevaluacion')
-
-    # =========================================================
-    # 9. MOSTRAR PANTALLA DE REVISIÓN (GET)
-    # =========================================================
-
-
-
 
 
 @perfil_seleccionado_required
@@ -1064,9 +1039,7 @@ def cancelar_preevaluacion(request, pk):
 
             preevaluacion.resultado = False
 
-            preevaluacion.save(
-                update_fields=['resultado']
-            )
+            preevaluacion.save(update_fields=['resultado'])
 
         # =====================================================
         # 5. CONFIRMACIÓN
