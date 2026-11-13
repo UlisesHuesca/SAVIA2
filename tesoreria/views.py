@@ -1610,23 +1610,23 @@ def matriz_pagos(request):
             # Conceptos de viáticos
             conceptos_viatico_qs = (Concepto_Viatico.objects.select_related('producto'))
 
-            pagos_excel = pagos.prefetch_related(
-                Prefetch(
-                    'oc__articulocomprado_set',
-                    queryset=articulos_compra_qs,
-                    to_attr='articulos_excel'
-                ),
-                Prefetch(
-                    'gasto__articulos',
-                    queryset=articulos_gasto_qs,
-                    to_attr='articulos_excel'
-                ),
-                Prefetch(
-                    'viatico__conceptos',
-                    queryset=conceptos_viatico_qs,
-                    to_attr='articulos_excel'
-                ),
-            )
+            #pagos_excel = pagos.prefetch_related(
+            #    Prefetch(
+            #        'oc__articulocomprado_set',
+            #        queryset=articulos_compra_qs,
+            #        to_attr='articulos_excel'
+            #    ),
+            #    Prefetch(
+            #        'gasto__articulos',
+            #        queryset=articulos_gasto_qs,
+            #        to_attr='articulos_excel'
+            #    ),
+            #    Prefetch(
+            #        'viatico__conceptos',
+            #        queryset=conceptos_viatico_qs,
+            #        to_attr='articulos_excel'
+            #    ),
+            #)
                 
             return convert_excel_matriz_pagos(pagos_excel)
         elif 'btnReporteXML' in request.POST:
