@@ -1572,7 +1572,39 @@ def matriz_pagos(request):
 
     if request.method == 'POST': 
         if 'btnReporte' in request.POST:
-            return convert_excel_matriz_pagos(pagos)
+            pagos_excel = pagos.select_related(
+                #Cuenta bancaria
+                'cuenta',
+                'cuenta_moneda',
+                'tipo',
+                #Orden de compra
+                'oc__req__orden__distrito',
+                'oc__req__orden__proyecto',
+                'oc__req__orden__subproyecto',
+                'oc__req__orden__staff__staff__staff',
+                'oc__proveedor',
+                'oc__moneda',
+                'oc__oc_autorizada_por2__staff__staff',
+                'oc__creada_por__staff__staff',
+                   # Gasto
+                'gasto__distrito',
+                'gasto__tipo',
+                'gasto__staff__staff__staff',
+                'gasto__colaborador__staff__staff',
+                'gasto__superintendente__staff__staff',
+                'gasto__autorizado_por2__staff__staff',
+
+                # Viático
+                'viatico__distrito',
+                'viatico__proyecto',
+                'viatico__subproyecto',
+                'viatico__staff__staff__staff',
+                'viatico__colaborador__staff__staff',
+                'viatico__gerente__staff__staff',
+            )
+
+                
+            return convert_excel_matriz_pagos(pagos_excel)
         elif 'btnReporteXML' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
