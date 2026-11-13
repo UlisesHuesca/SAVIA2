@@ -855,7 +855,7 @@ def matriz_oc(request):
         )
 
         articulos_excel = ArticuloComprado.objects.select_related(
-            'producto__producto__articulos__producto__producto'
+            'producto__articulos__producto__producto'
         )
 
         pagos_excel = Pago.objects.filter(hecho=True).order_by('pagado_date')
