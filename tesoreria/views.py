@@ -74,6 +74,7 @@ import xml.etree.ElementTree as ET
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 
+
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -1628,7 +1629,8 @@ def matriz_pagos(request):
             #    ),
             #)
                 
-            return convert_excel_matriz_pagos(pagos_excel)
+            #return convert_excel_matriz_pagos(pagos_excel)
+            return convert_excel_matriz_pagos_xlsxwriter(pagos_excel)
         elif 'btnReporteXML' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
@@ -5420,6 +5422,458 @@ def convert_excel_matriz_pagos(pagos):
     wb.save(response)
 
     return(response)
+
+
+
+
+
+logger = logging.getLogger(__name__)
+
+
+def convert_excel_matriz_pagos_xlsxwriter(pagos):
+
+    inicio_total = time.perf_counter()
+    inicio_filas = time.perf_counter()
+
+    output = io.BytesIO()
+
+    workbook = xlsxwriter.Workbook(
+        output,
+        {
+            'in_memory': True,
+            'strings_to_urls': False,
+        }
+    )
+
+    ws = workbook.add_worksheet('Pagos')
+
+    # =====================================================
+    # 1. ESTILOS
+    # =====================================================
+
+    head_style = workbook.add_format({
+        'bold': True,
+        'font_color': '#FFFFFF',
+        'bg_color': '#333366',
+        'font_name': 'Arial',
+        'font_size': 11,
+    })
+
+    body_style = workbook.add_format({
+        'font_name': 'Calibri',
+        'font_size': 10,
+    })
+
+    date_style = workbook.add_format({
+        'num_format': 'dd/mm/yyyy',
+        'font_name': 'Calibri',
+        'font_size': 10,
+    })
+
+    time_style = workbook.add_format({
+        'num_format': 'hh:mm',
+        'font_name': 'Calibri',
+        'font_size': 10,
+    })
+
+    money_style = workbook.add_format({
+        'num_format': '$ #,##0.00',
+        'font_name': 'Calibri',
+        'font_size': 10,
+    })
+
+    money_resumen_style = workbook.add_format({
+        'num_format': '$ #,##0.00',
+        'font_name': 'Calibri',
+        'font_size': 14,
+        'bold': True,
+    })
+
+    messages_style = workbook.add_format({
+        'font_name': 'Arial Narrow',
+        'font_size': 11,
+    })
+
+    # =====================================================
+    # 2. FUNCIONES AUXILIARES
+    # =====================================================
+
+    def fecha_excel(valor):
+        if isinstance(valor, dt.datetime):
+            if timezone.is_aware(valor):
+                return timezone.make_naive(
+                    valor,
+                    timezone.get_current_timezone()
+                )
+        return valor
+
+    def nombre_persona(persona):
+        if persona is None:
+            return ''
+
+        return (
+            f'{persona.first_name or ""} '
+            f'{persona.last_name or ""}'
+        ).strip()
+
+    def get_transaction_id(pago):
+
+        if pago.oc_id:
+            return 'Compra'
+
+        elif pago.gasto_id:
+
+            if pago.tipo and pago.tipo.nombre == 'ABONO':
+                return 'Gasto - ABONO'
+
+            if pago.gasto.tipo:
+                return f'Gasto - {pago.gasto.tipo.tipo}'
+
+            return 'Gasto'
+
+        elif pago.viatico_id:
+            return 'Viático'
+
+        return ''
+
+    # =====================================================
+    # 3. ENCABEZADOS
+    # =====================================================
+
+    columns = [
+        'Distrito',
+        'Folio',
+        'Tipo',
+        'Solicitado',
+        'Autorizado',
+        'Fecha Creación',
+        'Fecha Autorización',
+        'Proyecto',
+        'Subproyecto',
+        'Proveedor/Colaborador',
+        'Producto/Concepto',
+        'Importe',
+        'Moneda',
+        'Tipo de cambio',
+        'Total en Pesos',
+        'Fecha de pago',
+        'Envío a CD',
+        'Hora Envío a CD',
+        'Tiene Facturas',
+        'Cuenta',
+        'Comprador',
+    ]
+
+    for col_num, columna in enumerate(columns):
+        ws.write(0, col_num, columna, head_style)
+        ws.set_column(col_num, col_num, 16)
+
+    ws.set_column('F:F', 25)
+    ws.set_column('H:K', 24)
+    ws.set_column('L:O', 18)
+    ws.set_column('T:U', 22)
+
+    ws.freeze_panes(1, 0)
+
+    # =====================================================
+    # 4. DATOS INFORMATIVOS
+    # =====================================================
+
+    columna_resumen = len(columns) + 2
+
+    ws.write(0, columna_resumen,'Reporte Creado Automáticamente por SAVIA 2.1', messages_style)
+
+    ws.write(1, columna_resumen,'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+
+    ws.set_column(columna_resumen, columna_resumen, 35)
+
+    ws.write(2, columna_resumen, 'Total de Pagos', head_style)
+    ws.write(3, columna_resumen, 'Sumatoria de Pagos', head_style)
+
+    # =====================================================
+    # 5. RECORRER PAGOS
+    # =====================================================
+
+    total_pagos = 0
+
+    for row_num, pago in enumerate(pagos.iterator(chunk_size=500),start=1):
+
+        total_pagos += 1
+
+        # Variables generales
+        distrito = ''
+        folio = ''
+        solicitado = ''
+        autorizado = ''
+        fecha_creacion = None
+        fecha_autorizacion = None
+        proyectos = ''
+        subproyectos = ''
+        proveedor = ''
+        productos = ''
+        moneda = 'PESOS'
+        tipo_de_cambio = ''
+        tiene_facturas = 'No'
+        comprador = 'NA'
+
+        cuenta = (pago.cuenta.cuenta if pago.cuenta_id and pago.cuenta else '')
+
+        # ================================================
+        # ORDEN DE COMPRA
+        # ================================================
+
+        if pago.oc_id:
+
+            compra = pago.oc
+            orden = compra.req.orden
+
+            folio = f'OC{compra.folio}'
+            distrito = orden.distrito.nombre
+
+            solicitado = nombre_persona(orden.staff.staff.staff)
+            autorizado = (nombre_persona(compra.oc_autorizada_por2.staff.staff) if compra.oc_autorizada_por2 else '')
+            fecha_creacion = fecha_excel(compra.created_at)
+
+            fecha_autorizacion = fecha_excel(compra.autorizado_at_2)
+
+            proyectos = (orden.proyecto.nombre if orden.proyecto else '')
+
+            subproyectos = (orden.subproyecto.nombre if orden.subproyecto else '')
+
+            proveedor = str(compra.proveedor)
+
+            # Mantenemos la consulta original.
+            articulos_compra = ArticuloComprado.objects.filter(oc=compra)
+
+            productos_set = set()
+
+            for articulo in articulos_compra:
+
+                if articulo.producto:
+                    productos_set.add(str(articulo.producto.producto.articulos.producto.producto.nombre))
+
+            productos = ', '.join(productos_set)
+
+            tiene_facturas = ('Sí' if compra.facturas.filter(factura_xml__isnull=False).exists() else 'No')
+
+            moneda = (compra.moneda.nombre if compra.moneda else 'PESOS')
+
+            cuenta_moneda = (pago.cuenta.moneda.nombre if pago.cuenta and pago.cuenta.moneda else None)
+
+            if cuenta_moneda == 'DOLARES':
+                tipo_de_cambio = (pago.tipo_de_cambio or compra.tipo_de_cambio or 17)
+
+            comprador = nombre_persona(compra.creada_por.staff.staff)
+
+        # ================================================
+        # GASTO
+        # ================================================
+
+        elif pago.gasto_id:
+
+            gasto = pago.gasto
+
+            folio = f'G{gasto.folio}'
+            distrito = gasto.distrito.nombre
+
+            solicitado = nombre_persona(gasto.staff.staff.staff)
+
+            fecha_creacion = fecha_excel(gasto.created_at)
+
+            fecha_autorizacion = fecha_excel(gasto.approbado_fecha2)
+
+            if gasto.colaborador:
+                proveedor = nombre_persona(gasto.colaborador.staff.staff)
+            else:
+                proveedor = solicitado
+
+            if distrito == 'MATRIZ':
+                autorizado = (
+                    nombre_persona(gasto.superintendente.staff.staff) if gasto.superintendente else '')
+            else:
+                autorizado = (
+                    nombre_persona(gasto.autorizado_por2.staff.staff) if gasto.autorizado_por2 else '')
+
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+
+            proyectos_set = set()
+            subproyectos_set = set()
+            productos_set = set()
+
+            for articulo in articulos_gasto:
+
+                if articulo.proyecto:
+                    proyectos_set.add(str(articulo.proyecto.nombre))
+
+                if articulo.subproyecto:
+                    subproyectos_set.add(str(articulo.subproyecto.nombre))
+
+                if articulo.producto:
+                    productos_set.add(str(articulo.producto.nombre))
+
+            proyectos = ', '.join(proyectos_set)
+            subproyectos = ', '.join(subproyectos_set)
+            productos = ', '.join(productos_set)
+
+            tiene_facturas = ('Sí' if gasto.facturas.exists() else 'No')
+
+        # ================================================
+        # VIÁTICO
+        # ================================================
+
+        elif pago.viatico_id:
+
+            viatico = pago.viatico
+
+            folio = f'V{viatico.folio}'
+            distrito = viatico.distrito.nombre
+
+            fecha_creacion = fecha_excel(viatico.created_at)
+
+            fecha_autorizacion = fecha_excel(viatico.approved_at)
+
+            proyectos = (viatico.proyecto.nombre if viatico.proyecto else '')
+
+            subproyectos = (viatico.subproyecto.nombre if viatico.subproyecto else '')
+
+            solicitado = nombre_persona(viatico.staff.staff.staff)
+
+            autorizado = (
+                nombre_persona(viatico.gerente.staff.staff) if viatico.gerente else '')
+
+            if viatico.colaborador:
+                proveedor = nombre_persona(viatico.colaborador.staff.staff)
+            else:
+                proveedor = solicitado
+
+            articulos_viatico = Concepto_Viatico.objects.filter(viatico=viatico)
+
+            productos_set = set()
+
+            for articulo in articulos_viatico:
+
+                if articulo.producto:
+                    productos_set.add(
+                        str(articulo.producto.nombre)
+                    )
+
+            productos = ', '.join(productos_set)
+
+            tiene_facturas = ('Sí' if viatico.facturas.exists() else 'No')
+
+        # ================================================
+        # FECHA Y HORA DE ENVÍO A CD
+        # ================================================
+
+        fecha_envio = None
+        hora_envio = None
+
+        if pago.fecha_control_documentos:
+
+            fecha_original = fecha_excel(
+                pago.fecha_control_documentos
+            )
+
+            if isinstance(fecha_original, dt.datetime):
+
+                fecha_envio = fecha_original.date()
+
+                if fecha_original.time() != dt.time(0, 0):
+                    hora_envio = fecha_original.time()
+
+            else:
+                fecha_envio = fecha_original
+
+        # ================================================
+        # CONSTRUIR FILA
+        # ================================================
+
+        row = [
+            distrito,
+            folio,
+            get_transaction_id(pago),
+            solicitado,
+            autorizado,
+            fecha_creacion,
+            fecha_autorizacion,
+            proyectos,
+            subproyectos,
+            proveedor,
+            productos,
+            pago.monto,
+            moneda,
+            tipo_de_cambio,
+            None,  # Fórmula total en pesos
+            fecha_excel(pago.pagado_date),
+            fecha_envio,
+            hora_envio,
+            tiene_facturas,
+            cuenta,
+            comprador,
+        ]
+
+        # ================================================
+        # ESCRIBIR CELDAS
+        # ================================================
+
+        for col_num, cell_value in enumerate(row):
+
+            if col_num == 14:
+                continue
+
+            formato = body_style
+
+            if col_num in (5, 6, 15, 16):
+                formato = date_style
+
+            elif col_num == 17:
+                formato = time_style
+
+            elif col_num in (11, 13):
+                formato = money_style
+
+            ws.write(row_num, col_num, cell_value, formato)
+
+        # Total en pesos - columna O
+        excel_row = row_num + 1
+
+        ws.write_formula(row_num, 14,(f'=IF(N{excel_row}="",L{excel_row},L{excel_row}*N{excel_row})'),money_style)
+
+        # Métricas cada 500 registros
+        if total_pagos % 500 == 0:
+            logger.info('XLSXWRITER PAGOS | Filas=%s | Tiempo=%.2f s', total_pagos, time.perf_counter() - inicio_filas)
+
+    # =====================================================
+    # 6. RESUMEN
+    # =====================================================
+
+    ws.write_number(2, columna_resumen + 1, total_pagos, body_style)
+
+    ultima_fila = total_pagos + 1
+
+    ws.write_formula(3,columna_resumen + 1,(f'=SUM(O2:O{ultima_fila})' if total_pagos else '=0'), money_resumen_style)
+
+    tiempo_procesamiento = (time.perf_counter() - inicio_filas)
+
+    inicio_guardado = time.perf_counter()
+
+    workbook.close()
+
+    tiempo_guardado = (time.perf_counter() - inicio_guardado)
+
+    output.seek(0)
+
+    response = HttpResponse(output.getvalue(),content_type=('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))
+
+    response['Content-Disposition'] = (f'attachment; filename="Matriz_pagos_{dt.date.today()}_xlsxwriter.xlsx"')
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)
+    logger.info('XLSXWRITER PAGOS | Registros=%s | Procesamiento=%.2f s | Guardado=%.2f s | Total=%.2f s', total_pagos, tiempo_procesamiento, tiempo_guardado,
+        time.perf_counter() - inicio_total)
+
+    output.close()
+
+    return response
+
 
 def mass_payment_view(request):
     if request.method == 'POST':
