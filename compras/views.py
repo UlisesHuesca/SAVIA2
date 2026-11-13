@@ -4877,10 +4877,21 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         worksheet.write(0, i, column, head_style)
         worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
 
+    def fecha_excel(valor):
+        if isinstance(valor, datetime) and timezone.is_aware(valor):
+            return timezone.make_naive(
+                valor,
+                timezone.get_current_timezone()
+            )
+        return valor
+
     worksheet.set_column('L:L', 12,  money_style)
     worksheet.set_column('M:M', 12, money_style) 
     # Asumiendo que ya tienes tus datos de compras
     row_num = 0
+    
+    
+    
     for row_num, compra_list in enumerate( compras.iterator(chunk_size=500), start=1):
         
         # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
@@ -4997,8 +5008,9 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             cell_format = body_style
 
             # Aplica el formato de fecha para las columnas con fechas
-            if col_num in [9, 10, 17]:  # Asume que estas son tus columnas de fechas
+            if col_num in [9, 10, 17]:
                 cell_format = date_style
+                cell_value = fecha_excel(cell_value)
         
             # Aplica el formato de dinero para las columnas con valores monetarios
             elif col_num in [14, 15]:  # Asume que estas son tus columnas de dinero
