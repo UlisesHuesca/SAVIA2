@@ -6,7 +6,7 @@ from django.core.mail import EmailMessage, BadHeaderError
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField
+from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField, Prefetch
 from django.db.models.functions import Concat, Coalesce
 from django.contrib import messages
 #from django.contrib.auth.decorators import login_required
@@ -1603,6 +1603,30 @@ def matriz_pagos(request):
                 'viatico__gerente__staff__staff',
             )
 
+            # Artículos de órdenes de compra
+            articulos_compra_qs = (ArticuloComprado.objects.select_related('producto__producto'))
+            # Artículos de gastos
+            articulos_gasto_qs = (Articulo_Gasto.objects.select_related('proyecto','subproyecto','producto'))
+            # Conceptos de viáticos
+            conceptos_viatico_qs = (Concepto_Viatico.objects.select_related('producto'))
+
+            pagos_excel = pagos.prefetch_related(
+                Prefetch(
+                    'oc__articulocomprado_set',
+                    queryset=articulos_compra_qs,
+                    to_attr='articulos_excel'
+                ),
+                Prefetch(
+                    'gasto__articulos',
+                    queryset=articulos_gasto_qs,
+                    to_attr='articulos_excel'
+                ),
+                Prefetch(
+                    'viatico__conceptos',
+                    queryset=conceptos_viatico_qs,
+                    to_attr='articulos_excel'
+                ),
+            )
                 
             return convert_excel_matriz_pagos(pagos_excel)
         elif 'btnReporteXML' in request.POST:
@@ -5204,7 +5228,7 @@ def convert_excel_matriz_pagos(pagos):
     columna_max = len(columns)+2
 
     # Agregar los mensajes
-    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.1. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.1}').style = messages_style
     ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Grupo Vordcab S.A. de C.V.}').style = messages_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 30
 
@@ -5220,12 +5244,12 @@ def convert_excel_matriz_pagos(pagos):
 
    # Aquí debes extraer el conjunto completo de pagos en lugar de solo ciertos valores
     
-    for pago in pagos:
-        row_num = row_num + 1
+    for pago in pagos.iterator(chunk_size=500):
+        row_num += 1
         # Define los valores de las columnas basándote en el tipo de pago
         cuenta = pago.cuenta.cuenta if pago.cuenta else ''
         if pago.oc:
-            articulos_compra = ArticuloComprado.objects.filter(oc=pago.oc)
+            articulos_compra = pago.oc.articulos_excel
             solicitado = pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else ''
             distrito = pago.oc.req.orden.distrito.nombre
             proveedor = pago.oc.proveedor
@@ -5273,7 +5297,7 @@ def convert_excel_matriz_pagos(pagos):
             else:
                 proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             
-            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+            articulos_gasto = pago.gasto.articulos_excel
             if pago.gasto.distrito.nombre == 'MATRIZ':
                 autorizado = pago.gasto.superintendente.staff.staff.first_name + ' ' + pago.gasto.superintendente.staff.staff.last_name if pago.gasto.superintendente else ''
             else:
@@ -5304,7 +5328,7 @@ def convert_excel_matriz_pagos(pagos):
             
         elif pago.viatico:
             folio = "V" + str(pago.viatico.folio)
-            articulos_viatico = Concepto_Viatico.objects.filter(viatico=pago.viatico)
+            articulos_viatico = pago.viatico.articulos_excel
             proyectos = pago.viatico.proyecto.nombre if pago.viatico else ''
             subproyectos = pago.viatico.subproyecto.nombre if pago.viatico else ''
             distrito = pago.viatico.distrito.nombre
