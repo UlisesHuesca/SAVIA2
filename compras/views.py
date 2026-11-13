@@ -4,7 +4,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
 from django.db import transaction
-from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField, OuterRef, Subquery, DateTimeField
+from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField, Prefetch
 from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
 from django.utils.html import escape
@@ -799,112 +799,140 @@ def mostrar_comparativo(request, pk):
 @tipo_usuario_requerido('compras')
 def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
-    colaborador_sel = Profile.objects.all()
-    usuario = colaborador_sel.get(id = pk_perfil)
-    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    
+    usuario = Profile.objects.select_related('tipo','distritos').get(id=pk_perfil)
+    almacenes_distritos = usuario.almacen.values_list('distrito_id',flat=True)
+
     if usuario.tipo.compras:
-        compras = Compra.objects.filter(complete = True, req__orden__distrito__id__in = almacenes_distritos).annotate(
-            total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
-            autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
-            ).order_by('-folio')
+
+        compras_base = Compra.objects.filter(complete=True, req__orden__distrito_id__in=almacenes_distritos)
     else:
-        compras = Compra.objects.none()
-    
-    
-    myfilter = CompraFilter(request.GET, queryset=compras)
+        compras_base = Compra.objects.none()
+
+    myfilter = CompraFilter(request.GET, queryset=compras_base)
     compras = myfilter.qs
-    print(compras)
 
-
-    compras_data = list(compras.values())
-    # Obtienes las fechas de inicio y finalización del filtro
     start_date = myfilter.form.cleaned_data.get('start_date')
     end_date = myfilter.form.cleaned_data.get('end_date')
+
+    # 4. DESCARGA EXCEL
    
-    num_approved_requis = 0
-    num_requis_atendidas = 0
-    # Asegúrate de que start_date y end_date son objetos datetime "aware"
-    if start_date is not None and end_date is not None:
-    # Si las fechas no tienen información de la zona horaria, hazlas "aware"
-        # Filtrar las requisiciones aprobadas dentro del rango de fechas
-        if usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ":
-            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True)
-        else:
-            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
-        approved_requis_ids = approved_requis.values_list('id', flat=True)
-        num_approved_requis = approved_requis.count() 
+    if request.method == 'POST' and 'btnExcel' in request.POST:
 
-        # Contar el número de requisiciones aprobadas
-        compras_colocadas_ids = Compra.objects.filter(
-            created_at__gte=start_date, 
-            created_at__lte=end_date, 
-            req__colocada=True,
-            req_id__in=approved_requis_ids,
-            req__orden__distrito = usuario.distritos
-        ).values_list('req', flat=True).distinct()
+        num_approved_requis = 0
+        num_requis_atendidas = 0
 
-        num_requis_atendidas = len(set(compras_colocadas_ids))
+        if start_date is not None and end_date is not None:
+
+            # Requisiciones aprobadas
+            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar=True)
+
+            if not (usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ"):
+                approved_requis = approved_requis.filter(orden__distrito=usuario.distritos)
+
+            num_approved_requis = approved_requis.count()
+
+            # Requisiciones atendidas
+            num_requis_atendidas = (
+                Compra.objects.filter(created_at__gte=start_date, created_at__lte=end_date, req__colocada=True, req_id__in=approved_requis.values('id'),
+                                      req__orden__distrito=usuario.distritos)
+                .values('req_id')
+                .distinct()
+                .count()
+            )
+
+        # Exportación: relaciones cargadas anticipadamente
+        compras_excel = compras.select_related(
+            'req__orden__distrito',
+            'req__orden__proyecto',
+            'req__orden__subproyecto',
+            'req__orden__operacion',
+            'req__orden__staff__staff__staff',
+            'proveedor__nombre',
+            'cond_de_pago',
+            'moneda',
+            'creada_por__staff__staff',
+            'tipo_contratacion',
+        )
+
+        articulos_excel = ArticuloComprado.objects.select_related(
+            'producto__producto__articulos__producto__producto'
+        )
+
+        pagos_excel = Pago.objects.filter(hecho=True).order_by('pagado_date')
+
+        compras_excel = compras_excel.prefetch_related(Prefetch('articulocomprado_set', queryset=articulos_excel, to_attr='articulos_excel'),
+                                                       Prefetch('pagos', queryset=pagos_excel,to_attr='pagos_excel'),'facturas')
+
+        return convert_excel_matriz_compras(compras_excel, num_requis_atendidas, num_approved_requis, start_date, end_date, usuario)
+
+    # =====================================================
+    # 5. CONSULTAS ESPECÍFICAS DE LA MATRIZ HTML
+    # =====================================================
+
+    compras = compras.annotate(
+        total_facturas=Count(
+            'facturas',
+            filter=Q(facturas__hecho=True)
+        ),
+        autorizadas=Count(
+            'facturas',
+            filter=Q(
+                facturas__autorizada=True,
+                facturas__hecho=True
+            )
+        )
+    ).select_related(
+        'req__orden__distrito',
+        'proveedor__nombre',
+    ).prefetch_related(
+        'facturas'
+    ).order_by('-folio')
 
 
-    # Calcular el total de órdenes de compra
-    total_de_oc = compras.count()
-     # Calcular el número de OC que cumplen el criterio (created_at - approved_at <= 3)
-    time_difference = ExpressionWrapper(F('created_at') - F('req__approved_at'), output_field=fields.DurationField())
-    compras_con_criterio = compras.annotate(time_difference=time_difference).filter(time_difference__lte=timedelta(days=3))
-    oc_cumplen = compras_con_criterio.count()
-
-     # Calcular el indicador de cumplimiento (oc_cumplen / total_de_oc)
-    #if total_de_oc > 0:
-    #    cumplimiento = (oc_cumplen / total_de_oc)*100
-    #else:
-    #    cumplimiento = 0
-
-     #Set up pagination
     p = Paginator(compras, 50)
+
     page = request.GET.get('page')
     compras_list = p.get_page(page)
 
-    # Proceso para asignar estados y calcular la suma total de facturas
+   
+
     for compra in compras_list:
+
         if compra.total_facturas == 0:
             compra.estado_facturas = 'sin_facturas'
+
         elif compra.autorizadas == compra.total_facturas:
             compra.estado_facturas = 'todas_autorizadas'
+
         else:
             compra.estado_facturas = 'pendientes'
-        
-        # Sumar totales de facturas relacionadas que cumplan con las condiciones
+
         compra.suma_total_facturas = sum(
-            decimal.Decimal(factura.emisor['total'])
-            for factura in compra.facturas.all()
-            if factura.factura_xml and factura.hecho and factura.autorizada and factura.emisor is not None
+            (
+                decimal.Decimal(
+                    factura.emisor['total']
+                )
+                for factura in compra.facturas.all()
+                if (
+                    factura.factura_xml
+                    and factura.hecho
+                    and factura.autorizada
+                    and factura.emisor is not None
+                )
+            ),
+            decimal.Decimal('0')
         )
-        
-    context= {
-        'usuario':usuario,
-        #'num_approved_requis': num_approved_requis,
-        'compras_list':compras_list,
-        'compras':compras,
-        'myfilter':myfilter,
-        #'cumplimiento': cumplimiento,
-        }
-    
-    
-    #task_id = request.session.get('task_id')
 
-    if request.method == 'POST' and 'btnExcel' in request.POST:
-        return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date, usuario)
-        
-        
+  
+    context = {
+        'usuario': usuario,
+        'compras_list': compras_list,
+        'compras': compras,
+        'myfilter': myfilter,
+    }
 
-    
+    return render(request, 'compras/matriz_compras.html', context)
 
-    return render(request, 'compras/matriz_compras.html',context)
-
-
-#def generar_reporte(request):
-    
 
 from celery.result import AsyncResult
 from celery.exceptions import CeleryError
@@ -4853,23 +4881,26 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.set_column('M:M', 12, money_style) 
     # Asumiendo que ya tienes tus datos de compras
     row_num = 0
-    for compra_list in compras:
-        row_num += 1
+    for row_num, compra_list in enumerate( compras.iterator(chunk_size=500), start=1):
+        
         # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
-        pagos = Pago.objects.filter(oc=compra_list, hecho = True).annotate(
-            fecha_orden=Coalesce('pagado_real', 'pagado_date', output_field=DateField())
-        ).order_by('pagado_date')
+        pagos = compra_list.pagos_excel
+        articulos = compra_list.articulos_excel
 
-        if pagos.exists():
-            primer_pago = pagos.first()
-            primera_fecha_pago = primer_pago.pagado_real if primer_pago.pagado_real else primer_pago.pagado_date
-            primera_fecha_pago = primera_fecha_pago.strftime('%d/%m/%Y')
-        else:
-            primera_fecha_pago = " "
+        primera_fecha_pago = None
+
+        if pagos:
+            primer_pago = pagos[0]
+
+            primera_fecha_pago = (primer_pago.pagado_real or primer_pago.pagado_date)
 
 
-        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
-        articulos = compra_list.articulocomprado_set.all()
+        tipos_cambio = [pago.tipo_de_cambio for pago in pagos if pago.tipo_de_cambio is not None]
+        tipo_de_cambio_promedio_pagos = (sum(tipos_cambio) / len(tipos_cambio) if tipos_cambio else None)
+
+        tipo = (tipo_de_cambio_promedio_pagos if tipo_de_cambio_promedio_pagos is not None else compra_list.tipo_de_cambio)
+        tipo_de_cambio = ('' if tipo is None or tipo == 0 else tipo)
+
          # Determinar el tipo de producto para la columna de tipo_producto
         hay_servicios = False
         hay_productos = False
@@ -4903,16 +4934,24 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         productos_celda = '\n'.join(productos_detalle)
     
 
-        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
-        tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
-        tipo_de_cambio = '' if tipo == 0 else tipo
-        created_at = compra_list.created_at.replace(tzinfo=None)
+        created_at = compra_list.created_at
+
+        if created_at is not None and created_at.tzinfo is not None:
+            created_at = created_at.replace(tzinfo=None)
+
         approved_at = compra_list.req.approved_at
+
         try:
             activo_obj = compra_list.req.orden.activo
-            activo = str(activo_obj) if activo_obj else "No definido"
+
+            activo = (
+                str(activo_obj)
+                if activo_obj
+                else 'No definido'
+            )
+
         except Activo.DoesNotExist:
-            activo = "No definido"
+            activo = 'No definido'
 
         row = [
             compra_list.folio,
@@ -4933,11 +4972,17 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             compra_list.monto_pagado,
             'Pagada' if compra_list.pagada else 'No Pagada',
             primera_fecha_pago,
-            'Autorizado' if compra_list.autorizado2 else 'Cancelado' if compra_list.autorizado2 == False or compra_list.autorizado1 == False else 'Pendiente Autorización',
+            (
+                'Autorizado'
+                if compra_list.autorizado2
+                else 'Cancelado'
+                if compra_list.autorizado2 is False or compra_list.autorizado1 is False
+                else 'Pendiente Autorización'
+            ),
             tipo_producto,
             compra_list.dias_de_entrega,
             compra_list.moneda.nombre,
-            tipo_de_cambio,  # Asegúrate de que tipo_de_cambio sea un valor que pueda ser escrito directamente
+            tipo_de_cambio,
             'Entregada' if compra_list.entrada_completa else 'No Entregada',
             'Sí' if compra_list.facturas.exists() else 'No',
             activo,
