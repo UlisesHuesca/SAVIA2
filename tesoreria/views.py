@@ -2386,22 +2386,22 @@ def control_documentos(request):
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
                     pagos = Pago.objects.filter(pagado_real__range=[fecha_inicio, fecha_fin], hecho = True) #Se modifica para que ya solo descargue con respecto a la --fecha real--
                     
-                    if tipo_documento == "gastos":
-                        pagos = pagos.filter(gasto__isnull=False)
-                    elif tipo_documento == "compras":
-                        pagos = pagos.filter(oc__isnull=False)
-                    elif tipo_documento == "viaticos":
-                        pagos = pagos.filter(viatico__isnull=False)
+                if tipo_documento == "gastos":
+                    pagos = pagos.filter(gasto__isnull=False)
+                elif tipo_documento == "compras":
+                    pagos = pagos.filter(oc__isnull=False)
+                elif tipo_documento == "viaticos":
+                    pagos = pagos.filter(viatico__isnull=False)
 
-                    if distrito_id:
-                        pagos = pagos.filter(
-                            Q(gasto__distrito_id=distrito_id) |
-                            Q(oc__req__orden__distrito_id=distrito_id) |
-                            Q(viatico__distrito_id=distrito_id)
-                        )
+                if distrito_id:
+                    pagos = pagos.filter(
+                        Q(gasto__distrito_id=distrito_id) |
+                        Q(oc__req__orden__distrito_id=distrito_id) |
+                        Q(viatico__distrito_id=distrito_id)
+                    )
 
-                    if tesorero_id:
-                        pagos = pagos.filter(tesorero_id=tesorero_id)
+                if tesorero_id:
+                    pagos = pagos.filter(tesorero_id=tesorero_id)
 
                 if folio:
                     pagos = pagos.filter(
@@ -2409,15 +2409,6 @@ def control_documentos(request):
                         Q(oc__folio=folio) |
                         Q(viatico__folio=folio)
                     )
-                    if distrito_id:
-                        pagos = pagos.filter(
-                            Q(gasto__distrito_id=distrito_id) |
-                            Q(oc__req__orden__distrito_id=distrito_id) |
-                            Q(viatico__distrito_id=distrito_id)
-                        )
-
-                    if tesorero_id:
-                        pagos = pagos.filter(tesorero_id=tesorero_id)
 
                 if cuenta:
                     pagos = pagos.filter(cuenta = cuenta)
