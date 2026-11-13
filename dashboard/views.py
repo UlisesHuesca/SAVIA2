@@ -3538,7 +3538,7 @@ def generar_pdf_dd(proveedor, request):
         [Paragraph('Elaborado por (Nombre):', label), Paragraph(elaborado_por, value)],
         [Paragraph('Cargo:', label), Paragraph(cargo, value)],
         [Paragraph('Fecha:', label), Paragraph(fecha, value)],
-        [Paragraph('Teléfono:', label), Paragraph(tel, value)],
+        [Paragraph('Teléfono:', label), Paragraph(tel, value), Paragraph(str(tel or 'No registrado'), value),],
         [Paragraph('Correo electrónico:', label), Paragraph(correo, value)],
         [Paragraph('Representante, apoderado legal u oficial de cumplimiento:', label), Paragraph(representante, value)],
         [Paragraph('Razón Social:', label), Paragraph(razon_social, value)],
