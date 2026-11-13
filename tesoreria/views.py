@@ -1604,32 +1604,7 @@ def matriz_pagos(request):
                 'viatico__gerente__staff__staff',
             )
 
-            # Artículos de órdenes de compra
-            articulos_compra_qs = (ArticuloComprado.objects.select_related('producto__producto'))
-            # Artículos de gastos
-            articulos_gasto_qs = (Articulo_Gasto.objects.select_related('proyecto','subproyecto','producto'))
-            # Conceptos de viáticos
-            conceptos_viatico_qs = (Concepto_Viatico.objects.select_related('producto'))
-
-            #pagos_excel = pagos.prefetch_related(
-            #    Prefetch(
-            #        'oc__articulocomprado_set',
-            #        queryset=articulos_compra_qs,
-            #        to_attr='articulos_excel'
-            #    ),
-            #    Prefetch(
-            #        'gasto__articulos',
-            #        queryset=articulos_gasto_qs,
-            #        to_attr='articulos_excel'
-            #    ),
-            #    Prefetch(
-            #        'viatico__conceptos',
-            #        queryset=conceptos_viatico_qs,
-            #        to_attr='articulos_excel'
-            #    ),
-            #)
-                
-            #return convert_excel_matriz_pagos(pagos_excel)
+           
             return convert_excel_matriz_pagos_xlsxwriter(pagos_excel)
         elif 'btnReporteXML' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
@@ -2281,7 +2256,39 @@ def control_documentos(request):
 
     if request.method == 'POST': 
         if 'btnReporte' in request.POST:
-            return convert_excel_matriz_pagos(pagos)
+            pagos_excel = pagos.select_related(
+                #Cuenta bancaria
+                'cuenta',
+                'cuenta__moneda',
+                'tipo',
+                #Orden de compra
+                'oc__req__orden__distrito',
+                'oc__req__orden__proyecto',
+                'oc__req__orden__subproyecto',
+                'oc__req__orden__staff__staff__staff',
+                'oc__proveedor',
+                'oc__moneda',
+                'oc__oc_autorizada_por2__staff__staff',
+                'oc__creada_por__staff__staff',
+                # Gasto
+                'gasto__distrito',
+                'gasto__tipo',
+                'gasto__staff__staff__staff',
+                'gasto__colaborador__staff__staff',
+                'gasto__superintendente__staff__staff',
+                'gasto__autorizado_por2__staff__staff',
+            
+                # Viático
+                'viatico__distrito',
+                'viatico__proyecto',
+                'viatico__subproyecto',
+                'viatico__staff__staff__staff',
+                'viatico__colaborador__staff__staff',
+                'viatico__gerente__staff__staff',
+            )
+            
+                       
+            return convert_excel_matriz_pagos_xlsxwriter(pagos_excel)
         elif 'btnReporteXML' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
@@ -2366,6 +2373,7 @@ def control_documentos(request):
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
             tipo_documento = request.POST.get('tipo_documento') 
+            cuenta = request.POST.get('cuenta_bancaria')
             
             print(usuario.tipo.documentos)
             if usuario.distritos.nombre == "MATRIZ":
@@ -2393,7 +2401,6 @@ def control_documentos(request):
                         pagos = pagos.filter(tesorero_id=tesorero_id)
 
                 if folio:
-                    pagos = Pago.objects.filter(hecho = True)
                     pagos = pagos.filter(
                         Q(gasto__folio=folio) |
                         Q(oc__folio=folio) |
@@ -2408,6 +2415,10 @@ def control_documentos(request):
 
                     if tesorero_id:
                         pagos = pagos.filter(tesorero_id=tesorero_id)
+
+                if cuenta:
+                    pagos = pagos.filter(cuenta = cuenta)
+
             else:
                 #print('Aquí también entró')
                 pagos = pagos.filter(
