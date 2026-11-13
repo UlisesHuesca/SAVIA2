@@ -1575,7 +1575,7 @@ def matriz_pagos(request):
             pagos_excel = pagos.select_related(
                 #Cuenta bancaria
                 'cuenta',
-                'cuenta_moneda',
+                'cuenta__moneda',
                 'tipo',
                 #Orden de compra
                 'oc__req__orden__distrito',
