@@ -5244,12 +5244,12 @@ def convert_excel_matriz_pagos(pagos):
 
    # Aquí debes extraer el conjunto completo de pagos en lugar de solo ciertos valores
     
-    for pago in pagos.iterator(chunk_size=500):
+    for pago in pagos:
         row_num += 1
         # Define los valores de las columnas basándote en el tipo de pago
         cuenta = pago.cuenta.cuenta if pago.cuenta else ''
         if pago.oc:
-            articulos_compra = pago.oc.articulos_excel
+            articulos_compra = ArticuloComprado.objects.filter(oc=pago.oc)
             solicitado = pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else ''
             distrito = pago.oc.req.orden.distrito.nombre
             proveedor = pago.oc.proveedor
@@ -5297,7 +5297,7 @@ def convert_excel_matriz_pagos(pagos):
             else:
                 proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             
-            articulos_gasto = pago.gasto.articulos_excel
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
             if pago.gasto.distrito.nombre == 'MATRIZ':
                 autorizado = pago.gasto.superintendente.staff.staff.first_name + ' ' + pago.gasto.superintendente.staff.staff.last_name if pago.gasto.superintendente else ''
             else:
@@ -5328,7 +5328,7 @@ def convert_excel_matriz_pagos(pagos):
             
         elif pago.viatico:
             folio = "V" + str(pago.viatico.folio)
-            articulos_viatico = pago.viatico.articulos_excel
+            articulos_viatico = Concepto_Viatico.objects.filter(viatico=pago.viatico)
             proyectos = pago.viatico.proyecto.nombre if pago.viatico else ''
             subproyectos = pago.viatico.subproyecto.nombre if pago.viatico else ''
             distrito = pago.viatico.distrito.nombre
