@@ -1,0 +1,294 @@
+
+{% extends 'partials/base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between
+                align-items-center mb-4">
+
+        <div>
+            <h3 class="mb-1">
+                Composición BOM
+            </h3>
+
+            <p class="text-muted mb-0">
+                {{ producto.producto.codigo }}
+                —
+                {{ producto.producto.nombre }}
+            </p>
+        </div>
+
+        <a
+            href="{% url 'lista-productos-terminados' %}"
+            class="btn btn-outline-secondary"
+        >
+            <i class="fa-solid fa-arrow-left me-1"></i>
+            Regresar
+        </a>
+
+    </div>
+
+    <div class="sv-card p-4 mb-4">
+
+        <div class="d-flex justify-content-between
+                    align-items-center flex-wrap gap-2">
+
+            <div>
+                <h5 class="mb-1">
+                    {{ producto.producto.nombre }}
+                </h5>
+
+                <span class="badge bg-primary">
+                    {{ producto.get_tipo_display }}
+                </span>
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button
+                    class="btn btn-outline-primary"
+                    disabled
+                    title="Próximamente"
+                >
+                    Generar plantilla
+                </button>
+
+                <button
+                    class="btn btn-outline-success"
+                    disabled
+                    title="Próximamente"
+                >
+                    Generar solicitud
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-8">
+
+            <div class="sv-card p-4">
+
+                <h5 class="mb-3">
+                    Componentes y materiales
+                </h5>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for componente in componentes %}
+
+                            <tr>
+
+                                <td>
+                                    {% if componente.material %}
+                                        <span class="badge bg-secondary">
+                                            Material
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-info text-dark">
+                                            Componente
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="fw-semibold">
+                                    {% if componente.material %}
+                                        {{ componente.material.codigo }}
+                                    {% else %}
+                                        {{ componente.producto_hijo.producto.codigo }}
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if componente.material %}
+                                        {{ componente.material.nombre }}
+                                    {% else %}
+                                        {{ componente.producto_hijo.producto.nombre }}
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ componente.cantidad }}
+                                </td>
+
+                                <td class="text-end">
+
+                                    <a
+                                        href="{% url 'editar-componente-bom' componente.pk %}"
+                                        class="btn btn-outline-primary btn-sm"
+                                        title="Editar"
+                                    >
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'eliminar-componente-bom' componente.pk %}"
+                                        class="d-inline form-eliminar-bom"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-outline-danger btn-sm"
+                                            title="Eliminar"
+                                        >
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+                                <td colspan="5"
+                                    class="text-center text-muted py-4">
+                                    Este producto no tiene componentes
+                                    registrados.
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-xl-4">
+
+            <div class="sv-card p-4">
+
+                <h5 class="mb-3">
+                    Agregar elemento
+                </h5>
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Componente fabricable
+                        </label>
+                        {{ form.producto_hijo }}
+                        {{ form.producto_hijo.errors }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Material
+                        </label>
+                        {{ form.material }}
+                        {{ form.material.errors }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Cantidad
+                        </label>
+                        {{ form.cantidad }}
+                        {{ form.cantidad.errors }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Comentario
+                        </label>
+                        {{ form.comentario }}
+                        {{ form.comentario.errors }}
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary w-100"
+                    >
+                        <i class="fa-solid fa-plus me-1"></i>
+                        Agregar a BOM
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".form-eliminar-bom").forEach(form => {
+
+        form.addEventListener("submit", function (event) {
+
+            event.preventDefault();
+
+            Swal.fire({
+                title: "¿Eliminar elemento?",
+                text: "Se eliminará de la composición BOM.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#dc3545"
+            }).then(resultado => {
+
+                if (resultado.isConfirmed) {
+                    form.submit();
+                }
+
+            });
+
+        });
+
+    });
+
+    if (window.jQuery && $.fn.select2) {
+        $(".select2").select2({
+            width: "100%",
+            placeholder: "Selecciona una opción",
+            allowClear: true
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

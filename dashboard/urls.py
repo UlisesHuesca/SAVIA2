@@ -66,4 +66,9 @@ urlpatterns = [
     path("contratos/<int:pk>/editar/", views.editar_contrato,name="editar-contrato"),
     #path("pozos/<int:pk>/editar/",views.editar_pozo, name="editar-pozo"
 
-]
+    #MODULOS DE MANUFACTURA
+    path("productos-terminados/", views.lista_productos_terminados, name="lista-productos-terminados",),
+    path("productos-terminados/<int:pk>/composicion/",views.composicion_producto_terminado, name="composicion-producto-terminado",),
+    path("productos-terminados/bom/<int:pk>/editar/", views.editar_componente_bom, name="editar-componente-bom",),
+    path("productos-terminados/bom/<int:pk>/eliminar/", views.eliminar_componente_bom, name="eliminar-componente-bom",),
+    ]

@@ -5,42 +5,48 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.utils import translation
 from django.utils.dateparse import parse_date
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 from django.conf import settings
 from django.forms import inlineformset_factory
 from django.utils.http import urlencode
 from django.db import transaction
 #from dateutil.relativedelta import relativedelta
-from django.db.models import Sum, Q, Prefetch, F, Sum, Value, F,DecimalField, ExpressionWrapper, Max
+from django.db.models import Sum, Q, Prefetch, F, Sum, Value, F,DecimalField, ExpressionWrapper, Count
 from django.db.models.functions import Coalesce
-from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
-from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
-from compras.models import Moneda
-from entradas.models import EntradaArticulo
-from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato, Pozo
-from gastos.models import Articulo_Gasto 
-from viaticos.models import Concepto_Viatico
-from requisiciones.models import Salidas, ValeSalidas
-from user.models import Profile, Distrito, Banco
+
+
+from .models import (Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange,
+                     ProductoTerminado, ComponenteProductoTerminado)
+from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from .forms import Contrato_form, ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
 from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_Form_Edit, Comentario_Rechazo_Form
-from .forms import PeriodoSubproyectoFormSet
-from solicitudes.forms import PozoForm
+from .forms import PeriodoSubproyectoFormSet, ComponenteProductoTerminadoForm
+
+from user.models import Profile, Distrito, Banco
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
-from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
 from user.utils import obtener_empresa_por_host
+
+
+from entradas.models import EntradaArticulo
+from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato, Pozo
+from solicitudes.forms import PozoForm
+from requisiciones.models import Salidas, ValeSalidas
+from compras.models import (Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, 
+                            InvitacionProveedor, Moneda)
+from gastos.models import Articulo_Gasto 
+from viaticos.models import Concepto_Viatico
 from proveedores_externos.views import extraer_tipo_contribuyente
+
 from decimal import Decimal 
 import csv
 
 from datetime import date, datetime
-import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
 import pandas as pd
 import io
 import os
@@ -4970,3 +4976,115 @@ def convert_excel_productos_xlsxwriter(items):
 
     output.close()
     return response
+
+
+#####################################################################
+# LISTADO DE PRODUCTOS TERMINADOS
+def lista_productos_terminados(request):
+
+    productos = (ProductoTerminado.objects.select_related("producto").annotate(total_componentes=Count("componentes")).order_by("producto__codigo"))
+
+    context = {
+        "productos":productos,
+    }
+
+    return render(request,"dashboard/productos_terminados/lista.html", context)
+
+
+# DETALLE Y REGISTRO DE COMPOSICIÓN BOM
+def composicion_producto_terminado(request, pk):
+
+    producto = get_object_or_404(ProductoTerminado.objects.select_related("producto"), pk=pk,)
+
+    if request.method == "POST":
+
+        form = ComponenteProductoTerminadoForm(request.POST,producto_padre=producto,)
+
+        if form.is_valid():
+            componente = form.save(commit=False)
+            componente.producto_padre = producto
+
+            try:
+                componente.full_clean()
+                with transaction.atomic():
+                    componente.save()
+
+            except ValidationError as error:
+                form.add_error(None, error)
+
+            else:
+                messages.success(request, "Elemento agregado a la composición BOM.")
+
+                return redirect("composicion-producto-terminado", pk=producto.pk,)
+
+    else:
+        form = ComponenteProductoTerminadoForm(producto_padre=producto)
+
+    componentes = (
+        ComponenteProductoTerminado.objects.filter(producto_padre=producto).select_related("producto_hijo__producto","material",).order_by("id"))
+
+    context = {
+        "producto": producto,
+        "componentes": componentes,
+        "form": form,
+    }
+
+    return render(request,"dashboard/productos_terminados/composicion.html", context)
+
+
+
+# EDITAR COMPONENTE BOM
+def editar_componente_bom(request, pk):
+
+    componente = get_object_or_404(ComponenteProductoTerminado.objects.select_related("producto_padre"),pk=pk,)
+
+    if request.method == "POST":
+
+        form = ComponenteProductoTerminadoForm(request.POST, instance=componente, producto_padre=componente.producto_padre,)
+
+        if form.is_valid():
+
+            elemento = form.save(commit=False)
+
+            try:
+                elemento.full_clean()
+
+                with transaction.atomic():
+                    elemento.save()
+
+            except ValidationError as error:
+                form.add_error(None, error)
+
+            else:
+                messages.success(request, "Elemento BOM actualizado correctamente.")
+
+                return redirect("composicion-producto-terminado", pk=componente.producto_padre_id,)
+
+    else:
+        form = ComponenteProductoTerminadoForm(instance=componente, producto_padre=componente.producto_padre,)
+
+    context = {
+        "form": form,
+        "componente": componente,
+    }
+
+    return render(request,"dashboard/productos_terminados/editar_componente.html",context)
+
+
+
+# ELIMINAR COMPONENTE BOM
+
+
+@require_POST
+@transaction.atomic
+def eliminar_componente_bom(request, pk):
+
+    componente = get_object_or_404(ComponenteProductoTerminado,pk=pk,)
+
+    producto_id = componente.producto_padre_id
+
+    componente.delete()
+
+    messages.success(request,"Elemento eliminado de la composición BOM.")
+
+    return redirect("composicion-producto-terminado",pk=producto_id,)

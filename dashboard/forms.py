@@ -1,5 +1,6 @@
 from django import forms
-from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad, Producto_Calidad, PriceRefChange
+from .models import (Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad, Producto_Calidad, PriceRefChange,
+                     ProductoTerminado, ComponenteProductoTerminado)
 from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, DocumentosProveedor
 from user.models import Distrito
 from solicitudes.models import Proyecto, Subproyecto, Contrato, PeriodoSubproyecto
@@ -270,3 +271,58 @@ class Comentario_Rechazo_Form(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
         fields = ['comentario_status']
+
+
+class ComponenteProductoTerminadoForm(forms.ModelForm):
+
+    class Meta:
+        model = ComponenteProductoTerminado
+
+        fields = ["producto_hijo", "material", "cantidad", "comentario",]
+
+        widgets = {
+            "producto_hijo": forms.Select(
+                attrs={"class": "form-select select2"}
+            ),
+            "material": forms.Select(
+                attrs={"class": "form-select select2"}
+            ),
+            "cantidad": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "step": "0.0001",
+                    "min": "0.0001",
+                }
+            ),
+            "comentario": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                }
+            ),
+        }
+
+    def __init__(self, *args, producto_padre=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.producto_padre = producto_padre
+
+        if producto_padre:
+            self.fields["producto_hijo"].queryset = (
+                ProductoTerminado.objects.exclude(pk=producto_padre.pk).select_related("producto").order_by("producto__codigo"))
+
+        self.fields["material"].queryset = (Product.objects.filter(baja_item=False).order_by("codigo"))
+
+        self.fields["producto_hijo"].required = False
+        self.fields["material"].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        producto_hijo = cleaned_data.get("producto_hijo")
+        material = cleaned_data.get("material")
+
+        if bool(producto_hijo) == bool(material):
+            raise forms.ValidationError("Selecciona un subcomponente o un material, pero no ambos.")
+
+        return cleaned_data
