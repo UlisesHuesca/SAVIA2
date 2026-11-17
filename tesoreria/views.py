@@ -2931,7 +2931,7 @@ def matriz_facturas_nomodal(request, pk):
         if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
             base_url = reverse('matriz-oc-proveedores')
             compra = get_object_or_404(Compra, id=pk, proveedor__nombre = perfil.proveedor)
-            next_url = request.GET.get('next', 'matriz-compras')
+            next_url = base_url
         else:
             compra = get_object_or_404(Compra, id=pk)
             next_url = request.GET.get('next', 'matriz-compras')
