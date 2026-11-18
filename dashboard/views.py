@@ -26,6 +26,7 @@ from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, Subproyecto
 from .forms import Contrato_form, ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
 from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_Form_Edit, Comentario_Rechazo_Form
 from .forms import PeriodoSubproyectoFormSet, ComponenteProductoTerminadoForm
+from .services.bom import explosion_bom
 
 from user.models import Profile, Distrito, Banco
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
@@ -43,7 +44,7 @@ from gastos.models import Articulo_Gasto
 from viaticos.models import Concepto_Viatico
 from proveedores_externos.views import extraer_tipo_contribuyente
 
-from decimal import Decimal 
+from decimal import Decimal, InvalidOperation
 import csv
 
 from datetime import date, datetime
@@ -5088,3 +5089,37 @@ def eliminar_componente_bom(request, pk):
     messages.success(request,"Elemento eliminado de la composición BOM.")
 
     return redirect("composicion-producto-terminado",pk=producto_id,)
+
+
+def explosion_materiales_bom(request, pk):
+
+    producto = get_object_or_404(ProductoTerminado.objects.select_related("producto"), pk=pk,)
+
+    cantidad_texto = request.GET.get("cantidad", "1")
+
+    try:
+        cantidad = Decimal(cantidad_texto)
+
+        if not cantidad.is_finite() or cantidad <= 0:
+            raise InvalidOperation
+
+    except (InvalidOperation, ValueError, TypeError):
+        cantidad = Decimal("1")
+
+        messages.warning(request,"La cantidad indicada no es válida. Se utilizará una unidad.")
+
+    resultado = None
+
+    try:
+        resultado = explosion_bom(producto_terminado=producto, cantidad=cantidad,)
+
+    except ValidationError as error:
+        messages.error(request,"; ".join(error.messages))
+
+    context = {
+        "producto": producto,
+        "cantidad": cantidad,
+        "resultado": resultado,
+    }
+
+    return render(request,"dashboard/productos_terminados/explosion.html", context)

@@ -89,6 +89,7 @@
                                 <th>Código</th>
                                 <th>Descripción</th>
                                 <th>Cantidad</th>
+                                <th>Unidad</th>
                                 <th class="text-end">Acciones</th>
                             </tr>
                         </thead>
@@ -129,6 +130,9 @@
 
                                 <td>
                                     {{ componente.cantidad }}
+                                </td>
+                                <td>
+                                    {{componente.material.unidad}}
                                 </td>
 
                                 <td class="text-end">

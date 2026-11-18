@@ -62,13 +62,17 @@
 
                         <td class="text-end">
 
-                            <a
-                                href="{% url 'composicion-producto-terminado' producto.pk %}"
-                                class="btn btn-outline-primary btn-sm"
-                            >
+                            <a href="{% url 'composicion-producto-terminado' producto.pk %}" class="btn btn-outline-primary btn-sm">
                                 <i class="fa-solid fa-list-tree me-1"></i>
                                 Ver composición
                             </a>
+                            {% if producto.tipo == 'EQUIPO' %}
+                                <a href="{% url 'explosion-materiales-bom' producto.pk %}"
+                                class="sv-btn sv-btn-primary">
+                                    <i class="fa-solid fa-sitemap me-1"></i>
+                                    Explosión BOM
+                                </a>
+                            {% endif %}
 
                         </td>
                     </tr>

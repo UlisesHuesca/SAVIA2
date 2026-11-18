@@ -1,0 +1,626 @@
+
+{% extends 'partials/base.html' %}
+{% load humanize %}
+{% load l10n %}
+{% block content %}
+
+<div class="sv-page sv-page-with-navbar">
+
+    <!-- =====================================================
+         ENCABEZADO
+    ====================================================== -->
+
+    <div class="sv-page-header">
+
+        <div>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon">
+                    <i class="fa-solid fa-sitemap"></i>
+                </span>
+                Explosión de materiales
+            </h1>
+
+            <p class="sv-page-subtitle">
+                {{ producto.producto.codigo }}
+                —
+                {{ producto.producto.nombre }}
+            </p>
+        </div>
+
+        <a
+            href="{% url 'composicion-producto-terminado' producto.pk %}"
+            class="sv-btn sv-btn-secondary"
+        >
+            <i class="fa-solid fa-arrow-left me-2"></i>
+            Regresar a BOM
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         INFORMACIÓN DEL EQUIPO
+    ====================================================== -->
+
+    <div class="sv-card mb-4">
+
+        <div class="sv-card-body">
+
+            <div class="d-flex flex-wrap
+                        justify-content-between
+                        align-items-center gap-3">
+
+                <div>
+                    <h4 class="mb-2">
+                        {{ producto.producto.nombre }}
+                    </h4>
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <span class="badge bg-primary">
+                            {{ producto.producto.codigo }}
+                        </span>
+
+                        <span class="badge bg-secondary">
+                            {{ producto.get_tipo_display }}
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="text-muted small">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Requerimientos teóricos de fabricación
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORMULARIO DE CANTIDAD A FABRICAR
+    ====================================================== -->
+
+    <div class="sv-card mb-4">
+
+        <div class="sv-card-body">
+
+            <h5 class="mb-3">
+                <i class="fa-solid fa-calculator me-2"></i>
+                Calcular requerimientos
+            </h5>
+
+            <form method="get"
+                  class="row g-3 align-items-end">
+
+                <div class="col-12 col-md-4 col-lg-3">
+
+                    <label
+                        for="cantidad"
+                        class="form-label"
+                    >
+                        Cantidad de equipos a fabricar
+                    </label>
+
+                    <input
+                        type="number"
+                        id="cantidad"
+                        name="cantidad"
+                        class="form-control"
+                        value="{{ cantidad|unlocalize }}"
+                        min="1"
+                        step="1"
+                        required
+                    >
+
+                </div>
+
+                <div class="col-12 col-md-auto">
+
+                    <button
+                        type="submit"
+                        class="sv-btn sv-btn-primary"
+                    >
+                        <i class="fa-solid fa-calculator me-2"></i>
+                        Calcular explosión
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    {% if resultado %}
+
+    <!-- =====================================================
+         INDICADORES
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="sv-card h-100">
+                <div class="sv-card-body">
+
+                    <div class="text-muted small mb-2">
+                        Unidades a fabricar
+                    </div>
+
+                    <h3 class="mb-0">
+                        {{ resultado.cantidad|floatformat:0 }}
+                    </h3>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="sv-card h-100">
+                <div class="sv-card-body">
+
+                    <div class="text-muted small mb-2">
+                        Familias
+                    </div>
+
+                    <h3 class="mb-0">
+                        {{ resultado.total_familias }}
+                    </h3>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="sv-card h-100">
+                <div class="sv-card-body">
+
+                    <div class="text-muted small mb-2">
+                        Materiales distintos
+                    </div>
+
+                    <h3 class="mb-0">
+                        {{ resultado.total_materiales }}
+                    </h3>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="sv-card h-100">
+                <div class="sv-card-body">
+
+                    <div class="text-muted small mb-2">
+                        Subcomponentes requeridos
+                    </div>
+
+                    <h3 class="mb-0">
+                        {{ resultado.total_subcomponentes }}
+                    </h3>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TABLA DINÁMICA DE MATERIALES POR FAMILIA
+    ====================================================== -->
+
+    <div class="sv-card mb-4">
+
+        <div class="sv-card-body">
+
+            <div class="d-flex flex-wrap
+                        justify-content-between
+                        align-items-center gap-3 mb-4">
+
+                <div>
+                    <h4 class="mb-1">
+                        <i class="fa-solid fa-layer-group me-2"></i>
+                        Materiales consolidados por familia
+                    </h4>
+
+                    <p class="text-muted small mb-0">
+                        Requerimientos para
+                        <strong>
+                            {{ resultado.cantidad|floatformat:0 }}
+                        </strong>
+                        unidad(es) del equipo.
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="button"
+                        class="sv-btn sv-btn-secondary"
+                        id="btnExpandirFamilias"
+                    >
+                        <i class="fa-solid fa-angles-down me-1"></i>
+                        Expandir
+                    </button>
+
+                    <button
+                        type="button"
+                        class="sv-btn sv-btn-secondary"
+                        id="btnContraerFamilias"
+                    >
+                        <i class="fa-solid fa-angles-up me-1"></i>
+                        Contraer
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle sv-table"
+                       id="tablaExplosionBOM">
+
+                    <thead>
+
+                        <tr>
+                            <th style="width: 130px;">
+                                Código
+                            </th>
+
+                            <th>
+                                Material / Familia
+                            </th>
+
+                            <th style="width: 120px;">
+                                Unidad
+                            </th>
+
+                            <th class="text-end"
+                                style="width: 170px;">
+                                Cantidad total
+                            </th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for grupo in resultado.familias %}
+
+                        <!-- =================================
+                             FILA DE FAMILIA
+                        ================================== -->
+
+                        <tr class="table-light fila-familia">
+
+                            <td colspan="4" class="p-0">
+
+                                <button
+                                    type="button"
+                                    class="btn w-100 border-0 rounded-0
+                                           text-start d-flex
+                                           align-items-center
+                                           gap-3 px-3 py-3
+                                           btn-toggle-familia"
+                                    data-familia="{{ forloop.counter }}"
+                                    aria-expanded="true"
+                                    aria-controls="familia-{{ forloop.counter }}"
+                                >
+
+                                    <i
+                                        class="fa-solid fa-chevron-down
+                                               icono-familia"
+                                    ></i>
+
+                                    <i
+                                        class="fa-solid fa-folder-open
+                                               text-primary"
+                                    ></i>
+
+                                    <span class="fw-bold flex-grow-1">
+                                        {{ grupo.nombre }}
+                                    </span>
+
+                                    <span class="badge bg-secondary">
+                                        {{ grupo.total_materiales }}
+                                        materiales
+                                    </span>
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+
+                        <!-- =================================
+                             MATERIALES DE LA FAMILIA
+                        ================================== -->
+
+                        {% for item in grupo.materiales %}
+
+                        <tr
+                            class="fila-material"
+                            data-familia="{{ forloop.parentloop.counter }}"
+                        >
+
+                            <td class="fw-semibold">
+                                {{ item.producto.codigo }}
+                            </td>
+
+                            <td>
+                                {{ item.producto.nombre }}
+                            </td>
+
+                            <td>
+                                {% if item.producto.unidad %}
+                                    {{ item.producto.unidad }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end fw-semibold">
+                                {{ item.cantidad|floatformat:4 }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="4"
+                                class="text-center text-muted py-4">
+                                No hay materiales registrados
+                                para este producto.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="text-muted small mt-3">
+
+                <i class="fa-solid fa-circle-info me-1"></i>
+
+                Los materiales compartidos entre distintos
+                subcomponentes aparecen una sola vez,
+                con su cantidad total consolidada.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUBCOMPONENTES REQUERIDOS
+    ====================================================== -->
+
+    <div class="sv-card mb-4">
+
+        <div class="sv-card-body">
+
+            <h4 class="mb-3">
+                <i class="fa-solid fa-gears me-2"></i>
+                Subcomponentes requeridos
+            </h4>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle sv-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto fabricable</th>
+                            <th>Tipo</th>
+                            <th class="text-end">
+                                Cantidad requerida
+                            </th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in resultado.subcomponentes %}
+
+                        <tr>
+
+                            <td class="fw-semibold">
+                                {{ item.producto.producto.codigo }}
+                            </td>
+
+                            <td>
+                                {{ item.producto.producto.nombre }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ item.producto.get_tipo_display }}
+                                </span>
+                            </td>
+
+                            <td class="text-end fw-semibold">
+                                {{ item.cantidad|floatformat:4 }}
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="4"
+                                class="text-center text-muted py-4">
+                                Este producto no requiere
+                                subcomponentes adicionales.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT: TABLA DINÁMICA POR FAMILIAS
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tabla = document.getElementById("tablaExplosionBOM");
+
+    if (!tabla) {
+        return;
+    }
+
+    const botonesFamilia = tabla.querySelectorAll(
+        ".btn-toggle-familia"
+    );
+
+    const btnExpandir = document.getElementById(
+        "btnExpandirFamilias"
+    );
+
+    const btnContraer = document.getElementById(
+        "btnContraerFamilias"
+    );
+
+
+    // =====================================================
+    // MOSTRAR / OCULTAR MATERIALES DE UNA FAMILIA
+    // =====================================================
+
+    function cambiarEstadoFamilia(boton, expandir) {
+
+        const familiaId = boton.dataset.familia;
+
+        const filas = tabla.querySelectorAll(
+            `.fila-material[data-familia="${familiaId}"]`
+        );
+
+        filas.forEach(fila => {
+            fila.classList.toggle("d-none", !expandir);
+        });
+
+        boton.setAttribute(
+            "aria-expanded",
+            expandir ? "true" : "false"
+        );
+
+        const icono = boton.querySelector(".icono-familia");
+
+        if (icono) {
+            icono.classList.toggle(
+                "fa-chevron-down",
+                expandir
+            );
+
+            icono.classList.toggle(
+                "fa-chevron-right",
+                !expandir
+            );
+        }
+
+    }
+
+
+    // =====================================================
+    // TOGGLE INDIVIDUAL
+    // =====================================================
+
+    botonesFamilia.forEach(boton => {
+
+        boton.addEventListener("click", function () {
+
+            const expandido = (
+                boton.getAttribute("aria-expanded") === "true"
+            );
+
+            cambiarEstadoFamilia(
+                boton,
+                !expandido
+            );
+
+        });
+
+    });
+
+
+    // =====================================================
+    // EXPANDIR TODAS
+    // =====================================================
+
+    if (btnExpandir) {
+
+        btnExpandir.addEventListener("click", function () {
+
+            botonesFamilia.forEach(boton => {
+                cambiarEstadoFamilia(boton, true);
+            });
+
+        });
+
+    }
+
+
+    // =====================================================
+    // CONTRAER TODAS
+    // =====================================================
+
+    if (btnContraer) {
+
+        btnContraer.addEventListener("click", function () {
+
+            botonesFamilia.forEach(boton => {
+                cambiarEstadoFamilia(boton, false);
+            });
+
+        });
+
+    }
+
+});
+</script>
+
+{% endblock %}

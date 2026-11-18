@@ -272,7 +272,6 @@ class Comentario_Rechazo_Form(forms.ModelForm):
         model = Proveedor_direcciones
         fields = ['comentario_status']
 
-
 class ComponenteProductoTerminadoForm(forms.ModelForm):
 
     class Meta:
@@ -308,21 +307,31 @@ class ComponenteProductoTerminadoForm(forms.ModelForm):
         self.producto_padre = producto_padre
 
         if producto_padre:
+            self.instance.producto_padre = producto_padre
+
+            jerarquias = {
+                ProductoTerminado.Tipo.EQUIPO: [
+                    ProductoTerminado.Tipo.SUBCOMPONENTE,
+                    ProductoTerminado.Tipo.PIEZA,
+                ],
+                ProductoTerminado.Tipo.SUBCOMPONENTE: [
+                    ProductoTerminado.Tipo.PIEZA,
+                ],
+                ProductoTerminado.Tipo.PIEZA: [],
+            }
+
+            tipos_permitidos = jerarquias.get(
+                producto_padre.tipo, []
+            )
+
             self.fields["producto_hijo"].queryset = (
-                ProductoTerminado.objects.exclude(pk=producto_padre.pk).select_related("producto").order_by("producto__codigo"))
+                ProductoTerminado.objects
+                .filter(tipo__in=tipos_permitidos)
+                .exclude(pk=producto_padre.pk)
+                .select_related("producto")
+                .order_by("producto__codigo")
+            )
 
         self.fields["material"].queryset = (Product.objects.filter(baja_item=False).order_by("codigo"))
-
         self.fields["producto_hijo"].required = False
         self.fields["material"].required = False
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        producto_hijo = cleaned_data.get("producto_hijo")
-        material = cleaned_data.get("material")
-
-        if bool(producto_hijo) == bool(material):
-            raise forms.ValidationError("Selecciona un subcomponente o un material, pero no ambos.")
-
-        return cleaned_data

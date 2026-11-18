@@ -71,4 +71,5 @@ urlpatterns = [
     path("productos-terminados/<int:pk>/composicion/",views.composicion_producto_terminado, name="composicion-producto-terminado",),
     path("productos-terminados/bom/<int:pk>/editar/", views.editar_componente_bom, name="editar-componente-bom",),
     path("productos-terminados/bom/<int:pk>/eliminar/", views.eliminar_componente_bom, name="eliminar-componente-bom",),
+    path("productos-terminados/<int:pk>/explosion/", views.explosion_materiales_bom, name="explosion-materiales-bom",),
     ]

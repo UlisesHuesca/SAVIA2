@@ -690,34 +690,74 @@ class ComponenteProductoTerminado(models.Model):
             models.CheckConstraint(check=(Q(producto_hijo__isnull=True)|~Q(producto_padre_id=models.F("producto_hijo_id"))),name="bom_sin_autorreferencia"),
         ]
 
+    
     def clean(self):
         super().clean()
 
-        if bool(self.producto_hijo_id) == bool(self.material_id):
-            raise ValidationError("Selecciona un producto hijo o un material, pero no ambos.")
+        errores = {}
 
-        if self.cantidad is not None and self.cantidad <= 0:
-            raise ValidationError({"cantidad": "La cantidad debe ser mayor que cero."})
+        # 1. Exclusividad: componente o material
+        if bool(self.producto_hijo_id) == bool(self.material_id):
+            raise ValidationError(
+                "Selecciona un producto hijo o un material, "
+                "pero no ambos."
+            )
+
+        # 2. Cantidad positiva
+        if self.cantidad is None or self.cantidad <= 0:
+            errores["cantidad"] = (
+                "La cantidad debe ser mayor que cero."
+            )
 
         if not self.producto_padre_id:
-            return
+            errores["producto_padre"] = (
+                "Debes seleccionar un producto padre."
+            )
 
-        padre = self.producto_padre
+        if errores:
+            raise ValidationError(errores)
 
-        # Los materiales directos están permitidos
-        # en los tres niveles de fabricación.
+        # 3. Evitar elementos duplicados
+        existentes = ComponenteProductoTerminado.objects.filter(
+            producto_padre_id=self.producto_padre_id
+        )
+
+        if self.pk:
+            existentes = existentes.exclude(pk=self.pk)
+
+        if self.material_id:
+            if existentes.filter(material_id=self.material_id).exists():
+                raise ValidationError({
+                    "material": "Este material ya existe en la BOM."
+                })
+
+        if self.producto_hijo_id:
+            if existentes.filter(
+                producto_hijo_id=self.producto_hijo_id
+            ).exists():
+                raise ValidationError({
+                    "producto_hijo": (
+                        "Este componente ya existe en la BOM."
+                    )
+                })
+
+        # 4. Si es material, no hay jerarquía que validar
         if self.material_id:
             return
 
-        if not self.producto_hijo_id:
-            return
+        # 5. Evitar autorreferencia
+        if self.producto_padre_id == self.producto_hijo_id:
+            raise ValidationError({
+                "producto_hijo": (
+                    "Un producto no puede contenerse a sí mismo."
+                )
+            })
 
+        padre = self.producto_padre
         hijo = self.producto_hijo
 
-        if padre.pk == hijo.pk:
-            raise ValidationError("Un producto no puede contenerse a sí mismo.")
-
-        tipos_permitidos = {
+        # 6. Validar jerarquía de fabricación
+        jerarquias = {
             ProductoTerminado.Tipo.EQUIPO: {
                 ProductoTerminado.Tipo.SUBCOMPONENTE,
                 ProductoTerminado.Tipo.PIEZA,
@@ -728,9 +768,44 @@ class ComponenteProductoTerminado(models.Model):
             ProductoTerminado.Tipo.PIEZA: set(),
         }
 
-        if hijo.tipo not in tipos_permitidos.get(padre.tipo, set()):
-            raise ValidationError(
-                f"Un producto de tipo {padre.get_tipo_display()} no puede contener otro de tipo {hijo.get_tipo_display()}.")
+        permitidos = jerarquias.get(padre.tipo, set())
+
+        if hijo.tipo not in permitidos:
+            raise ValidationError({
+                "producto_hijo": (
+                    f"Un producto de tipo {padre.get_tipo_display()} "
+                    f"no puede contener otro de tipo "
+                    f"{hijo.get_tipo_display()}."
+                )
+            })
+
+        # 7. Detectar referencias circulares indirectas
+        pendientes = [self.producto_hijo_id]
+        visitados = set()
+
+        while pendientes:
+            actual = pendientes.pop()
+
+            if actual == self.producto_padre_id:
+                raise ValidationError({
+                    "producto_hijo": (
+                        "Esta relación generaría una referencia "
+                        "circular en la composición BOM."
+                    )
+                })
+
+            if actual in visitados:
+                continue
+
+            visitados.add(actual)
+
+            hijos = ComponenteProductoTerminado.objects.filter(
+                producto_padre_id=actual,
+                producto_hijo__isnull=False
+            ).values_list("producto_hijo_id", flat=True)
+
+            pendientes.extend(hijos)
+
 
     def save(self, *args, **kwargs):
         self.full_clean()
