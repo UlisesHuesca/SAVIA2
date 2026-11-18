@@ -16,6 +16,8 @@ from django.db import transaction
 #from dateutil.relativedelta import relativedelta
 from django.db.models import Sum, Q, Prefetch, F, Sum, Value, F,DecimalField, ExpressionWrapper, Max
 from django.db.models.functions import Coalesce
+
+
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
 from compras.models import Moneda
@@ -69,6 +71,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
 from bs4 import BeautifulSoup
+
+from io import BytesIO
+
 
 # Create your views here.
 @perfil_seleccionado_required
@@ -3538,7 +3543,7 @@ def generar_pdf_dd(proveedor, request):
         [Paragraph('Elaborado por (Nombre):', label), Paragraph(elaborado_por, value)],
         [Paragraph('Cargo:', label), Paragraph(cargo, value)],
         [Paragraph('Fecha:', label), Paragraph(fecha, value)],
-        [Paragraph('Teléfono:', label), Paragraph(tel, value), Paragraph(str(tel or 'No registrado'), value),],
+        [Paragraph('Teléfono:', label), Paragraph(str(tel or 'No registrado'), value),],
         [Paragraph('Correo electrónico:', label), Paragraph(correo, value)],
         [Paragraph('Representante, apoderado legal u oficial de cumplimiento:', label), Paragraph(representante, value)],
         [Paragraph('Razón Social:', label), Paragraph(razon_social, value)],
@@ -4846,10 +4851,7 @@ def actualizar_comentario_status(request, pk):
 
         return JsonResponse({'ok': True})
     
-from io import BytesIO
-from django.http import HttpResponse
-import datetime as dt
-import xlsxwriter
+
 
 def convert_excel_productos_xlsxwriter(items):
     output = BytesIO()
