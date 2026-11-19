@@ -3471,9 +3471,12 @@ def complemento_nuevo(request, pk):
                                 oc_id__in=oc_ids,
                                 hecho=True,
                                 eliminado=False,
-                                pagado_real__isnull=False,
-                            ).values_list(
-                                'pagado_real',
+                            ).annotate(
+                                fecha_pago=Coalesce('pagado_real','pagado_date')
+                            ).filter(
+                                fecha_pago__isnull= False
+                            )values_list(
+                                'fecha_pago',
                                 flat=True
                             )
                         )
