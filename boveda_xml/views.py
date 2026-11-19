@@ -325,112 +325,143 @@ def carga_masiva_xml(request):
 
 @require_http_methods(["GET", "POST"])
 def relacionar_cfdi_compra(request, pk):
-    print("Iniciando la función relacionar_cfdi_compra con pk:", pk)
+   
+    # 1. PERFIL DEL USUARIO
+
     pk_profile = request.session.get("selected_profile_id")
     usuario = get_object_or_404(Profile, id=pk_profile)
 
-    cfdi = get_object_or_404(CFDI, id=pk)
-    print("CFDI encontrado:", cfdi.rfc_emisor)
-    # RFC del emisor registrado en Bóveda.
+    if usuario.tipo.nombre == "PROVEEDOR_EXTERNO":
+        messages.error(request,"No tienes permisos para relacionar facturas.")
+        return redirect("boveda_xml:lista_cfdi")
+
+    # Complementar con la validación de permisos de Compras
+    # y distritos autorizados del usuario.
+
+    # 2. OBTENER CFDI
+
+    cfdi = get_object_or_404(CFDI.objects.select_related("factura_compra"), pk=pk)
+
     rfc_emisor = (cfdi.rfc_emisor or "").strip().upper()
 
     if not rfc_emisor:
-        messages.error(request, "El CFDI no tiene RFC emisor.")
+        messages.error(request,"El CFDI no tiene RFC emisor.")
         return redirect("boveda_xml:lista_cfdi")
-
-    # Órdenes del proveedor que emitió el CFDI.
-    compras_base = Compra.objects.filter(proveedor__nombre__rfc=rfc_emisor)
+  
+    # 3. ÓRDENES DE COMPRA DEL PROVEEDOR
+  
+    compras_base = Compra.objects.filter(proveedor__nombre__rfc__iexact=rfc_emisor)
     
+    # 4. CONSULTAR FACTURAS REGISTRADAS
+ 
+    def obtener_registros_existentes():
 
-    def tiene_registro_previo():
-        return (
-            Facturas.objects.filter(uuid__iexact=cfdi.uuid).exists()
-            or Factura.objects.filter(uuid__iexact=cfdi.uuid).exists()
-            or Viaticos_Factura.objects.filter(uuid__iexact=cfdi.uuid).exists()
-        )
+        factura_compra = (Facturas.objects.select_related("oc").filter(uuid__iexact=cfdi.uuid).first())
+        
+        factura_gasto = (Factura.objects.filter(uuid__iexact=cfdi.uuid).first())
 
+        factura_viatico = (Viaticos_Factura.objects.filter(uuid__iexact=cfdi.uuid).first())
+
+        return factura_compra, factura_gasto, factura_viatico
+    
+    # 5. PROCESAR VINCULACIÓN
+    
     if request.method == "POST":
 
-        compra_id = request.POST.get("compra_id")
+        compra_id = request.POST.get("compra_id", "").strip()
         comentario = request.POST.get("comentario", "").strip()[:100]
 
-        # Volver a comprobar la relación dentro de la transacción.
+        # Validar el ID recibido del formulario.
+        if not compra_id.isdecimal():
+            messages.error(request, "El identificador de la orden de compra no es válido.")
+            return redirect("boveda_xml:relacionar-cfdi-compra", pk=pk)
+
+        compra_id = int(compra_id)
+
+        # Obtener la OC seleccionada.
+        compra = get_object_or_404(
+            compras_base.select_related("req", "req__orden", "req__orden__distrito", "proveedor", "proveedor__nombre",), pk=compra_id)
+
+        # RFC receptor autorizado según la empresa.
+        if compra.req.orden.distrito.nombre == "Yerod":
+            rfc_esperados = {"OSY260827551"}
+        else:
+            rfc_esperados = {"GVO020226811", "SPP0605268G8",}
+
+        rfc_receptor = (cfdi.rfc_receptor or "").strip().upper()
+
+        if rfc_receptor not in rfc_esperados:
+            messages.error(request, "El RFC receptor no corresponde a la empresa de la OC.")
+            return redirect("boveda_xml:relacionar-cfdi-compra", pk=pk)
+
+        if cfdi.tipo_comprobante == "P":
+            messages.error(request, "No se permite relacionar complementos de pago.")
+            return redirect("boveda_xml:relacionar-cfdi-compra", pk=pk)
+
+        if not cfdi.archivo_xml:
+            messages.error(request, "El CFDI no tiene un archivo XML almacenado.")
+            return redirect("boveda_xml:relacionar-cfdi-compra", pk=pk)
+
+       
+        # 6. CREAR FACTURA Y ESTABLECER RELACIÓN
+       
         with transaction.atomic():
 
+            # Bloquear el CFDI durante la operación.
             cfdi = get_object_or_404(CFDI.objects.select_for_update(), pk=pk)
 
-            if cfdi.factura_compra_id or tiene_registro_previo():
+            factura_compra, factura_gasto, factura_viatico = (obtener_registros_existentes())
+
+            # No permitir duplicados.
+            if (cfdi.factura_compra_id or factura_compra is not None or factura_gasto is not None or factura_viatico is not None):
                 messages.warning(request, "Este CFDI ya tiene una factura registrada.")
-                return redirect("boveda_xml:lista_cfdi")
 
-            compra = get_object_or_404(compras_base, pk=compra_id)
+                return redirect("boveda_xml:relacionar-cfdi-compra", pk=pk)
 
-            # RFC receptor autorizado según empresa.
-            if compra.req.orden.distrito.nombre == "Yerod":
-                rfc_esperados = {"OSY260827551"}
-            else:
-                rfc_esperados = {"GVO020226811", "SPP0605268G8",}
-
-            rfc_receptor = (cfdi.rfc_receptor or "").strip().upper()
-
-            if rfc_receptor not in rfc_esperados:
-                messages.error(request, "El RFC receptor no corresponde a la empresa de la OC.")
-                return redirect("relacionar-cfdi-compra", pk=pk)
-
-            if cfdi.tipo_comprobante == "P":
-                messages.error(request, "No se permite relacionar complementos de pago.")
-                return redirect("relacionar-cfdi-compra", pk=pk)
-
-            # Crear el objeto de Compras.
+            # Crear registro en Tesorería.
             factura = Facturas(oc=compra, hecho=False)
+            
 
-            # Reutilizar el XML existente en Bóveda.
-            nombre_archivo = cfdi.archivo_xml.name.rsplit("/", 1)[-1]
+            nombre_archivo = (cfdi.archivo_xml.name.rsplit("/", 1)[-1])
 
+            # Reutilizar el archivo XML almacenado en Bóveda.
             with cfdi.archivo_xml.open("rb") as origen:
+
                 archivo = File(origen, name=nombre_archivo)
 
-                guardar_factura(
-                    factura,
-                    archivo,
-                    nombre_archivo,
-                    cfdi.uuid,
-                    cfdi.fecha_timbrado,
-                    usuario,
-                    comentario
-                )
+                guardar_factura(factura, archivo, nombre_archivo, cfdi.uuid, cfdi.fecha_timbrado, usuario, comentario)
 
-            # Guardar vinculación.
+            # Vincular CFDI con la factura creada.
             cfdi.factura_compra = factura
             cfdi.save(update_fields=["factura_compra"])
 
-        messages.success(request, f"CFDI {cfdi.uuid} relacionado correctamente con la OC {compra.folio}.")
+        messages.success(request, f"El CFDI {cfdi.uuid} se relacionó correctamente con la OC {compra.folio}.")
 
         return redirect("boveda_xml:lista_cfdi")
 
-    # GET: impedir nuevas relaciones si ya existe una factura.
-    if cfdi.factura_compra_id or tiene_registro_previo():
-        messages.warning(request, "Este CFDI ya está relacionado o registrado.")
-        return redirect("boveda_xml:lista_cfdi")
 
-    # Buscar OC por folio.
+    # 7. BUSCAR ÓRDENES DE COMPRA
+
     buscar = request.GET.get("buscar", "").strip()
 
     compras = Compra.objects.none()
 
-     # Órdenes del proveedor que emitió el CFDI.
-    #compras = Compra.objects.filter(proveedor__nombre__rfc__iexact=rfc_emisor)
-
     if buscar:
-        compras = (compras_base.filter(folio__icontains=buscar).select_related("req", "req__orden", "proveedor", "proveedor__nombre",).order_by("-id")[:30])
+        compras = (compras_base.filter(folio__icontains=buscar).select_related("req","req__orden","req__orden__distrito","proveedor","proveedor__nombre",).order_by("-id")[:30])
+
+
+    # 8. CONTEXTO
 
     context = {
         "cfdi": cfdi,
         "compras": compras,
         "buscar": buscar,
+        "factura_gasto_existente": factura_gasto is not None,
+        "factura_viatico_existente": factura_viatico is not None,
     }
 
     return render(request, "boveda_xml/relacionar_cfdi_compra.html", context)
+
 
 
 # Create your views here.

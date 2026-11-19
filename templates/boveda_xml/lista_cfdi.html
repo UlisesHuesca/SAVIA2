@@ -324,12 +324,36 @@
                         </td>
                         <td>
                             {% if usuario.tipo.comprador %}
-                                {% if not cfdi.factura_compra_id %}
-                                    <a href="{% url 'boveda_xml:relacionar-cfdi-compra' cfdi.id %}" class="btn btn-sm btn-outline-primary">
+                               {% if cfdi.factura_compra_id %}
+
+                                <!-- CFDI relacionado con Compras -->
+                                <div class="d-flex flex-column gap-1">
+
+                                    <span class="badge bg-success">
+                                        <i class="fa-solid fa-check-circle me-1"></i>
+                                        OC {{ cfdi.factura_compra.oc.folio }}
+                                    </span>
+
+                                    <small class="text-muted">
+                                        Factura relacionada
+                                    </small>
+
+                                </div>
+
+                            {% else %}
+
+                                <!-- CFDI sin relación -->
+                                {% if acceso_completo %}
+                                    <a
+                                        href="{% url 'boveda_xml:relacionar-cfdi-compra' cfdi.pk %}"
+                                        class="sv-btn sv-btn-info sv-btn-icon"
+                                        title="Relacionar con orden de compra"
+                                    >
                                         <i class="fa-solid fa-link"></i>
-                                        Relacionar
                                     </a>
                                 {% endif %}
+
+                            {% endif %}
                             {% endif %}
                         </td>
 

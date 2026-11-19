@@ -6,8 +6,8 @@ from django.core.mail import EmailMessage, BadHeaderError
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField, Prefetch
-from django.db.models.functions import Concat, Coalesce
+from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField, DateField
+from django.db.models.functions import Concat, Coalesce, Cast
 from django.contrib import messages
 #from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -3472,7 +3472,10 @@ def complemento_nuevo(request, pk):
                                 hecho=True,
                                 eliminado=False,
                             ).annotate(
-                                fecha_pago=Coalesce('pagado_real','pagado_date')
+                                fecha_pago=Coalesce(
+                                    Cast('pagado_real', output_field=DateField()),
+                                    Cast('pagado_date', output_field=DateField()),
+                                    output_field=DateField())
                             ).filter(
                                 fecha_pago__isnull= False
                             ).values_list(
