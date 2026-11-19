@@ -2475,6 +2475,13 @@ def agregar_vales_rosa_generados(zip_file, carpeta, gasto=None, viatico=None):
 def control_cuentas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
+    perfiles_consulta = [usuario.id]
+
+    if usuario.sustituto:
+        usuario_sustituido = Profile.objects.filter(staff = usuario.staff, st_activo = True).first()
+        if usuario_sustituido:
+            perfiles_consulta.append(usuario_sustituido.id)
+
     
     if usuario.distritos.nombre == "MATRIZ":
         if usuario.tipo.supervisor:
@@ -2482,12 +2489,16 @@ def control_cuentas(request):
                 cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True).exclude(distrito__nombre = "BRASIL")
             elif usuario.tipo.finanzas:
                 cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True).exclude(distrito__nombre = "BRASIL")
+            
             #print(cuentas)
         else:
             if usuario.tipo.tesoreria:
                 cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visores=usuario))
             elif usuario.tipo.finanzas:
-                cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visores=usuario))
+                if not usuario_sustituido:
+                    cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visores=usuario))
+                else:
+                    cuentas = Cuenta.objects.filter(Q(encargado__id__in = perfiles_consulta) | Q(visores__id__in=perfiles_consulta))
     elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
         cuentas = Cuenta.objects.filter(visores = usuario)
 
