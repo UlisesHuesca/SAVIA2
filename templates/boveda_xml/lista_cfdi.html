@@ -647,10 +647,7 @@
                         </td>
 
                         <td>
-
-                            {% if usuario.tipo.comprador %}
-
-                               {% if cfdi.factura_compra_id %}
+                            {% if cfdi.factura_compra_id %}
 
                                 <!-- CFDI relacionado con Compras -->
 
@@ -671,8 +668,10 @@
                                     </small>
 
                                 </div>
-
+                            
                             {% else %}
+
+                            {% if usuario.tipo.comprador %}
 
                                 <!-- CFDI sin relación -->
 
