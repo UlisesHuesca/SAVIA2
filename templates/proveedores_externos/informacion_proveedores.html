@@ -699,6 +699,112 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                            <tr>
+                                <td><span class="sv-cell-title">EMA</span></td>
+                                <td>
+                                    <div class="sv-actions">
+                                        {% if documentos_count.ema == 0 %}
+                                        <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#dialog"
+                                           title="Subir EMA"
+                                           aria-label="Subir EMA"
+                                           hx-target="#document"
+                                           hx-get="{% url 'edit-ema' proveedor.id|unlocalize %}">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "ema" and not documento.obsoleto %}
+                                                <button type="button"
+                                                        class="sv-btn {% if documento.validada %}sv-btn-info{% else %}sv-btn-danger{% endif %} sv-btn-icon js-document-preview"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#pdfPreviewModal"
+                                                        data-document-url="{{ documento.archivo.url }}#zoom=80"
+                                                        data-document-title="EMA"
+                                                        title="{% if documento.validada %}Documento validado{% else %}Pendiente de validación{% endif %}"
+                                                        aria-label="Ver EMA">
+                                                    <i class="fa-solid fa-file-pdf"></i>
+                                                </button>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if documentos_count.ema > documentos_validados_count.ema %}
+                                            <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#dialog"
+                                               title="Actualizar EMA"
+                                               aria-label="Actualizar EMA"
+                                               hx-target="#document"
+                                               hx-get="{% url 'edit-ema' proveedor.id|unlocalize %}">
+                                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-break" id="comentario_16_{{ proveedor.id|unlocalize }}" tipo="ema">
+                                    {% if proveedor.comentario_ema %}
+                                        {{ proveedor.comentario_ema }}
+                                    {% else %}
+                                        <span class="sv-cell-subtitle">Sin comentarios</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="sv-cell-title">EBA</span></td>
+                                <td>
+                                    <div class="sv-actions">
+                                        {% if documentos_count.eba == 0 %}
+                                        <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#dialog"
+                                           title="Subir EBA"
+                                           aria-label="Subir EBA"
+                                           hx-target="#document"
+                                           hx-get="{% url 'edit-eba' proveedor.id|unlocalize %}">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "eba" and not documento.obsoleto %}
+                                                <button type="button"
+                                                        class="sv-btn {% if documento.validada %}sv-btn-info{% else %}sv-btn-danger{% endif %} sv-btn-icon js-document-preview"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#pdfPreviewModal"
+                                                        data-document-url="{{ documento.archivo.url }}#zoom=80"
+                                                        data-document-title="EBA"
+                                                        title="{% if documento.validada %}Documento validado{% else %}Pendiente de validación{% endif %}"
+                                                        aria-label="Ver EBA">
+                                                    <i class="fa-solid fa-file-pdf"></i>
+                                                </button>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if documentos_count.eba > documentos_validados_count.eba %}
+                                            <a class="sv-btn sv-btn-outline sv-btn-icon"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#dialog"
+                                               title="Actualizar EBA"
+                                               aria-label="Actualizar EBA"
+                                               hx-target="#document"
+                                               hx-get="{% url 'edit-eba' proveedor.id|unlocalize %}">
+                                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-break" id="comentario_16_{{ proveedor.id|unlocalize }}" tipo="eba">
+                                    {% if proveedor.comentario_eba %}
+                                        {{ proveedor.comentario_eba }}
+                                    {% else %}
+                                        <span class="sv-cell-subtitle">Sin comentarios</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                           
                         </tbody>
                     </table>
                 </div>
