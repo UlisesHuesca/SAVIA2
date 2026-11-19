@@ -456,8 +456,6 @@ def relacionar_cfdi_compra(request, pk):
         "cfdi": cfdi,
         "compras": compras,
         "buscar": buscar,
-        "factura_gasto_existente": factura_gasto is not None,
-        "factura_viatico_existente": factura_viatico is not None,
     }
 
     return render(request, "boveda_xml/relacionar_cfdi_compra.html", context)
