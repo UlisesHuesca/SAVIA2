@@ -3475,7 +3475,7 @@ def complemento_nuevo(request, pk):
                                 fecha_pago=Coalesce('pagado_real','pagado_date')
                             ).filter(
                                 fecha_pago__isnull= False
-                            )values_list(
+                            ).values_list(
                                 'fecha_pago',
                                 flat=True
                             )
