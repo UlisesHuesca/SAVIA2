@@ -1,12 +1,16 @@
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import render,  get_object_or_404, redirect
 from django.contrib import messages
+from django.db import IntegrityError, transaction
+from django.db.models import Q
+from django.contrib import messages
 from django.core.paginator import Paginator
 from django.core.files import File
 from django.core.files.base import ContentFile
-from django.views.decorators.http import require_http_methods
-from django.db import IntegrityError, transaction
-from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_http_methods, require_POST
+
 
 from .filters import CFDIFilter
 from .forms import CargaMasivaXMLForm
@@ -18,7 +22,7 @@ from user.decorators import perfil_seleccionado_required
 from dashboard.models import Profile
 from compras.models import Compra
 from tesoreria.models import Facturas
-from tesoreria.views import guardar_factura
+from tesoreria.views import guardar_factura, consultar_estatus_sat
 from gastos.models import Factura
 from viaticos.models import Viaticos_Factura
 
@@ -42,6 +46,9 @@ from num2words import num2words
 
 from pathlib import PurePosixPath
 from zipfile import ZipFile, BadZipFile
+
+from datetime import timedelta, datetime, time
+
 
 
 @perfil_seleccionado_required
@@ -759,3 +766,103 @@ def cfdi_pdf(factura):
 
     buffer.seek(0)
     return buffer
+
+
+
+
+@perfil_seleccionado_required
+@require_POST
+def validar_sat_boveda(request):
+
+    pk_profile = request.session.get("selected_profile_id")
+
+    perfil = get_object_or_404(Profile.objects.select_related("tipo"), pk=pk_profile)
+
+    # Validación de permisos
+    if perfil.tipo.nombre != "SUPERINTENDENCIA_CONTABILIDAD":
+        messages.error(request, "No tienes permisos para validar CFDI ante el SAT.")
+        return redirect("boveda_xml:lista_cfdi")
+
+    # CFDI sin validar o cuya última validación
+    # ocurrió hace al menos cuatro horas.
+    #fecha_limite = timezone.now() - timedelta(hours=4)
+
+
+    fecha_inicio = parse_date(request.POST.get("fecha_inicio", ""))
+
+    fecha_fin = parse_date(request.POST.get("fecha_fin", ""))
+
+    if not fecha_inicio or not fecha_fin or fecha_inicio > fecha_fin:
+        messages.error(request,"Debes seleccionar un rango de fechas válido.")
+        return redirect("boveda_xml:lista_cfdi")
+
+     # 3. Convertir fechas a datetime
+    zona = timezone.get_current_timezone()
+
+    inicio = timezone.make_aware(datetime.combine(fecha_inicio, time.min),zona)
+
+    fin_exclusivo = timezone.make_aware(datetime.combine(fecha_fin + timedelta(days=1), time.min),zona)
+
+    cfdis = (CFDI.objects.filter(fecha_timbrado__gte=inicio, fecha_timbrado__lt=fin_exclusivo,)
+        .exclude(uuid__isnull=True)
+        .exclude(uuid="")
+        .order_by("-fecha_timbrado", "-pk")
+    )
+
+    resultados = {
+        "vigentes": 0,
+        "cancelados": 0,
+        "no_encontrados": 0,
+        "errores": 0,
+    }
+
+    for cfdi in cfdis:
+
+        if (
+            not cfdi.rfc_emisor
+            or not cfdi.rfc_receptor
+            or cfdi.total is None
+        ):
+            resultados["errores"] += 1
+            continue
+
+        estado = consultar_estatus_sat(
+            rfc_emisor=cfdi.rfc_emisor,
+            rfc_receptor=cfdi.rfc_receptor,
+            total=cfdi.total,
+            uuid=str(cfdi.uuid),
+        )
+
+        estado_normalizado = (estado or "").strip().upper()
+
+        if estado_normalizado == "VIGENTE":
+            resultados["vigentes"] += 1
+
+        elif estado_normalizado == "CANCELADO":
+            resultados["cancelados"] += 1
+
+        elif estado_normalizado == "NO ENCONTRADO":
+            resultados["no_encontrados"] += 1
+
+        else:
+            resultados["errores"] += 1
+            continue
+
+        print(estado_normalizado)
+        cfdi.estado_sat = estado_normalizado
+        cfdi.fecha_validacion_sat = timezone.now()
+
+        cfdi.save(update_fields=["estado_sat","fecha_validacion_sat",])
+
+    messages.info(
+        request,
+        (
+            f"Validación SAT: "
+            f"{resultados['vigentes']} vigentes, "
+            f"{resultados['cancelados']} cancelados, "
+            f"{resultados['no_encontrados']} no encontrados y "
+            f"{resultados['errores']} sin resultado válido."
+        )
+    )
+
+    return redirect("boveda_xml:lista_cfdi")

@@ -1,341 +1,673 @@
 {% extends 'partials/base.html' %}
+
 {% load static %}
+
 {% load widget_tweaks %}
 
 {% block title %}{% if not acceso_completo %} Búsqueda XML {% else %} Bóveda SAVIA XML {% endif %}{% endblock %}
 
 {% block content %}
+
 <main class="sv-page sv-page-with-navbar">
+
     <header class="sv-page-header">
+
         <div>
+
             <h1 class="sv-page-title">
+
                 <span class="sv-page-title-icon">
+
                     <i class="fa-solid fa-vault"></i>
+
                 </span>
+
                 {% if not acceso_completo %}
+
                 Búsqueda XML
+
                 {% else %}
+
                 Bóveda SAVIA XML
+
                 {% endif %}
+
             </h1>
+
             <p class="sv-page-subtitle">
+
                 Consulta y administración de comprobantes fiscales almacenados en SAVIA.
+
             </p>
+
         </div>
 
         <div class="sv-page-actions">
+
             <span class="sv-badge sv-badge-primary">
+
                 <i class="fa-solid fa-file-code"></i>
+
                 {{ pagina.paginator.count }} registro{{ pagina.paginator.count|pluralize }}
+
             </span>
+
         </div>
+
     </header>
 
     {% if messages %}
+
         {% for message in messages %}
+
         <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show"
+
              role="alert">
+
             {{ message }}
+
             <button type="button"
+
                     class="btn-close"
+
                     data-bs-dismiss="alert"
+
                     aria-label="Cerrar">
+
             </button>
+
         </div>
+
         {% endfor %}
+
     {% endif %}
 
-    {% if usuario.tipo.nombre == 'CONTADOR' or usuario.tipo.nombre == 'SUPERINTENDENCIA_CONTABILIDAD' %}
-    <section class="sv-card mb-3">
+    {# Validación fiscal independiente de los filtros de búsqueda #}
+    {% if usuario.tipo.nombre == 'SUPERINTENDENCIA_CONTABILIDAD' %}
+    <section class="sv-card mb-3" aria-labelledby="satCardTitle">
         <div class="sv-card-header">
             <div>
-                <h2 class="sv-card-title">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    Carga masiva de XML
+                <h2 class="sv-card-title" id="satCardTitle">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Validación fiscal ante el SAT
                 </h2>
                 <p class="sv-card-subtitle">
-                    Selecciona uno o varios comprobantes fiscales para incorporarlos a la bóveda.
+                    Selecciona las fechas de timbrado que deseas consultar. El proceso es independiente de los filtros de la tabla.
                 </p>
             </div>
+            <span class="sv-badge sv-badge-primary">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Revalidación cada 4 h
+            </span>
         </div>
-
         <div class="sv-card-body">
             <form method="post"
-                  enctype="multipart/form-data"
-                  action="{% url 'boveda_xml:carga_masiva_xml' %}">
+                  action="{% url 'boveda_xml:validar-sat' %}"
+                  id="formValidarSAT">
                 {% csrf_token %}
-
-                <div class="row g-3 align-items-center">
-                    <div class="col-12 col-lg-9">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-lg-4">
+                        <label for="satFechaInicio" class="form-label fw-semibold">Fecha inicial de timbrado</label>
                         <div class="sv-input-group input-group">
-                            <span class="input-group-text">
-                                <i class="fa-solid fa-file-code"></i>
-                            </span>
-                            {% render_field form_carga.archivos_xml class+="form-control" aria-label="Seleccionar archivos XML" %}
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <input type="date" name="fecha_inicio" id="satFechaInicio"
+                                   class="form-control" max="{% now 'Y-m-d' %}" required>
                         </div>
-
-                        <span class="sv-cell-subtitle mt-2">
-                            Puedes seleccionar varios archivos XML al mismo tiempo.
-                        </span>
-
-                        {% if form_carga.archivos_xml.errors %}
-                        <div class="text-danger small mt-2">
-                            {{ form_carga.archivos_xml.errors }}
-                        </div>
-                        {% endif %}
                     </div>
-
-                    <div class="col-12 col-lg-3 d-grid">
-                        <button type="submit" class="sv-btn sv-btn-success">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            Cargar XML
+                    <div class="col-12 col-lg-4">
+                        <label for="satFechaFin" class="form-label fw-semibold">Fecha final de timbrado</label>
+                        <div class="sv-input-group input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+                            <input type="date" name="fecha_fin" id="satFechaFin"
+                                   class="form-control" max="{% now 'Y-m-d' %}" required>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4 d-grid">
+                        <button type="submit" id="btnValidarSAT" class="sv-btn sv-btn-info w-100">
+                            <i class="fa-solid fa-shield-halved me-2"></i>
+                            <span class="sat-button-label">Validar CFDI ante el SAT</span>
                         </button>
                     </div>
                 </div>
+                <div class="d-flex align-items-start gap-2 mt-3 sv-cell-subtitle" role="note">
+                    <i class="fa-solid fa-circle-info mt-1" aria-hidden="true"></i>
+                    <span>Se consultará omitiendo los validados en las últimas 4 horas. Los resultados se guardan en la Bóveda.</span>
+                </div>
             </form>
         </div>
     </section>
     {% endif %}
 
+    {% if usuario.tipo.nombre == 'CONTADOR' or usuario.tipo.nombre == 'SUPERINTENDENCIA_CONTABILIDAD' %}
+
     <section class="sv-card mb-3">
+
         <div class="sv-card-header">
+
             <div>
+
                 <h2 class="sv-card-title">
-                    <i class="fa-solid fa-filter"></i>
-                    Filtros de búsqueda
+
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                    Carga masiva de XML
+
                 </h2>
+
                 <p class="sv-card-subtitle">
 
-                {% if not acceso_completo %}
-                    Localiza comprobantes por su folio fiscal
-                {% else %} 
-                    Localiza comprobantes por sus datos fiscales y de emisión.
-                {% endif %}
+                    Selecciona uno o varios comprobantes fiscales para incorporarlos a la bóveda.
+
                 </p>
+
             </div>
+
         </div>
 
         <div class="sv-card-body">
+
+            <form method="post"
+
+                  enctype="multipart/form-data"
+
+                  action="{% url 'boveda_xml:carga_masiva_xml' %}">
+
+                {% csrf_token %}
+
+                <div class="row g-3 align-items-center">
+
+                    <div class="col-12 col-lg-9">
+
+                        <div class="sv-input-group input-group">
+
+                            <span class="input-group-text">
+
+                                <i class="fa-solid fa-file-code"></i>
+
+                            </span>
+
+                            {% render_field form_carga.archivos_xml class+="form-control" aria-label="Seleccionar archivos XML" %}
+
+                        </div>
+
+                        <span class="sv-cell-subtitle mt-2">
+
+                            Puedes seleccionar varios archivos XML al mismo tiempo.
+
+                        </span>
+
+                        {% if form_carga.archivos_xml.errors %}
+
+                        <div class="text-danger small mt-2">
+
+                            {{ form_carga.archivos_xml.errors }}
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="col-12 col-lg-3 d-grid">
+
+                        <button type="submit" class="sv-btn sv-btn-success">
+
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                            Cargar XML
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+    <section class="sv-card mb-3">
+
+        <div class="sv-card-header">
+
+            <div>
+
+                <h2 class="sv-card-title">
+
+                    <i class="fa-solid fa-filter"></i>
+
+                    Filtros de búsqueda
+
+                </h2>
+
+                <p class="sv-card-subtitle">
+
+                {% if not acceso_completo %}
+
+                    Localiza comprobantes por su folio fiscal
+
+                {% else %}&#x20;
+
+                    Localiza comprobantes por sus datos fiscales y de emisión.
+
+                {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="sv-card-body">
+
             <form method="get">
+
                 <div class="sv-filter-grid sv-filter-grid-4">
+
                     {% for campo in filtro.form %}
+
                     <div class="sv-input-group input-group">
+
                         <span class="input-group-text">
+
                             <i class="fa-solid fa-filter"></i>
+
                         </span>
 
                         <div class="form-floating form-floating-group flex-grow-1">
+
                             {% if campo.field.widget.input_type == 'select' %}
+
                                 {% render_field campo class+="form-select" %}
+
                             {% else %}
+
                                 {% render_field campo class+="form-control" placeholder=campo.label %}
+
                             {% endif %}
+
                             <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+
                         </div>
 
                         {% if campo.errors %}
+
                         <div class="invalid-feedback d-block">
+
                             {{ campo.errors|striptags }}
+
                         </div>
+
                         {% endif %}
+
                     </div>
+
                     {% endfor %}
 
                     {% if not acceso_completo %}
+
                     <div class="sv-input-group input-group">
+
                         <span class="input-group-text">
+
                             <i class="fa-solid fa-fingerprint"></i>
+
                         </span>
+
                         <div class="form-floating form-floating-group flex-grow-1">
+
                             <input type="text"
+
                                    class="form-control"
+
                                    id="uuid"
+
                                    name="uuid"
+
                                    value="{{ uuid|default:'' }}"
+
                                    placeholder="Folio fiscal (UUID)"
+
                                    maxlength="36"
+
                                    required>
+
                             <label for="uuid">Folio fiscal (UUID)</label>
+
                         </div>
+
                     </div>
+
                     {% endif %}
 
                     <a href="{% url 'boveda_xml:lista_cfdi' %}"
+
                        class="sv-btn sv-btn-outline">
+
                         <i class="fa-solid fa-eraser"></i>
+
                         Limpiar
+
                     </a>
 
                     <button type="submit" class="sv-btn sv-btn-primary">
+
                         <i class="fa-solid fa-magnifying-glass"></i>
+
                         Buscar
+
                     </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </section>
 
     <section class="sv-card">
+
         <div class="sv-card-header">
+
             <div>
+
                 <h2 class="sv-card-title">
+
                     <i class="fa-solid fa-file-invoice"></i>
+
                     CFDI almacenados
+
                 </h2>
+
                 <p class="sv-card-subtitle">
+
                     Consulta el XML original o genera su representación impresa.
+
                 </p>
+
             </div>
 
             <span class="sv-badge sv-badge-dark">
+
                 <i class="fa-solid fa-database"></i>
+
                 {{ pagina.paginator.count }} registro{{ pagina.paginator.count|pluralize }}
+
             </span>
+
         </div>
 
         <div class="sv-table-wrap">
+
             <table class="sv-table sv-table-wide">
+
                 <thead>
+
                     <tr>
+
                         <th>Timbrado</th>
+
                         <th>Emisor</th>
+
                         <th>Comprobante</th>
+
                         <th class="text-end">Importe</th>
+
                         <th>Método de pago</th>
+
                         <th>Tipo</th>
+
                         <th>XML</th>
+
                         <th>PDF</th>
+
                         <th>Acción</th>
+
+                        <th>Status SAT</th>
+
                     </tr>
+
                 </thead>
 
                 <tbody>
+
                     {% for cfdi in pagina %}
+
                     <tr>
+
                         <td>
+
                             <div class="sv-date">
+
                                 <strong>{{ cfdi.fecha_timbrado|date:"d/m/Y"|default:"—" }}</strong>
+
                                 <small>{{ cfdi.fecha_timbrado|date:"H:i" }}</small>
+
                             </div>
+
                         </td>
 
                         <td>
+
                             <span class="sv-cell-title">
+
                                 {{ cfdi.nombre_emisor|default:"Sin nombre" }}
+
                             </span>
+
                             <span class="sv-cell-subtitle">
+
                                 RFC: {{ cfdi.rfc_emisor|default:"—" }}
+
                             </span>
+
                         </td>
 
                         <td>
+
                             <span class="sv-cell-title">
+
                                 {% if cfdi.serie or cfdi.folio %}
+
                                     {{ cfdi.serie|default:"" }} {{ cfdi.folio|default:"" }}
+
                                 {% else %}
+
                                     Sin serie ni folio
+
                                 {% endif %}
+
                             </span>
+
                             <span class="sv-cell-subtitle text-break" title="{{ cfdi.uuid }}">
+
                                 UUID: {{ cfdi.uuid }}
+
                             </span>
+
                         </td>
 
                         <td class="text-end">
+
                             <span class="sv-cell-title">
+
                                 ${{ cfdi.total|floatformat:2 }}
+
                             </span>
+
                             <span class="sv-cell-subtitle">
+
                                 {{ cfdi.moneda|default:"Sin moneda" }}
+
                             </span>
+
                         </td>
 
                         <td>
+
                             {% if cfdi.metodo_pago %}
+
                             <span class="sv-badge sv-badge-neutral">
+
                                 {{ cfdi.metodo_pago }}
+
                             </span>
+
                             {% else %}
+
                             <span class="sv-cell-subtitle">No especificado</span>
+
                             {% endif %}
+
                         </td>
 
                         <td>
+
                             {% if cfdi.tipo_comprobante == 'I' %}
+
                             <span class="sv-badge sv-badge-success">
+
                                 <i class="fa-solid fa-arrow-trend-up"></i>
+
                                 Ingreso
+
                             </span>
+
                             {% elif cfdi.tipo_comprobante == 'P' %}
+
                             <span class="sv-badge sv-badge-primary">
+
                                 <i class="fa-solid fa-money-check-dollar"></i>
+
                                 Pago
+
                             </span>
+
                             {% elif cfdi.tipo_comprobante == 'E' %}
+
                             <span class="sv-badge sv-badge-danger">
+
                                 <i class="fa-solid fa-arrow-trend-down"></i>
+
                                 Egreso
+
                             </span>
+
                             {% elif cfdi.tipo_comprobante == 'N' %}
+
                             <span class="sv-badge sv-badge-primary">
+
                                 <i class="fa-solid fa-users"></i>
+
                                 Nómina
+
                             </span>
+
                             {% elif cfdi.tipo_comprobante == 'T' %}
+
                             <span class="sv-badge sv-badge-neutral">
+
                                 <i class="fa-solid fa-truck-fast"></i>
+
                                 Traslado
+
                             </span>
+
                             {% else %}
+
                             <span class="sv-badge sv-badge-neutral">
+
                                 Sin identificar
+
                             </span>
+
                             {% endif %}
+
                         </td>
 
                         <td>
+
                             {% if cfdi.archivo_xml %}
+
                             <a href="{{ cfdi.archivo_xml.url }}"
+
                                class="sv-btn sv-btn-info sv-btn-icon"
+
                                target="_blank"
+
                                rel="noopener noreferrer"
+
                                title="Descargar XML"
+
                                aria-label="Descargar XML del CFDI {{ cfdi.uuid }}">
+
                                 <i class="fa-solid fa-file-code"></i>
+
                             </a>
+
                             {% else %}
+
                             <span class="sv-cell-subtitle">No disponible</span>
+
                             {% endif %}
+
                         </td>
 
                         <td>
+
                             {% if cfdi.tipo_comprobante == 'I' or cfdi.tipo_comprobante == 'E' %}
+
                             <button type="button"
+
                                     class="sv-btn sv-btn-danger sv-btn-icon btn-ver-pdf"
+
                                     data-url="{% url 'boveda_xml:generar_cfdi' cfdi.id %}"
+
                                     data-uuid="{{ cfdi.uuid }}"
+
                                     title="Visualizar representación PDF"
+
                                     aria-label="Visualizar PDF del CFDI {{ cfdi.uuid }}">
+
                                 <i class="fa-solid fa-file-pdf"></i>
+
                             </button>
+
                             {% else %}
+
                             <span class="sv-cell-subtitle">No aplica</span>
+
                             {% endif %}
+
                         </td>
+
                         <td>
+
                             {% if usuario.tipo.comprador %}
+
                                {% if cfdi.factura_compra_id %}
 
                                 <!-- CFDI relacionado con Compras -->
+
                                 <div class="d-flex flex-column gap-1">
 
                                     <span class="badge bg-success">
+
                                         <i class="fa-solid fa-check-circle me-1"></i>
+
                                         OC {{ cfdi.factura_compra.oc.folio }}
+
                                     </span>
 
                                     <small class="text-muted">
+
                                         Factura relacionada
+
                                     </small>
 
                                 </div>
@@ -343,204 +675,473 @@
                             {% else %}
 
                                 <!-- CFDI sin relación -->
+
                                 {% if acceso_completo %}
+
                                     <a
+
                                         href="{% url 'boveda_xml:relacionar-cfdi-compra' cfdi.pk %}"
+
                                         class="sv-btn sv-btn-info sv-btn-icon"
+
                                         title="Relacionar con orden de compra"
+
                                     >
+
                                         <i class="fa-solid fa-link"></i>
+
                                     </a>
+
                                 {% endif %}
 
                             {% endif %}
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {% if cfdi.estado_sat == 'VIGENTE' %}
+                                <span class="sv-badge sv-badge-success">
+                                    <i class="fa-solid fa-circle-check"></i> Vigente
+                                </span>
+                            {% elif cfdi.estado_sat == 'CANCELADO' %}
+                                <span class="sv-badge sv-badge-danger">
+                                    <i class="fa-solid fa-circle-xmark"></i> Cancelado
+                                </span>
+                            {% elif cfdi.estado_sat == 'NO ENCONTRADO' %}
+                                <span class="sv-badge sv-badge-neutral">No encontrado</span>
+                            {% elif cfdi.estado_sat %}
+                                <span class="sv-badge sv-badge-neutral">{{ cfdi.estado_sat }}</span>
+                            {% else %}
+                                <span class="sv-cell-subtitle">Sin validar</span>
+                            {% endif %}
+                            {% if cfdi.fecha_validacion_sat %}
+                                <small class="sv-cell-subtitle d-block mt-1">
+                                    <i class="fa-regular fa-clock me-1"></i>
+                                    {{ cfdi.fecha_validacion_sat|date:"d/m/Y H:i" }}
+                                </small>
                             {% endif %}
                         </td>
 
                     </tr>
 
                     {% empty %}
+
                     <tr>
-                        <td colspan="8" class="sv-empty">
+
+                        <td colspan="10" class="sv-empty">
+
                             <span class="sv-empty-icon">
+
                                 <i class="fa-solid fa-file-circle-xmark"></i>
+
                             </span>
+
                             <span class="sv-empty-title">No se encontraron CFDI</span>
+
                             <span class="sv-empty-text">
+
                                 Modifica los filtros o limpia la búsqueda para consultar otros comprobantes.
+
                             </span>
+
                         </td>
+
                     </tr>
+
                     {% endfor %}
+
                 </tbody>
+
             </table>
+
         </div>
 
         {% if pagina.paginator.num_pages > 1 %}
+
         <div class="sv-pagination-wrap">
+
             <nav aria-label="Paginación de comprobantes fiscales">
+
                 <ul class="pagination sv-pagination justify-content-center mb-0">
+
                     {% if pagina.has_previous %}
+
                     <li class="page-item">
+
                         <a class="page-link"
+
                            href="?{% if querystring %}{{ querystring }}&{% endif %}page=1"
+
                            aria-label="Primera página">
+
                             <i class="fa-solid fa-angles-left"></i>
+
                         </a>
+
                     </li>
+
                     <li class="page-item">
+
                         <a class="page-link"
+
                            href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.previous_page_number }}"
+
                            aria-label="Página anterior">
+
                             <i class="fa-solid fa-angle-left"></i>
+
                         </a>
+
                     </li>
+
                     {% endif %}
 
                     {% for numero in pagina.paginator.page_range %}
+
                         {% if pagina.number == numero %}
+
                         <li class="page-item active" aria-current="page">
+
                             <span class="page-link">{{ numero }}</span>
+
                         </li>
+
                         {% elif numero > pagina.number|add:'-2' and numero < pagina.number|add:'2' %}
+
                         <li class="page-item">
+
                             <a class="page-link"
+
                                href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ numero }}">
+
                                 {{ numero }}
+
                             </a>
+
                         </li>
+
                         {% endif %}
+
                     {% endfor %}
 
                     {% if pagina.has_next %}
+
                     <li class="page-item">
+
                         <a class="page-link"
+
                            href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.next_page_number }}"
+
                            aria-label="Página siguiente">
+
                             <i class="fa-solid fa-angle-right"></i>
+
                         </a>
+
                     </li>
+
                     <li class="page-item">
+
                         <a class="page-link"
+
                            href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.paginator.num_pages }}"
+
                            aria-label="Última página">
+
                             <i class="fa-solid fa-angles-right"></i>
+
                         </a>
+
                     </li>
+
                     {% endif %}
-                
+
                 </ul>
+
             </nav>
+
         </div>
+
         {% endif %}
+
     </section>
+
 </main>
 
-<div class="modal fade"
-     id="modalPDF"
-     tabindex="-1"
-     aria-labelledby="modalPDFLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
+{# Modal específico: no se utiliza la cookie de descarga de Excel #}
+{% if usuario.tipo.nombre == 'SUPERINTENDENCIA_CONTABILIDAD' %}
+<div class="modal fade" id="loadingIndicatorSAT" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false"
+     aria-labelledby="loadingIndicatorSATTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sv-card">
+            <div class="modal-body d-flex align-items-center gap-3 p-4">
+                <div class="flex-shrink-0 text-info">
+                    <span class="spinner-border" role="status" aria-label="Validando"></span>
+                </div>
                 <div>
-                    <h2 class="modal-title sv-card-title" id="modalPDFLabel">
-                        <i class="fa-solid fa-file-pdf text-danger"></i>
-                        Representación impresa del CFDI
+                    <h2 class="h6 fw-bold mb-1" id="loadingIndicatorSATTitle">
+                        Validando CFDI ante el SAT
                     </h2>
-                    <p class="sv-card-subtitle mb-0">
-                        Vista previa del comprobante fiscal.
+                    <p class="sv-cell-subtitle mb-1" role="status">
+                        Consultando los comprobantes del periodo seleccionado…
                     </p>
+                    <small class="sv-cell-subtitle">La pantalla regresará a Bóveda al terminar.</small>
                 </div>
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar">
-                </button>
-            </div>
-
-            <div class="modal-body sv-document-viewer">
-                <div id="cargandoPDF" class="sv-document-loading">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Generando PDF...</span>
-                    </div>
-                    <span>Generando representación PDF...</span>
-                </div>
-
-                <iframe id="visorPDF"
-                        class="sv-document-frame d-none"
-                        title="Representación PDF del CFDI">
-                </iframe>
-            </div>
-
-            <div class="modal-footer">
-                <a id="descargarPDF"
-                   href="#"
-                   class="sv-btn sv-btn-danger"
-                   download>
-                    <i class="fa-solid fa-download"></i>
-                    Descargar PDF
-                </a>
-
-                <button type="button"
-                        class="sv-btn sv-btn-outline"
-                        data-bs-dismiss="modal">
-                    <i class="fa-solid fa-xmark"></i>
-                    Cerrar
-                </button>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
 
+<div class="modal fade"
+
+     id="modalPDF"
+
+     tabindex="-1"
+
+     aria-labelledby="modalPDFLabel"
+
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2 class="modal-title sv-card-title" id="modalPDFLabel">
+
+                        <i class="fa-solid fa-file-pdf text-danger"></i>
+
+                        Representación impresa del CFDI
+
+                    </h2>
+
+                    <p class="sv-card-subtitle mb-0">
+
+                        Vista previa del comprobante fiscal.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+
+                        class="btn-close"
+
+                        data-bs-dismiss="modal"
+
+                        aria-label="Cerrar">
+
+                </button>
+
+            </div>
+
+            <div class="modal-body sv-document-viewer">
+
+                <div id="cargandoPDF" class="sv-document-loading">
+
+                    <div class="spinner-border" role="status">
+
+                        <span class="visually-hidden">Generando PDF...</span>
+
+                    </div>
+
+                    <span>Generando representación PDF...</span>
+
+                </div>
+
+                <iframe id="visorPDF"
+
+                        class="sv-document-frame d-none"
+
+                        title="Representación PDF del CFDI">
+
+                </iframe>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <a id="descargarPDF"
+
+                   href="#"
+
+                   class="sv-btn sv-btn-danger"
+
+                   download>
+
+                    <i class="fa-solid fa-download"></i>
+
+                    Descargar PDF
+
+                </a>
+
+                <button type="button"
+
+                        class="sv-btn sv-btn-outline"
+
+                        data-bs-dismiss="modal">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                    Cerrar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% if usuario.tipo.nombre == 'SUPERINTENDENCIA_CONTABILIDAD' %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formValidarSAT');
+    const button = document.getElementById('btnValidarSAT');
+    if (!form || !button) return;
+
+    const fechaInicio = document.getElementById('satFechaInicio');
+    const fechaFin = document.getElementById('satFechaFin');
+    let enviando = false;
+
+    function restablecer() {
+        enviando = false;
+        button.disabled = false;
+        button.innerHTML = '<i class="fa-solid fa-shield-halved me-2"></i><span class="sat-button-label">Validar CFDI ante el SAT</span>';
+        const modalEl = document.getElementById('loadingIndicatorSAT');
+        if (modalEl && window.bootstrap) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+    }
+
+    form.addEventListener('submit', function (event) {
+        if (enviando) {
+            event.preventDefault();
+            return;
+        }
+        if (!form.checkValidity()) return;
+
+        const hoy = fechaFin.max;
+        if (fechaInicio.value > fechaFin.value || fechaFin.value > hoy) {
+            event.preventDefault();
+            if (window.Swal) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Rango de fechas inválido',
+                    text: 'Comprueba que la fecha inicial sea menor o igual a la final y que no incluyas fechas futuras.'
+                });
+            } else {
+                alert('Verifica el rango de fechas seleccionado.');
+            }
+            return;
+        }
+
+        enviando = true;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Validando CFDI...';
+
+        const modalEl = document.getElementById('loadingIndicatorSAT');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+        // Envío POST normal. No se usa verificación por cookie (no hay descarga).
+    });
+
+    window.addEventListener('pageshow', restablecer);
+});
+</script>
+{% endif %}
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
     const modalElement = document.getElementById('modalPDF');
+
     const modalPDF = bootstrap.Modal.getOrCreateInstance(modalElement);
+
     const visorPDF = document.getElementById('visorPDF');
+
     const cargandoPDF = document.getElementById('cargandoPDF');
+
     const descargarPDF = document.getElementById('descargarPDF');
+
     const modalTitulo = document.getElementById('modalPDFLabel');
 
     function mostrarCargando() {
+
         cargandoPDF.classList.remove('d-none');
+
         visorPDF.classList.add('d-none');
+
     }
 
     function mostrarDocumento() {
+
         cargandoPDF.classList.add('d-none');
+
         visorPDF.classList.remove('d-none');
+
     }
 
     document.querySelectorAll('.btn-ver-pdf').forEach(function (boton) {
+
         boton.addEventListener('click', function () {
+
             const url = this.dataset.url;
+
             const uuid = this.dataset.uuid;
 
             modalTitulo.innerHTML =
+
                 '<i class="fa-solid fa-file-pdf text-danger"></i> CFDI ' + uuid;
 
             mostrarCargando();
+
             visorPDF.src = url;
+
             descargarPDF.href = url;
+
             modalPDF.show();
+
         });
+
     });
 
     visorPDF.addEventListener('load', function () {
+
         if (visorPDF.getAttribute('src')) {
+
             mostrarDocumento();
+
         }
+
     });
 
     modalElement.addEventListener('hidden.bs.modal', function () {
+
         visorPDF.removeAttribute('src');
+
         visorPDF.classList.add('d-none');
+
         cargandoPDF.classList.remove('d-none');
+
         descargarPDF.href = '#';
+
     });
+
 });
+
 </script>
+
 {% endblock %}
