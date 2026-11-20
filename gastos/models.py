@@ -194,6 +194,7 @@ class Articulo_Gasto(models.Model):
         return total
     
 class Factura(models.Model):
+    id = models.AutoField(primary_key=True)
     solicitud_gasto = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE, related_name='facturas', null=True)
     archivo_pdf = models.FileField(blank=True, null=True, upload_to='facturastb', validators=[FileExtensionValidator(['pdf'])])
     archivo_xml = models.FileField(blank=True, null=True, upload_to='xmltb', validators=[FileExtensionValidator(['xml'])])

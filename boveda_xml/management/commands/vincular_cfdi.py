@@ -1,8 +1,6 @@
 
-from itertools import islice
-
 from django.core.management.base import BaseCommand
-from django.db import IntegrityError, transaction
+from django.db import transaction
 
 from boveda_xml.models import CFDI
 from tesoreria.models import Facturas
@@ -14,28 +12,27 @@ def normalizar_uuid(valor):
     return str(valor or "").strip().upper()
 
 
-def obtener_lotes(iterable, tamano=500):
-    while True:
-        lote = list(islice(iterable, tamano))
-        if not lote:
-            break
-        yield lote
-
-
 class Command(BaseCommand):
 
-    help = "Vincula CFDI históricos con Compras, Gastos y Viáticos."
+    help = "Relaciona CFDI de Bóveda con facturas existentes."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--simular",
             action="store_true",
-            help="Mostrar resultados sin guardar relaciones."
+            help="Identifica relaciones sin modificar la BD.",
         )
 
     def handle(self, *args, **options):
 
         simular = options["simular"]
+        tamano_lote = 500
+
+        modelos = [
+            ("compras", "factura_compra", Facturas, "uuid"),
+            ("gastos", "factura_gasto", Factura, "uuid"),
+            ("viaticos", "factura_viatico", Viaticos_Factura, "uuid"),
+        ]
 
         resultados = {
             "revisados": 0,
@@ -48,7 +45,10 @@ class Command(BaseCommand):
             "errores": 0,
         }
 
-        # Solamente CFDI sin ninguna relación.
+        # --------------------------------------------------
+        # 1. Identificar CFDI pendientes
+        # --------------------------------------------------
+
         pendientes = (
             CFDI.objects
             .filter(
@@ -58,48 +58,76 @@ class Command(BaseCommand):
             )
             .exclude(uuid__isnull=True)
             .exclude(uuid="")
-            .order_by("pk")
-            .values_list("pk", "uuid")
         )
 
-        total = pendientes.count()
+        total_cfdi = CFDI.objects.count()
+        total_pendientes = pendientes.count()
 
         self.stdout.write(
-            f"CFDI pendientes por revisar: {total}"
+            f"Total CFDI en Bóveda: {total_cfdi}"
+        )
+
+        self.stdout.write(
+            f"CFDI pendientes de vincular: {total_pendientes}"
         )
 
         if simular:
             self.stdout.write(
                 self.style.WARNING(
-                    "MODO SIMULACIÓN: No se guardarán cambios."
+                    "MODO SIMULACIÓN - No se guardarán cambios."
                 )
             )
 
-        # Evitar cargar toda la Bóveda en memoria.
-        registros = pendientes.iterator(chunk_size=500)
+        # --------------------------------------------------
+        # 2. Procesar todos los CFDI por lotes
+        # --------------------------------------------------
 
-        for lote in obtener_lotes(registros, 500):
+        ultimo_id = 0
 
-            uuids = list({
+        while True:
+
+            lote = list(
+                pendientes
+                .filter(pk__gt=ultimo_id)
+                .order_by("pk")
+                .values_list("pk", "uuid")[:tamano_lote]
+            )
+
+            if not lote:
+                break
+
+            ultimo_id = lote[-1][0]
+
+            # UUID que buscaremos en los tres modelos.
+            uuids = {
                 normalizar_uuid(uuid)
                 for _, uuid in lote
                 if normalizar_uuid(uuid)
-            })
+            }
 
-            # Consultar cada módulo por separado.
-            modelos = [
-                ("compras", "factura_compra", Facturas),
-                ("gastos", "factura_gasto", Factura),
-                ("viaticos", "factura_viatico", Viaticos_Factura),
-            ]
+            # Incluimos las representaciones originales
+            # para evitar diferencias simples de formato.
+            uuids_busqueda = set(uuids)
+
+            for _, uuid in lote:
+                if uuid:
+                    uuids_busqueda.add(str(uuid).strip())
+
+            # ------------------------------------------------
+            # 3. Buscar facturas existentes
+            # ------------------------------------------------
 
             coincidencias = {}
 
-            for modulo, campo, modelo in modelos:
+            for modulo, campo, modelo, campo_uuid in modelos:
 
-                facturas = modelo.objects.filter(
-                    uuid__in=uuids
-                ).values_list("pk", "uuid")
+                facturas = (
+                    modelo.objects
+                    .filter(**{
+                        f"{campo_uuid}__in": uuids_busqueda
+                    })
+                    .values_list("pk", campo_uuid)
+                )
 
                 for factura_id, uuid_factura in facturas:
 
@@ -113,24 +141,23 @@ class Command(BaseCommand):
                         (modulo, campo, factura_id)
                     )
 
-            # Procesar cada CFDI del lote.
+            # ------------------------------------------------
+            # 4. Vincular CFDI
+            # ------------------------------------------------
+
             for cfdi_id, uuid in lote:
 
                 resultados["revisados"] += 1
 
-                uuid_normalizado = normalizar_uuid(uuid)
-
                 encontrados = coincidencias.get(
-                    uuid_normalizado, []
+                    normalizar_uuid(uuid), []
                 )
 
                 if not encontrados:
                     resultados["sin_coincidencia"] += 1
                     continue
 
-                # Un UUID registrado más de una vez
-                # requiere revisión manual.
-                if len(encontrados) != 1:
+                if len(encontrados) > 1:
 
                     resultados["conflictos"] += 1
 
@@ -145,16 +172,18 @@ class Command(BaseCommand):
                 modulo, campo, factura_id = encontrados[0]
 
                 try:
+
                     with transaction.atomic():
 
-                        # Bloquear registro y comprobar
-                        # nuevamente que continúa disponible.
+                        # Bloqueo del CFDI para evitar
+                        # dos vinculaciones simultáneas.
                         cfdi = (
                             CFDI.objects
                             .select_for_update()
                             .get(pk=cfdi_id)
                         )
 
+                        # Revalidar las tres relaciones.
                         if (
                             cfdi.factura_compra_id is not None
                             or cfdi.factura_gasto_id is not None
@@ -163,26 +192,29 @@ class Command(BaseCommand):
                             resultados["omitidos"] += 1
                             continue
 
-                        # No utilizar una factura que ya
-                        # esté vinculada a otro CFDI.
-                        factura_ocupada = (
+                        # Verificar que la factura no esté
+                        # vinculada con otro CFDI.
+                        ocupada = (
                             CFDI.objects
                             .filter(**{campo: factura_id})
                             .exclude(pk=cfdi.pk)
                             .exists()
                         )
 
-                        if factura_ocupada:
+                        if ocupada:
+
                             resultados["conflictos"] += 1
 
                             self.stdout.write(
                                 self.style.WARNING(
-                                    f"Factura ocupada: UUID={uuid}"
+                                    f"Factura ya ocupada: "
+                                    f"UUID={uuid}"
                                 )
                             )
                             continue
 
                         if not simular:
+
                             setattr(
                                 cfdi,
                                 f"{campo}_id",
@@ -195,25 +227,57 @@ class Command(BaseCommand):
 
                     resultados[modulo] += 1
 
-                except (IntegrityError, Exception) as error:
+                except Exception as error:
+
                     resultados["errores"] += 1
 
                     self.stderr.write(
                         f"ERROR UUID={uuid}: {error}"
                     )
 
+        # --------------------------------------------------
+        # 5. Resumen final
+        # --------------------------------------------------
+
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                "========== RESULTADO VINCULACIÓN =========="
+                "======= VINCULACIÓN CFDI ======="
             )
         )
 
-        for clave, cantidad in resultados.items():
-            self.stdout.write(
-                f"{clave}: {cantidad}"
-            )
+        self.stdout.write(
+            f"Revisados: {resultados['revisados']}"
+        )
 
         self.stdout.write(
-            "==========================================="
+            f"Compras: {resultados['compras']}"
+        )
+
+        self.stdout.write(
+            f"Gastos: {resultados['gastos']}"
+        )
+
+        self.stdout.write(
+            f"Viáticos: {resultados['viaticos']}"
+        )
+
+        self.stdout.write(
+            f"Sin coincidencia: {resultados['sin_coincidencia']}"
+        )
+
+        self.stdout.write(
+            f"Conflictos: {resultados['conflictos']}"
+        )
+
+        self.stdout.write(
+            f"Omitidos durante ejecución: {resultados['omitidos']}"
+        )
+
+        self.stdout.write(
+            f"Errores: {resultados['errores']}"
+        )
+
+        self.stdout.write(
+            "================================"
         )
