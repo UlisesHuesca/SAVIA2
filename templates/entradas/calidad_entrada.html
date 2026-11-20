@@ -16,19 +16,11 @@
             {% for message in messages %}
                 {% if message.tags == "error" %}
                 <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
+                Swal.fire({"title":"Error","text":"{{message}}","icon":"error",})
                 </script>
                 {% else %}
                 <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
+                Swal.fire({"title":"Excelente","text":"{{message}}","icon":"success",})
                 </script>
                 {% endif %}
             {% endfor %}
@@ -38,6 +30,7 @@
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
+
 <div class="row">
     <div class="col-lg-6">
         <div class ="card">
@@ -66,7 +59,6 @@
                             <th>Tipo de Requerimiento</th>
                             <th>Comentarios</th>
                             <th>Fecha</th>
-                           
                         </tr>
                         </thead>
                         <tbody>
@@ -110,8 +102,6 @@
                     </div>
                 </div>  
                 
-                
-               
                     <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Evidencia Reporte:</strong></label>
                     <div class="col-12">
                         {{form.image|add_class:"form-control"}}
@@ -125,119 +115,34 @@
                         </div>
                     </div>      
             </div>
-        
-        
         </div>
         <div class="card-footer">
-                <button class="btn btn-success col-2" id="crear" name = "reporte" type="submit" >Crear Reporte</button>
+                <button class="btn btn-success col-2" id="crear" name="reporte" type="submit" >Crear Reporte</button>
                 <a type="button" class="btn btn-secondary" href="{% url 'pendientes_calidad' %}">Cerrar</a>
         </div>
         </form>
     </div>
-
-  
     </div>
+
+    <!-- COLUMNA DERECHA: SECCIÓN DE EVIDENCIAS ESTÁNDAR -->
     <div class="col-lg-6">
-        <div class ="card">
-            <div class="card-header">
-                <h5 class="card-title">Evidencias</h5>
-            </div>
-            <div class="card-body">
-                {% if evidencias %}
-                <table class="table table-bordered table-striped table-sm mt-2">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Archivo</th>
-                        <th>Comentario</th>
-                        <th>Fecha</th>
-                        <th>Visualizar</th>
-                        <th>Eliminar</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for evidencia in evidencias %}
-                        <tr>
-                            <td>{{ evidencia.file.name|slice:"15:" }}</td>
-                            <td>{{ evidencia.comentario }}</td>
-                            <td>{{ evidencia.uploaded|date:"d/m/Y" }}</td>
-                            <td>
-                                <!-- Botón que abre el visor -->
-                                <button 
-                                    class="btn btn-outline-primary btn-sm" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#verEvidencia{{ evidencia.id }}">
-                                    <i class="fa fa-eye"></i> Ver
-                                </button>
-                            </td>
-                              <!-- Botón de eliminación -->
-                            <td>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="abrirModalEliminar({{ evidencia.id | unlocalize }})">
-                                    <i class="fa-duotone fa-solid fa-trash-can"></i>
-                                </button>
-                            </td> 
-                        </tr>
+        {% include 'evidencias/seccion_evidencias.html' %}
+        
+        <!-- Aquí se incluye el modal genérico. Al pasarle el EvidenciaForm filtrado, 
+             pintará el select y el textarea automáticamente -->
+        {% if puede_subir_evidencia %}
+            {% include 'evidencias/modal_evidencias.html' %}
+        {% endif %}
+    </div>
 
-                   
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                    <p class="text-muted">No hay evidencias registradas.</p>
-                {% endif %}
-            </div>
-            
-            <form method="POST" enctype="multipart/form-data" class="mt-4">
-                {% csrf_token %}
-                <div class="row g-2 align-items-center">
-                    <div class="col-md-6">
-                    <input type="file" name="evidencia_file" class="form-control" multiple required>
-                    </div>
-                    <div class="col-md-4">
-                    <input type="text" name="comentario" class="form-control" placeholder="Comentario (opcional)">
-                    </div>
-                    <div class="col-md-2 d-grid">
-                    <button type="submit" name="btn_evidencia" class="btn btn-success">
-                        <i class="fa fa-upload me-1"></i> Subir Evidencia
-                    </button>
-                    </div>
-                </div>
-            </form>
-            </div>
-        </div>
-    </div>
 </div>
-<!-- Modal de Confirmación eliminación-->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Eliminar Evidencia</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="deleteForm" method="POST">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="comentario" class="form-label">Comentario</label>
-                        <input type="text" class="form-control" id="comentario" name="comentario" placeholder="Escribe un comentario" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="eliminarEvidencia()">Eliminar</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 <!--AJAX CALL-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-//var price1 = document.getElementById("id_price")
-//price1.setAttribute("class","form-control d-none")
+<script src="{% static 'js/evidencias.js' %}"></script>
 
+<script>
 document.addEventListener("DOMContentLoaded", function() {
     const check = document.querySelector("#{{ form.autorizado.id_for_label }}");
     if (check) {
@@ -246,8 +151,22 @@ document.addEventListener("DOMContentLoaded", function() {
       check.style.cursor = "pointer";
       check.style.transition = "all 0.25s ease";
     }
-  });
+});
 
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+
+var myModal = document.getElementById('dialog')
+myModal.addEventListener('hidden.bs.modal', function (event) {
+    setTimeout(function() {
+        location.reload(); 
+    }, 2000);
+})
 
 let evidenciaIdEliminar = null;
 
@@ -257,63 +176,95 @@ function abrirModalEliminar(evidenciaId) {
     modal.show();
 }
 
-
-//Parte del modal factura eliminar
+// Esta función es la que borra (nota que el input del modal de borrar se llama comentario_delete para no chocar con el del reporte)
 function eliminarEvidencia() {
-        console.log("Eliminar evidencia", evidenciaIdEliminar);
-        
-        if (!evidenciaIdEliminar) {
-            alert("No se ha seleccionado ninguna evidencia para eliminar");
-            return;
-        }
-        const comentario = document.getElementById('comentario').value;
-        console.log(comentario);
-        if (!comentario) {
-            alert("Por favor, escribe un comentario antes de continuar.");
-            return;
-        }
-        // Obtener token CSRF desde el template
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    if (!evidenciaIdEliminar) return;
+    // Como el modal genérico puede reutilizar el id "comentario", buscamos el que está dentro del confirmModal
+    const inputComentario = document.querySelector('#confirmModal #comentario');
+    const comentario = inputComentario ? inputComentario.value : '';
 
-        fetch(`/proveedores_externos/eliminar_evidencia/${evidenciaIdEliminar}/`, {  // Ajusta la URL según tu configuración
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken  // Django requiere este token para seguridad
-            },
-            body: JSON.stringify({ comentario: comentario })  // Agrega datos adicionales si es necesario
-        })
-        .then(response => response.json())
-      .then(data => {
+    if (!comentario) {
+        alert("Por favor, escribe un comentario antes de continuar.");
+        return;
+    }
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(`/proveedores_externos/eliminar_evidencia/${evidenciaIdEliminar}/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({ comentario: comentario })
+    })
+    .then(response => response.json())
+    .then(data => {
         if (data.success) {
-
-            // quitar la fila
-            const row = document.getElementById(`evidencia-${evidenciaIdEliminar}`);
-            if (row) row.remove();
-
-            // ocultar modal
+            document.getElementById(`evidencia-${evidenciaIdEliminar}`).remove();
             const modalElement = document.getElementById('confirmModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement)
-                                || new bootstrap.Modal(modalElement);
-            modalInstance.hide();
-
-            // Opcional: recargar página
-            // window.location.reload();
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) modalInstance.hide();
         } else {
-            alert("Error: " + (data.error || "No se pudo eliminar la evidencia"));
+            alert("Error: " + data.error);
         }
     })
-        .catch(error => console.error("Error en la solicitud:", error));
-    }
+    .catch(error => console.error("Error:", error));
+}
 
-
-    // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');
-confirmModal.addEventListener('hidden.bs.modal', function (event) {
-    location.reload();  
-});
+if(confirmModal) {
+    confirmModal.addEventListener('hidden.bs.modal', function (event) {
+        location.reload();  
+    });
+}
 
+const previewModal = document.getElementById('pdfPreviewModal');
+const previewTitle = document.getElementById('pdfPreviewTitle');
+const previewFrame = document.getElementById('pdfPreviewFrame');
+const previewLoading = document.getElementById('pdfPreviewLoading');
+let objectUrl = null;
 
+if (previewModal) {
+    previewModal.addEventListener('show.bs.modal', async function (event) {
+        const button = event.relatedTarget;
+        const url = button ? button.dataset.documentUrl : '';
+        const title = button ? button.dataset.documentTitle : 'Vista previa';
+        previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + title;
+        
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+        previewFrame.classList.add('d-none');
+        previewFrame.removeAttribute('src');
+        previewLoading.classList.remove('d-none');
+
+        try {
+            if (!url) throw new Error('No se encontró el documento.');
+            const response = await fetch(url, { credentials: 'same-origin' });
+            if (!response.ok) throw new Error('No fue posible cargar el documento.');
+            const blob = await response.blob();
+            const pdfBlob = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' });
+            objectUrl = URL.createObjectURL(pdfBlob);
+            previewFrame.src = objectUrl + '#zoom=85';
+            previewFrame.classList.remove('d-none');
+            previewLoading.classList.add('d-none');
+        } catch (error) {
+            previewLoading.classList.add('d-none');
+            bootstrap.Modal.getInstance(previewModal)?.hide();
+            Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+        }
+    });
+
+    previewModal.addEventListener('hidden.bs.modal', function () {
+        previewFrame.removeAttribute('src');
+        previewFrame.classList.add('d-none');
+        previewLoading.classList.remove('d-none');
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    });
+}
 </script>
 {% endblock %}
 </body>
