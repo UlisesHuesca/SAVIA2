@@ -134,10 +134,10 @@
      aria-labelledby="evidenciaPreviewTitle"
      aria-hidden="true">
 
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content sv-modal">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content sv-modal">
 
-            <div class="modal-header">
+                        <div class="modal-header">
                 <div>
                     <h2 class="modal-title" id="evidenciaPreviewTitle">
                         <i class="fa-solid fa-folder-open me-2"></i>
@@ -148,11 +148,13 @@
                     </span>
                 </div>
 
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar">
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <a id="evidenciaPreviewDescarga" class="sv-btn sv-btn-outline" href="">
+                        <i class="fa-solid fa-download"></i>
+                        Descargar
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
             </div>
 
             <div class="modal-body sv-document-viewer">
@@ -184,3 +186,14 @@
 </div>
 
 </section>
+
+<script>
+document.querySelectorAll('.js-preview-evidencia').forEach(function (boton) {
+    boton.addEventListener('click', function () {
+        const link = document.getElementById('evidenciaPreviewDescarga');
+        if (!link) return;
+        link.href = boton.dataset.url;
+        link.setAttribute('download', boton.dataset.nombre || 'evidencia');
+    });
+});
+</script>

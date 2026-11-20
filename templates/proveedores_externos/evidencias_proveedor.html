@@ -302,62 +302,67 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const previewModal = document.getElementById('pdfPreviewModal');
-    const previewTitle = document.getElementById('pdfPreviewTitle');
-    const previewFrame = document.getElementById('pdfPreviewFrame');
-    const previewLoading = document.getElementById('pdfPreviewLoading');
-    let objectUrl = null;
+const previewModal = document.getElementById('pdfPreviewModal');
+const previewTitle = document.getElementById('pdfPreviewTitle');
+const previewFrame = document.getElementById('pdfPreviewFrame');
+const previewLoading = document.getElementById('pdfPreviewLoading');
+const evidenciaDescarga = document.getElementById('evidenciaPreviewDescarga');
+let objectUrl = null;
 
-    if (previewModal && previewTitle && previewFrame && previewLoading) {
-        previewModal.addEventListener('show.bs.modal', async function (event) {
-            const button = event.relatedTarget;
-            const url = button ? button.dataset.documentUrl : '';
-            const title = button ? button.dataset.documentTitle : 'Vista previa';
+if (previewModal && previewTitle && previewFrame && previewLoading) {
+    previewModal.addEventListener('show.bs.modal', async function (event) {
+        const button = event.relatedTarget;
+        const url = button ? button.dataset.documentUrl : '';
+        const title = button ? button.dataset.documentTitle : 'Vista previa';
 
-            previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + title;
+        previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + title;
 
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
-            }
+        if (pdfDescarga && url) {
+            pdfDescarga.href = url;
+            pdfDescarga.setAttribute('download', title || 'documento');
+        }
 
-            previewFrame.classList.add('d-none');
-            previewFrame.removeAttribute('src');
-            previewLoading.classList.remove('d-none');
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
 
-            try {
-                if (!url) throw new Error('No se encontró el documento.');
-                const response = await fetch(url, { credentials: 'same-origin' });
-                if (!response.ok) throw new Error('No fue posible cargar el documento.');
+        previewFrame.classList.add('d-none');
+        previewFrame.removeAttribute('src');
+        previewLoading.classList.remove('d-none');
 
-                const blob = await response.blob();
-                const pdfBlob = blob.type === 'application/pdf'
-                    ? blob
-                    : new Blob([blob], { type: 'application/pdf' });
+        try {
+            if (!url) throw new Error('No se encontró el documento.');
+            const response = await fetch(url, { credentials: 'same-origin' });
+            if (!response.ok) throw new Error('No fue posible cargar el documento.');
 
-                objectUrl = URL.createObjectURL(pdfBlob);
-                previewFrame.src = objectUrl + '#zoom=85';
-                previewFrame.classList.remove('d-none');
-                previewLoading.classList.add('d-none');
-            } catch (error) {
-                previewLoading.classList.add('d-none');
-                bootstrap.Modal.getInstance(previewModal)?.hide();
-                Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
-            }
-        });
+            const blob = await response.blob();
+            const pdfBlob = blob.type === 'application/pdf'
+                ? blob
+                : new Blob([blob], { type: 'application/pdf' });
 
-        previewModal.addEventListener('hidden.bs.modal', function () {
-            previewFrame.removeAttribute('src');
-            previewFrame.classList.add('d-none');
-            previewLoading.classList.remove('d-none');
+            objectUrl = URL.createObjectURL(pdfBlob);
+            previewFrame.src = objectUrl + '#zoom=85';
+            previewFrame.classList.remove('d-none');
+            previewLoading.classList.add('d-none');
+        } catch (error) {
+            previewLoading.classList.add('d-none');
+            bootstrap.Modal.getInstance(previewModal)?.hide();
+            Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+        }
+    });
 
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
-            }
-        });
-    }
-});
+    previewModal.addEventListener('hidden.bs.modal', function () {
+        previewFrame.removeAttribute('src');
+        previewFrame.classList.add('d-none');
+        previewLoading.classList.remove('d-none');
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    });
+}
 </script>
 {% endblock %}
 </body>
