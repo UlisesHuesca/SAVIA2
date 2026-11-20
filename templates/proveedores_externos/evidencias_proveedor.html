@@ -42,125 +42,6 @@
         {% endif %}
     </div>
 </div>
-<div class="container">
-    <div class="card">
-        <div class="card-header d-flex align-items-center">
-            <h5>Evidencia de OC: {{compra.folio}}</h5>
-            <ul class="nav ms-auto">
-                <li class="nav-item">
-                    <a href="{% url 'matriz-oc-proveedores' %}" class="btn btn-secondary">
-                        <i class="fa-duotone fa-solid fa-xmark-large"></i>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body">
-            <!-- Formulario único para envío de toda la información -->
-            <form method="POST">
-                {% csrf_token %}
-                <!-- Botón para descargar todas las facturas -->
-                <!--<div class="nav-item ms-auto">
-                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                        <i class="fas fa-file-archive"></i> Descargar Archivos
-                    </button>
-                </div>-->
-                <h6>&nbsp;</h6>
-                <!-- Tabla de datos XML y autorización -->
-                <table class="table bg-white">
-                    <thead class="text-black" style="background-color: #F5F5F5;">
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Comentario</th>
-                            <th>Editar</th>
-                            <th scope="col">Archivo</th>
-                            <th>Eliminar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for evidencia in evidencias %}
-                        <tr id="evidencia-{{ evidencia.id }}">
-                            <td>{{evidencia.id}}</td>
-                            
-                            <td class="d-none" id="form_comentario_{{evidencia.id|unlocalize}}">
-                                <input type="textarea" class="form-control" id="comentario-input_{{ evidencia.id|unlocalize }}" value="{{ evidencia.comentario }}">
-                            </td>
-                            <td class="" id="comentario_{{evidencia.id|unlocalize}}">
-                                {% if evidencia.comentario %} {{evidencia.comentario}} {% else %} No hay comentario {% endif %}
-                            </td>
-                            <td>
-                            <a id="modificar_comentario_{{evidencia.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{evidencia.id|unlocalize}}')">
-                                <i class="fa-regular fa-comment"></i>
-                            </a>
-
-                            <button type="button" id="save_comment_{{evidencia.id|unlocalize}}" onclick="aceptar_edicion('{{evidencia.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
-                                <i class="fa-regular fa-circle-check"></i>
-                            </button>
-                            <button id="cancel_edit_{{evidencia.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{evidencia.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
-                                <i class="fa-solid fa-circle-xmark"></i>
-                            </button>
-                            </td>
-                            <!-- Archivos PDF y XML -->
-                            <td>
-                                <ul class="nav nav-pills">
-                                    {% if evidencia.file %}
-                                    <li class="nav-item mx-1">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{evidencia.id|unlocalize }}" title="Ver Evidencia">
-                                            <i class="fa-duotone fa-solid fa-file-pdf"></i>
-                                        </button>
-                                    </li>
-                                    <!-- Modal con visor de PDF -->
-                                    <div class="modal fade" id="pdfModal{{evidencia.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{evidencia.id|unlocalize }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-xl">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="pdfModalLabel{{evidencia.id|unlocalize }}">Comprobante de Pago</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <iframe src="{{evidencia.file.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </ul>
-                            </td>
-
-                            <!-- Botón de eliminación -->
-                            <td>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="abrirModalEliminar({{ evidencia.id | unlocalize }})">
-                                    <i class="fa-duotone fa-solid fa-trash-can"></i>
-                                </button>
-                            </td> 
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <!-- Botón para subir nueva factura -->
-                <ul class="nav">
-                    <li class="nav-item">
-                        <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'subir-evidencias' compra.id %}">
-                            <i class="fa-duotone fa-regular fa-cloud-arrow-up"></i>
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- Cierre del formulario y botón de cierre de facturas -->
-                {% if usuario.tipo.tesoreria %}
-                <div class="row ms-3 my-2">
-                    <div class="form-check form-switch col-sm">
-                        <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas | Validado por: {{ gasto.verificacion_facturas.staff.staff.first_name }} {{ gasto.verificacion_facturas.staff.staff.last_name }}</strong></label>
-                        {{ form.facturas_completas|add_class:"form-check-input" }}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Botón de cierre -->
-            </form>
-        </div>
-    </div>
-</div>
 
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
@@ -192,9 +73,41 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1"
+     aria-labelledby="pdfPreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="pdfPreviewTitle">
+                        <i class="fa-solid fa-file-pdf me-2"></i>
+                        Vista previa
+                    </h2>
+                    <span class="sv-modal-subtitle">Documento asociado</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body sv-document-viewer">
+                <div class="sv-document-loading" id="pdfPreviewLoading">
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <span>Cargando documento…</span>
+                </div>
+                <iframe class="sv-document-frame d-none" id="pdfPreviewFrame" title="Vista previa del documento"></iframe>
+                <img id="evidenciaPreviewImage" class="d-none img-fluid mx-auto" alt="Vista previa de evidencia" style="max-height: 75vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'evidencias/seccion_evidencias.html' %}
+
+{% if puede_subir_evidencia %}
+    {% include 'evidencias/modal_evidencias.html' %}
+{% endif %}
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+<script src="{% static 'js/evidencias.js' %}"></script>
 <script>
  ;(function(){
         const modal = new bootstrap.Modal(document.getElementById('dialog'))
@@ -221,7 +134,7 @@ function abrirModalEliminar(evidenciaId) {
     modal.show();
 }
 
-//Parte del modal factura eliminar
+//Parte del modal factura eliminar 
 function eliminarEvidencia() {
         console.log("Eliminar evidencia", evidenciaIdEliminar);
         
@@ -355,6 +268,96 @@ function ActualizarComentario(evidencia_id, dato , tipo){
         }
     })
 }
+document.addEventListener('DOMContentLoaded', function () {
+    const confirmModal = document.getElementById('confirmModal');
+    const deleteForm = document.getElementById('deleteForm');
+    const commentInput = document.getElementById('comentario');
+    const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+    const deleteUrlTemplate = "{% url 'factura-eliminar' 999999 %}";
+
+    if (confirmModal && deleteForm) {
+        confirmModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const facturaId = button ? button.dataset.facturaId : '';
+            const nextParam = new URLSearchParams(window.location.search).get('next');
+            let deleteUrl = deleteUrlTemplate.replace('999999', facturaId);
+
+            if (nextParam) deleteUrl += '?next=' + encodeURIComponent(nextParam);
+            deleteForm.action = deleteUrl;
+        });
+    }
+
+    if (confirmDeleteButton && deleteForm && commentInput) {
+        confirmDeleteButton.addEventListener('click', function () {
+            if (!commentInput.value.trim()) {
+                commentInput.focus();
+                Swal.fire({
+                    title: 'Comentario requerido',
+                    text: 'Escribe un comentario antes de eliminar la factura.',
+                    icon: 'warning'
+                });
+                return;
+            }
+            deleteForm.submit();
+        });
+    }
+
+    const previewModal = document.getElementById('pdfPreviewModal');
+    const previewTitle = document.getElementById('pdfPreviewTitle');
+    const previewFrame = document.getElementById('pdfPreviewFrame');
+    const previewLoading = document.getElementById('pdfPreviewLoading');
+    let objectUrl = null;
+
+    if (previewModal && previewTitle && previewFrame && previewLoading) {
+        previewModal.addEventListener('show.bs.modal', async function (event) {
+            const button = event.relatedTarget;
+            const url = button ? button.dataset.documentUrl : '';
+            const title = button ? button.dataset.documentTitle : 'Vista previa';
+
+            previewTitle.innerHTML = '<i class="fa-solid fa-file-pdf me-2"></i>' + title;
+
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+
+            previewFrame.classList.add('d-none');
+            previewFrame.removeAttribute('src');
+            previewLoading.classList.remove('d-none');
+
+            try {
+                if (!url) throw new Error('No se encontró el documento.');
+                const response = await fetch(url, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error('No fue posible cargar el documento.');
+
+                const blob = await response.blob();
+                const pdfBlob = blob.type === 'application/pdf'
+                    ? blob
+                    : new Blob([blob], { type: 'application/pdf' });
+
+                objectUrl = URL.createObjectURL(pdfBlob);
+                previewFrame.src = objectUrl + '#zoom=85';
+                previewFrame.classList.remove('d-none');
+                previewLoading.classList.add('d-none');
+            } catch (error) {
+                previewLoading.classList.add('d-none');
+                bootstrap.Modal.getInstance(previewModal)?.hide();
+                Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+            }
+        });
+
+        previewModal.addEventListener('hidden.bs.modal', function () {
+            previewFrame.removeAttribute('src');
+            previewFrame.classList.add('d-none');
+            previewLoading.classList.remove('d-none');
+
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
 </body>
