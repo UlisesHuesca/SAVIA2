@@ -17,6 +17,7 @@ from django.views.decorators.http import require_GET
 from django.utils.crypto import get_random_string
 from django import forms  # por si no lo tienes ya importado
 from email.mime.image import MIMEImage
+from compras.forms import EvidenciaForm
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado, Relacion_Servidor_Publico, Responsable_Interaccion
 from user.models import Profile, CustomUser, Tipo_perfil, Distrito, Almacen
 from .filters import Compra_PE_Filter 
@@ -760,9 +761,24 @@ def evidencias_proveedor(request, pk):
     usuario = Profile.objects.get(id = pk_usuario)
     compra = Compra.objects.get(id = pk)
     evidencias = Evidencia.objects.filter(oc = compra, hecho=True)
-    
-    
     next_url = request.GET.get('next',)
+    form_evidencia = EvidenciaForm(mostrar_categoria=True)    
+
+
+    if request.method == 'POST' and 'btn_evidencia' in request.POST:
+        form_evidencia = EvidenciaForm(request.POST, request.FILES, mostrar_categoria=True)
+        if form_evidencia.is_valid():
+            evidencia = form_evidencia.save(commit=False)
+            evidencia.oc = compra
+            evidencia.gasto = None
+            evidencia.viatico = None
+            evidencia.subido_por = usuario
+            evidencia.uploaded = timezone.localdate()
+            evidencia.hecho = True
+            evidencia.save()
+            messages.success(request, 'La evidencia se registró correctamente.')
+            return redirect(request.path)
+        messages.error(request, 'No se pudo guardar la evidencia. Revisa el archivo y la categoría.')
 
     context={
         'next_url':next_url,
@@ -770,6 +786,9 @@ def evidencias_proveedor(request, pk):
         'compra':compra,
         'evidencias':evidencias,
         'usuario':usuario,
+        'puede_subir_evidencia': True,
+        'form_evidencia': form_evidencia,
+        'folio_evidencia': compra.folio,
         }
 
     return render(request, 'proveedores_externos/evidencias_proveedor.html', context)

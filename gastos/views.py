@@ -2564,10 +2564,14 @@ def matriz_facturas_gasto(request, pk):
 
     evidencias = (gasto.evidencias.filter(hecho=True, categoria__nombre="Soporte Administrativo").select_related('categoria', 'subido_por').order_by('-uploaded', '-id'))
 
-    #categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True, nombre="Soporte Administrativo").order_by('nombre'))
-
-    form_evidencia = EvidenciaForm()
-
+    # categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True, nombre="Soporte Administrativo").order_by('nombre'))
+    categoria_soporte = get_object_or_404(
+        CategoriaEvidencia,
+        nombre="Soporte Administrativo",
+        activo=True,
+    )
+    form_evidencia = EvidenciaForm(mostrar_categoria=True, initial={'categoria': categoria_soporte.pk},)
+    form_evidencia.fields['categoria'].disabled = True
 
     if request.method == 'POST':
         print('POST recibido:', list(request.POST.keys()))
@@ -2610,14 +2614,10 @@ def matriz_facturas_gasto(request, pk):
             vale.delete()
             return redirect('matriz-facturas-gasto', gasto.id)
         elif 'btn_evidencia' in request.POST:
-            form_evidencia = EvidenciaForm(request.POST,request.FILES)
-            print('si entra')
-            # IMPORTANTE:
-            # Validar aquí que el perfil pueda agregar evidencias
-            # a este gasto, no solo consultarlo.
+            form_evidencia = EvidenciaForm(request.POST, request.FILES, mostrar_categoria=True, initial={'categoria': categoria_soporte.pk},)
+            form_evidencia.fields['categoria'].disabled = True
             if form_evidencia.is_valid():
                 evidencia = form_evidencia.save(commit=False)
-                evidencia.categoria = get_object_or_404(CategoriaEvidencia, nombre="Soporte Administrativo", activo=True)
                 evidencia.gasto = gasto
                 evidencia.oc = None
                 evidencia.viatico = None
@@ -2625,9 +2625,10 @@ def matriz_facturas_gasto(request, pk):
                 evidencia.uploaded = timezone.localdate()
                 evidencia.hecho = True
                 evidencia.save()
-
+           
                 messages.success(request,'La evidencia se registró correctamente.')
-
+                return redirect(request.path)
+                   
 
             
     context={

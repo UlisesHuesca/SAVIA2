@@ -1340,7 +1340,13 @@ def matriz_facturas_viaticos(request, pk):
     
     #categorias_evidencia = (CategoriaEvidencia.objects.filter(activo=True, nombre="Soporte Administrativo").order_by('nombre'))
     
-    form_evidencia = EvidenciaForm()
+    categoria_soporte = get_object_or_404(
+           CategoriaEvidencia,
+           nombre="Soporte Administrativo",
+           activo=True,
+    )
+    form_evidencia = EvidenciaForm(mostrar_categoria=True, initial={'categoria': categoria_soporte.pk},)
+    form_evidencia.fields['categoria'].disabled = True
     #print(fuera_de_tiempo)
 
     if request.method == 'POST':
@@ -1380,8 +1386,8 @@ def matriz_facturas_viaticos(request, pk):
             vale.delete()
             return redirect('matriz-facturas-viaticos', viatico.id)
         elif 'btn_evidencia' in request.POST:
-            form_evidencia = EvidenciaForm(request.POST,request.FILES)
-            print('si entra')
+            form_evidencia = EvidenciaForm(request.POST, request.FILES, mostrar_categoria=True, initial={'categoria': categoria_soporte.pk},)
+            form_evidencia.fields['categoria'].disabled = True
             # IMPORTANTE:
             # Validar aquí que el perfil pueda agregar evidencias
             # a este gasto, no solo consultarlo.
@@ -1397,6 +1403,7 @@ def matriz_facturas_viaticos(request, pk):
                 evidencia.hecho = True
                 evidencia.save()
                 messages.success(request,'La evidencia se registró correctamente.')
+                return redirect(request.path)
 
     context={
         'next_url':next_url,

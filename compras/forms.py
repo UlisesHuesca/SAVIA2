@@ -118,14 +118,19 @@ class RequisDevolucionForm(forms.ModelForm):
         widgets = {
             "comentario_devolucion": forms.Textarea(attrs={"rows":2}),
         }
-
+        
 class EvidenciaForm(forms.ModelForm):
 
     class Meta:
         model = Evidencia
-        fields = ['file', 'comentario']
+        fields = ['categoria', 'file', 'comentario']
 
         widgets = {
+            'categoria': forms.Select(
+                attrs={
+                    'class': 'form-select',
+                }
+            ),
             'file': forms.ClearableFileInput(
                 attrs={
                     'class': 'form-control',
@@ -141,9 +146,15 @@ class EvidenciaForm(forms.ModelForm):
             )
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, mostrar_categoria=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fields['file'].required = True
-
         self.fields['comentario'].required = False
+
+        if mostrar_categoria:
+            self.fields['categoria'].required = True
+            self.fields['categoria'].empty_label = 'Seleccione una categoría'
+            self.fields['categoria'].queryset = CategoriaEvidencia.objects.filter(activo=True).order_by('nombre')
+        else:
+            self.fields.pop('categoria')
