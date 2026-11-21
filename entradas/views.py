@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, Max, Count, Case, When, Value
 from django.db.models.functions import Coalesce
@@ -15,7 +15,8 @@ from django.urls import reverse
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from utils.email_theme import obtener_tema_correo
-from compras.models import Compra, ArticuloComprado, Evidencia
+from compras.models import Compra, ArticuloComprado, Evidencia, CategoriaEvidencia
+from compras.forms import EvidenciaForm
 from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, Activo, Estatus_Activo
@@ -1068,7 +1069,6 @@ def update_entrada(request):
                 entrada.save()
                 producto_surtir.save()
             #Se guardan todas las bases de datos
-            ##########################################################Fin
 
             #cantidad_entradas = entradas_producto.cantidad - entradas_producto.cantidad_por_surtir
             messages.success(request,'Haz agregado exitosamente un producto')
@@ -1097,7 +1097,6 @@ def update_entrada(request):
             else:
                 producto_inv.price = monto_total/cantidad_inventario or 0
         if producto_inv.producto.critico == False:
-            #########################################################################InicioEvitar     
             #cantidad_total = cantidad_inventario - entrada_item.cantidad
             if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
                 producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
@@ -1126,15 +1125,12 @@ def update_entrada(request):
 
             producto_inv._change_reason = 'Se está borrando una entrada. view: update_entrada'
             producto_inv.cantidad_entradas = producto_inv.cantidad_entradas - entrada_item.cantidad
-            #######################################################################Fin
         if producto_comprado.cantidad_pendiente == None:
             producto_comprado.cantidad_pendiente = 0
         producto_comprado.cantidad_pendiente = producto_comprado.cantidad_pendiente + entrada_item.cantidad
         producto_comprado.entrada_completa = False
         producto_comprado.seleccionado = False
         messages.success(request,'Has eliminado el artículo con éxito')
-        #Se borra el elemento de las entradas
-        #Guardado de bases de datos
         entrada_item.save()
         producto_inv.save()
         producto_comprado.save()
@@ -1142,7 +1138,6 @@ def update_entrada(request):
     mensaje ='Item was ' + action
     return JsonResponse(mensaje, safe=False)
     
-
 @perfil_seleccionado_required
 def reporte_calidad(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1150,57 +1145,52 @@ def reporte_calidad(request, pk):
     articulo_entrada = EntradaArticulo.objects.get(id = pk)
     form = Reporte_CalidadForm()
     evidencias = Evidencia.objects.filter(oc = articulo_entrada.entrada.oc)
-    form_evidencia = UploadFileForm()
+    
+    categoria_calidad = get_object_or_404(CategoriaEvidencia, nombre="Calidad", activo=True)
+    
+    form_evidencia = EvidenciaForm()
+    if 'categoria' in form_evidencia.fields:
+        form_evidencia.fields['categoria'].queryset = CategoriaEvidencia.objects.filter(id=categoria_calidad.id)
+        form_evidencia.fields['categoria'].initial = categoria_calidad
+        form_evidencia.fields['categoria'].disabled = True 
+
     calidad_producto = Reporte_Calidad.objects.filter(articulo = articulo_entrada, completo = True)
     reporte_actual, created = Reporte_Calidad.objects.get_or_create(articulo = articulo_entrada, completo = False)
     sum_articulos_reportes = 0
-    producto = (
-        articulo_entrada.articulo_comprado.producto.producto
-        .articulos.producto.producto
-    )
-
-    # Si el related_name no es 'producto_calidad', usa 'productocalidad'
+    producto = (articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto)
     pc = getattr(producto, "producto_calidad", None)
-
-    # Trabaja con lista para evitar .exists() sobre None
     requerimientos = list(pc.requerimientos_calidad.all()) if pc else []
 
     for item in calidad_producto:
         sum_articulos_reportes = item.cantidad + sum_articulos_reportes
 
-
     restantes_liberacion = articulo_entrada.cantidad - sum_articulos_reportes
-    #print(restantes_liberacion)
 
     if request.method =='POST':
-        print('Entró al post')
         if 'btn_evidencia' in request.POST:
-            form_evidencia = UploadFileForm(request.POST, request.FILES)
-            files_evidencia = request.FILES.getlist('evidencia_file')
+            archivo = request.FILES.get('file')
             comentario = request.POST.get('comentario', None)
-            if not files_evidencia:
-                messages.error(request, 'Debes subir al menos un archivo de evidencia.')
-            else: 
-                for archivo_evidencia in files_evidencia:
-                    Evidencia.objects.create(
-                        oc=articulo_entrada.entrada.oc,
-                        file=archivo_evidencia,
-                        hecho=True,
-                        uploaded=datetime.now(),
-                        subido_por=perfil,
-                        comentario=comentario
-                    )
-                messages.success(request, 'Las evidencias se subieron correctamente.')
+            
+            if not archivo:
+                messages.error(request, 'Debes subir un archivo de evidencia.')
+            else:
+                Evidencia.objects.create(
+                    oc=articulo_entrada.entrada.oc,
+                    file=archivo,
+                    hecho=True,
+                    uploaded=datetime.now(),
+                    subido_por=perfil,
+                    comentario=comentario,
+                    categoria=categoria_calidad,
+                )
+                messages.success(request, 'La evidencia se subió correctamente.')
             return redirect('reporte_calidad', pk=pk)
+            
         if 'reporte' in request.POST:
             form = Reporte_CalidadForm(request.POST, request.FILES, instance = reporte_actual)
-            print(form)
-            print(decimal.Decimal(request.POST['cantidad']) )
             if decimal.Decimal(request.POST['cantidad']) <=  restantes_liberacion:
                 if not request.POST['autorizado'] == None:
-                    #if item.cantidad <= 0:
                     if form.is_valid():
-
                         item = form.save(commit=False)
                         item.articulo = articulo_entrada
                         item.reporte_date = date.today()
@@ -1229,25 +1219,17 @@ def reporte_calidad(request, pk):
                                 producto.save()
 
                         if item.autorizado == False:
-                        
-                            #Esta condicional solo afectara la cantidad de articulos en la entrada si ya son los ultimos articulos dentro de la liberacion
-                            #Esto es porque en caso de no ser así genera un error en las cantidades 
                             if restantes_liberacion == item.cantidad:
                                 print(restantes_liberacion, item.cantidad)
                                 articulo_entrada.cantidad = articulo_entrada.cantidad - item.cantidad
-                            #Si hay un rechazo, se tienen que evaluar varias cuestiones
-                            #1. Se tiene que afectar la cantidad de articulos entrada
                             articulo_entrada.cantidad_por_surtir = articulo_entrada.cantidad_por_surtir - item.cantidad
-                            #2 El producto por surtir se tiene que decrementar porque se afectó en la vista update_entrada
                             producto_surtir.cantidad = producto_surtir.cantidad - item.cantidad
                             articulo_entrada.save()
                             producto_surtir.save()
-                            #3 Si la cantidad del articulo y la entrada prácticamente se tendría que cancelar
                             if producto_surtir.cantidad == 0:
                                 entrada = Entrada.objects.get(id = articulo_entrada.entrada.id)
                                 entrada.cancelada = True
                                 entrada.save()
-                            #Si el item no es autorizado por calidad, se crea una NC
                             
                             tipo_nc = Tipo_Nc.objects.get(id = 2)
                             no_conformidad, created = No_Conformidad.objects.get_or_create(
@@ -1276,19 +1258,23 @@ def reporte_calidad(request, pk):
                     messages.error(request, 'Debes elegir un Status de liberación')
             else:
                 messages.error(request, 'La cantidad liberada no puede ser mayor que cantidad de entradas restante')
-
-    #else:
-        #form = InventarioForm()
+                        
+            pass 
+                     
 
     context = {
         'evidencias': evidencias,
         'form': form,
-        'articulo_entrada':articulo_entrada,
+        'form_evidencia': form_evidencia, 
+        'articulo_entrada': articulo_entrada,
         'restantes_liberacion': restantes_liberacion,
         'requerimientos': requerimientos,
+        'categoria_calidad': categoria_calidad,
+        'puede_subir_evidencia': True, 
         }
 
     return render(request,'entradas/calidad_entrada.html',context)
+
 
 @perfil_seleccionado_required
 def matriz_nc(request):
