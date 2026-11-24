@@ -299,12 +299,12 @@
                 <i class="fa-solid fa-circle-check"></i>
             </span>
             <span class="sv-status-content">
-                <span class="sv-status-label">Altas</span>
+                <span class="sv-status-label">EN OPERACION</span>
                 <strong>{{ resumen_activos.altas }}</strong>
             </span>
         </div>
 
-        <div class="sv-status-item sv-status-item--baja">
+        <!--<div class="sv-status-item sv-status-item--baja">
             <span class="sv-status-icon">
                 <i class="fa-solid fa-circle-down"></i>
             </span>
@@ -312,14 +312,14 @@
                 <span class="sv-status-label">Bajas</span>
                 <strong>{{ resumen_activos.bajas }}</strong>
             </span>
-        </div>
+        </div>-->
 
         <div class="sv-status-item sv-status-item--stock">
             <span class="sv-status-icon">
                 <i class="fa-solid fa-boxes-stacked"></i>
             </span>
             <span class="sv-status-content">
-                <span class="sv-status-label">Stock</span>
+                <span class="sv-status-label">DISPONIBLE</span>
                 <strong>{{ resumen_activos.stock }}</strong>
             </span>
         </div>
@@ -329,7 +329,7 @@
                 <i class="fa-solid fa-screwdriver-wrench"></i>
             </span>
             <span class="sv-status-content">
-                <span class="sv-status-label">Reparación</span>
+                <span class="sv-status-label">EN MANTENIMIENTO</span>
                 <strong>{{ resumen_activos.reparacion }}</strong>
             </span>
         </div>
@@ -467,6 +467,7 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-end p-3" style="z-index: 1080;" aria-labelledby="columnasActivos">
                     <h3 class="h6 mb-3">Mostrar columnas</h3>
+                    
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="responsable" id="colResponsable"><label class="form-check-label" for="colResponsable">Responsable</label></div>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="categoria" id="colCategoria"><label class="form-check-label" for="colCategoria">Categoría</label></div>
                     <div class="form-check"><input class="form-check-input js-column-toggle" type="checkbox" value="serie" id="colSerie"><label class="form-check-label" for="colSerie">Serie</label></div>
@@ -504,7 +505,17 @@
                     {% for item in activos %}
                     <tr>
                         <td><span class="sv-folio">{{ item.eco_unidad }}</span></td>
-                        <td>{{item.responsable.distritos}}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ item.activo.distrito }}
+                            </span>
+                            
+                            {% if item.responsable.distritos != item.activo.distrito %}
+                            <span class="badge bg-primary">
+                            <strong>></strong> {{ item.responsable.distritos }}
+                            </span>
+                            {% endif %}
+                        </td>
                         <td style="width: 28%; max-width: 320px; white-space: normal; overflow-wrap: anywhere;"><span class="sv-cell-title">{% if item.activo %}{{ item.activo.producto.nombre }}{% else %}—{% endif %}</span></td>
                         <td data-column="responsable">{{ item.responsable.staff.staff.first_name }} {{ item.responsable.staff.staff.last_name }}</td>
                         <td data-column="categoria">{{ item.categoria|default:"—" }}</td>
@@ -514,7 +525,7 @@
                         <td data-column="modelo">{{ item.modelo|default:"—" }}</td>
                         <td data-column="descripcion">{{ item.descripcion|default:"—" }}</td>
                         <td>
-                            {% if item.estatus.nombre == "ALTA" %}
+                            {% if item.estatus.id == 1 %}
                                 <span class="sv-badge sv-badge-success">{{ item.estatus.nombre }}</span>
                             {% elif item.estatus.nombre == "BAJA" %}
                                 <span class="sv-badge sv-badge-danger">{{ item.estatus.nombre }}</span>

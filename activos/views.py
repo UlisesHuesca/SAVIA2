@@ -78,15 +78,14 @@ def activos(request):
         activos_base = Activo.objects.filter(
             Q(responsable__distritos__id__in=almacenes_distritos)|
             Q(activo__distrito__in=almacenes_distritos),
-            completo=True,
-           
-        )
+            completo=True 
+        ).exclude(estatus__id = 2)
     else:
         activos_base = Activo.objects.filter(
             Q(responsable__distritos=usuario.distritos)
             | Q(activo__distrito=usuario.distritos),
             completo=True,
-        )
+        ).exclude(estatus__id = 2)
     
     activos_base = activos_base.distinct()
     print(activos_base)
@@ -150,22 +149,22 @@ def activos(request):
         total=Count('id', distinct=True),
         altas=Count(
             'id',
-            filter=Q(estatus__nombre__iexact='ALTA'),
+            filter=Q(estatus__id = 1), #EN OPERACION
             distinct=True,
         ),
-        bajas=Count(
-            'id',
-            filter=Q(estatus__nombre__iexact='BAJA'),
-            distinct=True,
-        ),
+        #bajas=Count(
+        #    'id',
+        #    filter=Q(estatus__nombre__iexact='BAJA'),
+        #    distinct=True,
+        #),
         stock=Count(
             'id',
-            filter=Q(estatus__nombre__iexact='STOCK'),
+            filter=Q(estatus__id = 3), #DISPONIBLE
             distinct=True,
         ),
         reparacion=Count(
             'id',
-            filter=Q(estatus__nombre__iexact='REPARACION'),
+            filter=Q(estatus__id = 4), #EN MANTENIMIENTO
             distinct=True,
         ),
     )
@@ -194,7 +193,7 @@ def activos(request):
             'icono': presentacion['icono'],
             'clase': presentacion['clase'],
             'altas': conteos_estatus['altas'],
-            'bajas': conteos_estatus['bajas'],
+            #'bajas': conteos_estatus['bajas'],
             'stock': conteos_estatus['stock'],
             'reparacion': conteos_estatus['reparacion'],
         }
@@ -206,7 +205,7 @@ def activos(request):
             'icono': 'fa-boxes-stacked',
             'clase': 'todos',
             'altas': conteos_estatus['altas'],
-            'bajas': conteos_estatus['bajas'],
+            #'bajas': conteos_estatus['bajas'],
             'stock': conteos_estatus['stock'],
             'reparacion': conteos_estatus['reparacion'],
         }
@@ -638,15 +637,16 @@ def edit_activo(request, pk):
             ext_form.fields['motor'].queryset = (
                 Motor_UBM.objects
                 .filter(
-                    activo__activo__distrito=distrito_ubm,
-                    activo__estatus__nombre__iexact='ALTA',
+                    Q(activo__activo__distrito=distrito_ubm) |
+                    Q(activo__responsable__distritos=distrito_ubm),
+                    activo__estatus__id = 1,
                 )
                 .select_related(
                     'activo',
                     'activo__activo',
                     'activo__activo__distrito',
                     'activo__estatus',
-                )
+                ).distinct()
                 .order_by('activo__eco_unidad')
             )
 
@@ -1567,14 +1567,17 @@ def render_pdf_responsiva_activos(request, pk):
     #c.drawString(280,caja_proveedor-40,'Distrito:')
     #c.drawString(280,caja_proveedor-60,'Firma:')
     if activo.responsable:
+        print('0')
         print(activo.responsable.distritos)
+        print('1',activo.responsable.id, activo.responsable.staff)
         c.drawCentredString(200,180, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
+        
         activo_resp = Profile.objects.filter(
-            distritos = activo.responsable.distritos, 
-            tipo__activos = True, 
-            st_activo = True
-            ).exclude(tipo__nombre = "Admin").first()
-        print(activo_resp)
+                distritos = activo.responsable.distritos, 
+                tipo__activos = True, 
+                st_activo = True
+                ).exclude( id = 1).first()
+        
         if activo_resp:
             fecha_actual = datetime.now().strftime('%d/%m/%Y')
             c.drawCentredString(400,180, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
@@ -1585,7 +1588,7 @@ def render_pdf_responsiva_activos(request, pk):
             texto_central = ""
         
         
-        c.drawCentredString(300,150, texto_central)
+        #c.drawCentredString(300,150, texto_central)
     else:
         c.drawCentredString(200,180, " " )
         c.drawCentredString(400,180, " ")

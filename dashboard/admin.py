@@ -18,6 +18,10 @@ class Tipo_Activo_Admin(admin.ModelAdmin):
     list_filter = ('nombre',)
     search_fields = ['nombre']
 
+class Estatus_Activo_Admin(admin.ModelAdmin):
+    list_display = ('id','nombre',)
+   
+
 
 class InventarioAdmin(SimpleHistoryAdmin):
     list_display = ('id','producto','cantidad','cantidad_apartada','price','minimo','distrito')
@@ -85,7 +89,7 @@ admin.site.register(Tipo_Orden)
 
 admin.site.register(Activo, ActivoAdmin)
 
-admin.site.register(Estatus_Activo)
+admin.site.register(Estatus_Activo, Estatus_Activo_Admin)
 
 admin.site.register(Producto_Calidad)
 
