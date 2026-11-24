@@ -410,6 +410,7 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 4000
 
 PADME_API_URL = os.environ.get("PADME_API_URL", "")
 PADME_API_TOKEN = os.environ.get("PADME_API_TOKEN", "")
+PADME_API_MOTORES_URL = os.environ.get("PADME_MOTORES_URL", "")
 
 
 if not DEBUG:

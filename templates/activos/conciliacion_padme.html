@@ -15,7 +15,7 @@
                 Conciliación de activos
             </h1>
             <p class="sv-page-subtitle">
-                Comparación de equipos UBM entre SAVIA 2.1 y PADME mediante número económico.
+                Comparación de {% if categoria == "MOTOR" %}motores{% else %}equipos UBM{% endif %} entre SAVIA 2.1 y PADME mediante número económico.
             </p>
         </div>
 
@@ -30,7 +30,7 @@
                 Actualizar
             </button>
 
-            <a href="{% url 'exportar-conciliacion-padme' %}"
+            <a href="{% url 'exportar-conciliacion-padme' %}?categoria={{ categoria|default:'UBM'|urlencode }}"
                id="btnExportarPadme"
                class="sv-btn sv-btn-success">
                 <i class="fa-solid fa-file-excel"></i>
@@ -43,6 +43,36 @@
     <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
         <i class="fa-solid fa-triangle-exclamation"></i>
         <div>{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <section class="sv-card mb-4" aria-label="Categoría de conciliación">
+        <div class="sv-card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <span class="sv-page-eyebrow">Categoría de conciliación</span>
+                <p class="sv-card-subtitle mb-0">Selecciona el tipo de activo que deseas comparar.</p>
+            </div>
+            <div class="btn-group" role="group" aria-label="Tipo de activo">
+                <a href="?categoria=UBM"
+                   class="btn {% if categoria != 'MOTOR' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                   {% if categoria != 'MOTOR' %}aria-current="page"{% endif %}>
+                    <i class="fa-solid fa-oil-well me-2"></i> UBM
+                </a>
+                <a href="?categoria=MOTOR"
+                   class="btn {% if categoria == 'MOTOR' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                   {% if categoria == 'MOTOR' %}aria-current="page"{% endif %}>
+                    <i class="fa-solid fa-gears me-2"></i> Motores
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {% if categoria == "MOTOR" %}
+    <div class="alert alert-info mb-4" role="note">
+        <i class="fa-solid fa-circle-info me-2"></i>
+        La conciliación de motores considera únicamente económicos reconocidos del tipo M-044.
+        Los números de serie de fabricación quedan fuera de esta comparación.
+        Una coincidencia no encontrada no implica necesariamente que el motor no exista en PADME.
     </div>
     {% endif %}
 
@@ -195,13 +225,18 @@
                         <th>Distrito PADME</th>
                         <th>Modelo</th>
                         <th>Estatus SAVIA</th>
-                        <th>Estatus PADME</th>
+                        {% if categoria == "MOTOR" %}
+                            <th>Marca PADME</th>
+                        {% else %}
+                            <th>Estatus PADME</th>
+                        {% endif %}
                         <th>Conciliación</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in resultados %}
-                    <tr data-estado="{{ item.estado }}">
+                    <tr data-estado="{{ item.estado }}"
+                         data-busqueda="{{ item.eco|default_if_none:'' }}|{{ item.savia_eco|default_if_none:'' }}|{{ item.padme_serial|default_if_none:'' }}|{{ item.savia_distrito|default_if_none:'' }}|{{ item.padme_distrito|default_if_none:'' }}|{{ item.padme_modelo|default_if_none:'' }}|{{ item.savia_estatus|default_if_none:'' }}|{{ item.padme_estatus|default_if_none:'' }}|{{ item.padme_marca|default_if_none:'' }}|{{ item.estado|default_if_none:'' }}|{{ item.padme_tipo|default_if_none:'' }}|{{ item.savia_id|default_if_none:'' }}|{{ item.cantidad_savia|default_if_none:'' }}|{{ item.cantidad_padme|default_if_none:'' }}">
                         <td>
                             <span class="sv-cell-title">{{ item.eco }}</span>
                         </td>
@@ -219,7 +254,9 @@
                             {% if item.padme_serial %}
                             <div class="sv-cell-stack">
                                 <span class="sv-cell-title">{{ item.padme_serial }}</span>
-                                <span class="sv-cell-subtitle">{{ item.padme_tipo|default:"Sin tipo" }}</span>
+                                {% if categoria != "MOTOR" %}
+                                 <span class="sv-cell-subtitle">{{ item.padme_tipo|default:"Sin tipo" }}</span>
+                                 {% endif %}
                             </div>
                             {% else %}
                             <span class="sv-cell-subtitle">—</span>
@@ -247,7 +284,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if item.padme_estatus %}
+                            {% if categoria == "MOTOR" %}
+                             <span class="sv-cell-title">{{ item.padme_marca|default:"—" }}</span>
+                             {% elif item.padme_estatus %}
                             <span class="sv-cell-title">{{ item.padme_estatus }}</span>
                             {% else %}
                             <span class="sv-cell-subtitle">—</span>
@@ -300,6 +339,11 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="sinCoincidenciasFiltro" class="d-none">
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            No hay registros que coincidan con los filtros.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -322,6 +366,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const filtro = document.getElementById('filtroConciliacion');
     const limpiar = document.getElementById('limpiarFiltros');
     const actualizar = document.getElementById('btnActualizarPadme');
+    const exportar = document.getElementById('btnExportarPadme');
+    const sinCoincidencias = document.getElementById('sinCoincidenciasFiltro');
     const contador = document.getElementById('contadorResultados');
     const filas = Array.from(
         document.querySelectorAll('#tablaConciliacion tbody tr[data-estado]')
@@ -342,8 +388,9 @@ document.addEventListener('DOMContentLoaded', function () {
         let visibles = 0;
 
         filas.forEach(function (fila) {
-            const contenido = normalizarTexto(fila.textContent);
-            const coincideTexto = contenido.includes(texto);
+            const coincideTexto = !texto || fila.dataset.busqueda.split('|').some(
+                campo => normalizarTexto(campo).includes(texto)
+            );
             const coincideEstado = !estado || fila.dataset.estado === estado;
             const mostrar = coincideTexto && coincideEstado;
 
@@ -354,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        sinCoincidencias.classList.toggle('d-none', filas.length === 0 || visibles > 0);
         contador.textContent = `Mostrando ${visibles} de ${filas.length} registros`;
     }
 
@@ -367,6 +415,24 @@ document.addEventListener('DOMContentLoaded', function () {
         buscar.focus();
     });
 
+    function agregarFiltros(url) {
+        if (filtro.value) url.searchParams.set('estado', filtro.value);
+        else url.searchParams.delete('estado');
+        if (buscar.value.trim()) url.searchParams.set('buscar', buscar.value.trim());
+        else url.searchParams.delete('buscar');
+        return url;
+    }
+
+    exportar.addEventListener('click', function (event) {
+        event.preventDefault();
+        window.location.href = agregarFiltros(new URL(exportar.href)).toString();
+    });
+
+    const parametros = new URLSearchParams(window.location.search);
+    buscar.value = parametros.get('buscar') || '';
+    filtro.value = parametros.get('estado') || '';
+    if (filtro.selectedIndex < 0) filtro.value = '';
+
     actualizar.addEventListener('click', function () {
         actualizar.disabled = true;
         actualizar.innerHTML = `
@@ -375,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         window.setTimeout(function () {
-            window.location.reload();
+            window.location.href = agregarFiltros(new URL(window.location.href)).toString();
         }, 50);
     });
 

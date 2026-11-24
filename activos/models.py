@@ -234,33 +234,17 @@ class DocumentoCategoriaActivo(models.Model):
         FOTOGRAFIA = 'FOTOGRAFIA', 'Fotografía'
         OTRO = 'OTRO', 'Otro (especificar)'
 
-    activo = models.ForeignKey(
-        'dashboard.Activo',
-        on_delete=models.CASCADE,
-        related_name='documentos',
-    )
-    tipo_documento = models.CharField(
-        max_length=30,
-        choices=TipoDocumento.choices,
-    )
+    activo = models.ForeignKey('dashboard.Activo', on_delete=models.CASCADE, related_name='documentos',)
+    tipo_documento = models.CharField(max_length=30, choices=TipoDocumento.choices,)
     tipo_documento_otro = models.CharField(
         max_length=100,
         blank=True,
         default='',
         help_text='Especificar cual es el "Otro" tipo ".',
-    )
-    documento = models.FileField(
-        upload_to=documento_upload_path,
-        verbose_name='Archivo',
-    )
+    )  #Eliminar
+    documento = models.FileField(upload_to=documento_upload_path, verbose_name='Archivo',)
     descripcion = models.CharField(max_length=255, blank=True, default='')
-    subido_por = models.ForeignKey(
-        Profile,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='documentos_activos_subidos',
-    )
+    subido_por = models.ForeignKey(Profile,on_delete=models.SET_NULL, null=True, blank=True, related_name='documentos_activos_subidos',) #Quitar el blank
     fecha_subida = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
@@ -271,7 +255,7 @@ class DocumentoCategoriaActivo(models.Model):
             models.Index(fields=['activo', '-fecha_subida'], name='idx_doc_activo_fecha'),
         ]
 
-    def __str__(self):
+    def __str__(self):  #>>>>> Quitar esto
         if self.tipo_documento == self.TipoDocumento.OTRO and self.tipo_documento_otro:
             return f'{self.activo.eco_unidad} - {self.tipo_documento_otro}'
         return f'{self.activo.eco_unidad} - {self.get_tipo_documento_display()}'    
