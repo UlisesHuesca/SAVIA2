@@ -3536,7 +3536,7 @@ def generar_pdf_dd(proveedor, request):
         nacionalidad = "No estado definido"
 
     #nacionalidad  = "MEXICANA" if proveedor_direcciones.estado.pais.nombre == "MEXICO" else "EXTRANJERA"
-    domicilio     =  S(proveedor_direcciones.domicilio) if proveedor_direcciones else ''
+    domicilio     =  S(proveedor_direcciones.domicilio or '') if proveedor_direcciones else ''
     sitio_web     = dd.sitio_web
     # === Data para tabla ===
     data = [
