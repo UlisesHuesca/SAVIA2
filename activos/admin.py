@@ -1,6 +1,6 @@
 from django.contrib import admin
 from dashboard.models import Activo
-from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo, HistorialAsignacionActivo
+from .models import Categoria_Activo, Vehiculo_Activo, UBM_Activo, HistorialAsignacionActivo, TipoDocumentacion_Activo
 # Register your models here.
 class Historial_Admin(admin.ModelAdmin):
     raw_id_fields = ('responsable_anterior','responsable_nuevo','registrado_por','activo')
@@ -8,6 +8,8 @@ class Historial_Admin(admin.ModelAdmin):
     search_fields = ['activo']
  
 admin.site.register(Categoria_Activo)
+
+admin.site.register(TipoDocumentacion_Activo)
 
 admin.site.register(Vehiculo_Activo)
 

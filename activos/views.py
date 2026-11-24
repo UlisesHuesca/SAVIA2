@@ -941,8 +941,8 @@ def edit_activo(request, pk):
         
         'oc_origen': oc_origen,
         'facturas_oc': facturas_oc,
-        'form_documento': DocumentoCategoriaActivoForm(),
-    }
+        'form_documento': DocumentoCategoriaActivoForm(categoria=activo.categoria),    
+        }
 
     return render(request,'activos/edit_activos.html', context)
 
@@ -2698,7 +2698,7 @@ def subir_documento_activo(request, activo_id):
     next_url = _resolver_redirect(request)
 
     if request.method == 'POST':
-        form = DocumentoCategoriaActivoForm(request.POST, request.FILES)
+        form = DocumentoCategoriaActivoForm(request.POST, request.FILES, categoria = activo.categoria)
         if form.is_valid():
             doc = form.save(commit=False)
             doc.activo = activo
@@ -2708,7 +2708,7 @@ def subir_documento_activo(request, activo_id):
             return redirect(next_url)
         messages.error(request, 'No se pudo subir el documento. Verifica los datos.')
     else:
-        form = DocumentoCategoriaActivoForm()
+        form = DocumentoCategoriaActivoForm(categoria = activo.categoria)
 
     context = {
         'activo': activo,

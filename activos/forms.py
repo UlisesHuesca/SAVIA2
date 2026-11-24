@@ -3,7 +3,7 @@ from django.core.validators import FileExtensionValidator
 from dashboard.models import Activo, Marca, Tipo_Activo, Profile, Inventario
 from requisiciones.models import Salidas
 from compras.models import Proveedor_direcciones
-from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM, DocumentoCategoriaActivo
+from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM, DocumentoCategoriaActivo, TipoDocumentacion_Activo
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
 #from django.forms.fields import DateField 
@@ -198,7 +198,7 @@ class VehiculoActivoForm(forms.ModelForm):
 
         # No incluimos "activo" porque se asignará desde la vista.
         fields = ['tipo_vehiculo','anio_modelo','numero_motor','color','placas','estado_registro','vigencia_poliza','numero_poliza','cobertura',
-            'fecha_verificacion',
+            'fecha_verificacion','numero_vin',
         ]
 
         widgets = {
@@ -228,6 +228,12 @@ class VehiculoActivoForm(forms.ModelForm):
                     'placeholder': 'Placas',
                 }
             ),
+            'numero_vin': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Número VIN',
+                }
+            ),            
             'estado_registro': forms.Select(
                 attrs={'class': 'form-select'}
             ),
@@ -376,21 +382,27 @@ class DocumentoCategoriaActivoForm(forms.ModelForm):
 
     class Meta:
         model = DocumentoCategoriaActivo
-        fields = ['tipo_documento', 'tipo_documento_otro', 'documento', 'descripcion']
+        fields = ['tipo_documento', 'documento', 'descripcion']
         widgets = {
             'tipo_documento': forms.Select(attrs={'class': 'form-select'}),
-            'tipo_documento_otro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Especifica el tipo'}),
             'documento': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
+    def __init__(self, *args, categoria=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        tipos = TipoDocumentacion_Activo.objects.all()
+        if categoria is not None:
+            tipos = tipos.filter(categorias=categoria)
+        else:
+            tipos = tipos.none()
+        self.fields['tipo_documento'].queryset = tipos.order_by('nombre')
+        self.fields['tipo_documento'].empty_label = 'Selecciona un tipo'
+    # def clean(self):
+    #     cleaned = super().clean()
+    #     tipo = cleaned.get('tipo_documento')
 
-    def clean(self):
-        cleaned = super().clean()
-        tipo = cleaned.get('tipo_documento')
-        otro = cleaned.get('tipo_documento_otro')
-
-        if tipo == DocumentoCategoriaActivo.TipoDocumento.OTRO and not otro.strip():
-            self.add_error('tipo_documento_otro', 'Debes especificar el tipo de documento.')
-        elif tipo != DocumentoCategoriaActivo.TipoDocumento.OTRO:
-            cleaned['tipo_documento_otro'] = ''  # limpiar si no aplica
-        return cleaned    
+    #     if tipo == DocumentoCategoriaActivo.TipoDocumento.OTRO and not otro.strip():
+    #         self.add_error('tipo_documento_otro', 'Debes especificar el tipo de documento.')
+    #     elif tipo != DocumentoCategoriaActivo.TipoDocumento.OTRO:
+    #         cleaned['tipo_documento_otro'] = ''  # limpiar si no aplica
+    #     return cleaned    

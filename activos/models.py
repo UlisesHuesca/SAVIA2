@@ -25,6 +25,21 @@ vin_validator = RegexValidator(
     message='El VIN solo puede contener letras MAYÚSCULAS y números.',
 )
 
+class TipoDocumentacion_Activo(models.Model):
+    nombre = models.CharField(max_length= 50)
+    categorias = models.ManyToManyField(
+        Categoria_Activo,
+        related_name='tipos_documentacion',
+        verbose_name='Categorías',
+    )
+
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Tipo de documentación de activo'
+        verbose_name_plural = 'Tipos de documentación de activos'
+
+    def __str__(self):
+        return self.nombre
 
 class Vehiculo_Activo(models.Model):
 
@@ -222,27 +237,23 @@ def documento_upload_path(instance, filename):
 
 class DocumentoCategoriaActivo(models.Model):
 
-    class TipoDocumento(models.TextChoices):
-        FACTURA = 'FACTURA', 'Factura'
-        TARJETA_CIRCULACION = 'TARJETA_CIRCULACION', 'Tarjeta de circulación'
-        POLIZA_SEGURO = 'POLIZA_SEGURO', 'Póliza de seguro'
-        VERIFICACION = 'VERIFICACION', 'Verificación'
-        PLACAS = 'PLACAS', 'Placas'
-        CONTRATO = 'CONTRATO', 'Contrato'
-        MANUAL = 'MANUAL', 'Manual'
-        GARANTIA = 'GARANTIA', 'Garantía'
-        FOTOGRAFIA = 'FOTOGRAFIA', 'Fotografía'
-        OTRO = 'OTRO', 'Otro (especificar)'
+    tipo_documento = models.ForeignKey(
+        TipoDocumentacion_Activo,
+        on_delete=models.PROTECT,
+        related_name='documentos',
+        verbose_name='Tipo de documento',
+    )
+    activo = models.ForeignKey(
+        'dashboard.Activo',
+        on_delete=models.CASCADE,
+        related_name='documentos',
+    )
+    
+    documento = models.FileField(
+        upload_to=documento_upload_path,
+        verbose_name='Archivo',
+    )
 
-    activo = models.ForeignKey('dashboard.Activo', on_delete=models.CASCADE, related_name='documentos',)
-    tipo_documento = models.CharField(max_length=30, choices=TipoDocumento.choices,)
-    tipo_documento_otro = models.CharField(
-        max_length=100,
-        blank=True,
-        default='',
-        help_text='Especificar cual es el "Otro" tipo ".',
-    )  #Eliminar
-    documento = models.FileField(upload_to=documento_upload_path, verbose_name='Archivo',)
     descripcion = models.CharField(max_length=255, blank=True, default='')
     subido_por = models.ForeignKey(Profile,on_delete=models.SET_NULL, null=True, blank=True, related_name='documentos_activos_subidos',) #Quitar el blank
     fecha_subida = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -255,7 +266,5 @@ class DocumentoCategoriaActivo(models.Model):
             models.Index(fields=['activo', '-fecha_subida'], name='idx_doc_activo_fecha'),
         ]
 
-    def __str__(self):  #>>>>> Quitar esto
-        if self.tipo_documento == self.TipoDocumento.OTRO and self.tipo_documento_otro:
-            return f'{self.activo.eco_unidad} - {self.tipo_documento_otro}'
-        return f'{self.activo.eco_unidad} - {self.get_tipo_documento_display()}'    
+    def __str__(self):
+        return f'{self.activo.eco_unidad} - {self.tipo_documento}'
