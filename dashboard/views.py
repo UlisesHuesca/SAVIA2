@@ -3509,7 +3509,13 @@ def generar_pdf_dd(proveedor, request):
 
     def S(txt): return '' if txt is None else str(txt)
     #elaborado_perfil = proveedor.perfiles.first()
-    proveedor_direcciones = proveedor.direcciones
+    proveedor_direcciones = (
+        proveedor.direcciones
+        .exclude(domicilio__isnull=True)
+        .exclude(domicilio__exact='')
+        .order_by('id')
+        .first()
+    )
     perfil_proveedor = Profile.objects.filter(proveedor=proveedor).first()
     # === Datos de ejemplo ===
     if perfil_proveedor:
@@ -3522,7 +3528,7 @@ def generar_pdf_dd(proveedor, request):
     else:
         cargo = dd.cargo
     fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
-    tel           = S(proveedor_direcciones.telefono or '')
+    tel           = proveedor_direcciones.telefono or ''
     correo        = proveedor_direcciones.email
     representante = dd.representante_nombre
     razon_social  = S(getattr(proveedor, 'razon_social', ''))
@@ -3536,7 +3542,7 @@ def generar_pdf_dd(proveedor, request):
         nacionalidad = "No estado definido"
 
     #nacionalidad  = "MEXICANA" if proveedor_direcciones.estado.pais.nombre == "MEXICO" else "EXTRANJERA"
-    domicilio     =  S(proveedor_direcciones.domicilio or '') if proveedor_direcciones else ''
+    domicilio     =  proveedor_direcciones.domicilio if proveedor_direcciones else ''
     sitio_web     = dd.sitio_web
     # === Data para tabla ===
     data = [
