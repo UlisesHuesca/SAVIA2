@@ -3509,7 +3509,7 @@ def generar_pdf_dd(proveedor, request):
 
     def S(txt): return '' if txt is None else str(txt)
     #elaborado_perfil = proveedor.perfiles.first()
-    proveedor_direcciones = proveedor.direcciones.first()
+    proveedor_direcciones = proveedor.direcciones
     perfil_proveedor = Profile.objects.filter(proveedor=proveedor).first()
     # === Datos de ejemplo ===
     if perfil_proveedor:
@@ -3536,7 +3536,7 @@ def generar_pdf_dd(proveedor, request):
         nacionalidad = "No estado definido"
 
     #nacionalidad  = "MEXICANA" if proveedor_direcciones.estado.pais.nombre == "MEXICO" else "EXTRANJERA"
-    domicilio     =  proveedor_direcciones.domicilio if proveedor_direcciones else ''
+    domicilio     =  S(proveedor_direcciones.domicilio) if proveedor_direcciones else ''
     sitio_web     = dd.sitio_web
     # === Data para tabla ===
     data = [
