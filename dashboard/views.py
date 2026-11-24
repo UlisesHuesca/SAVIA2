@@ -3522,7 +3522,7 @@ def generar_pdf_dd(proveedor, request):
     else:
         cargo = dd.cargo
     fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
-    tel           = proveedor_direcciones.telefono
+    tel           = S(proveedor_direcciones.telefono or '')
     correo        = proveedor_direcciones.email
     representante = dd.representante_nombre
     razon_social  = S(getattr(proveedor, 'razon_social', ''))
