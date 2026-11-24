@@ -679,7 +679,7 @@
                             {{ extension_form.non_field_errors }}
                         </div>
                         {% endif %}
-
+ 
                         <div class="row g-3">
                             <div class="col-12 col-md-6 col-xl-3">
                                 <label
@@ -760,6 +760,23 @@
                                 {{ extension_form.placas }}
 
                                 {% for error in extension_form.placas.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ extension_form.numero_vin.id_for_label }}"
+                                >
+                                    Número VIN
+                                </label>
+
+                                {{ extension_form.numero_vin }}
+
+                                {% for error in extension_form.numero_vin.errors %}
                                 <div class="text-danger small mt-1">
                                     {{ error }}
                                 </div>
@@ -1296,13 +1313,7 @@
                     <tbody>
                         {% for doc in activo.documentos.all %}
                         <tr>
-                            <td>
-                                {% if doc.tipo_documento == 'OTRO' %}
-                                    {{ doc.tipo_documento_otro }}
-                                {% else %}
-                                    {{ doc.get_tipo_documento_display }}
-                                {% endif %}
-                            </td>
+                            <td>{{ doc.tipo_documento }}</td>                    
                             <td>{{ doc.descripcion|default:"—" }}</td>
                             <td>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</td>
                             <td>
@@ -1614,33 +1625,36 @@
                 <!-- next para que al guardar regrese a esta misma página -->
                 <input type="hidden" name="next" value="{{ request.path }}">
                 
-                <div class="modal-body">
+           <div class="modal-body">
                     <div class="row g-3">
-                        <!-- Aquí renderizamos el formulario. Asumiendo que lo pasamos en el contexto como 'form_documento' -->
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Tipo de documento</label>
-                            {{ form_documento.tipo_documento }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Especifique el tipo (si eligió "Otro")</label>
-                            {{ form_documento.tipo_documento_otro }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Archivo</label>
-                            {{ form_documento.documento }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Descripción (Opcional)</label>
-                            {{ form_documento.descripcion }}
-                        </div>
+                        {% if form_documento.fields.tipo_documento.queryset %}
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Tipo de documento</label>
+                                {{ form_documento.tipo_documento }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Archivo</label>
+                                {{ form_documento.documento }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Descripción (Opcional)</label>
+                                {{ form_documento.descripcion }}
+                            </div>
+                        {% else %}
+                            <div class="col-12">
+                                <p class="sv-cell-subtitle mb-0">No hay tipos registrados para esta categoría.</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="sv-btn sv-btn-success">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
-                    </button>
+                    {% if form_documento.fields.tipo_documento.queryset %}
+                        <button type="submit" class="sv-btn sv-btn-success">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
+                        </button>
+                    {% endif %}
                 </div>
             </form>
         </div>
