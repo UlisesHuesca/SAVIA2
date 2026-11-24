@@ -8,12 +8,13 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.text import slugify
-
+from dashboard.models import Activo 
+from user.models import Profile
 
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm, DocumentosActivoForm
-from .forms import VehiculoActivoForm, UBMActivoForm, MotorUBMForm
-from .models import Categoria_Activo, HistorialAsignacionActivo, Vehiculo_Activo, UBM_Activo, Motor_UBM
+from .forms import VehiculoActivoForm, UBMActivoForm, MotorUBMForm, DocumentoCategoriaActivoForm
+from .models import Categoria_Activo, HistorialAsignacionActivo, Vehiculo_Activo, UBM_Activo, Motor_UBM, DocumentoCategoriaActivo
 from compras.models import Proveedor_direcciones
 from tesoreria.models import Facturas
 from .filters import ActivoFilter
@@ -935,6 +936,7 @@ def edit_activo(request, pk):
         
         'oc_origen': oc_origen,
         'facturas_oc': facturas_oc,
+        'form_documento': DocumentoCategoriaActivoForm(),
     }
 
     return render(request,'activos/edit_activos.html', context)
@@ -2483,3 +2485,89 @@ def exportar_conciliacion_padme(request):
     response['Content-Disposition'] = (f'attachment; filename="{nombre_archivo}"')
 
     return response
+
+
+ASSET_REDIRECT_MAP = {
+    'vehiculo': 'activos-vehiculos',
+    'ubm':      'activos-ubms',
+}
+
+def _resolver_redirect(request, tipo_default='vehiculo'):
+    return (
+        request.POST.get('next')
+        or request.GET.get('next')
+        or request.META.get('HTTP_REFERER')
+        or ASSET_REDIRECT_MAP.get(tipo_default, 'activos-vehiculos')
+    )
+
+
+# @login_required(login_url='user-login')
+# def subir_documento_activo(request, activo_id):
+#     activo = get_object_or_404(Activo, id=activo_id)
+#     usuario = Profile.objects.get(staff=request.user)
+#     next_url = _resolver_redirect(request)
+
+#     if request.method == 'POST':
+#         form = DocumentoCategoriaActivoForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             doc = form.save(commit=False)
+#             doc.activo = activo
+#             doc.subido_por = usuario
+#             doc.save()
+#             messages.success(request, f'Documento "{doc}" subido correctamente.')
+#             return redirect(next_url)
+#         messages.error(request, 'No se pudo subir el documento. Verifica los datos.')
+#     else:
+#         form = DocumentoCategoriaActivoForm()
+
+#     context = {
+#         'activo': activo,
+#         'form': form,
+#         'next': next_url,
+#     }
+#     return render(request, 'activos/subir_documento.html', context)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def subir_documento_activo(request, activo_id):
+    activo = get_object_or_404(Activo, id=activo_id)
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = get_object_or_404(Profile, pk=pk_perfil)
+    next_url = _resolver_redirect(request)
+
+    if request.method == 'POST':
+        form = DocumentoCategoriaActivoForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.activo = activo
+            doc.subido_por = usuario
+            doc.save()
+            messages.success(request, f'Documento "{doc}" subido correctamente.')
+            return redirect(next_url)
+        messages.error(request, 'No se pudo subir el documento. Verifica los datos.')
+    else:
+        form = DocumentoCategoriaActivoForm()
+
+    context = {
+        'activo': activo,
+        'form': form,
+        'next': next_url,
+    }
+    return render(request, 'activos/subir_documento.html', context)
+
+@login_required(login_url='user-login')
+def eliminar_documento_activo(request, pk):
+    documento = get_object_or_404(DocumentoCategoriaActivo, id=pk)
+    next_url = _resolver_redirect(request)
+
+    if request.method == 'POST':
+        nombre = str(documento)
+        documento.documento.delete(save=False)
+        documento.delete()
+        messages.success(request, f'Documento "{nombre}" eliminado.')
+        return redirect(next_url)
+
+    return render(request, 'activos/eliminar_documento.html', {
+        'documento': documento,
+        'next': next_url,
+    })

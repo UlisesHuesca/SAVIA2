@@ -3,10 +3,10 @@ from django.core.validators import FileExtensionValidator
 from dashboard.models import Activo, Marca, Tipo_Activo, Profile, Inventario
 from requisiciones.models import Salidas
 from compras.models import Proveedor_direcciones
-from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM
+from .models import Vehiculo_Activo, UBM_Activo, Motor_UBM, DocumentoCategoriaActivo
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
-#from django.forms.fields import DateField
+#from django.forms.fields import DateField 
 
 class Activo_Form(forms.ModelForm):
     class Meta:
@@ -367,3 +367,30 @@ class MotorUBMForm(forms.ModelForm):
         self.fields['tipo'].widget.attrs.update({
             'class': 'form-select',
         })
+
+    from django import forms
+from .models import DocumentoCategoriaActivo
+
+
+class DocumentoCategoriaActivoForm(forms.ModelForm):
+
+    class Meta:
+        model = DocumentoCategoriaActivo
+        fields = ['tipo_documento', 'tipo_documento_otro', 'documento', 'descripcion']
+        widgets = {
+            'tipo_documento': forms.Select(attrs={'class': 'form-select'}),
+            'tipo_documento_otro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Especifica el tipo'}),
+            'documento': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        tipo = cleaned.get('tipo_documento')
+        otro = cleaned.get('tipo_documento_otro')
+
+        if tipo == DocumentoCategoriaActivo.TipoDocumento.OTRO and not otro.strip():
+            self.add_error('tipo_documento_otro', 'Debes especificar el tipo de documento.')
+        elif tipo != DocumentoCategoriaActivo.TipoDocumento.OTRO:
+            cleaned['tipo_documento_otro'] = ''  # limpiar si no aplica
+        return cleaned    

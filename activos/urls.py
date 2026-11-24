@@ -23,4 +23,6 @@ urlpatterns = [
     path('activos/cargar-extension/',views.cargar_formulario_extension_activo, name='cargar-formulario-extension-activo',),
     path('activos/conciliacion-padme/', views.conciliacion_padme, name='conciliacion-padme'),
     path('activos/conciliacion-padme/exportar/',views.exportar_conciliacion_padme, name='exportar-conciliacion-padme'),
+    path('documentos/subir/<int:activo_id>/', views.subir_documento_activo, name='subir-documento-activo'),
+    path('documentos/eliminar/<int:pk>/', views.eliminar_documento_activo, name='eliminar-documento-activo'),
     ]

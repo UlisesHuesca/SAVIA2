@@ -1271,6 +1271,75 @@
             </div>
         </div>
     </section>
+
+     <section class="sv-card mt-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-folder-open"></i> Documentación del Activo por Categoría</h2>
+                <p class="sv-card-subtitle">Sube pólizas, tarjetas de circulación, actas u otros documentos adicionales.</p>
+            </div>
+
+            <!-- Botón para abrir el modal de la nueva documentación -->
+            <button type="button" class="sv-btn sv-btn-primary" data-bs-toggle="modal" data-bs-target="#subirDocumentoCategoriaModal">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Subir documento
+            </button>
+        </div>
+
+        <div class="sv-card-body">
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Documento</th>
+                            <th>Descripción</th>
+                            <th>Subido el</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in activo.documentos.all %}
+                        <tr>
+                            <td>
+                                {% if doc.tipo_documento == 'OTRO' %}
+                                    {{ doc.tipo_documento_otro }}
+                                {% else %}
+                                    {{ doc.get_tipo_documento_display }}
+                                {% endif %}
+                            </td>
+                            <td>{{ doc.descripcion|default:"—" }}</td>
+                            <td>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="sv-actions">
+                                    <!-- Botón para ver el archivo -->
+                                    <a href="{{ doc.documento.url }}" target="_blank" class="sv-btn sv-btn-info sv-btn-icon" title="Ver documento">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+
+                                    <!-- Botón para eliminar el archivo -->
+                                    <form method="POST" action="{% url 'eliminar-documento-activo' doc.id %}" class="d-inline form-eliminar-doc">
+                                        {% csrf_token %}
+                                        <!-- next para que al borrar regrese a esta misma página -->
+                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                        <button type="submit" class="sv-btn sv-btn-danger sv-btn-icon" title="Eliminar documento">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="sv-empty text-center py-4">
+                                <i class="fa-solid fa-folder-open text-muted fs-3 mb-2"></i>
+                                <p class="mb-0">No hay documentos adicionales subidos.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </main>
 
 {% if distrito_ubicacion.mapa_embed_url %}
@@ -1526,6 +1595,57 @@
                     <p class="sv-cell-subtitle mb-0">Por favor espera… <i class="fa-solid fa-spinner fa-spin"></i></p>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="subirDocumentoCategoriaModal" tabindex="-1" aria-labelledby="subirDocumentoCategoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="subirDocumentoCategoriaModalLabel">
+                        <i class="fa-solid fa-folder-open me-2"></i> Subir Documento
+                    </h2>
+                    <span class="sv-modal-subtitle">Agrega un documento clasificado por su tipo.</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <!-- Apunta a la vista genérica que creamos en views.py -->
+            <form method="POST" action="{% url 'subir-documento-activo' activo.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <!-- next para que al guardar regrese a esta misma página -->
+                <input type="hidden" name="next" value="{{ request.path }}">
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Aquí renderizamos el formulario. Asumiendo que lo pasamos en el contexto como 'form_documento' -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Tipo de documento</label>
+                            {{ form_documento.tipo_documento }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Especifique el tipo (si eligió "Otro")</label>
+                            {{ form_documento.tipo_documento_otro }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Archivo</label>
+                            {{ form_documento.documento }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Descripción (Opcional)</label>
+                            {{ form_documento.descripcion }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="sv-btn sv-btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

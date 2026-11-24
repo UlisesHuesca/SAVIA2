@@ -3,8 +3,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from dashboard.models import Inventario, Marca
 from user.models import Profile
 from solicitudes.models import Pozo
-
-
+from django.core.validators import RegexValidator
+import re
+from django.utils import timezone
 
 # Create your models here.
 class Categoria_Activo(models.Model):
@@ -19,8 +20,10 @@ class Categoria_Activo(models.Model):
         return self.nombre
 
 
-
-
+vin_validator = RegexValidator(
+    regex=r'^[A-Z0-9]+$',
+    message='El VIN solo puede contener letras MAYÚSCULAS y números.',
+)
 
 
 class Vehiculo_Activo(models.Model):
@@ -72,17 +75,26 @@ class Vehiculo_Activo(models.Model):
     numero_poliza = models.CharField(max_length=30,null=True,blank=True,verbose_name='Número de póliza',)
     cobertura = models.CharField(max_length=15,choices=CoberturaSeguro.choices,null=True,blank=True,)
     fecha_verificacion = models.DateField(null=True,blank=True,verbose_name='Fecha de verificación',)
+    numero_vin = models.CharField(max_length=17, null=True, blank=True, validators=[vin_validator], verbose_name='Número VIN',help_text='17 caracteres, solo letras MAYÚSCULAS y números.',)
 
     class Meta:
         ordering = ['activo__eco_unidad']
         verbose_name = 'Vehículo'
         verbose_name_plural = 'Vehículos'
 
+    # Pa que todo vaya en mayus
+    def clean(self):
+        super().clean()
+        if self.numero_vin:
+            self.numero_vin = self.numero_vin.upper().strip()    
+
     def __str__(self):
         return (
             f'{self.activo.eco_unidad} - '
             f'{self.get_tipo_vehiculo_display()}'
         )
+
+
 
 class Motor_UBM(models.Model):
 
@@ -199,3 +211,67 @@ class HistorialAsignacionActivo(models.Model):
             f'{self.eco_unidad} - '
             f'{self.get_tipo_movimiento_display()}'
         )
+
+def documento_upload_path(instance, filename):
+    """Guarda en activos/documentos/<eco_unidad>/<timestamp>_<archivo>"""
+    eco = instance.activo.eco_unidad if instance.activo else 'sin_eco'
+    eco = re.sub(r'[^\w\-]', '_', eco)
+    ts = timezone.now().strftime('%Y%m%d_%H%M%S')
+    return f'activos/documentos/{eco}/{ts}_{filename}'
+
+
+class DocumentoCategoriaActivo(models.Model):
+
+    class TipoDocumento(models.TextChoices):
+        FACTURA = 'FACTURA', 'Factura'
+        TARJETA_CIRCULACION = 'TARJETA_CIRCULACION', 'Tarjeta de circulación'
+        POLIZA_SEGURO = 'POLIZA_SEGURO', 'Póliza de seguro'
+        VERIFICACION = 'VERIFICACION', 'Verificación'
+        PLACAS = 'PLACAS', 'Placas'
+        CONTRATO = 'CONTRATO', 'Contrato'
+        MANUAL = 'MANUAL', 'Manual'
+        GARANTIA = 'GARANTIA', 'Garantía'
+        FOTOGRAFIA = 'FOTOGRAFIA', 'Fotografía'
+        OTRO = 'OTRO', 'Otro (especificar)'
+
+    activo = models.ForeignKey(
+        'dashboard.Activo',
+        on_delete=models.CASCADE,
+        related_name='documentos',
+    )
+    tipo_documento = models.CharField(
+        max_length=30,
+        choices=TipoDocumento.choices,
+    )
+    tipo_documento_otro = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text='Especificar cual es el "Otro" tipo ".',
+    )
+    documento = models.FileField(
+        upload_to=documento_upload_path,
+        verbose_name='Archivo',
+    )
+    descripcion = models.CharField(max_length=255, blank=True, default='')
+    subido_por = models.ForeignKey(
+        Profile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='documentos_activos_subidos',
+    )
+    fecha_subida = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-fecha_subida']
+        verbose_name = 'Documento de activo'
+        verbose_name_plural = 'Documentos de activos'
+        indexes = [
+            models.Index(fields=['activo', '-fecha_subida'], name='idx_doc_activo_fecha'),
+        ]
+
+    def __str__(self):
+        if self.tipo_documento == self.TipoDocumento.OTRO and self.tipo_documento_otro:
+            return f'{self.activo.eco_unidad} - {self.tipo_documento_otro}'
+        return f'{self.activo.eco_unidad} - {self.get_tipo_documento_display()}'    
