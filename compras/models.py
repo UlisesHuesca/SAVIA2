@@ -553,15 +553,16 @@ class Compra(models.Model):
             for factura in self.facturas.all()
         )
     
-    #@property
-    #def tiene_articulos_activo(self):
+    @property
+    def tiene_articulos_activo(self):
   
-    #    for articulo in self.articulocomprado_set.all():
-    #        print(f"DEBUG: Revisando ArticuloComprado ID {articulo.id}")
-            
-           
-    #        inv = articulo.producto.producto.articulos.producto.producto.activo
-           
+        for articulo in self.articulocomprado_set.all():
+            print(f"DEBUG: Revisando ArticuloComprado ID {articulo.id}")
+            inv = articulo.producto.producto.articulos.producto.producto.activo
+
+            if inv:
+                return True
+        return False
 
 
 
