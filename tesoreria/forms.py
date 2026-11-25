@@ -32,6 +32,20 @@ class Facturas_Completas_Form(forms.ModelForm):
         model = Compra
         fields = ['facturas_completas']
 
+class FacturaPDFForm(forms.ModelForm):
+    class Meta:
+        model = Facturas
+        fields = ["factura_pdf"]
+        widgets = {
+            "factura_pdf": forms.ClearableFileInput(attrs={"accept": "application/pdf"}),
+        }
+
+    def clean_factura_pdf(self):
+        archivo = self.cleaned_data.get("factura_pdf")
+        if archivo and not archivo.name.lower().endswith(".pdf"):
+            raise forms.ValidationError("El archivo debe ser un PDF.")
+        return archivo
+
 class Facturas_Gastos_Form(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto

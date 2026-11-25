@@ -45,4 +45,5 @@ urlpatterns = [
     path("tesoreria/cuentas/<int:cuenta_id>/estados-cuenta/",views.estados_cuenta,name="estados-cuenta"),
     path('pago/eliminar/<int:pago_id>/', views.eliminar_pago, name='eliminar_pago'),
     path('pago/<int:pk>/marcar-spei-devuelto/',views.marcar_spei_devuelto,name='marcar-spei-devuelto'),
+    path("factura/<int:pk>/subir-factura-pdf/",views.subir_factura_pdf,name="subir-factura-pdf",),
     ]

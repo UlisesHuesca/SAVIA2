@@ -37,7 +37,7 @@ from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from finanzas.models import Exhibit, Linea_Exhibit
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm, Cargo_Abono_No_Documento_Form, EstadoCuentaForm
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm, Cargo_Abono_No_Documento_Form, EstadoCuentaForm, FacturaPDFForm
 from .filters import PagoFilter, Matriz_Pago_Filter, Estado_Cuenta_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -7482,3 +7482,29 @@ def consultar_estatus_sat(rfc_emisor, rfc_receptor, total, uuid):
             f"Error UUID {uuid}: {error}"
         )
         return "Error SAT"
+
+    
+
+@perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria', 'finanzas')
+def subir_factura_pdf(request, pk):
+    factura = get_object_or_404(Facturas, id=pk)
+
+    # Doble validación en servidor: aunque el template no muestre el botón,
+    # bloqueamos la ruta si la OC no tiene artículos ACTIVO.
+    if not factura.oc or not factura.oc.tiene_articulos_activo:
+        return HttpResponse("No aplica", status=403)
+
+    form = FacturaPDFForm(instance=factura)
+
+    if request.method == "POST":
+        form = FacturaPDFForm(request.POST, request.FILES, instance=factura)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204)
+
+    return render(
+        request,
+        "tesoreria/subir_factura_pdf.html",
+        {"factura": factura, "form": form},
+    )

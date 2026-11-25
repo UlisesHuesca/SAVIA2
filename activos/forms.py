@@ -397,12 +397,3 @@ class DocumentoCategoriaActivoForm(forms.ModelForm):
             tipos = tipos.none()
         self.fields['tipo_documento'].queryset = tipos.order_by('nombre')
         self.fields['tipo_documento'].empty_label = 'Selecciona un tipo'
-    # def clean(self):
-    #     cleaned = super().clean()
-    #     tipo = cleaned.get('tipo_documento')
-
-    #     if tipo == DocumentoCategoriaActivo.TipoDocumento.OTRO and not otro.strip():
-    #         self.add_error('tipo_documento_otro', 'Debes especificar el tipo de documento.')
-    #     elif tipo != DocumentoCategoriaActivo.TipoDocumento.OTRO:
-    #         cleaned['tipo_documento_otro'] = ''  # limpiar si no aplica
-    #     return cleaned    

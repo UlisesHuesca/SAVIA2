@@ -1,0 +1,28 @@
+{% load crispy_forms_tags %}
+<div class="modal-content sv-modal">
+    <div class="modal-header">
+        <h2 class="modal-title">
+            <i class="fa-solid fa-file-pdf me-2"></i>
+            Factura PDF — #{{ factura.id }}
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
+
+    <form method="POST"
+          enctype="multipart/form-data"
+          hx-post="{% url 'subir-factura-pdf' factura.id %}"
+          hx-encoding="multipart/form-data"
+          hx-target="#document"
+          hx-swap="innerHTML">
+        {% csrf_token %}
+        <div class="modal-body">
+            {{ form|crispy }}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="sv-btn sv-btn-outline" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="sv-btn sv-btn-success">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+        </div>
+    </form>
+</div>

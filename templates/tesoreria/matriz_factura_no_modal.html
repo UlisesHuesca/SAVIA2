@@ -168,7 +168,7 @@
                 <div>
                     <h2 class="sv-card-title">
                         <i class="fa-solid fa-folder-open"></i>
-                        Documentación fiscal
+                        Documentación fiscal 
                     </h2>
                     <p class="sv-page-subtitle mb-0">
                         Facturas, representaciones impresas y complementos de pago.
@@ -202,6 +202,7 @@
                             <th>Documentos</th>
                             {% if usuario.tipo.tesoreria %}<th>Validar</th>{% endif %}
                             <th>Complementos</th>
+                            <th>Factura PDF</th>
                             <th>Eliminar</th>
                         </tr>
                     </thead>
@@ -282,6 +283,36 @@
                                 {% endif %}
                             </td>
                             <td>
+                                {% if p.oc.tiene_articulos_activo %}
+                                    <div class="sv-actions">
+                                        {% if p.factura_pdf %}
+                                            <button type="button"
+                                                    class="sv-btn sv-btn-info sv-btn-icon"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#pdfPreviewModal"
+                                                    data-document-url="{{ p.factura_pdf.url }}"
+                                                    data-document-title="Factura PDF #{{ p.id|unlocalize }}"
+                                                    title="Ver factura PDF"
+                                                    aria-label="Ver factura PDF">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button type="button"
+                                                class="sv-btn sv-btn-outline sv-btn-icon"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#dialog"
+                                                hx-target="#document"
+                                                hx-get="{% url 'subir-factura-pdf' p.id %}"
+                                                title="{% if p.factura_pdf %}Cambiar factura PDF{% else %}Subir factura PDF{% endif %}"
+                                                aria-label="Subir factura PDF">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <span class="sv-cell-subtitle">No aplica</span>
+                                {% endif %}
+                            </td>                            
+                            <td>
                                 <button type="button" class="sv-btn sv-btn-danger sv-btn-icon"
                                         data-bs-toggle="modal" data-bs-target="#confirmModal"
                                         data-factura-id="{{ p.id|unlocalize }}"
@@ -292,8 +323,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="{% if usuario.tipo.tesoreria %}8{% else %}7{% endif %}" class="sv-empty">
-                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
+                                <td colspan="{% if usuario.tipo.tesoreria %}9{% else %}8{% endif %}" class="sv-empty">                                <span class="sv-empty-icon"><i class="fa-solid fa-file-circle-xmark"></i></span>
                                 <span class="sv-empty-title">Sin facturas registradas</span>
                             </td>
                         </tr>
