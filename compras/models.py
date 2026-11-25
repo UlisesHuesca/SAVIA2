@@ -506,9 +506,6 @@ class Compra(models.Model):
         suma = sum([producto.total for producto in productos])
         return suma
 
-    @property
-    def get_folio(self):
-        return f'OC{self.id}'
     
     @property
     def estatus_original(self):
@@ -555,44 +552,16 @@ class Compra(models.Model):
             factura.emisor and factura.emisor.get('metodo_pago') == 'PPD'
             for factura in self.facturas.all()
         )
-    @property
-    def tiene_articulos_activo(self):
+    
+    #@property
+    #def tiene_articulos_activo(self):
   
-        for articulo in self.articulocomprado_set.all():
-            print(f"DEBUG: Revisando ArticuloComprado ID {articulo.id}")
+    #    for articulo in self.articulocomprado_set.all():
+    #        print(f"DEBUG: Revisando ArticuloComprado ID {articulo.id}")
             
-            try:
-                inv = articulo.producto.producto.articulos.producto.producto
-            except AttributeError as e:
-                print(f"DEBUG: Error de ruta (AttributeError) - {e}")
-                continue
-
-            if inv is None:
-                print("DEBUG: El inventario es None")
-                continue
-
-            clasif = getattr(inv, "clasificacion", None)
-            if clasif:
-                nombre = getattr(clasif, "nombre", clasif)
-                if str(nombre).strip().upper() == "ACTIVO":
-                    print(f"DEBUG: ¡Encontrado por CLASIFICACION! -> {nombre}")
-                    return True
-
-            tipo_activo = getattr(inv, "tipo_activo", None)
-            if tipo_activo:
-                print(f"DEBUG: ¡Encontrado por TIPO_ACTIVO! -> {tipo_activo}")
-                return True
-                
-            categoria = getattr(inv, "categoria", None)
-            if categoria:
-                print(f"DEBUG: ¡Encontrado por CATEGORIA! -> {categoria}")
-                return True
-
-            print("DEBUG: Este artículo no es activo.")
-
-        #Para cuando se determine si vamos o nel hacer lo de la asignaciion  de la categoria de el activo entonces esta linea se 
-        #cambia a false
-        return True
+           
+    #        inv = articulo.producto.producto.articulos.producto.producto.activo
+           
 
 
 
