@@ -79,13 +79,13 @@ def activos(request):
             Q(responsable__distritos__id__in=almacenes_distritos)|
             Q(activo__distrito__in=almacenes_distritos),
             completo=True 
-        ).exclude(estatus__id = 2)
+        )#.exclude(estatus__id = 2)
     else:
         activos_base = Activo.objects.filter(
             Q(responsable__distritos=usuario.distritos)
             | Q(activo__distrito=usuario.distritos),
             completo=True,
-        ).exclude(estatus__id = 2)
+        )#.exclude(estatus__id = 2)
     
     activos_base = activos_base.distinct()
     print(activos_base)
