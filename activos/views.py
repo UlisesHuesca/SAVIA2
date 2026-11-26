@@ -234,6 +234,147 @@ def activos(request):
     return render(request,'activos/activos.html',context,)
    
 
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def bajas_activos(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+
+    
+    # ACTIVOS PERMITIDOS PARA EL USUARIO
+   
+    if usuario.tipo.nombre in ["ADMIN_ACTIVOS", "Admin"]:
+        activos_base = Activo.objects.filter(Q(responsable__distritos__id__in=almacenes_distritos) | Q(activo__distrito__in=almacenes_distritos),
+            completo=True, estatus__nombre__iexact='BAJA',)
+    else:
+        activos_base = Activo.objects.filter(Q(responsable__distritos=usuario.distritos)| Q(activo__distrito=usuario.distritos),
+            completo=True, estatus__nombre__iexact='BAJA',)
+
+    activos_base = activos_base.distinct()
+
+    
+    # FILTROS
+   
+    myfilter = ActivoFilter(request.GET or None, queryset=activos_base,)
+
+    activos_queryset = myfilter.qs.distinct()
+
+  
+    # CATEGORÍA SELECCIONADA
+  
+    categoria_id = request.GET.get('categoria', '').strip()
+
+    categoria_seleccionada = None
+
+    if categoria_id.isdigit():
+        categoria_seleccionada = (
+            Categoria_Activo.objects
+            .filter(id=int(categoria_id))
+            .first()
+        )
+
+    presentacion_categorias = {
+        'UBM': {
+            'icono': 'fa-oil-well',
+            'clase': 'ubm',
+        },
+        'VEHICULO': {
+            'icono': 'fa-truck-pickup',
+            'clase': 'vehiculo',
+        },
+        'COMPUTO': {
+            'icono': 'fa-laptop',
+            'clase': 'computo',
+        },
+        'CELULAR': {
+            'icono': 'fa-mobile-screen-button',
+            'clase': 'celular',
+        },
+        'EPP': {
+            'icono': 'fa-shield-halved',
+            'clase': 'epp',
+        },
+        'MAQUINARIA Y HERRAMIENTA': {
+            'icono': 'fa-screwdriver-wrench',
+            'clase': 'maquinaria',
+        },
+        'MOTOR': {
+            'icono': 'fa-engine',
+            'clase': 'motor',
+        },
+        'OTRO': {
+            'icono': 'fa-boxes-stacked',
+            'clase': 'otro',
+        },
+    }
+
+    
+    # TARJETA RESUMEN
+    
+    total_bajas = activos_queryset.count()
+
+    if categoria_seleccionada:
+        nombre_categoria = (categoria_seleccionada.nombre or '').strip().upper()
+
+        presentacion = presentacion_categorias.get(
+            nombre_categoria,
+            {
+                'icono': 'fa-box',
+                'clase': 'otro',
+            },
+        )
+
+        resumen_activos = {
+            'titulo': categoria_seleccionada.nombre,
+            'subtitulo': 'Activos dados de baja',
+            'cantidad': total_bajas,
+            'icono': presentacion['icono'],
+            'clase': presentacion['clase'],
+            'bajas': total_bajas,
+        }
+    else:
+        resumen_activos = {
+            'titulo': 'Bajas de activos',
+            'subtitulo': 'Activos dados de baja disponibles para el usuario',
+            'cantidad': total_bajas,
+            'icono': 'fa-box-archive',
+            'clase': 'todos',
+            'bajas': total_bajas,
+        }
+
+    # ---------------------------------------------------------
+    # EXPORTACIÓN
+    # ---------------------------------------------------------
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        return convert_activos_to_xls(
+            activos_queryset,
+            categoria=categoria_seleccionada,
+        )
+
+    # ---------------------------------------------------------
+    # PAGINACIÓN
+    # ---------------------------------------------------------
+    paginator = Paginator(activos_queryset.order_by('id'),50)
+
+    page = request.GET.get('page')
+    activos = paginator.get_page(page)
+
+    context = {
+        'activos': activos,
+        'myfilter': myfilter,
+        'usuario': usuario,
+        'resumen_activos': resumen_activos,
+        'categoria_seleccionada': categoria_seleccionada,
+        'es_pantalla_bajas': True,
+    }
+
+    return render(request,'activos/bajas_activos.html',context,)
+
+
+
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def cargar_formulario_extension_activo(request):

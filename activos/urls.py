@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('activos/', views.activos, name='activos'),
+    path('activos/bajas/', views.bajas_activos, name='bajas-activos'),
     path('activos/agregar', views.add_activo, name='add-activo'),
     #path('activos/agregar/<int:pk>', views.add_activo2, name='add-activo2'),
     path('activos/edit/<int:pk>', views.edit_activo, name='edit-activo'),

@@ -425,6 +425,13 @@
                     <a class="sv-btn sv-btn-danger" href="{% url 'render_pdf_responsiva_activos_gerente' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva Gerente">
                         <i class="fa-solid fa-file-pdf"></i> Responsiva gerente
                     </a>
+                    <a href="{% url 'bajas-activos' %}"
+                    class="sv-btn sv-btn-danger"
+                    title="Consultar bajas de activos"
+                    aria-label="Consultar bajas de activos">
+                        <i class="fa-solid fa-box-archive me-2"></i>
+                        Bajas de activos
+                    </a>
                     {% if usuario.tipo.activos == True %}
                     <a href="{% url 'conciliacion-padme' %}"
                         class="sv-btn sv-btn-primary d-inline-flex align-items-center gap-2"
