@@ -213,8 +213,6 @@ class Proveedor_Batch(models.Model):
         return f'File id:{self.id}'
 
 
-
-
 class Estado(models.Model):
     nombre = models.CharField(max_length=30, null=True)
     pais = models.ForeignKey(Pais, on_delete=models.CASCADE, null=True, blank=True)
@@ -266,6 +264,7 @@ class Proveedor_direcciones(models.Model):
     servicio = models.BooleanField(default=False)
     producto = models.BooleanField(default=False)
     arrendamiento = models.BooleanField(default=False)
+    servicios_especializados = models.BooleanField(default=False)
     moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
     referencia = models.CharField(max_length=20, null=True, blank = True)
     convenio = models.CharField(max_length=20, null=True, blank = True)
@@ -312,6 +311,7 @@ class InvitacionProveedor(models.Model):
     servicio = models.BooleanField(default=False)
     producto = models.BooleanField(default=False)
     arrendamiento = models.BooleanField(default=False)
+    servicios_especializados = models.BooleanField(default=False)
     distrito = models.ForeignKey(Distrito,  on_delete=models.PROTECT,null=True,blank=True, related_name='invitaciones_proveedor',)
 
     def __str__(self):
