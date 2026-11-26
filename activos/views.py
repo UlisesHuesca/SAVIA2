@@ -685,7 +685,7 @@ def add_activo2(request, pk):
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
-def edit_activo(request, pk):
+def edit_activo(request, pk, solo_lectura=False):    
     pk_perfil = request.session.get('selected_profile_id') 
     empleados = Profile.objects.all()
     perfil = empleados.get(id = pk_perfil)
@@ -1055,7 +1055,18 @@ def edit_activo(request, pk):
             if ext_form is not None:
                 for field, errors in ext_form.errors.items():
                     error_messages[f'{tipo_extension} - {field}'] = errors.as_text()
-            
+
+            if solo_lectura:
+                for formulario in (form, ext_form, factura_form):
+                    if formulario is None:
+                        continue
+                for campo in formulario.fields.values():
+                    campo.disabled = True
+
+            form_documento = DocumentoCategoriaActivoForm(categoria=activo.categoria)
+            if solo_lectura:
+                for campo in form_documento.fields.values():
+                    campo.disabled = True
 
     
     context = {
@@ -1071,7 +1082,7 @@ def edit_activo(request, pk):
         'tipo_activo_predeterminado': tipo_activo_predeterminado,
         'tipo_activo_para_select2': tipo_activo_para_select2,
         'activo':activo,
-        #'personal':personal,
+        #'personal':personal, 
         'marcas':marcas,
         'form':form,
         'extension_form': ext_form,
@@ -1086,6 +1097,65 @@ def edit_activo(request, pk):
         }
 
     return render(request,'activos/edit_activos.html', context)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def detalle_activo(request, pk):
+    activo = get_object_or_404(Activo, pk=pk)
+
+    if activo.activo_id:
+        distrito_ubicacion = activo.activo.distrito
+        producto = activo.activo.producto
+        familia = producto.familia.nombre if producto and producto.familia_id else '—'
+        subfamilia = producto.subfamilia.nombre if producto and producto.subfamilia_id else ''
+    else:
+        distrito_ubicacion = None
+        familia = 'Sin producto asociado'
+        subfamilia = ''
+
+    nombre_categoria = (
+        activo.categoria.nombre.strip().upper()
+        if activo.categoria_id and activo.categoria.nombre else ''
+    )
+
+    tipo_extension = None
+    extension = None
+
+    if nombre_categoria == 'VEHICULO':
+        tipo_extension = 'VEHICULO'
+        extension = Vehiculo_Activo.objects.filter(activo=activo).first()
+    elif nombre_categoria == 'UBM':
+        tipo_extension = 'UBM'
+        extension = UBM_Activo.objects.filter(activo=activo).first()
+    elif nombre_categoria == 'MOTOR':
+        tipo_extension = 'MOTOR'
+        extension = Motor_UBM.objects.filter(activo=activo).first()
+
+    oc_origen = None
+    facturas_oc = Facturas.objects.none()
+
+    if activo.entrada_articulo_id:
+        entrada_articulo = activo.entrada_articulo
+        if entrada_articulo.entrada_id and entrada_articulo.entrada.oc_id:
+            oc_origen = entrada_articulo.entrada.oc
+            if oc_origen:
+                facturas_oc = (
+                    oc_origen.facturas
+                    .filter(hecho=True)
+                    .order_by('-fecha_timbrado', '-id')
+                )
+
+    context = {
+        'activo': activo,
+        'distrito_ubicacion': distrito_ubicacion,
+        'familia': familia,
+        'subfamilia': subfamilia,
+        'tipo_extension': tipo_extension,
+        'extension': extension,
+        'oc_origen': oc_origen,
+        'facturas_oc': facturas_oc,
+    }
+    return render(request, 'activos/detalle_activo.html', context)
 
 def obtener_estado_documentos(activo):
     return {
@@ -2877,3 +2947,4 @@ def eliminar_documento_activo(request, pk):
         'documento': documento,
         'next': next_url,
     })
+
