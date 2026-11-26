@@ -279,7 +279,7 @@ def checkout(request):
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True).exclude(tipo__nombre="Admin")
 
     #print(usuario.distritos)
-    if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "Yerod": 
+    if usuario.distritos.id in [6,17,18]: 
         #print("Quev")
         superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
     elif usuario.distritos.nombre == "BRASIL":
@@ -389,7 +389,7 @@ def checkout(request):
                 "nombre_solicitante": nombre_solicitante,
                 "articulos": articulos_correo,
             })
-            if usuario.tipo.supervisor == True or usuario.distritos.nombre == "BRASIL" or usuario.distritos.nombre == "Yerod": #Si el usuario es supervisor
+            if usuario.tipo.supervisor or (usuario.distritos.id in [17,18]): #Si el usuario es supervisor o si es del distrito Yerod o Boca
                
                 for producto in productos:
                     # We fetch inventory product corresponding to product (that's why we use product.id)
@@ -398,7 +398,7 @@ def checkout(request):
                     ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
                    
                     if not ordensurtir.procesado:
-                        if producto.producto.producto.servicio == True or usuario.distritos.nombre == "Yerod": #or producto.producto.producto.activo == True: Se comenta para evitar que se creen requisiciones de activos
+                        if producto.producto.producto.servicio == True or (usuario.distritos.id in [17,18]): #or producto.producto.producto.activo == True: Se comenta para evitar que se creen requisiciones de activos
                             ordensurtir.requisitar = True
                             ordensurtir.cantidad_requisitar = producto.cantidad
                             ordensurtir.procesado = True
