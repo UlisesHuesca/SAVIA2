@@ -203,6 +203,7 @@ def matriz_direcciones(request):
         direcciones = Proveedor_direcciones.objects.filter(nombre=proveedor, completo = True, distrito__status = True, estatus__nombre__in = estatus_proveedor,  distrito__id__in = almacenes_distritos)
         tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
         tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
+        tiene_servicios_especializados = proveedor.direcciones.filter(servicios_especializados=True).exists()
 
         # Obtener todos los documentos del proveedor
         documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
@@ -241,6 +242,7 @@ def matriz_direcciones(request):
         'direcciones':direcciones,
         'tiene_servicio': tiene_servicio,
         'tiene_arrendamiento': tiene_arrendamiento,
+        'tiene_servicios_especializados': tiene_servicios_especializados,
         
         }
     return render(request,'proveedores_externos/informacion_proveedores.html', context)
@@ -1071,6 +1073,7 @@ def invitar_proveedor(request):
         producto = bool(request.POST.get('producto'))
         servicio = bool(request.POST.get('servicio'))
         arrendamiento = bool(request.POST.get('arrendamiento'))
+        servicios_especializados = bool(request.POST.get('servicios_especializados'))
         
         # ----------------------------------------------------------
         # Validar tipo de invitación
@@ -1172,6 +1175,7 @@ def invitar_proveedor(request):
                 producto=producto,
                 servicio=servicio,
                 arrendamiento=arrendamiento,
+                servicios_especializados=servicios_especializados,
                 usado=False,
                 distrito=distrito,
             )
@@ -1225,6 +1229,7 @@ def invitar_proveedor(request):
                 producto=producto,
                 servicio=servicio,
                 arrendamiento=arrendamiento,
+                servicios_especializados=servicios_especializados,
                 usado=False,
                 distrito=distrito,
             )
@@ -1970,9 +1975,9 @@ def registro_usuario_existente(request,invitacion,proveedor,user,customuser,dist
                         "estatus": estatus,
                         "producto": invitacion.producto,
                         "servicio": invitacion.servicio,
-                        "arrendamiento": (
-                            invitacion.arrendamiento
-                        ),
+                        "servicios_especializados": invitacion.servicios_especializados,            
+                        "arrendamiento":(invitacion.arrendamiento
+                        ), 
                         "moneda": (
                             form.cleaned_data["moneda"]
                         ),
@@ -2281,6 +2286,7 @@ def registro_proveedor(request, token):
 
             producto_inv = invitacion.producto
             servicio_inv = invitacion.servicio
+            servicios_especializados_inv = invitacion.servicios_especializados
             arrendamiento_inv = (
                 invitacion.arrendamiento
             )
@@ -2324,6 +2330,7 @@ def registro_proveedor(request, token):
                     "producto": producto_inv,
                     "servicio": servicio_inv,
                     "arrendamiento": arrendamiento_inv,
+                    "servicios_especializados" : servicios_especializados_inv,
                     "moneda": (
                         form.cleaned_data["moneda"]
                     ),

@@ -278,6 +278,16 @@
                                         {{form.arrendamiento|add_class:"form-check-input"}}
                                     </div>
                     </div>
+                    <div class="row ms-3 my-2">
+                                    <div class="form-check form-switch col-sm">
+                                    <label for="form.logistica" class="form-check-label">
+                                        <strong>
+                                            {% if usuario.distritos.nombre == "BRASIL" %}Alugel{% else %}Servicios Especializados{% endif %}
+                                        </strong>
+                                    </label>
+                                        {{form.servicios_especializados|add_class:"form-check-input"}}
+                                    </div>
+                    </div>                    
                     <div class="col-lg-12">
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
                     {% if usuario.distritos.nombre == "BRASIL" %}

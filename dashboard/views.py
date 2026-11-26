@@ -1769,7 +1769,7 @@ def add_proveedor_direccion(request, pk):
             form = ProveedoresDireccionesForm()
     else:
         raise Http404("No tienes permiso para ver esta vista")
-
+ 
     context = {
         'form': form,
         #'item':item,
@@ -2345,6 +2345,7 @@ def documentacion_proveedores(request, pk):
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
     tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
     tiene_producto = proveedor.direcciones.filter(producto=True).exists()
+    tiene_servicios_especializados = proveedor.direcciones.filter(producto=True).exists()
 
     # Obtener todos los documentos del proveedor
     documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
@@ -2448,6 +2449,7 @@ def documentacion_proveedores(request, pk):
         'tiene_servicio': tiene_servicio,
         'tiene_arrendamiento': tiene_arrendamiento,
         'tiene_producto': tiene_producto,
+        'tienes_servicios_especializados': tiene_servicios_especializados,
         'documentos_count': documentos_count,  # Dict con el total de documentos por tipo
         'documentos_validados_count': documentos_validados_count,  # Dict con validados por tipo
         'documentos': documentos,
@@ -2576,6 +2578,7 @@ def update_flag_direccion(request):
         'producto': 'producto',                 # o 'tiene_producto'
         'servicio': 'servicio',                 # o 'tiene_servicio'
         'arrendamiento': 'arrendamiento',       # o 'tiene_arrendamiento'
+        'servicios_especializados': 'servicios_especializados',
     }
     field = allowed.get(flag)
     if not field:

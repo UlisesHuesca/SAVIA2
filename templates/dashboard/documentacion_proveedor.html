@@ -107,6 +107,7 @@
                             <th>Materiales</th>
                             <th>Servicio</th>
                             <th>Arrendamiento</th>
+                            <th>Servicios especializados</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -285,6 +286,22 @@
                                         </span>
                                         <button type="button" class="sv-btn sv-btn-outline sv-btn-icon sv-flag-button"
                                                 onclick="toggleFlag({{ direccion.id|unlocalize }}, 'arrendamiento')" title="Cambiar Status">
+                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                        </button>
+                                        </div>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <div class="sv-flag-control">
+                                        <span id="flag_servicios_especializados_{{ direccion.id|unlocalize }}" class="sv-flag-status">
+                                        {% if direccion.servicios_especializados %}
+                                            <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
+                                        {% else %}
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                        </span>
+                                        <button type="button" class="sv-btn sv-btn-outline sv-btn-icon sv-flag-button"
+                                                onclick="toggleFlag({{ direccion.id|unlocalize }}, 'servicios_especializados')" title="Cambiar Status">
                                         <i class="fa-solid fa-arrows-rotate"></i>
                                         </button>
                                         </div>
@@ -3201,6 +3218,7 @@ function toggleFlag(id, flag) {
   })
   .catch(console.error);
 }
+
 function fechaAdic_edit(id) {
     const view  = document.getElementById(`fecha_adic_view_${id}`);
     const input = document.getElementById(`fecha_adic_input_${id}`);

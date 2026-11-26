@@ -79,7 +79,7 @@ class DireccionComparativoForm(forms.ModelForm):
 class ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda','modificado_fecha','referencia','convenio',]
+        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','servicios_especializados','moneda','modificado_fecha','referencia','convenio',]
 
   
       
@@ -88,13 +88,13 @@ class ProveedoresExistDireccionesForm(forms.ModelForm):
    
     class Meta:
         model = Proveedor_direcciones
-        fields = ['domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','moneda','referencia','convenio','swift','spid','producto','servicio','arrendamiento']
+        fields = ['domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','moneda','referencia','convenio','swift','spid','producto','servicio','arrendamiento', 'servicios_especializados']
 
 
 class Add_ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','referencia','convenio']
+        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','servicios_especializados','referencia','convenio']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,7 +103,7 @@ class Add_ProveedoresDireccionesForm(forms.ModelForm):
 class Add_ProveedoresDir_Alt_Form(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','referencia','convenio']
+        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','servicios_especializados','referencia','convenio']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
