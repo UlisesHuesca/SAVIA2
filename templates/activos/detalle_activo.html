@@ -1,0 +1,394 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load l10n %}
+
+{% block title %}Detalle del activo{% endblock %}
+
+{% block content %}
+<main class="sv-page sv-page-with-navbar">
+    <header class="sv-page-header">
+        <div>
+            <span class="sv-page-eyebrow">Control patrimonial</span>
+            <h1 class="sv-page-title">
+                <span class="sv-page-title-icon"><i class="fa-solid fa-eye"></i></span>
+                Detalle del activo
+            </h1>
+            <p class="sv-page-subtitle">Consulta de asignación, identificación, estado y documentación.</p>
+        </div>
+        <div class="sv-page-actions">
+            <span class="sv-badge sv-badge-primary"><i class="fa-solid fa-hashtag"></i> ECO {{ activo.eco_unidad }}</span>
+        </div>
+    </header>
+
+    <section class="sv-card">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-circle-info"></i> Información del activo</h2>
+            </div>
+        </div>
+
+        <div class="sv-card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body">
+                            <span class="sv-cell-subtitle">Producto en inventario</span>
+                            {% if activo.activo %}
+                            <strong class="sv-cell-title">{{ activo.activo.producto.nombre }}</strong>
+                            {% else %}
+                            <strong class="sv-cell-title">No asignado</strong>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <span class="sv-cell-subtitle">Distrito del activo</span>
+                                <strong class="sv-cell-title">
+                                    {% if activo.activo %}{{ activo.activo.distrito.nombre }}{% else %}—{% endif %}
+                                </strong>
+                            </div>
+                            {% if distrito_ubicacion.mapa_embed_url %}
+                            <button type="button" class="sv-btn sv-btn-outline sv-btn-icon" data-bs-toggle="modal" data-bs-target="#ubicacionActivoModal" title="Ver ubicación">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body">
+                            <span class="sv-cell-subtitle">Distrito del responsable</span>
+                            <strong class="sv-cell-title">{{ activo.responsable.distritos.nombre|default:"—" }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="sv-card h-100">
+                        <div class="sv-card-body">
+                            <span class="sv-cell-subtitle">Clasificación</span>
+                            <strong class="sv-cell-title">{{ familia|default:"—" }} · {{ subfamilia|default:"—" }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <span class="sv-cell-subtitle d-block">Descripción</span>
+                    <strong class="sv-cell-title">{{ activo.descripcion|default:"—" }}</strong>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <span class="sv-cell-subtitle d-block">Categoría</span>
+                    <strong class="sv-cell-title">{{ activo.categoria|default:"—" }}</strong>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <span class="sv-cell-subtitle d-block">ECO</span>
+                    <strong class="sv-cell-title">{{ activo.eco_unidad|default:"—" }}</strong>
+                </div>
+                <div class="col-12">
+                    <span class="sv-cell-subtitle d-block">Responsable</span>
+                    <strong class="sv-cell-title">
+                        {% if activo.responsable %}
+                            {{ activo.responsable.staff.staff.first_name }} {{ activo.responsable.staff.staff.last_name }}
+                        {% else %}—{% endif %}
+                    </strong>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <span class="sv-cell-subtitle d-block">Marca</span>
+                    <strong class="sv-cell-title">{{ activo.marca|default:"—" }}</strong>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <span class="sv-cell-subtitle d-block">Serie</span>
+                    <strong class="sv-cell-title">{{ activo.serie|default:"—" }}</strong>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <span class="sv-cell-subtitle d-block">Modelo</span>
+                    <strong class="sv-cell-title">{{ activo.modelo|default:"—" }}</strong>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <span class="sv-cell-subtitle d-block">Estatus</span>
+                    <strong class="sv-cell-title">{{ activo.estatus|default:"—" }}</strong>
+                </div>
+            </div>
+
+            <div class="sv-card mt-4 mb-0">
+                <div class="sv-card-header">
+                    <div>
+                        <h3 class="sv-card-title"><i class="fa-solid fa-cart-shopping"></i> Información de adquisición</h3>
+                        <p class="sv-card-subtitle mb-0">Datos relacionados con la adquisición y propiedad del activo.</p>
+                    </div>
+                </div>
+                <div class="sv-card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <span class="sv-cell-subtitle d-block">Fecha de adquisición</span>
+                            <strong class="sv-cell-title">{{ activo.fecha_adquisicion|date:"d/m/Y"|default:"—" }}</strong>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <span class="sv-cell-subtitle d-block">Precio de adquisición</span>
+                            <strong class="sv-cell-title">
+                                {% if activo.precio_adquisicion != None %}${{ activo.precio_adquisicion|floatformat:2 }}{% else %}—{% endif %}
+                            </strong>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <span class="sv-cell-subtitle d-block">Proveedor</span>
+                            <strong class="sv-cell-title">
+                                {% if activo.proveedor_adquisicion %}
+                                    {{ activo.proveedor_adquisicion.nombre.razon_social|default:activo.proveedor_adquisicion }}
+                                {% else %}—{% endif %}
+                            </strong>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <span class="sv-cell-subtitle d-block">Origen</span>
+                            <strong class="sv-cell-title">{% firstof activo.get_origen_display activo.origen "—" %}</strong>
+                        </div>
+                    </div>
+
+                    {% if oc_origen %}
+                    <hr class="my-4">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                        <div>
+                            <h4 class="sv-card-title mb-1"><i class="fa-solid fa-file-invoice text-primary"></i> Orden de compra de origen</h4>
+                            <p class="sv-card-subtitle mb-0">Información obtenida de la entrada con la que se creó el activo.</p>
+                        </div>
+                        <span class="badge rounded-pill bg-dark fs-6">OC {{ oc_origen.folio }}</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded-3 p-3 h-100">
+                                <span class="sv-cell-subtitle d-block mb-1">Orden de compra</span>
+                                <strong class="sv-cell-title">{{ oc_origen.folio }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded-3 p-3 h-100">
+                                <span class="sv-cell-subtitle d-block mb-1">Proveedor</span>
+                                <strong class="sv-cell-title">{{ oc_origen.proveedor.nombre.razon_social|default:"Sin proveedor" }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded-3 p-3 h-100">
+                                <span class="sv-cell-subtitle d-block mb-1">Moneda</span>
+                                <strong class="sv-cell-title">{{ oc_origen.moneda|default:"No especificada" }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="border rounded-3 p-3 h-100">
+                                <span class="sv-cell-subtitle d-block mb-1">Facturas relacionadas</span>
+                                <strong class="sv-cell-title">{{ facturas_oc|length }} factura{{ facturas_oc|length|pluralize }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <span class="sv-cell-subtitle d-block">Observaciones</span>
+                    <strong class="sv-cell-title">{{ activo.comentario|default:"—" }}</strong>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <span class="sv-cell-subtitle d-block">Fecha de asignación</span>
+                    <strong class="sv-cell-title">{{ activo.fecha_asignacion|date:"d/m/Y"|default:"—" }}</strong>
+                </div>
+            </div>
+
+            {% if tipo_extension == "VEHICULO" %}
+            <section class="sv-card mt-4">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-car-side"></i> Información del vehículo</h2>
+                    </div>
+                </div>
+                <div class="sv-card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Tipo de vehículo</span><strong class="sv-cell-title">{% firstof extension.get_tipo_vehiculo_display extension.tipo_vehiculo "—" %}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Año modelo</span><strong class="sv-cell-title">{{ extension.anio_modelo|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Número de motor</span><strong class="sv-cell-title">{{ extension.numero_motor|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Color</span><strong class="sv-cell-title">{{ extension.color|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Placas</span><strong class="sv-cell-title">{{ extension.placas|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Número VIN</span><strong class="sv-cell-title">{{ extension.numero_vin|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Estado de registro</span><strong class="sv-cell-title">{% firstof extension.get_estado_registro_display extension.estado_registro "—" %}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Número de póliza</span><strong class="sv-cell-title">{{ extension.numero_poliza|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Cobertura</span><strong class="sv-cell-title">{% firstof extension.get_cobertura_display extension.cobertura "—" %}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Vigencia de póliza</span><strong class="sv-cell-title">{{ extension.vigencia_poliza|date:"d/m/Y"|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Fecha de verificación</span><strong class="sv-cell-title">{{ extension.fecha_verificacion|date:"d/m/Y"|default:"—" }}</strong></div>
+                    </div>
+                </div>
+            </section>
+            {% elif tipo_extension == "UBM" %}
+            <section class="sv-card mt-4">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-oil-well"></i> Información de la UBM</h2>
+                    </div>
+                </div>
+                <div class="sv-card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-4"><span class="sv-cell-subtitle d-block">Tipo de UBM</span><strong class="sv-cell-title">{% firstof extension.get_tipo_ubm_display extension.tipo_ubm "—" %}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-4"><span class="sv-cell-subtitle d-block">Serie del acumulador</span><strong class="sv-cell-title">{{ extension.serie_acumulador|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-4"><span class="sv-cell-subtitle d-block">Serie del cilindro</span><strong class="sv-cell-title">{{ extension.serie_cilindro|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-4"><span class="sv-cell-subtitle d-block">Depósito de aceite</span><strong class="sv-cell-title">{{ extension.deposito_aceite|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-4"><span class="sv-cell-subtitle d-block">Rack</span><strong class="sv-cell-title">{{ extension.rack|default:"—" }}</strong></div>
+                        <div class="col-12 col-md-6 col-xl-4"><span class="sv-cell-subtitle d-block">Pedestal</span><strong class="sv-cell-title">{{ extension.pedestal|default:"—" }}</strong></div>
+                    </div>
+                    <div class="border-top mt-4 pt-4">
+                        <h3 class="h6 fw-bold mb-3"><i class="fa-solid fa-gears text-primary"></i> Componentes y ubicación</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Motor</span><strong class="sv-cell-title">{% firstof extension.motor.activo.eco_unidad extension.motor "—" %}</strong></div>
+                            <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Bomba</span><strong class="sv-cell-title">{{ extension.bomba|default:"—" }}</strong></div>
+                            <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Manifold</span><strong class="sv-cell-title">{{ extension.manifold|default:"—" }}</strong></div>
+                            <div class="col-12 col-md-6 col-xl-3"><span class="sv-cell-subtitle d-block">Pozo</span><strong class="sv-cell-title">{{ extension.pozo|default:"—" }}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% elif tipo_extension == "MOTOR" %}
+            <section class="sv-card mt-4">
+                <div class="sv-card-header">
+                    <div>
+                        <h2 class="sv-card-title"><i class="fa-solid fa-gear"></i> Información de motor</h2>
+                    </div>
+                </div>
+                <div class="sv-card-body">
+                    <span class="sv-cell-subtitle d-block">Tipo</span>
+                    <strong class="sv-cell-title">{% firstof extension.get_tipo_display extension.tipo "—" %}</strong>
+                </div>
+            </section>
+            {% endif %}
+
+            <div class="sv-actions justify-content-end mt-4">
+                <a class="sv-btn sv-btn-outline" href="{% url 'activos' %}"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="sv-card mt-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-file-invoice"></i> Documentos</h2>
+                <p class="sv-card-subtitle mb-0">Factura PDF y XML del activo.</p>
+            </div>
+        </div>
+        <div class="sv-card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <span class="sv-cell-subtitle d-block">Factura PDF</span>
+                    <strong class="sv-cell-title d-block">{% if activo.factura_pdf %}{{ activo.factura_pdf.name }}{% else %}Sin documento{% endif %}</strong>
+                    {% if activo.factura_pdf %}
+                    <button type="button" id="verFacturaPdf" class="sv-btn sv-btn-danger mt-2" data-pdf-url="{{ activo.factura_pdf.url }}">
+                        <i class="fa-solid fa-eye"></i> Ver PDF
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-md-6">
+                    <span class="sv-cell-subtitle d-block">Factura XML</span>
+                    <strong class="sv-cell-title d-block">{% if activo.factura_xml %}{{ activo.factura_xml.name }}{% else %}Sin documento{% endif %}</strong>
+                    {% if activo.factura_xml %}
+                    <a href="{{ activo.factura_xml.url }}" class="sv-btn sv-btn-primary mt-2" download>
+                        <i class="fa-solid fa-download"></i> Descargar XML
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="sv-card mt-4">
+        <div class="sv-card-header">
+            <div>
+                <h2 class="sv-card-title"><i class="fa-solid fa-folder-open"></i> Documentación por categoría</h2>
+            </div>
+        </div>
+        <div class="sv-card-body">
+            <div class="sv-table-wrap">
+                <table class="sv-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo de documento</th>
+                            <th>Descripción</th>
+                            <th>Subido el</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in activo.documentos.all %}
+                        <tr>
+                            <td>{{ doc.tipo_documento }}</td>
+                            <td>{{ doc.descripcion|default:"—" }}</td>
+                            <td>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{{ doc.documento.url }}" target="_blank" class="sv-btn sv-btn-info sv-btn-icon" title="Ver documento">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">No hay documentos adicionales.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% if distrito_ubicacion.mapa_embed_url %}
+<div class="modal fade" id="ubicacionActivoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <h2 class="modal-title sv-card-title"><i class="fa-solid fa-map-location-dot"></i> Ubicación del activo</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="ratio ratio-16x9">
+                    <iframe src="{{ distrito_ubicacion.mapa_embed_url }}" title="Ubicación de {{ distrito_ubicacion.nombre }}" loading="lazy" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="modal fade" id="facturaPdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content sv-modal">
+            <div class="modal-header">
+                <h2 class="modal-title sv-card-title"><i class="fa-solid fa-file-pdf text-danger"></i> Factura PDF</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="facturaPdfFrame" title="Factura PDF" style="width:100%; height:75vh; border:0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const boton = document.getElementById('verFacturaPdf');
+    const marco = document.getElementById('facturaPdfFrame');
+    const modal = document.getElementById('facturaPdfModal');
+    if (!boton || !marco || !modal) return;
+    const instancia = bootstrap.Modal.getOrCreateInstance(modal);
+    boton.addEventListener('click', function () {
+        marco.src = boton.dataset.pdfUrl;
+        instancia.show();
+    });
+    modal.addEventListener('hidden.bs.modal', function () {
+        marco.src = '';
+    });
+});
+</script>
+{% endblock %}

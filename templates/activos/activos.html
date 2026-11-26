@@ -503,6 +503,7 @@
                         <th scope="col">Estatus</th>
                         {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" %}<th scope="col" data-column="distrito">Distrito</th>{% endif %}
                         <th scope="col">QR</th>
+                        <th scope="col">Detalle</th>
                         <th scope="col">Editar</th>
                         {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}<th scope="col">Cambiar distrito</th>{% endif %}
                         <th scope="col">Responsiva</th>
@@ -544,6 +545,11 @@
                         <td>
                             <a class="sv-btn sv-btn-outline sv-btn-icon" href="{% url 'generate-qr' item.id %}" title="Generar QR" aria-label="Generar QR">
                                 <i class="fa-solid fa-qrcode"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <a class="sv-btn sv-btn-outline sv-btn-icon" href="{% url 'detalle-activo' item.id %}" title="Consultar activo" aria-label="Consultar activo">
+                                <i class="fa-solid fa-eye"></i>
                             </a>
                         </td>
                         <td>

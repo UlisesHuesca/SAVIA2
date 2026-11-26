@@ -26,4 +26,5 @@ urlpatterns = [
     path('activos/conciliacion-padme/exportar/',views.exportar_conciliacion_padme, name='exportar-conciliacion-padme'),
     path('documentos/subir/<int:activo_id>/', views.subir_documento_activo, name='subir-documento-activo'),
     path('documentos/eliminar/<int:pk>/', views.eliminar_documento_activo, name='eliminar-documento-activo'),
+    path('activos/detalle/<int:pk>/', views.detalle_activo, name='detalle-activo'),
     ]
