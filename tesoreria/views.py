@@ -1978,7 +1978,8 @@ def control_documentos(request):
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |
             Q(viatico__distrito__in=almacenes_distritos, viatico__autorizar2=True) |
             Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True) |
-            Q(gasto__tipo__tipo='NOMINA')
+            Q(gasto__tipo__tipo='NOMINA') |
+            Q(control_documentos = True)
         )
     
         vales_gasto_aprobados = ValeRosa.objects.filter(
@@ -2116,7 +2117,8 @@ def control_documentos(request):
         filtro_pagos = (
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |
             Q(viatico__distrito__in=almacenes_distritos, viatico__autorizar2=True) |
-            Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True)
+            Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True) |
+            Q(control_documentos = True)
         )
     
         facturas_oc = Facturas.objects.filter(
@@ -2296,7 +2298,7 @@ def control_documentos(request):
             if usuario.distritos.nombre == "MATRIZ":
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
-                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
+                    pagos = pagos.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]))
               
                     #if distrito_id:
                     #    pagos = pagos.filter(
@@ -2380,7 +2382,7 @@ def control_documentos(request):
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
-                    pagos = Pago.objects.filter(pagado_real__range=[fecha_inicio, fecha_fin], hecho = True) #Se modifica para que ya solo descargue con respecto a la --fecha real--
+                    pagos = pagos.filter(pagado_real__range=[fecha_inicio, fecha_fin]) #Se modifica para que ya solo descargue con respecto a la --fecha real--
                     
                 if tipo_documento == "gastos":
                     pagos = pagos.filter(gasto__isnull=False)
@@ -2427,7 +2429,7 @@ def control_documentos(request):
                 elif tipo_documento == "viaticos":
                     pagos = pagos.filter(viatico__isnull=False)
 
-            pagos = pagos.filter(control_documentos = True)
+            #pagos = pagos.filter(control_documentos = True)
 
             return descargar_documentos_pagos(pagos)
         
