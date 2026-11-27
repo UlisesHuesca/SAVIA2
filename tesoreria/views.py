@@ -2382,7 +2382,7 @@ def control_documentos(request):
             print(usuario.tipo.documentos)
             if usuario.distritos.nombre == "MATRIZ":
                 
-                pagos = Pago.objects.filter(hecho=True)
+                
                 if fecha_inicio and fecha_fin:
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
                     pagos = pagos.filter(pagado_real__range=[fecha_inicio, fecha_fin]) #Se modifica para que ya solo descargue con respecto a la --fecha real--
