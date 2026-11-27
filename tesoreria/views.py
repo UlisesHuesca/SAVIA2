@@ -1603,7 +1603,7 @@ def matriz_pagos(request):
                 'viatico__colaborador__staff__staff',
                 'viatico__gerente__staff__staff',
             )
-
+                            
            
             return convert_excel_matriz_pagos_xlsxwriter(pagos_excel)
         elif 'btnReporteXML' in request.POST:
@@ -1616,11 +1616,10 @@ def matriz_pagos(request):
             if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
-                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
+                    pagos = pagos.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]))
               
 
                 if folio:
-                    pagos = Pago.objects.filter(hecho = True)
                     pagos = pagos.filter(
                         Q(gasto__folio=folio) |
                         Q(oc__folio=folio) |
@@ -1637,7 +1636,11 @@ def matriz_pagos(request):
                     pagos = pagos.filter(tesorero_id=tesorero_id)
             else:
                 pagos = pagos.filter(
-                    Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
+                    Q(pagado_real__range=[fecha_inicio, fecha_fin])|
+                    Q(pagado_date__range=[fecha_inicio, fecha_fin])|
+                    Q(gasto__folio=folio) |
+                    Q(oc__folio=folio) |
+                    Q(viatico__folio=folio)|
                     Q(gasto__distrito__nombre=usuario.distritos.nombre) |
                     Q(oc__req__orden__distrito__nombre=usuario.distritos.nombre) |
                     Q(viatico__distrito__nombre=usuario.distritos.nombre),
