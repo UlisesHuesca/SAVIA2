@@ -261,11 +261,12 @@ def checkout(request):
     #***************************************************
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito=usuario.distritos )
     subproyectos = Subproyecto.objects.all()
+    #Se hace una excepción del proyecto para Veracruz donde los activos se pueden visualizar en Villahermosa
     activos_veracruz = Activo.objects.filter(responsable__distritos__nombre__in = ["VILLAHERMOSA","VERACRUZ"] ).exclude(estatus__nombre = "BAJA")
+    #Se excluyen categorías de los activos para que el personal deje de asignar costos a equipos de computo y celulares
     categorias_excluidas = ["COMPUTO", "CELULAR", "OTRO"]
     activos = Activo.objects.filter(responsable__distritos = usuario.distritos).exclude(categoria__nombre__in=categorias_excluidas).exclude(estatus__nombre = "BAJA").order_by("eco_unidad")
     tipo = Tipo_Orden.objects.get(tipo ='normal')
-    #sectores = Sector.objects.all()
     operaciones = Operacion.objects.exclude(nombre='GASTO')
 
     order, created = ordenes.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
@@ -420,7 +421,7 @@ def checkout(request):
                                 order.requisitado = True
                                 
                             ordensurtir.requisitar = False
-                            if usuario.distritos.nombre == "Yerod":
+                            if usuario.distritos.id in [17,18]:
                                 ahora = timezone.localtime()
                                 requi.autorizar = True
                                 requi.requi_autorizada_por = usuario

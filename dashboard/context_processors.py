@@ -119,7 +119,11 @@ def contadores_processor(request):
             conteo_viaticos = viaticos_pendientes.count()
             #viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True, distrito = usuario.distritos, superintendente = usuario)
             conteo_viaticos_gerencia = viaticos_gerencia.count()
-            vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__superintendente = usuario)
+            if not usuario.distritos.id in [17,18]:
+                vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__superintendente = usuario)
+            else:
+                vales_rosa = ValeRosa.objects.none()
+                
             conteo_vales = vales_rosa.count()
         elif usuario.tipo.oc_superintendencia == True:
             oc = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos)
@@ -131,7 +135,7 @@ def contadores_processor(request):
             conteo_pagos2 = oc_pendientes.filter(para_pago = False).count()
             
         
-        if usuario.tipo.oc_gerencia == True:
+        if usuario.tipo.oc_gerencia == True and not usuario.distritos.id in [17,18]:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None, req__orden__distrito = usuario.distritos)
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None, distrito = usuario.distritos)
             #viaticos_gerencia = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = usuario.distritos, superintendente = usuario)

@@ -1226,10 +1226,6 @@ def autorizacion_oc1(request):
     if usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
         #if usuario.distritos.nombre == "MATRIZ": #Esto lo comenté para que sirvan los cambios para Brasil
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
-    #elif usuario.tipo.subdirector == True and usuario.tipo.rh = True:
-    #    compras = 
-        #else:
-        #    compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     elif usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     else:
@@ -3870,7 +3866,9 @@ def autorizar_oc1(request, pk):
                     'autorizado_at_2',
                 ])
 
-            if usuario.distritos.nombre == "Yerod":
+
+
+            if usuario.distritos.id in [17,18]: #Yerod y Boca
                 compra.para_pago = True
                 campos_actualizados.extend(['para_pago'])
             compra.save(update_fields=campos_actualizados)

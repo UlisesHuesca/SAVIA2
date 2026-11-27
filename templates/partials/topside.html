@@ -139,7 +139,8 @@
                                     </a>
                                 </div>
                             </div>
-                            {% elif usuario.tipo.oc_gerencia %}
+                            
+                            {% elif usuario.tipo.oc_gerencia and not usuario.tipo.subdirector %}
                             <div class="sv-dashboard-grid">
                                 <div class="sv-dashboard-slot">
                                     <a class="sv-dashboard-link"  href="{% url 'autorizacion-oc1' %}">
@@ -179,7 +180,7 @@
                                     </a>
                                 </div>
                             </div>
-                            {% elif usuario.tipo.superintendente and usuario.distritos.nombre != "MATRIZ" or usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" %}
+                            {% elif usuario.tipo.superintendente and usuario.distritos.nombre != "MATRIZ" or usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ"  %}
                             
                             <div class="sv-dashboard-grid">
                                 <div class="sv-dashboard-slot">
@@ -206,7 +207,8 @@
                                             </div>
                                         </a>
                                 </div>
-                                {% if usuario.tipo.superintendente %}
+                              
+                                {% if usuario.tipo.superintendente  %}
                                 <div class="sv-dashboard-slot">
                                     <a class="sv-dashboard-link" href="{% url 'gastos-pendientes-autorizar' %}">
                                         <div class="sv-dashboard-action">
@@ -305,7 +307,7 @@
                     {% if usuario.tipo.proveedor_externo == False %}
                          {% if usuario.tipo.subdirector %}
                             <div class="sv-dashboard-grid">
-                                <div class="sv-dashboard-slot">
+                              <!--  <div class="sv-dashboard-slot">
                                     <a class="sv-dashboard-link" href="{% url 'viaticos-pendientes-autorizar2' %}">
                                         <div class="sv-dashboard-action">
                                             <h4 class="sv-dashboard-action-title">Viáticos por Autorizar</h4>
@@ -316,8 +318,8 @@
                                             {% endif %}
                                         </div>
                                     </a>
-                                </div>
-                                <div class="sv-dashboard-slot">
+                                </div>-->
+                                <!--<div class="sv-dashboard-slot">
                                         <a class="sv-dashboard-link" href="{% url 'requisicion-autorizacion' %}">
                                             <div class="sv-dashboard-action">
                                                 <h4 class="sv-dashboard-action-title">Requis por Autorizar </h4>
@@ -328,7 +330,8 @@
                                                 {% endif %}
                                             </div>
                                         </a>
-                                </div>
+                                </div>-->
+                                {% if not usuario.distritos.nombre == "BOCA DEL RIO" %}
                                 <div class="sv-dashboard-slot">
                                         <a class="sv-dashboard-link" href="{% url 'solicitud-pendientes-autorizacion' %}">
                                             <div class="sv-dashboard-action">
@@ -341,11 +344,28 @@
                                             </div>
                                         </a>
                                 </div>
+
+                                 <div class="sv-dashboard-slot">
+                                    <a class="sv-dashboard-link" href="{% url 'vales-rosa-pendientes-autorizar' %}">
+                                        <div class="sv-dashboard-action">
+                                            <h4 class="sv-dashboard-action-title">Vales por Autorizar </h4>
+                                            {% if conteo_vales == 0 %}
+                                                {% if usuario.distritos.nombre == "NEGRO" %}
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </div>
+                                                {% else %}
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
+                                                {% endif %}
+                                            {% else %}
+                                                <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_vales}})</span></div>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endif %}
                             </div>
+                               
                             {% elif usuario.tipo.oc_gerencia %}
                             <div class="sv-dashboard-grid">
-                               
-                                
                                 <div class="sv-dashboard-slot">
                                     <a class="sv-dashboard-link" href="{% url 'vales-rosa-pendientes-autorizar' %}">
                                         <div class="sv-dashboard-action">
@@ -578,26 +598,7 @@
                     
                    
                     {% endif %}
-                    {% if usuario.tipo.proveedor_externo == False %}
-                        {% if usuario.tipo.subdirector %}
-                       
-                            <div class="sv-dashboard-grid">
-                                 <div class="sv-dashboard-slot">
-                                    <a class="sv-dashboard-link" href="{% url 'vales-rosa-pendientes-autorizar' %}">
-                                        <div class="sv-dashboard-action">
-                                            <h4 class="sv-dashboard-action-title">Vales por Autorizar </h4>
-                                            {% if conteo_vales == 0 %}
-                                            <div class="sv-dashboard-action-status"><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></div>
-                                            {% else %}
-                                            <div class="sv-dashboard-action-status"><span class="badge bg-danger">({{conteo_vales}})</span></div>
-                                            {% endif %}
-                                        </div>
-                                    </a>
-                                </div>
-                                
-                            </div>
-                        {% endif %}
-                    {% endif %}
+                  
                 </div>
                   <!-- Modal con visor de PDF -->
                   

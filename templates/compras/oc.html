@@ -1274,7 +1274,8 @@ $(document).ready(function(){
         precio_ref()
         console.log("Distrito", distrito)
         var comparativoElement = document.getElementById('comparativo');
-        if (distrito == "Yerod"){
+        const distritosExcluidos = ["YEROD", "BOCA DEL RIO"];
+        if (distritosExcluidos.includes(distrito.trim().toUpperCase())) {
             comparativoElement.classList.add('d-none');
         } else {
             comparativoElement.classList.remove('d-none');

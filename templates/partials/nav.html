@@ -946,9 +946,12 @@ button.sv-navbar-icon-link {
                             {% else %}
                                 <div>
                             {% endif %}
+                            
                                 <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
                                 {% if usuario.distritos.nombre == "BRASIL" and usuario.tipo.oc_gerencia == True %}
                                 OC Gerente Brasil
+                                {% elif usuario.distritos.nombre == "BOCA DEL RIO" and usuario.tipo.oc_gerencia %}
+                                Autorizar OC
                                 {% elif usuario.tipo.subdirector %}
                                 OC Subdirector
                                 {% else %}

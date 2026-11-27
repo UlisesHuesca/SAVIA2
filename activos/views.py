@@ -1714,7 +1714,7 @@ def render_pdf_responsiva_activos(request, pk):
     #Here ends conf.
     todos_activos = Activo.objects.all()
     activo = todos_activos.get(id=pk)
-    activos = todos_activos.filter(responsable=activo.responsable, estatus__nombre__in=["ALTA", "REPARACION", "STOCK"])
+    activos = todos_activos.filter(responsable=activo.responsable, estatus__nombre__in=["EN OPERACION", "EN MANTENIMIENTO", "DISPONIBLE"])
 
    #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
@@ -1784,10 +1784,10 @@ def render_pdf_responsiva_activos(request, pk):
         c.drawCentredString(200,180, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
         
         activo_resp = Profile.objects.filter(
-                distritos = activo.responsable.distritos, 
-                tipo__activos = True, 
-                st_activo = True
-                ).exclude( id = 1).first()
+            distritos = activo.responsable.distritos, 
+            tipo__activos = True, 
+            st_activo = True
+        ).exclude(id = 1).first()
         
         if activo_resp:
             fecha_actual = datetime.now().strftime('%d/%m/%Y')
@@ -1799,7 +1799,7 @@ def render_pdf_responsiva_activos(request, pk):
             texto_central = ""
         
         
-        #c.drawCentredString(300,150, texto_central)
+        c.drawCentredString(300,150, texto_central)
     else:
         c.drawCentredString(200,180, " " )
         c.drawCentredString(400,180, " ")
@@ -1995,7 +1995,7 @@ def render_pdf_responsiva_activos_gerente(request):
     todos_activos = Activo.objects.all()
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-    activos = todos_activos.filter(responsable__distritos= usuario.distritos, estatus__nombre = "ALTA")
+    activos = todos_activos.filter(responsable__distritos= usuario.distritos, estatus__nombre__in=["EN OPERACION", "EN MANTENIMIENTO", "DISPONIBLE"])
 
    #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)

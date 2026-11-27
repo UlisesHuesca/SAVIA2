@@ -1142,12 +1142,15 @@ def proyectos_add(request):
     usuario = Profile.objects.get(id = pk_perfil)
     distrito = usuario.distritos
     print(usuario.distritos.nombre)
-    if usuario.distritos.nombre == "NEGRO":
-        contratos = Contrato.objects.filter(created_by__distritos__nombre = "NEGRO")
+    if distrito.nombre == "Yerod":
+        contratos = Contrato.objects.filter(created_by__distritos__nombre = "Yerod")
+    elif distrito.nombre == "BOCA DEL RIO":
+        contratos = Contrato.objects.filter(created_by__distritos__nombre = "BOCA DEL RIO")
     else: 
-        contratos = Contrato.objects.exclude(created_by__distritos__nombre = "NEGRO")
+        contratos = Contrato.objects.exclude(created_by__distritos__id__in = [17,18])  #Boca del Rio y Yerod
 
     form = Proyectos_Add_Form()
+
    
 
     if request.method =='POST':
@@ -1790,10 +1793,7 @@ def add_proveedores2(request, pk=None):
 
     print(almacenes_distritos)
    
-    distritos_disponibles = (
-            Distrito.objects.filter(status=True, id__in = almacenes_distritos)  
-            .order_by('nombre')
-        )
+    distritos_disponibles = (Distrito.objects.filter(status=True, id__in = almacenes_distritos)  .order_by('nombre'))
     # Instancias sin guardar: un GET no crea registros.
     proveedor = Proveedor(creado_por=usuario)
     direccion = Proveedor_direcciones(creado_por=usuario)
@@ -1819,11 +1819,12 @@ def add_proveedores2(request, pk=None):
     error_messages = {}
     if request.method == 'POST':
         es_yerod = usuario.distritos.nombre.upper() == "YEROD"
+        boca = usuario.distritos.nombre.upper() == "BOCA DEL RIO"
 
         rfc = (request.POST.get('proveedor-rfc') or '').strip().upper()
         proveedor_existente = None
 
-        if es_yerod and rfc:
+        if (es_yerod or boca) and rfc:
             proveedor_existente = Proveedor.objects.filter(
                 rfc__iexact=rfc
             ).first()
