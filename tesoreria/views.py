@@ -1572,6 +1572,7 @@ def matriz_pagos(request):
             #print('pago.proyectos:', pago.proyectos)
 
     if request.method == 'POST': 
+        print('request POST',request.POST)
         if 'btnReporte' in request.POST:
             pagos_excel = pagos.select_related(
                 #Cuenta bancaria
@@ -1718,10 +1719,9 @@ def matriz_pagos(request):
             folio = request.POST.get('folio')
             tipo_documento = request.POST.get('tipo_documento') 
             cuenta = request.POST.get('cuenta_bancaria')
-            
-            print(usuario.tipo.documentos)
+            print('usuario:',usuario.tipo.documentos)
             if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
-                
+                print('Entre al if')
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
@@ -1765,15 +1765,14 @@ def matriz_pagos(request):
                     pagos = pagos.filter(cuenta = cuenta)
 
             else:
-                #print('Aquí también entró')
+                print('pagos1:',pagos)
                 pagos = pagos.filter(
                     Q(gasto__distrito=usuario.distritos) |
                     Q(oc__req__orden__distrito=usuario.distritos) |
                     Q(viatico__distrito=usuario.distritos)
-                ).filter(
-                    Q(pagado_real__range=[fecha_inicio, fecha_fin]) |
-                    Q(pagado_real__isnull=True, pagado_date__range=[fecha_inicio, fecha_fin])
                 )
+                if fecha_inicio and fecha_fin:
+                    pagos = pagos.filter(pagado_real__range=[fecha_inicio, fecha_fin]) 
                 
                 if tipo_documento == "gastos":
                     pagos = pagos.filter(gasto__isnull=False)
@@ -1781,6 +1780,15 @@ def matriz_pagos(request):
                     pagos = pagos.filter(oc__isnull=False)
                 elif tipo_documento == "viaticos":
                     pagos = pagos.filter(viatico__isnull=False)
+
+                
+                if folio:
+                    pagos = pagos.filter(
+                        Q(gasto__folio=folio) |
+                        Q(oc__folio=folio) |
+                        Q(viatico__folio=folio)
+                    )
+                print('pagos2:',pagos)
 
             return descargar_documentos_pagos(pagos)
         
