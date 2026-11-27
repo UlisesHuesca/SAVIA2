@@ -1,0 +1,460 @@
+{% if correcciones_oc %}
+
+<style>
+    /* Estilos exclusivos del historial de correcciones OC */
+
+    .sv-oc-correcciones {
+        border-top: 4px solid var(--sv-warning);
+    }
+
+    .sv-oc-correcciones .sv-motivo-devolucion {
+        background: rgba(242, 183, 5, 0.10);
+        border-left: 4px solid var(--sv-warning);
+        border-radius: var(--sv-radius-sm);
+        padding: 14px 16px;
+        overflow-wrap: anywhere;
+    }
+
+    .sv-oc-correcciones .sv-summary-card {
+        height: 100%;
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .sv-oc-correcciones .sv-summary-value {
+        font-size: 20px;
+        overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sv-oc-correcciones .sv-table {
+        min-width: 0;
+        table-layout: fixed;
+    }
+
+    .sv-oc-correcciones .sv-table td,
+    .sv-oc-correcciones .sv-table th {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .sv-oc-correcciones .sv-variacion-positiva {
+        color: var(--sv-danger);
+    }
+
+    .sv-oc-correcciones .sv-variacion-negativa {
+        color: var(--sv-success);
+    }
+</style>
+
+<section class="sv-card sv-oc-correcciones">
+
+    <!-- ENCABEZADO -->
+
+    <div class="sv-card-header flex-wrap">
+
+        <div>
+            <h3 class="sv-card-title">
+                <i class="fa-solid fa-clock-rotate-left"
+                   style="color: var(--sv-warning);"></i>
+
+                Historial de correcciones
+            </h3>
+
+            <p class="sv-card-subtitle">
+                Modificaciones realizadas después de una devolución.
+            </p>
+        </div>
+
+        <span class="sv-badge sv-badge-warning">
+            <i class="fa-solid fa-rotate-left"></i>
+
+            {{ correcciones_oc|length }}
+            devolución{{ correcciones_oc|length|pluralize:" ,es" }}
+        </span>
+
+    </div>
+
+    <div class="sv-card-body">
+
+        {% for correccion in correcciones_oc %}
+
+        <div class="{% if not forloop.last %}border-bottom pb-4 mb-4{% endif %}">
+
+            <!-- NÚMERO DE DEVOLUCIÓN -->
+
+            <div class="d-flex flex-wrap justify-content-between
+                        align-items-center gap-2 mb-3">
+
+                <span class="sv-cell-title">
+                    Devolución #{{ correccion.numero }}
+                </span>
+
+                <small class="sv-cell-subtitle">
+                    <i class="fa-regular fa-calendar me-1"></i>
+
+                    {{ correccion.fecha_devolucion|date:"d/m/Y H:i" }}
+                </small>
+
+            </div>
+
+            <!-- MOTIVO DE DEVOLUCIÓN -->
+
+            <div class="sv-motivo-devolucion mb-4">
+
+                <div class="fw-bold mb-2" style="color: #856404;">
+
+                    <i class="fa-regular fa-message me-1"></i>
+
+                    Motivo de devolución
+
+                </div>
+
+                <div>
+                    {{ correccion.comentario|default:"Sin comentario registrado"|linebreaksbr }}
+                </div>
+
+            </div>
+
+            <!-- RESUMEN ECONÓMICO -->
+
+            <div class="row g-3 mb-4">
+
+                <!-- IMPORTE ANTERIOR -->
+
+                <div class="col-12 col-md-6 col-xl-4">
+
+                    <div class="sv-summary-card">
+
+                        <span class="sv-summary-icon">
+                            <i class="fa-solid fa-wallet"></i>
+                        </span>
+
+                        <div class="flex-grow-1" style="min-width: 0;">
+
+                            <span class="sv-summary-label">
+                                Importe anterior
+                            </span>
+
+                            <strong class="sv-summary-value">
+                                $ {{ correccion.total_anterior|floatformat:"2g" }}
+                            </strong>
+
+                            <small class="sv-cell-subtitle">
+                                {{ correccion.moneda_anterior|default:"Sin moneda" }}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- IMPORTE CORREGIDO -->
+
+                <div class="col-12 col-md-6 col-xl-4">
+
+                    <div class="sv-summary-card">
+
+                        <span class="sv-summary-icon">
+                            <i class="fa-solid fa-file-circle-check"></i>
+                        </span>
+
+                        <div class="flex-grow-1" style="min-width: 0;">
+
+                            <span class="sv-summary-label">
+                                Importe corregido
+                            </span>
+
+                            <strong class="sv-summary-value">
+                                $ {{ correccion.total_nuevo|floatformat:"2g" }}
+                            </strong>
+
+                            <small class="sv-cell-subtitle">
+                                {{ correccion.moneda_nueva|default:"Sin moneda" }}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- VARIACIÓN ECONÓMICA -->
+
+                <div class="col-12 col-xl-4">
+
+                    <div class="sv-summary-card">
+
+                        {% if correccion.misma_moneda %}
+
+                            {% if correccion.diferencia < 0 %}
+
+                                <span class="sv-summary-icon"
+                                      style="background: var(--sv-success-soft);
+                                             color: var(--sv-success);">
+
+                                    <i class="fa-solid fa-arrow-trend-down"></i>
+
+                                </span>
+
+                            {% elif correccion.diferencia > 0 %}
+
+                                <span class="sv-summary-icon"
+                                      style="background: #fbeaec;
+                                             color: var(--sv-danger);">
+
+                                    <i class="fa-solid fa-arrow-trend-up"></i>
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="sv-summary-icon">
+
+                                    <i class="fa-solid fa-equals"></i>
+
+                                </span>
+
+                            {% endif %}
+
+                        {% else %}
+
+                            <span class="sv-summary-icon"
+                                  style="background: #fff5df;
+                                         color: #856404;">
+
+                                <i class="fa-solid fa-money-bill-transfer"></i>
+
+                            </span>
+
+                        {% endif %}
+
+                        <div class="flex-grow-1" style="min-width: 0;">
+
+                            <span class="sv-summary-label">
+                                Variación económica
+                            </span>
+
+                            {% if correccion.misma_moneda %}
+
+                                <strong class="sv-summary-value
+                                    {% if correccion.diferencia < 0 %}
+                                        sv-variacion-negativa
+                                    {% elif correccion.diferencia > 0 %}
+                                        sv-variacion-positiva
+                                    {% endif %}">
+
+                                    {% if correccion.diferencia > 0 %}+{% endif %}$ {{ correccion.diferencia|floatformat:"2g" }}
+
+                                </strong>
+
+                                {% if correccion.porcentaje != None %}
+
+                                    <small class="fw-semibold
+                                        {% if correccion.diferencia < 0 %}
+                                            sv-variacion-negativa
+                                        {% elif correccion.diferencia > 0 %}
+                                            sv-variacion-positiva
+                                        {% endif %}">
+
+                                        {% if correccion.porcentaje > 0 %}+{% endif %}{{ correccion.porcentaje|floatformat:2 }}%
+
+                                    </small>
+
+                                {% endif %}
+
+                                {% if correccion.diferencia == 0 %}
+
+                                    <small class="sv-cell-subtitle">
+                                        Sin variación económica
+                                    </small>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="sv-cell-title">
+                                    No comparable
+                                </span>
+
+                                <small class="sv-cell-subtitle">
+                                    Moneda diferente o no registrada
+                                </small>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- DETALLE DE MODIFICACIONES -->
+
+            {% if correccion.hubo_cambios %}
+
+                <div class="sv-table-wrap border rounded">
+
+                    <table class="sv-table">
+
+                        <colgroup>
+                            <col style="width: 34%;">
+                            <col style="width: 33%;">
+                            <col style="width: 33%;">
+                        </colgroup>
+
+                        <thead>
+                            <tr>
+                                <th>Campo modificado</th>
+                                <th>Valor anterior</th>
+                                <th>Valor corregido</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for cambio in correccion.cambios %}
+
+                            <tr>
+
+                                <td>
+                                    <span class="sv-cell-title">
+                                        {{ cambio.nombre }}
+                                    </span>
+                                </td>
+
+                                {% if cambio.campo == 'proveedor' or cambio.campo == 'moneda' %}
+
+                                    <td>
+                                        <span class="text-muted">
+                                            {{ cambio.anterior|default_if_none:"No registrado" }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            {{ cambio.nuevo|default_if_none:"No registrado" }}
+                                        </strong>
+                                    </td>
+
+                                {% else %}
+
+                                    <td>
+                                        <span class="text-muted">
+
+                                            {% if cambio.anterior != None %}
+
+                                                $ {{ cambio.anterior|floatformat:"2g" }}
+
+                                            {% else %}
+
+                                                No registrado
+
+                                            {% endif %}
+
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <strong>
+
+                                            {% if cambio.nuevo != None %}
+
+                                                $ {{ cambio.nuevo|floatformat:"2g" }}
+
+                                            {% else %}
+
+                                                No registrado
+
+                                            {% endif %}
+
+                                        </strong>
+                                    </td>
+
+                                {% endif %}
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <small class="sv-cell-subtitle mt-2">
+
+                    <i class="fa-solid fa-list-check me-1"></i>
+
+                    {{ correccion.cantidad_cambios }}
+                    campo{{ correccion.cantidad_cambios|pluralize }}
+                    modificado{{ correccion.cantidad_cambios|pluralize }}
+
+                </small>
+
+            {% else %}
+
+                <div class="alert alert-secondary mb-0">
+
+                    <i class="fa-solid fa-circle-info me-2"></i>
+
+                    No se identificaron modificaciones en los
+                    campos económicos monitoreados.
+
+                </div>
+
+            {% endif %}
+
+            <!-- TRAZABILIDAD -->
+
+            <div class="row g-3 mt-3 pt-3 border-top">
+
+                <div class="col-12 col-md-6">
+
+                    <span class="sv-cell-subtitle">
+                        <i class="fa-solid fa-rotate-left me-1"></i>
+                        Devuelta por
+                    </span>
+
+                    <span class="sv-cell-title">
+                        {{ correccion.usuario_devolucion.staff.staff.first_name }} {{ correccion.usuario_devolucion.staff.staff.last_name }}
+                    </span>
+
+                    <small class="sv-cell-subtitle">
+                        {{ correccion.fecha_devolucion|date:"d/m/Y H:i" }}
+                    </small>
+
+                </div>
+
+                <div class="col-12 col-md-6">
+
+                    <span class="sv-cell-subtitle">
+                        <i class="fa-solid fa-pen-to-square me-1"></i>
+                        Corregida por
+                    </span>
+
+                    <span class="sv-cell-title">
+                        {{ correccion.usuario_correccion.staff.staff.first_name }} {{ correccion.usuario_correccion.staff.staff.last_name }}
+                    </span>
+
+                    <small class="sv-cell-subtitle">
+                        {{ correccion.fecha_correccion|date:"d/m/Y H:i" }}
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endif %}

@@ -216,9 +216,15 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+
                         </div>
                     </section>
                 </div>
+                {% if correcciones_oc %}
+                    <div class="col-12">
+                        {% include 'compras/partials/historial_correcciones_oc.html' %}
+                    </div>
+                {% endif %}
 
                 <div class="col-12">
                     <section class="sv-card border-success">

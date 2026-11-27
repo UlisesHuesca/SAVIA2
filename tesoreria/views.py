@@ -26,6 +26,7 @@ from compras.models import ArticuloComprado, Compra, TipoPrioridad
 from compras.forms import EvidenciaForm, CategoriaEvidencia
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf_nueva #convert_excel_matriz_compras
+from compras.utils import obtener_correcciones_oc
 from dashboard.models import Subproyecto, Producto_Calidad
 from utils.email_theme import obtener_tema_correo
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago, EstadoCuenta
@@ -2972,6 +2973,7 @@ def matriz_facturas_nomodal(request, pk):
         #return redirect(next_url)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
+
     form = Facturas_Completas_Form(instance=compra)
     # Construir los parámetros de filtro
     print('base_url',base_url)
@@ -3063,7 +3065,7 @@ def matriz_facturas_nomodal(request, pk):
         'facturas':facturas,
         'compra':compra,
         'evidencias': evidencias,
-        #'categorias_evidencia': categorias_evidencia,
+        'correcciones_oc': obtener_correcciones_oc(compra),
         'puede_subir_evidencia': True,  # Sustituir por permiso real
         'form_evidencia':form_evidencia,
         }

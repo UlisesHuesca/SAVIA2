@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OC autorizada con modificaciones | SAVIA 2.1</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#eef1f3;
+             font-family:Arial, Helvetica, sans-serif;
+             color:#29353e;">
+
+<table width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#eef1f3;">
+
+    <tr>
+        <td align="center" style="padding:25px 10px;">
+
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="max-width:760px; background-color:#ffffff;
+                          border:1px solid #e2e7ea; border-radius:12px;">
+
+                <!-- ENCABEZADO SAVIA -->
+
+                <tr>
+                    <td style="background-color:#122D45;
+                               padding:25px 30px; color:#ffffff;">
+
+                        <h1 style="margin:0; font-size:28px;">
+                            SAVIA
+                        </h1>
+
+                        <p style="margin:5px 0 0; font-size:13px;
+                                  color:#d5e0e9;">
+                            Sistema Administrativo Vordcab de Integración y Análisis
+                        </p>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="height:5px; background-color:#f2b705;">
+                    </td>
+                </tr>
+
+                <!-- INTRODUCCIÓN -->
+
+                <tr>
+                    <td style="padding:25px 30px;">
+
+                        <p style="font-size:11px; font-weight:bold;
+                                  color:#788590; letter-spacing:1px;
+                                  margin:0 0 10px;">
+
+                            NOTIFICACIÓN A TESORERÍA
+
+                        </p>
+
+                        <h2 style="color:#122D45; font-size:22px;
+                                   margin:0 0 20px;">
+
+                            Orden de compra autorizada con modificaciones
+
+                        </h2>
+
+                        <p style="font-size:14px; line-height:1.6;">
+                            Estimado equipo de Tesorería:
+                        </p>
+
+                        <p style="font-size:14px; line-height:1.6;">
+
+                            Se informa que la orden de compra
+                            <strong>{{ compra.folio }}</strong>
+                            ha recibido su autorización final después
+                            de haber sido devuelta y corregida.
+
+                            A continuación, se presentan las modificaciones
+                            registradas para su consideración durante
+                            la programación y ejecución del pago.
+
+                        </p>
+
+                        <!-- INFORMACIÓN GENERAL -->
+
+                        <table width="100%" cellpadding="10" cellspacing="0"
+                               style="background-color:#f5f7f8;
+                                      border:1px solid #e2e7ea;
+                                      border-radius:8px; font-size:14px;">
+
+                            <tr>
+                                <td width="35%" style="color:#788590;">
+                                    Orden de compra
+                                </td>
+
+                                <td>
+                                    <strong>{{ compra.folio }}</strong>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="color:#788590;">
+                                    Distrito
+                                </td>
+
+                                <td>
+                                    {{ compra.req.orden.distrito }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="color:#788590;">
+                                    Proveedor vigente
+                                </td>
+
+                                <td>
+                                    <strong>{{ compra.proveedor }}</strong>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="color:#788590;">
+                                    Condición de pago
+                                </td>
+
+                                <td>
+                                    {{ compra.cond_de_pago }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="color:#788590;">
+                                    Moneda
+                                </td>
+
+                                <td>
+                                    {{ compra.moneda }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="color:#788590;">
+                                    Importe autorizado
+                                </td>
+
+                                <td style="color:#122D45; font-size:20px;">
+                                    <strong>
+                                        $ {{ compra.costo_plus_adicionales|floatformat:"2g" }}
+                                    </strong>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="color:#788590;">
+                                    Estado
+                                </td>
+
+                                <td>
+                                    <span style="background-color:#e9f6ee;
+                                                 color:#23864b;
+                                                 padding:5px 12px;
+                                                 border-radius:15px;
+                                                 font-size:12px;
+                                                 font-weight:bold;">
+                                        AUTORIZADA
+                                    </span>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- HISTORIAL DE CORRECCIONES -->
+
+                {% if correcciones_oc %}
+
+                <tr>
+                    <td style="padding:0 30px 25px;">
+
+                        <h2 style="font-size:18px; color:#122D45;
+                                   border-bottom:2px solid #f2b705;
+                                   padding-bottom:12px;">
+
+                            Historial de correcciones
+
+                        </h2>
+
+                        <p style="font-size:13px; color:#788590;">
+
+                            Se identificaron {{ correcciones_oc|length }}
+                            devoluci{{ correcciones_oc|length|pluralize:"ón,ones" }}
+                            con corrección finalizada.
+
+                        </p>
+
+                        {% for correccion in correcciones_oc %}
+
+                        <table width="100%" cellpadding="0" cellspacing="0"
+                               style="border:1px solid #e2e7ea;
+                                      border-radius:8px;
+                                      margin-bottom:25px;">
+
+                            <!-- NÚMERO DE DEVOLUCIÓN -->
+
+                            <tr>
+                                <td style="padding:15px;
+                                           background-color:#f5f7f8;
+                                           border-bottom:1px solid #e2e7ea;">
+
+                                    <strong style="font-size:15px;">
+                                        Devolución #{{ correccion.numero }}
+                                    </strong>
+
+                                    <span style="font-size:12px;
+                                                 color:#788590;">
+                                        · {{ correccion.fecha_devolucion|date:"d/m/Y H:i" }}
+                                    </span>
+
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:15px;">
+
+                                    <!-- MOTIVO DE DEVOLUCIÓN -->
+
+                                    <table width="100%" cellpadding="12"
+                                           cellspacing="0"
+                                           style="background-color:#fff5df;
+                                                  border-left:4px solid #f2b705;
+                                                  margin-bottom:20px;">
+
+                                        <tr>
+                                            <td>
+
+                                                <strong style="color:#856404;
+                                                               font-size:13px;">
+                                                    Motivo de devolución
+                                                </strong>
+
+                                                <p style="margin:8px 0 0;
+                                                          font-size:14px;
+                                                          line-height:1.5;">
+
+                                                    {{ correccion.comentario|default:"Sin comentario registrado"|linebreaksbr }}
+
+                                                </p>
+
+                                            </td>
+                                        </tr>
+
+                                    </table>
+
+                                    <!-- RESUMEN DE IMPORTES -->
+
+                                    <table width="100%" cellpadding="10"
+                                           cellspacing="0">
+
+                                        <tr>
+
+                                            <td width="50%"
+                                                style="border:1px solid #e2e7ea;
+                                                       background-color:#f5f7f8;
+                                                       vertical-align:top;">
+
+                                                <span style="font-size:12px;
+                                                             color:#788590;">
+                                                    Importe anterior
+                                                </span>
+
+                                                <div style="font-size:22px;
+                                                            font-weight:bold;
+                                                            margin:8px 0;
+                                                            color:#29353e;">
+
+                                                    $ {{ correccion.total_anterior|floatformat:"2g" }}
+
+                                                </div>
+
+                                                <span style="font-size:12px;
+                                                             color:#788590;">
+
+                                                    {{ correccion.moneda_anterior|default:"Sin moneda" }}
+
+                                                </span>
+
+                                            </td>
+
+                                            <td width="50%"
+                                                style="border:1px solid #e2e7ea;
+                                                       background-color:#f5f7f8;
+                                                       vertical-align:top;">
+
+                                                <span style="font-size:12px;
+                                                             color:#788590;">
+                                                    Importe corregido
+                                                </span>
+
+                                                <div style="font-size:22px;
+                                                            font-weight:bold;
+                                                            margin:8px 0;
+                                                            color:#29353e;">
+
+                                                    $ {{ correccion.total_nuevo|floatformat:"2g" }}
+
+                                                </div>
+
+                                                <span style="font-size:12px;
+                                                             color:#788590;">
+
+                                                    {{ correccion.moneda_nueva|default:"Sin moneda" }}
+
+                                                </span>
+
+                                            </td>
+
+                                        </tr>
+
+                                    </table>
+
+                                    <!-- VARIACIÓN ECONÓMICA -->
+
+                                    <table width="100%" cellpadding="15"
+                                           cellspacing="0"
+                                           style="margin-top:15px;
+                                                  margin-bottom:20px;
+
+                                           {% if not correccion.misma_moneda %}
+                                               background-color:#fff5df;
+                                               color:#856404;
+                                           {% elif correccion.diferencia < 0 %}
+                                               background-color:#e9f6ee;
+                                               color:#23864b;
+                                           {% elif correccion.diferencia > 0 %}
+                                               background-color:#fbeaec;
+                                               color:#c83945;
+                                           {% else %}
+                                               background-color:#f5f7f8;
+                                               color:#29353e;
+                                           {% endif %}">
+
+                                        <tr>
+                                            <td>
+
+                                                {% if correccion.misma_moneda %}
+
+                                                    <span style="font-size:13px;
+                                                                 font-weight:bold;">
+
+                                                        {% if correccion.diferencia < 0 %}
+                                                            Reducción del importe
+                                                        {% elif correccion.diferencia > 0 %}
+                                                            Incremento del importe
+                                                        {% else %}
+                                                            Sin variación económica
+                                                        {% endif %}
+
+                                                    </span>
+
+                                                    <div style="font-size:26px;
+                                                                font-weight:bold;
+                                                                margin-top:6px;">
+
+                                                        {% if correccion.diferencia > 0 %}+{% endif %}$ {{ correccion.diferencia|floatformat:"2g" }}
+
+                                                        {% if correccion.porcentaje != None %}
+
+                                                            <span style="font-size:16px;">
+
+                                                                ({% if correccion.porcentaje > 0 %}+{% endif %}{{ correccion.porcentaje|floatformat:2 }}%)
+
+                                                            </span>
+
+                                                        {% endif %}
+
+                                                    </div>
+
+                                                {% else %}
+
+                                                    <strong>
+                                                        Importes no comparables
+                                                    </strong>
+
+                                                    <p style="font-size:13px;
+                                                              margin:5px 0 0;">
+
+                                                        La moneda fue modificada
+                                                        o no se encuentra registrada.
+
+                                                    </p>
+
+                                                {% endif %}
+
+                                            </td>
+                                        </tr>
+
+                                    </table>
+
+                                    <!-- DETALLE DE CAMBIOS -->
+
+                                    <h3 style="font-size:15px; color:#122D45;">
+                                        Detalle de modificaciones
+                                    </h3>
+
+                                    {% if correccion.hubo_cambios %}
+
+                                    <table width="100%" cellpadding="10"
+                                           cellspacing="0"
+                                           style="border-collapse:collapse;
+                                                  font-size:13px;">
+
+                                        <thead>
+
+                                            <tr style="background-color:#122D45;
+                                                       color:#ffffff;">
+
+                                                <th width="34%" align="left">
+                                                    Concepto
+                                                </th>
+
+                                                <th width="33%" align="left">
+                                                    Valor anterior
+                                                </th>
+
+                                                <th width="33%" align="left">
+                                                    Valor corregido
+                                                </th>
+
+                                            </tr>
+
+                                        </thead>
+
+                                        <tbody>
+
+                                            {% for cambio in correccion.cambios %}
+
+                                            <tr>
+
+                                                <td style="border-bottom:1px solid #e2e7ea;">
+
+                                                    <strong>
+                                                        {{ cambio.nombre }}
+                                                    </strong>
+
+                                                </td>
+
+                                                <td style="border-bottom:1px solid #e2e7ea;
+                                                           color:#788590;
+                                                           word-break:break-word;">
+
+                                                    {% if cambio.campo == "proveedor" or cambio.campo == "moneda" %}
+
+                                                        {{ cambio.anterior|default_if_none:"No registrado" }}
+
+                                                    {% else %}
+
+                                                        {% if cambio.anterior != None %}
+
+                                                            $ {{ cambio.anterior|floatformat:"2g" }}
+
+                                                        {% else %}
+
+                                                            No registrado
+
+                                                        {% endif %}
+
+                                                    {% endif %}
+
+                                                </td>
+
+                                                <td style="border-bottom:1px solid #e2e7ea;
+                                                           background-color:#fffbef;
+                                                           word-break:break-word;">
+
+                                                    <strong>
+
+                                                        {% if cambio.campo == "proveedor" or cambio.campo == "moneda" %}
+
+                                                            {{ cambio.nuevo|default_if_none:"No registrado" }}
+
+                                                        {% else %}
+
+                                                            {% if cambio.nuevo != None %}
+
+                                                                $ {{ cambio.nuevo|floatformat:"2g" }}
+
+                                                            {% else %}
+
+                                                                No registrado
+
+                                                            {% endif %}
+
+                                                        {% endif %}
+
+                                                    </strong>
+
+                                                </td>
+
+                                            </tr>
+
+                                            {% endfor %}
+
+                                        </tbody>
+
+                                    </table>
+
+                                    <p style="font-size:12px;
+                                              color:#788590;">
+
+                                        {{ correccion.cantidad_cambios }}
+                                        campo{{ correccion.cantidad_cambios|pluralize }}
+                                        modificado{{ correccion.cantidad_cambios|pluralize }}.
+
+                                    </p>
+
+                                    {% else %}
+
+                                    <p style="padding:12px;
+                                              background-color:#f5f7f8;
+                                              font-size:13px;">
+
+                                        No se identificaron modificaciones
+                                        en los campos económicos monitoreados.
+
+                                    </p>
+
+                                    {% endif %}
+
+                                    <!-- TRAZABILIDAD DE USUARIOS -->
+
+                                    <table width="100%" cellpadding="10"
+                                           cellspacing="0"
+                                           style="margin-top:20px;
+                                                  border-top:1px solid #e2e7ea;
+                                                  font-size:13px;">
+
+                                        <tr>
+
+                                            <td width="50%" valign="top">
+
+                                                <span style="color:#788590;">
+                                                    Devuelta por
+                                                </span>
+
+                                                <p style="margin:5px 0;
+                                                          font-weight:bold;">
+
+                                                    {{ correccion.usuario_devolucion.first_name|default_if_none:"No registrado" }}  {{ correccion.usuario_devolucion.last_name }}
+
+                                                </p>
+
+                                                <span style="font-size:12px;
+                                                             color:#788590;">
+
+                                                    {{ correccion.fecha_devolucion|date:"d/m/Y H:i" }}
+
+                                                </span>
+
+                                            </td>
+
+                                            <td width="50%" valign="top">
+
+                                                <span style="color:#788590;">
+                                                    Corregida por
+                                                </span>
+
+                                                <p style="margin:5px 0;
+                                                          font-weight:bold;">
+                                                    {{ correccion.usuario_correccion.first_name|default_if_none:"No registrado" }}  {{ correccion.usuario_correccion.last_name }}
+                                                 
+
+                                                </p>
+
+                                                <span style="font-size:12px;
+                                                             color:#788590;">
+
+                                                    {{ correccion.fecha_correccion|date:"d/m/Y H:i" }}
+
+                                                </span>
+
+                                            </td>
+
+                                        </tr>
+
+                                    </table>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        {% endfor %}
+
+                    </td>
+                </tr>
+
+                {% endif %}
+
+                <!-- INDICACIONES A TESORERÍA -->
+
+                <tr>
+                    <td style="padding:0 30px 25px;">
+
+                        <table width="100%" cellpadding="15" cellspacing="0"
+                               style="background-color:#eaf4fa;
+                                      border-left:4px solid #3e92cc;">
+
+                            <tr>
+                                <td style="font-size:14px; line-height:1.6;">
+
+                                    <strong style="color:#122D45;">
+                                        Consideraciones para Tesorería
+                                    </strong>
+
+                                    <p style="margin:8px 0 0;">
+
+                                        Se solicita considerar las condiciones
+                                        económicas y comerciales vigentes de
+                                        la orden de compra antes de programar
+                                        o ejecutar cualquier pago.
+
+                                    </p>
+
+                                    <p style="margin:8px 0 0;">
+
+                                        En caso de existir pagos previamente
+                                        programados, se recomienda verificar
+                                        que correspondan con el importe y
+                                        proveedor actualmente autorizados.
+
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="font-size:13px; line-height:1.6;
+                                  margin-top:20px;">
+
+                            Se adjunta la versión actualizada de la orden
+                            de compra para su consulta y seguimiento.
+
+                        </p>
+
+                       
+
+                    </td>
+                </tr>
+
+                <!-- PIE DE CORREO -->
+
+                <tr>
+                    <td align="center"
+                        style="padding:20px;
+                               background-color:#f5f7f8;
+                               border-top:1px solid #e2e7ea;">
+
+                        <p style="font-size:12px;
+                                  color:#788590;
+                                  margin:0 0 5px;">
+
+                            Notificación generada automáticamente por SAVIA.
+
+                        </p>
+
+                        <p style="font-size:11px;
+                                  color:#788590;
+                                  margin:0;">
+
+                            Este correo es de carácter informativo interno.
+
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+
+</body>
+
+</html>

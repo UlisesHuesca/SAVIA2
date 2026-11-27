@@ -27,6 +27,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
+from .utils import  obtener_correcciones_oc
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter, ComparativoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm, RequisDevolucionForm
@@ -3816,6 +3817,7 @@ def autorizar_oc1(request, pk):
     productos = ArticuloComprado.objects.filter(oc=compra)
     productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
     form = Compra_ComentarioForm()
+    correcciones_oc = obtener_correcciones_oc(compra)
 
     if compra.costo_fletes == None:
         costo_fletes = 0
@@ -3909,6 +3911,55 @@ def autorizar_oc1(request, pk):
 
                 html_message = render_to_string("emails/compras/compra_autorizada.html", contexto_correo,)
 
+
+                # =====================================================
+                # NOTIFICACIÓN A TESORERÍA POR CORRECCIONES DE OC
+                # =====================================================
+
+                correcciones_oc = obtener_correcciones_oc(compra)
+
+                hubo_cambios_comerciales = any(correccion['hubo_cambios'] for correccion in correcciones_oc)
+
+                if hubo_cambios_comerciales:
+
+
+                    contexto_tesoreria = contexto_base.copy()
+
+                    contexto_tesoreria.update({"compra": compra, "correcciones_oc": correcciones_oc, "cantidad_devoluciones": len(correcciones_oc),})
+
+                    html_tesoreria = render_to_string("compras/compra_corregida_tesoreria.html", contexto_tesoreria,)
+
+                    correos_tesoreria = list(Profile.objects.filter(tipo__tesoreria=True, distritos__nombre="MATRIZ",)
+                        .values_list('staff__staff__email', flat=True)
+                        .distinct()
+                    )
+
+                    
+                    #correos_tesoreria = ['ulises.huesca@grupovordcab.com']
+
+                    try:
+
+                        email_tesoreria = EmailMessage(
+                            subject=(
+                                f"OC {compra.folio} autorizada con modificaciones | SAVIA"
+                            ),
+                            body=html_tesoreria,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=correos_tesoreria,
+                        )
+
+                        email_tesoreria.content_subtype = "html"
+
+                        email_tesoreria.attach(f"OC_folio_{compra.folio}.pdf", archivo_oc,"application/pdf",)
+
+                        email_tesoreria.send()
+
+                    except (BadHeaderError, SMTPException, socket.gaierror, OSError,) as error:
+
+                        logger.error(f"Error al notificar correcciones de OC {compra.folio} a Tesorería: {error}")
+
+
+
                 if compra.cond_de_pago.nombre == "CREDITO":
                     contexto_proveedor = contexto_base.copy()
 
@@ -3960,9 +4011,7 @@ def autorizar_oc1(request, pk):
 
                                 archivo_path = requerimiento.url.path
 
-                                extension = os.path.splitext(
-                                    archivo_path
-                                )[1]
+                                extension = os.path.splitext(archivo_path)[1]
 
                                 nombre_archivo = (f"{producto.codigo}_"f"requerimiento_{contador}"f"{extension}")
 
@@ -4056,6 +4105,7 @@ def autorizar_oc1(request, pk):
         'resta':resta,
         'porcentaje':porcentaje,
         'costo_total':costo_total,
+        'correcciones_oc': correcciones_oc,
         }
     
 
@@ -4089,6 +4139,8 @@ def autorizar_oc2(request, pk):
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
     productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
+    correcciones_oc = obtener_correcciones_oc(compra)
+    
     if compra.costo_fletes == None:
         costo_fletes = 0
     #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
@@ -4162,11 +4214,55 @@ def autorizar_oc2(request, pk):
 
             es_compra_credito = (compra.cond_de_pago and compra.cond_de_pago.nombre.strip().upper() == "CREDITO")
 
-            if es_compra_credito:
-                archivo_oc = attach_oc_pdf(
-                    request,
-                    compra.id,
+            archivo_oc = attach_oc_pdf(request, compra.id,)
+
+            # =====================================================
+            # NOTIFICACIÓN A TESORERÍA POR CORRECCIONES DE OC
+            # =====================================================
+            
+            correcciones_oc = obtener_correcciones_oc(compra)
+            
+            hubo_cambios_comerciales = any(correccion['hubo_cambios'] for correccion in correcciones_oc)
+
+            if hubo_cambios_comerciales:
+            
+                contexto_tesoreria = contexto_base.copy()
+            
+                contexto_tesoreria.update({"compra": compra, "correcciones_oc": correcciones_oc, "cantidad_devoluciones": len(correcciones_oc),})
+            
+                html_tesoreria = render_to_string("compras/compra_corregida_tesoreria.html", contexto_tesoreria,)
+            
+                correos_tesoreria = list(Profile.objects.filter(tipo__tesoreria=True, distritos__nombre="MATRIZ",)
+                    .values_list('staff__staff__email', flat=True)
+                    .distinct()
                 )
+            
+                                
+                #correos_tesoreria = ['ulises.huesca@grupovordcab.com']
+            
+                try:
+            
+                    email_tesoreria = EmailMessage(
+                        subject=(
+                            f"OC {compra.folio} autorizada con modificaciones | SAVIA"
+                            ),
+                        body=html_tesoreria,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=correos_tesoreria,
+                    )
+            
+                    email_tesoreria.content_subtype = "html"
+            
+                    email_tesoreria.attach(f"OC_folio_{compra.folio}.pdf", archivo_oc,"application/pdf",)
+            
+                    email_tesoreria.send()
+            
+                except (BadHeaderError, SMTPException, socket.gaierror, OSError,) as error:
+            
+                    logger.error(f"Error al notificar correcciones de OC {compra.folio} a Tesorería: {error}")
+
+            if es_compra_credito:
+              
 
                 pdf_antisoborno = attach_antisoborno_pdf(
                     request
@@ -4300,6 +4396,7 @@ def autorizar_oc2(request, pk):
         'resta':resta,
         'porcentaje':porcentaje,
         'costo_total':costo_total,
+        'correcciones_oc':correcciones_oc,
         }
 
     return render(request, 'compras/autorizar_oc2.html',context)
