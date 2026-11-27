@@ -1981,8 +1981,7 @@ def control_documentos(request):
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |
             Q(viatico__distrito__in=almacenes_distritos, viatico__autorizar2=True) |
             Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True) |
-            Q(gasto__tipo__tipo='NOMINA') |
-            Q(control_documentos = True)
+            Q(gasto__tipo__tipo='NOMINA')
         )
     
         vales_gasto_aprobados = ValeRosa.objects.filter(
@@ -2026,7 +2025,7 @@ def control_documentos(request):
         )
             
         pagos = (Pago.objects
-            .filter(filtro_pagos, hecho=True)
+            .filter(filtro_pagos, hecho=True, control_documentos = True)
             .select_related(
                 'oc',
                 'oc__req',
@@ -2115,13 +2114,13 @@ def control_documentos(request):
             )
                 .order_by('-pagado_real')
             )
+        print('que mierda',pagos)
                 
     else:    
         filtro_pagos = (
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |
             Q(viatico__distrito__in=almacenes_distritos, viatico__autorizar2=True) |
-            Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True) |
-            Q(control_documentos = True)
+            Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True) 
         )
     
         facturas_oc = Facturas.objects.filter(
@@ -2154,7 +2153,7 @@ def control_documentos(request):
     
         pagos = (
             Pago.objects
-            .filter(filtro_pagos, hecho=True)
+            .filter(filtro_pagos, hecho=True, control_documentos = True)
             .exclude(gasto__tipo__tipo__in=["NOMINA","PTU"])
             .select_related(
                 'oc',
